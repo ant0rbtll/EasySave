@@ -38,6 +38,21 @@ public class BackupEngine
 
     private void ExecuteCompleteBackup(SaveWork job)
     {
+        var files = GetAllFiles(job.Source);
+
+        foreach (var file in files)
+        {
+            var relativePath = Path.GetRelativePath(job.Source, file);
+            var destinationFile = Path.Combine(job.Destination, relativePath);
+            var destinationDir = Path.GetDirectoryName(destinationFile)!;
+
+            if (!_fileSystem.DirectoryExists(destinationDir))
+            {
+                _fileSystem.CreateDirectory(destinationDir);
+            }
+
+            _transferService.TransferFile(file, destinationFile);
+        }
     }
 
     private void ExecuteDifferentialBackup(SaveWork job)
