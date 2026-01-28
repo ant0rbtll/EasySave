@@ -29,7 +29,6 @@ services:
     volumes:
       - .:/app
       - ./test-results:/app/test-results
-      - nuget-cache:C:\Users\ContainerUser\.nuget\packages
     environment:
       - DOTNET_ENVIRONMENT=Test
     depends_on:
@@ -37,9 +36,6 @@ services:
     networks:
       - easysave-network
     isolation: process
-
-volumes:
-  nuget-cache:
 
 networks:
   easysave-network:
