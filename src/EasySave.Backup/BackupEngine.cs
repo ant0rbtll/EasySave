@@ -28,4 +28,18 @@ public class BackupEngine
     {
         // To be implemented
     }
+
+    private void ExecuteCompleteBackup(SaveWork job)
+    {
+    }
+
+    private void ExecuteDifferentialBackup(SaveWork job)
+    {
+    }
+
+    private IEnumerable<string> GetAllFiles(string source)
+    {
+        return Enumerable.Empty<string>();
+    }
+
 }
