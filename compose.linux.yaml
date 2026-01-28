@@ -1,0 +1,38 @@
+services:
+  easysave-dev:
+    build:
+      context: .
+      dockerfile: docker/linux/Dockerfile.dev.linux
+    container_name: easysave-dev
+    volumes:
+      - .:/app
+      - nuget-cache:/root/.nuget/packages
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+      - DATA_PATH=/app/data
+    stdin_open: true
+    tty: true
+    networks:
+      - easysave-network
+
+  easysave-test:
+    build:
+      context: .
+      dockerfile: docker/linux/Dockerfile.test.linux  # CORRIGÉ
+    container_name: easysave-test
+    volumes:
+      - .:/app
+      - ./test-results:/app/test-results
+      - nuget-cache:/root/.nuget/packages
+    environment:
+      - DOTNET_ENVIRONMENT=Test
+    networks:
+      - easysave-network
+
+volumes:
+  nuget-cache:
+
+networks:
+  easysave-network:
+    driver: bridge

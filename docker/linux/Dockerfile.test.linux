@@ -1,0 +1,34 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+WORKDIR /app
+
+# Copier le fichier de solution
+COPY EasySave.sln ./
+COPY global.json ./
+
+# Copier TOUS les fichiers .csproj de src/
+COPY src/EasySave.UI/*.csproj ./src/EasySave.UI/
+COPY src/EasySave.Core/*.csproj ./src/EasySave.Core/
+COPY src/EasySave.Application/*.csproj ./src/EasySave.Application/
+COPY src/EasySave.Backup/*.csproj ./src/EasySave.Backup/
+COPY src/EasySave.Persistence/*.csproj ./src/EasySave.Persistence/
+COPY src/EasySave.Localization/*.csproj ./src/EasySave.Localization/
+COPY src/EasySave.Configuration/*.csproj ./src/EasySave.Configuration/
+COPY src/EasySave.System/*.csproj ./src/EasySave.System/
+COPY src/EasySave.State/*.csproj ./src/EasySave.State/
+COPY src/EasyLog/*.csproj ./src/EasyLog/
+
+# Copier TOUS les fichiers .csproj de tests/
+COPY tests/EasyLog.Tests/*.csproj ./tests/EasyLog.Tests/
+COPY tests/EasySave.Backup.Tests/*.csproj ./tests/EasySave.Backup.Tests/
+COPY tests/EasySave.Application.Tests/*.csproj ./tests/EasySave.Application.Tests/
+COPY tests/EasySave.State.Tests/*.csproj ./tests/EasySave.State.Tests/
+
+# Restaurer les dépendances
+RUN dotnet restore
+
+# Copier le reste du code
+COPY . .
+
+# Exécuter tous les tests
+CMD ["dotnet", "test", "--logger:trx", "--results-directory", "/app/test-results"]

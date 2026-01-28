@@ -1,0 +1,46 @@
+services:
+  easysave-dev:
+    build:
+      context: .
+      dockerfile: docker/windows/Dockerfile.dev.windows 
+    container_name: easysave-dev
+    volumes:
+      - .:/app
+      # Montez les disques Windows auxquels votre app doit accéder
+      - C:\Users:C:\host\Users
+      - C:\Program Files:C:\host\ProgramFiles
+      # Ajoutez d'autres disques si nécessaire
+      # - D:\:D:\
+      - nuget-cache:C:\Users\ContainerUser\.nuget\packages
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+    stdin_open: true
+    tty: true
+    networks:
+      - easysave-network
+    isolation: process
+
+  easysave-test:
+    build:
+      context: .
+      dockerfile: docker/windows/Dockerfile.test.windows  # CORRIGÉ
+    container_name: easysave-test
+    volumes:
+      - .:/app
+      - ./test-results:/app/test-results
+      - nuget-cache:C:\Users\ContainerUser\.nuget\packages
+    environment:
+      - DOTNET_ENVIRONMENT=Test
+    depends_on:
+      - easysave-dev
+    networks:
+      - easysave-network
+    isolation: process
+
+volumes:
+  nuget-cache:
+
+networks:
+  easysave-network:
+    driver: nat
