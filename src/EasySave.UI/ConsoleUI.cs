@@ -45,18 +45,18 @@ public class ConsoleUI : IUI
 
     public void createSaveWork()
     {
-        showMessage("====Création d'un job de travail====");
-        string nameJob = askString("name");
-        string sourceJob = askString("source");
-        string destination = askString("dest");
-        string backupTypeJob = askBackupType("type");
+        labelText("menu_create");
+        string nameJob = askString("savework_create_name");
+        string sourceJob = askString("savework_create_source");
+        string destination = askString("savework_create_destination");
+        string backupTypeJob = askBackupType("savework_create_type");
         // send to service 
         showMenu();
     }
 
     public void seeJobsList()
     {
-        showMessage("====Voir la liste des jobs====");
+        labelText("menu_list");
         List<string> listJobs = ["job", "job 2"];
         foreach (string job in listJobs) {
             showMessage(job);
@@ -67,7 +67,7 @@ public class ConsoleUI : IUI
 
     public void saveJob()
     {
-        showMessage("====Lancer une sauvegarde====");
+        labelText("menu_save");
         seeJobsList();
 
 
@@ -76,7 +76,7 @@ public class ConsoleUI : IUI
 
     public void configureParams()
     {
-        showMessage("====Changer les paramètres====");
+        labelText("menu_params");
 
 
     }
@@ -85,25 +85,27 @@ public class ConsoleUI : IUI
     public void showMenu()
     {
         separator();
-        string[] menu = { "Création d'un job de travail", "Voir la liste des jobs", "Lancer une sauvegarde", "Changer les paramètres" ,"Quitter" };
+        string[] menu = { "menu_create", "menu_list", "menu_save", "menu_params" ,"menu_quit" };
         int index = 0;
         ConsoleKey key;
 
         do
         {
             Console.Clear();
-            Console.WriteLine("====Menu====\n");
+            labelText("menu");
             for (int i = 0; i < menu.Length; i++)
             {
                 if (i == index)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    showMessage("> " + menu[i]);
+                    Console.Write("> ");
+                    showMessage(menu[i]);
                     Console.ResetColor();
                 }
                 else
                 {
-                    showMessage("  " + menu[i]);
+                    Console.Write("  ");
+                    showMessage(menu[i]);
                 }
             }
 
@@ -138,6 +140,14 @@ public class ConsoleUI : IUI
     private void separator()
     {
         Console.WriteLine("====================================================");
+    }
+
+    private void labelText(string key)
+    {
+        Console.Write("====");
+        string message = localizationService.translateTexte(key);
+        Console.Write(message);
+        Console.Write("====\n");
     }
 }
 
