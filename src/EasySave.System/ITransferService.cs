@@ -1,5 +1,3 @@
-using EasySave.Backup;
-
 namespace EasySave.System;
 
 public interface ITransferService

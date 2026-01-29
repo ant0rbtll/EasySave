@@ -1,4 +1,4 @@
-namespace EasySave.Backup;
+namespace EasySave.System;
 
 public class TransferResult
 {
