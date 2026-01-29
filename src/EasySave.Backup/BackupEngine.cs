@@ -30,9 +30,13 @@ public class BackupEngine
         {
             ExecuteCompleteBackup(job);
         }
-        else
+        else if (job.Type == BackupType.Differential)
         {
             ExecuteDifferentialBackup(job);
+        }
+        else
+        {
+            // TODO: Throw exception
         }
     }
 
@@ -57,6 +61,40 @@ public class BackupEngine
 
     private void ExecuteDifferentialBackup(SaveWork job)
     {
+        var files = GetAllFiles(job.Source);
+
+        foreach (var file in files)
+        {
+            var relativePath = Path.GetRelativePath(job.Source, file);
+            var destinationFile = Path.Combine(job.Destination, relativePath);
+
+            bool shouldCopy = false;
+
+            if (!_fileSystem.DirectoryExists(Path.GetDirectoryName(destinationFile)!))
+            {
+                _fileSystem.CreateDirectory(Path.GetDirectoryName(destinationFile)!);
+                shouldCopy = true;
+            }
+            else if (!_fileSystem.FileExists(destinationFile))
+            {
+                shouldCopy = true;
+            }
+            else
+            {
+                var sourceSize = _fileSystem.GetFileSize(file);
+                var destSize = _fileSystem.GetFileSize(destinationFile);
+
+                if (sourceSize != destSize)
+                {
+                    shouldCopy = true;
+                }
+            }
+
+            if (shouldCopy)
+            {
+                _transferService.TransferFile(file, destinationFile);
+            }
+        }
     }
 
     private IEnumerable<string> GetAllFiles(string source)
