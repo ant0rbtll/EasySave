@@ -3,46 +3,85 @@ using EasySave.Localization;
 
 namespace EasySave.UI;
 
+/// <summary>
+/// Actions and display of the application with the console
+/// </summary>
 public class ConsoleUI : IUI
 {
 
     private BackupAppService backUpAppService = new BackupAppService();
     private ILocalizationService localizationService = new LocalizationService();
     
+    /// <inheritdoc />
     public void showMessage(string key)
     {
         string message = localizationService.translateTexte(key);
         Console.WriteLine(message);
     }
 
+    /// <inheritdoc />
     public void showError(string key)
     {
         Console.Error.WriteLine(key);
     }
 
+    /// <inheritdoc />
     public string askString(string key)
     {
         showMessage(key);
-        string response = Console.ReadLine();
-        return response;
+
+        string? stringInput;
+
+        do
+        {
+            stringInput = Console.ReadLine();
+
+            if (string.IsNullOrWhiteSpace(stringInput))
+            {
+                showMessage("input_string_invalid");
+            }
+        }
+        while (string.IsNullOrWhiteSpace(stringInput));
+
+        return stringInput;
     }
 
+    /// <inheritdoc />
     public int askInt(string key)
     {
         showMessage(key);
-        int response = Convert.ToInt16(Console.ReadLine());
 
-        //verif if number
-        return response;
+        string? input;
+        int numberInput;
+
+        do
+        {
+            input = Console.ReadLine();
+
+            if (!int.TryParse(input, out numberInput))
+            {
+                showMessage("input_number_invalid");
+            }
+        }
+        while (!int.TryParse(input, out numberInput));
+
+        return numberInput;
     }
 
+    /// <inheritdoc />
     public string askBackupType(string key)
     {
+        return askString(key);
+        /* in waiting of the list of backupTypes
         showMessage(key);
-        string response = Console.ReadLine();
+        string? response = Console.ReadLine();
         return response;
+        */
     }
-
+    
+    /// <summary>
+    /// Gather a save's informations and create a saveWork
+    /// </summary>
     public void createSaveWork()
     {
         labelText("menu_create");
@@ -54,7 +93,10 @@ public class ConsoleUI : IUI
         mainMenu();
     }
 
-    public void seeJobsList()
+    /// <summary>
+    /// Display the informations of all saveWork created
+    /// </summary>
+    public void seeSaveList()
     {
         labelText("menu_list");
         List<string> listJobs = ["job", "job 2"];
@@ -65,19 +107,22 @@ public class ConsoleUI : IUI
 
     }
 
+    /// <summary>
+    /// Start a save
+    /// </summary>
     public void saveJob()
     {
         labelText("menu_save");
-        seeJobsList();
+        seeSaveList();
 
-
-        //showMenu();
+        mainMenu();
     }
 
+    /// <summary>
+    /// The menu of the app's configuration
+    /// </summary>
     public void configureParams()
     {
-        labelText("menu_params");
-
         string[] menu = { "menu_params_locale", "back" };
 
         Dictionary<int, Action> menuActions = new()
@@ -88,6 +133,9 @@ public class ConsoleUI : IUI
         showMenu(menu, menuActions, "menu_params");
     }
 
+    /// <summary>
+    /// The menu to change the app language
+    /// </summary>
     public void showChangeLocale()
     {
         string currentLocale = localizationService.getCulture();
@@ -107,6 +155,10 @@ public class ConsoleUI : IUI
         showMenu(menu, menuActions,"menu_params_locale");
     }
 
+    /// <summary>
+    /// The action of changing the language
+    /// </summary>
+    /// <param name="locale"></param>
     public void changeLocale(string locale)
     {
         localizationService.setCulture(locale);
@@ -114,6 +166,9 @@ public class ConsoleUI : IUI
         showChangeLocale();
     }
 
+    /// <summary>
+    /// The main menu of the application
+    /// </summary>
     public void mainMenu()
     {
         string[] menu = { "menu_create", "menu_list", "menu_save", "menu_params", "menu_quit" };
@@ -121,7 +176,7 @@ public class ConsoleUI : IUI
         Dictionary<int, Action> menuActions = new()
     {
         { 0, createSaveWork },
-        { 1, seeJobsList },
+        { 1, seeSaveList },
         { 2, saveJob },
         { 3, configureParams },
         { 4, quit } // ou juste Environment.Exit(0)
@@ -131,11 +186,20 @@ public class ConsoleUI : IUI
 
     }
 
+    /// <summary>
+    /// Quit the application
+    /// </summary>
     public void quit()
     {
         Console.Clear();
     }
 
+    /// <summary>
+    /// Show a menu with options
+    /// </summary>
+    /// <param name="menu">The list of displayed text</param>
+    /// <param name="menuActions">A dictionnary with the index and the actions of each options</param>
+    /// <param name="menuLabel">The translation key of the name of the menu</param>
     public void showMenu(string[] menu, Dictionary<int, Action> menuActions, string menuLabel = "menu")
     {
         int index = 0;
@@ -143,7 +207,7 @@ public class ConsoleUI : IUI
 
         do
         {
-            Console.Clear();
+            Console.Clear() ;
             labelText(menuLabel);
             for (int i = 0; i < menu.Length; i++)
             {
@@ -185,11 +249,10 @@ public class ConsoleUI : IUI
         }
     }
 
-    private void separator()
-    {
-        Console.WriteLine("====================================================");
-    }
-
+    /// <summary>
+    /// Display the title of the action selected
+    /// </summary>
+    /// <param name="key">the translation key</param>
     private void labelText(string key)
     {
         Console.Write("====");
@@ -199,8 +262,15 @@ public class ConsoleUI : IUI
     }
 }
 
+/// <summary>
+/// The main class that start the app
+/// </summary>
 public class MainClass
 {
+    /// <summary>
+    /// The main action that start the app
+    /// </summary>
+    /// <param name="args"></param>
     public static void Main(string[] args)
     {
         ConsoleUI console = new ConsoleUI();
