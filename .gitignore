@@ -3,6 +3,8 @@ bin/
 obj/
 out/
 
+test-results/
+
 # Visual Studio / VS Code
 .vs/
 .vscode/
