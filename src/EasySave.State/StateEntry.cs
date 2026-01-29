@@ -1,5 +1,3 @@
-using EasySave.Backup;
-
 namespace EasySave.State;
 
 public class StateEntry

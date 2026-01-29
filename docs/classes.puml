@@ -1,0 +1,297 @@
+!theme spacelab
+skinparam classAttributeIconSize 0
+title EasySave v1.0 - Diagramme de classes
+@startuml
+skinparam classAttributeIconSize 0
+
+' =========================================================
+' EasySave v1.0 - UML adapté livrable 1
+' Objectifs:
+' - SaveWork = définition (pas d’exécution)
+' - Exécution portée par BackupEngine
+' - Etat temps réel = fichier unique contenant tous les jobs
+' - Log = journalier, temps réel, actions (transfert + création dossier)
+' - Limite 5 jobs + stockage (mémoire ou JSON) via repository
+' - CLI parsing 1-3 / 1;3 / espaces
+' =========================================================
+
+' ===================== Core (Domain) =====================
+package "Core (Domain)" as CORE {
+  enum BackupType {
+    Complete
+    Differential
+  }
+
+  class SaveWork {
+    - id : int
+    - name : String
+    - source : String
+    - destination : String
+    - type : BackupType
+  }
+}
+
+' ===================== Application (Use cases) =====================
+package "Application" as APP {
+  class BackupAppService {
+    - repo : Persistence.ISaveWorkRepository
+    - engine : Backup.BackupEngine
+    - ui : UI.IUI
+    - parser : CLI.CommandLineParser
+    + RunInteractive() : void
+    + RunFromArgs(args : String[]) : void
+    + CreateJob(name : String, source : String, destination : String, type : CORE.BackupType) : void
+    + RemoveJob(id : int) : void
+    + RunJobs(ids : int[]) : void
+    + RunAllJobs() : void
+  }
+}
+
+' ===================== UI (Console) =====================
+package "UI (Console)" as UI {
+  interface IUI {
+    + ShowMessage(key : String) : void
+    + ShowError(key : String) : void
+    + AskString(key : String) : String
+    + AskInt(key : String) : int
+    + AskBackupType(key : String) : CORE.BackupType
+  }
+
+  class ConsoleUI
+  IUI <|.. ConsoleUI
+}
+
+' ===================== Localization =====================
+package "Localization" as LOC {
+  interface ILocalizationService {
+    + Get(key : String) : String
+  }
+
+  class LocalizationService {
+    - culture : String
+    + SetCulture(culture : String) : void
+    + Get(key : String) : String
+  }
+
+  ILocalizationService <|.. LocalizationService
+}
+
+UI.ConsoleUI --> LOC.ILocalizationService
+
+' ===================== CLI =====================
+package "CLI" as CLI {
+  class CommandLineParser {
+    + Parse(args : String[]) : int[]
+  }
+}
+
+' ===================== Persistence (Jobs) =====================
+package "Persistence" as Persistence {
+  interface ISaveWorkRepository {
+    + Add(job : CORE.SaveWork) : void
+    + Remove(id : int) : void
+    + GetById(id : int) : CORE.SaveWork
+    + GetAll() : List<CORE.SaveWork>
+    + Count() : int
+    + MaxJobs() : int
+  }
+
+  interface IJobIdProvider {
+    + NextId(existing : List<CORE.SaveWork>) : int
+  }
+
+  class SequentialJobIdProvider {
+    + NextId(existing : List<CORE.SaveWork>) : int
+  }
+
+  class InMemorySaveWorkRepository {
+    - maxJobs : int = 5
+    - jobs : Dictionary<int, CORE.SaveWork>
+    - idProvider : IJobIdProvider
+    + Add(job : CORE.SaveWork) : void
+    + Remove(id : int) : void
+    + GetById(id : int) : CORE.SaveWork
+    + GetAll() : List<CORE.SaveWork>
+    + Count() : int
+    + MaxJobs() : int
+  }
+
+  ISaveWorkRepository <|.. InMemorySaveWorkRepository
+  IJobIdProvider <|.. SequentialJobIdProvider
+
+  ' Optionnel v1 mais très utile en prod: persistance JSON des jobs
+  class JsonSaveWorkRepository {
+    - maxJobs : int = 5
+    - pathProvider : CFG.IPathProvider
+    - idProvider : IJobIdProvider
+    + Add(job : CORE.SaveWork) : void
+    + Remove(id : int) : void
+    + GetById(id : int) : CORE.SaveWork
+    + GetAll() : List<CORE.SaveWork>
+    + Count() : int
+    + MaxJobs() : int
+    - Load() : List<CORE.SaveWork>
+    - Save(all : List<CORE.SaveWork>) : void
+  }
+
+  ISaveWorkRepository <|.. JsonSaveWorkRepository
+}
+
+' ===================== Configuration (Paths) =====================
+package "Configuration (Paths)" as CFG {
+  interface IPathProvider {
+    + GetDailyLogPath(date : DateTime) : String
+    + GetStatePath() : String
+    + GetJobsConfigPath() : String
+  }
+
+  class DefaultPathProvider
+  IPathProvider <|.. DefaultPathProvider
+}
+
+' ===================== Backup (Execution) =====================
+package "Backup (Execution)" as Backup {
+
+  class BackupEngine {
+    - fs : SystemAbstractions.IFileSystem
+    - transfer : SystemAbstractions.ITransferService
+    - stateWriter : ETR.IStateWriter
+    - log : EasyLog.ILogger
+    + Execute(job : CORE.SaveWork) : void
+  }
+}
+
+' ===================== System Abstractions =====================
+package "SystemAbstractions" as SystemAbstractions {
+  interface IFileSystem {
+    + DirectoryExists(path : String) : bool
+    + CreateDirectory(path : String) : void
+    + EnumerateFiles(path : String) : List<String>
+    + EnumerateDirectories(path : String) : List<String>
+    + CopyFile(src : String, dst : String) : void
+    + GetFileSize(path : String) : long
+    + GetFullPath(path : String) : String
+  }
+
+  class TransferResult {
+    + fileSizeBytes : long
+    + transferTimeMs : long
+    + errorCode : int
+  }
+
+  interface ITransferService {
+    + TransferFile(src : String, dst : String) : TransferResult
+  }
+
+  class DefaultTransferService
+  ITransferService <|.. DefaultTransferService
+}
+
+' ===================== EasyLog.dll (Journalier) =====================
+package "EasyLog.dll" as EasyLog {
+  enum LogEventType {
+    CreateDirectory
+    TransferFile
+    Error
+  }
+
+  class LogEntry {
+    + timestamp : DateTime
+    + backupName : String
+    + eventType : LogEventType
+    + sourcePathUNC : String
+    + destinationPathUNC : String
+    + fileSizeBytes : long
+    + transferTimeMs : long
+  }
+
+  interface ILogger {
+    + Write(entry : LogEntry) : void
+  }
+
+  interface ILogFormatter {
+    + Format(entry : LogEntry) : String
+  }
+
+  class JsonLogFormatter {
+    + Format(entry : LogEntry) : String
+  }
+
+  class DailyFileLogger {
+    - formatter : ILogFormatter
+    - pathProvider : CFG.IPathProvider
+    + Write(entry : LogEntry) : void
+  }
+
+  ILogger <|.. DailyFileLogger
+  ILogFormatter <|.. JsonLogFormatter
+  DailyFileLogger --> ILogFormatter
+  DailyFileLogger --> CFG.IPathProvider
+}
+
+' ===================== ETR (Etat Temps Réel - fichier unique) =====================
+package "ETR (Etat Temps Réel)" as ETR {
+  class StateEntry {
+    + backupId : int
+    + backupName : String
+    + timestamp : DateTime
+    + status : ETR.BackupStatus
+    + totalFiles : int
+    + totalSizeBytes : long
+    + remainingFiles : int
+    + remainingSizeBytes : long
+    + progressPercent : int
+    + currentSourcePath : String
+    + currentDestinationPath : String
+  }
+
+  enum BackupStatus {
+    Inactive
+    Active
+    Done
+    Error
+  }
+
+  class GlobalState {
+    + updatedAt : DateTime
+    + entries : Dictionary<int, StateEntry>
+  }
+
+  interface IStateWriter {
+    + Update(entry : StateEntry) : void
+    + MarkInactive(backupId : int) : void
+  }
+
+  class StateSerializer {
+    + WritePrettyJson(path : String, state : GlobalState) : void
+  }
+
+  class RealTimeStateWriter {
+    - serializer : StateSerializer
+    - pathProvider : CFG.IPathProvider
+    - state : GlobalState
+    + Update(entry : StateEntry) : void
+    + MarkInactive(backupId : int) : void
+  }
+
+  IStateWriter <|.. RealTimeStateWriter
+  RealTimeStateWriter --> StateSerializer
+  RealTimeStateWriter --> CFG.IPathProvider
+}
+
+' ===================== Cross-package wiring =====================
+APP.BackupAppService --> Persistence.ISaveWorkRepository
+APP.BackupAppService --> Backup.BackupEngine
+APP.BackupAppService --> UI.IUI
+APP.BackupAppService --> CLI.CommandLineParser
+
+Backup.BackupEngine --> SystemAbstractions.IFileSystem
+Backup.BackupEngine --> SystemAbstractions.ITransferService
+Backup.BackupEngine --> ETR.IStateWriter
+Backup.BackupEngine --> EasyLog.ILogger
+
+Persistence.JsonSaveWorkRepository --> CFG.IPathProvider
+EasyLog.DailyFileLogger --> CFG.IPathProvider
+ETR.RealTimeStateWriter --> CFG.IPathProvider
+
+@enduml
