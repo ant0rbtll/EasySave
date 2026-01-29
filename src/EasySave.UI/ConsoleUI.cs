@@ -37,13 +37,13 @@ public class ConsoleUI : IUI
 
     public static void Main(string[] args)
     {
-<<<<<<< HEAD
         Console.WriteLine("Bonjour");
+        showMenu();
     }
 
-    public string showMenu()
+    public static void showMenu()
     {
-        this.separator();
+        separator();
         string[] menu = { "Jouer", "Options", "Quitter" };
         int index = 0;
         ConsoleKey key;
@@ -81,16 +81,10 @@ public class ConsoleUI : IUI
 
     }
 
-    private void separator()
+    private static void separator()
     {
         Console.WriteLine("====================================================");
-=======
-        // show the choice to select language
-        Console.WriteLine("Bonjour");
 
 
-
-
->>>>>>> f36e3227a4d513cc649bab9bcdfa7fb9084c2bed
     }
 }
