@@ -35,8 +35,53 @@ public class ConsoleUI : IUI
         return response;
     }
 
-    public static Main(string[] args)
+    public static void Main(string[] args)
     {
-        Console.WriteLine('Bonjour');
+        Console.WriteLine("Bonjour");
+    }
+
+    public string showMenu()
+    {
+        this.separator();
+        string[] menu = { "Jouer", "Options", "Quitter" };
+        int index = 0;
+        ConsoleKey key;
+
+        do
+        {
+            Console.Clear();
+            Console.WriteLine("====Menu====\n");
+
+            for (int i = 0; i < menu.Length; i++)
+            {
+                if (i == index)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("> " + menu[i]);
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.WriteLine("  " + menu[i]);
+                }
+            }
+
+            key = Console.ReadKey(true).Key;
+
+            if (key == ConsoleKey.UpArrow && index > 0)
+                index--;
+            else if (key == ConsoleKey.DownArrow && index < menu.Length - 1)
+                index++;
+
+        } while (key != ConsoleKey.Enter);
+
+        Console.Clear();
+        Console.WriteLine($"Tu as choisi : {menu[index]}");
+
+    }
+
+    private void separator()
+    {
+        Console.WriteLine("====================================================");
     }
 }
