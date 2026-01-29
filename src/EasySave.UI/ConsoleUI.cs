@@ -1,7 +1,12 @@
+using EasySave.Application;
+
 namespace EasySave.UI;
 
 public class ConsoleUI : IUI
 {
+
+    private BackupAppService backUpAppService = new BackupAppService();
+    
     public void showMessage(string key)
     {
         Console.WriteLine(key);
@@ -48,7 +53,28 @@ public class ConsoleUI : IUI
 
     public void seeJobsList()
     {
-        write("====Création d'un job de travail====");
+        write("====Voir la liste des jobs====");
+        List<string> listJobs = ["job", "job 2"];
+        foreach (string job in listJobs) {
+            Console.WriteLine(job);
+        }
+        //showMenu();
+
+    }
+
+    public void saveJob()
+    {
+        write("====Lancer une sauvegarde====");
+        seeJobsList();
+
+
+        showMenu();
+    }
+
+    public void configureParams()
+    {
+        write("====Changer les paramètres====");
+
 
     }
 
@@ -102,11 +128,14 @@ public class ConsoleUI : IUI
         {
             seeJobsList();
         }
-        else if (index == 2) 
+        else if (index == 2)
         {
-            //saveJob();    
+            saveJob();
         }
-
+        else if (index == 3)
+        {
+            configureParams();
+        }
     }
 
     private void separator()
