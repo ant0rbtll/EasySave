@@ -19,7 +19,7 @@ public class RealTimeStateWriterTests
         {
             backupId = 1,
             backupName = "TestBackup",
-            status = BackupStatus.Running
+            status = BackupStatus.Active
         };
 
         // Act
@@ -31,7 +31,7 @@ public class RealTimeStateWriterTests
 
         // Assert
         Assert.True(state.Entries.ContainsKey(1));
-        Assert.Equal(BackupStatus.Running, state.Entries[1].status);
+        Assert.Equal(BackupStatus.Active, state.Entries[1].status);
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class RealTimeStateWriterTests
         state.Entries[1] = new StateEntry
         {
             backupId = 1,
-            status = BackupStatus.Running
+            status = BackupStatus.Active
         };
 
         var writer = new RealTimeStateWriter(pathProvider, serializer, state);
