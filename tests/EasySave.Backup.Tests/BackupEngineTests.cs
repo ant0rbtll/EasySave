@@ -50,15 +50,15 @@ public class BackupEngineTests
         };
 
         _fileSystemMock.Setup(fs => fs.EnumerateFiles("/source"))
-            .Returns(new[] { "/source/file1.txt" });
+            .Returns(["/source/file1.txt"]);
         _fileSystemMock.Setup(fs => fs.EnumerateDirectories("/source"))
-            .Returns(new[] { "/source/folder" });
+            .Returns(["/source/folder"]);
         _fileSystemMock.Setup(fs => fs.EnumerateFiles("/source/folder"))
-            .Returns(new[] { "/source/folder/file2.txt" });
+            .Returns(["/source/folder/file2.txt"]);
         _fileSystemMock.Setup(fs => fs.EnumerateDirectories("/source/folder"))
-            .Returns(new[] { "/source/folder/subfolder" });
+            .Returns(["/source/folder/subfolder"]);
         _fileSystemMock.Setup(fs => fs.EnumerateFiles("/source/folder/subfolder"))
-            .Returns(new[] { "/source/folder/subfolder/file3.txt" });
+            .Returns(["/source/folder/subfolder/file3.txt"]);
         _fileSystemMock.Setup(fs => fs.EnumerateDirectories("/source/folder/subfolder"))
             .Returns([]);
 
@@ -95,7 +95,7 @@ public class BackupEngineTests
         };
 
         _fileSystemMock.Setup(fs => fs.EnumerateFiles("/source"))
-            .Returns(new[] { "/source/file.txt" });
+            .Returns(["/source/file.txt"]);
         _fileSystemMock.Setup(fs => fs.EnumerateDirectories("/source"))
             .Returns([]);
 
