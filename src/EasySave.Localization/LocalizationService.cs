@@ -1,6 +1,18 @@
+using System.Security.Cryptography.X509Certificates;
+
 namespace EasySave.Localization;
 
 public class LocalizationService : ILocalizationService
 {
-    public string Get(string key) => key;
+
+    private string culture;
+    public string getCulture()
+    {
+        return culture;
+    }
+
+    public void  setCulture(string culture)
+    {
+        this.culture = culture;
+    }
 }

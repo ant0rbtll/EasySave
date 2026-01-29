@@ -35,8 +35,13 @@ public class ConsoleUI : IUI
         return response;
     }
 
-    public static Main(string[] args)
+    public static void Main(string[] args)
     {
-        Console.WriteLine('Bonjour');
+        // show the choice to select language
+        Console.WriteLine("Bonjour");
+
+
+
+
     }
 }
