@@ -37,6 +37,7 @@ public class ConsoleUI : IUI
 
     public static void Main(string[] args)
     {
+<<<<<<< HEAD
         Console.WriteLine("Bonjour");
     }
 
@@ -83,5 +84,13 @@ public class ConsoleUI : IUI
     private void separator()
     {
         Console.WriteLine("====================================================");
+=======
+        // show the choice to select language
+        Console.WriteLine("Bonjour");
+
+
+
+
+>>>>>>> f36e3227a4d513cc649bab9bcdfa7fb9084c2bed
     }
 }
