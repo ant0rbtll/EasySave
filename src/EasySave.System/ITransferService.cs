@@ -2,5 +2,5 @@ namespace EasySave.System;
 
 public interface ITransferService
 {
-    TransferResult TransferFile(string src, string dst);
+    TransferResult TransferFile(string sourcePath, string destinationPath, bool overwrite);
 }

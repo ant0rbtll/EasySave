@@ -1,8 +1,10 @@
 namespace EasySave.System;
 
-public class TransferResult
+public sealed record TransferResult(
+    long FileSizeBytes,
+    long TransferTimeMs,
+    int ErrorCode
+)
 {
-    public long FileSizeBytes { get; set; }
-    public long TransferTimeMs { get; set; }
-    public int ErrorCode { get; set; }
+    public bool IsSuccess => ErrorCode == 0;
 }
