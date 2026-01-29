@@ -35,16 +35,33 @@ public class ConsoleUI : IUI
         return response;
     }
 
-    public static void Main(string[] args)
+    public void createSaveWork()
     {
-        Console.WriteLine("Bonjour");
+        write("====Création d'un job de travail====");
+        string nameJob = askString("name");
+        string sourceJob = askString("source");
+        string destination = askString("dest");
+        string backupTypeJob = askBackupType("type");
+        // send to service 
         showMenu();
     }
 
-    public static void showMenu()
+    public void seeJobsList()
+    {
+        write("====Création d'un job de travail====");
+
+    }
+
+    public void write(string message)
+    {
+        Console.WriteLine(message);
+    }
+
+
+    public void showMenu()
     {
         separator();
-        string[] menu = { "Jouer", "Options", "Quitter" };
+        string[] menu = { "Création d'un job de travail", "Voir la liste des jobs", "Lancer une sauvegarde", "Changer les paramètres" ,"Quitter" };
         int index = 0;
         ConsoleKey key;
 
@@ -77,14 +94,37 @@ public class ConsoleUI : IUI
         } while (key != ConsoleKey.Enter);
 
         Console.Clear();
-        Console.WriteLine($"Tu as choisi : {menu[index]}");
+        if (index == 0)
+        {
+            createSaveWork();
+        }
+        else if (index == 1)
+        {
+            seeJobsList();
+        }
+        else if (index == 2) 
+        {
+            //saveJob();    
+        }
 
     }
 
-    private static void separator()
+    private void separator()
     {
         Console.WriteLine("====================================================");
 
 
     }
 }
+
+public class MainClass
+{
+    public static void Main(string[] args)
+    {
+        Console.WriteLine("Bonjour");
+        ConsoleUI console = new ConsoleUI();
+        console.showMenu();
+
+    }
+}
+ 
