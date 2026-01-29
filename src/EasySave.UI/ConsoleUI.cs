@@ -1,4 +1,5 @@
 using EasySave.Application;
+using EasySave.Localization;
 
 namespace EasySave.UI;
 
@@ -6,10 +7,12 @@ public class ConsoleUI : IUI
 {
 
     private BackupAppService backUpAppService = new BackupAppService();
+    private ILocalizationService localizationService = new LocalizationService();
     
     public void showMessage(string key)
     {
-        Console.WriteLine(key);
+        string message = localizationService.translateTexte(key);
+        Console.WriteLine(message);
     }
 
     public void showError(string key)
@@ -19,14 +22,14 @@ public class ConsoleUI : IUI
 
     public string askString(string key)
     {
-        Console.WriteLine(key);
+        showMessage(key);
         string response = Console.ReadLine();
         return response;
     }
 
     public int askInt(string key)
     {
-        Console.WriteLine(key);
+        showMessage(key);
         int response = Convert.ToInt16(Console.ReadLine());
 
         //verif if number
@@ -35,14 +38,14 @@ public class ConsoleUI : IUI
 
     public string askBackupType(string key)
     {
-        Console.WriteLine(key);
+        showMessage(key);
         string response = Console.ReadLine();
         return response;
     }
 
     public void createSaveWork()
     {
-        write("====Création d'un job de travail====");
+        showMessage("====Création d'un job de travail====");
         string nameJob = askString("name");
         string sourceJob = askString("source");
         string destination = askString("dest");
@@ -53,10 +56,10 @@ public class ConsoleUI : IUI
 
     public void seeJobsList()
     {
-        write("====Voir la liste des jobs====");
+        showMessage("====Voir la liste des jobs====");
         List<string> listJobs = ["job", "job 2"];
         foreach (string job in listJobs) {
-            Console.WriteLine(job);
+            showMessage(job);
         }
         //showMenu();
 
@@ -64,7 +67,7 @@ public class ConsoleUI : IUI
 
     public void saveJob()
     {
-        write("====Lancer une sauvegarde====");
+        showMessage("====Lancer une sauvegarde====");
         seeJobsList();
 
 
@@ -73,14 +76,9 @@ public class ConsoleUI : IUI
 
     public void configureParams()
     {
-        write("====Changer les paramètres====");
+        showMessage("====Changer les paramètres====");
 
 
-    }
-
-    public void write(string message)
-    {
-        Console.WriteLine(message);
     }
 
 
@@ -95,18 +93,17 @@ public class ConsoleUI : IUI
         {
             Console.Clear();
             Console.WriteLine("====Menu====\n");
-
             for (int i = 0; i < menu.Length; i++)
             {
                 if (i == index)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("> " + menu[i]);
+                    showMessage("> " + menu[i]);
                     Console.ResetColor();
                 }
                 else
                 {
-                    Console.WriteLine("  " + menu[i]);
+                    showMessage("  " + menu[i]);
                 }
             }
 
@@ -141,8 +138,6 @@ public class ConsoleUI : IUI
     private void separator()
     {
         Console.WriteLine("====================================================");
-
-
     }
 }
 
@@ -150,7 +145,6 @@ public class MainClass
 {
     public static void Main(string[] args)
     {
-        Console.WriteLine("Bonjour");
         ConsoleUI console = new ConsoleUI();
         console.showMenu();
 
