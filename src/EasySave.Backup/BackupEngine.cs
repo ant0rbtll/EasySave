@@ -26,6 +26,8 @@ public class BackupEngine
 
     public void Execute(SaveWork job)
     {
+        try
+        {
         var files = GetAllFiles(job.Source).ToList();
 
         int totalFiles = files.Count;
@@ -48,9 +50,25 @@ public class BackupEngine
                 if (!_fileSystem.DirectoryExists(destinationDir))
                 {
                     _fileSystem.CreateDirectory(destinationDir);
+                    Log(
+                        job.Name,
+                        LogEventType.DirectoryCreated,
+                        destinationDir,
+                        destinationDir,
+                        0,
+                        0
+                    );
                 }
 
-                TransferResult result = _transferService.TransferFile(file, destinationFile);
+                TransferResult result = _transferService.TransferFile(file, destinationFile, true);
+                Log(
+                    job.Name,
+                    LogEventType.TransferFile,
+                    file,
+                    destinationFile,
+                    result.FileSizeBytes,
+                    result.TransferTimeMs
+                );
 
                 remainingFiles--;
                 remainingSize -= result.FileSizeBytes;
@@ -64,6 +82,20 @@ public class BackupEngine
         }
 
         UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
+        }
+        catch (Exception ex)
+        {
+            UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
+            Log(
+                job.Name,
+                LogEventType.Error,
+                "",
+                "",
+                0,
+                0
+            );
+            throw;
+        }
     }
     private bool CanCopyFile(BackupType type, string sourceFile, string destinationFile)
     {
@@ -123,14 +155,34 @@ public class BackupEngine
 
     private IEnumerable<string> GetAllFiles(string source)
     {
-        var files = _fileSystem.EnumerateFiles(source);
+        var files = _fileSystem.EnumerateFilesRecursive(source);
 
-        foreach (var directory in _fileSystem.EnumerateDirectories(source))
+        foreach (var directory in _fileSystem.EnumerateDirectoriesRecursive(source))
         {
             files = files.Concat(GetAllFiles(directory));
         }
 
         return files;
+    }
+
+    private void Log(
+        string backupName,
+        LogEventType eventType,
+        string sourcePath,
+        string destinationPath,
+        long fileSizeBytes,
+        long transferTimeMs)
+    {
+        _logger.Write(new LogEntry(
+            DateTime.Now,
+            backupName,
+            eventType,
+            sourcePath,
+            destinationPath,
+            fileSizeBytes,
+            transferTimeMs
+        )
+        );
     }
 
 
