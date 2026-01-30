@@ -1,6 +1,15 @@
 namespace EasyLog;
 
-public class LogEntry
-{
-    public DateTime Timestamp { get; set; }
-}
+/// <summary>
+/// Log model for EasySave v1.0 daily log.
+/// Keep fields stable for backward compatibility.
+/// </summary>
+public sealed record LogEntry(
+    DateTime Timestamp,
+    string BackupName,
+    LogEventType EventType,
+    string SourcePathUNC,
+    string DestinationPathUNC,
+    long FileSizeBytes,
+    long TransferTimeMs
+);

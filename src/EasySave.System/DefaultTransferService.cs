@@ -1,9 +1,59 @@
+using System.Diagnostics;
+
 namespace EasySave.System;
 
-public class DefaultTransferService : ITransferService
+public sealed class DefaultTransferService : ITransferService
 {
-    public TransferResult TransferFile(string src, string dst)
+    private readonly IFileSystem _fileSystem;
+
+    public DefaultTransferService(IFileSystem fileSystem)
     {
-        return new TransferResult();
+        _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+    }
+
+    public TransferResult TransferFile(string sourcePath, string destinationPath, bool overwrite)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath))
+            return TransferResult.InvalidSourcePath();
+
+        if (string.IsNullOrWhiteSpace(destinationPath))
+            return TransferResult.InvalidDestinationPath();
+
+        long sizeBytes = 0;
+        var sw = Stopwatch.StartNew();
+
+        try
+        {
+            if (!_fileSystem.FileExists(sourcePath))
+                return new TransferResult(
+                    fileSizeBytes: 0,
+                    transferTimeMs: -1,
+                    errorCode: TransferResult.ErrorCodes.SourceNotFound);
+
+            sizeBytes = _fileSystem.GetFileSize(sourcePath);
+
+            // Ensure destination folder exists
+            _fileSystem.EnsureDirectoryForFileExists(destinationPath);
+
+            _fileSystem.CopyFile(sourcePath, destinationPath, overwrite);
+
+            sw.Stop();
+            return new TransferResult(
+                fileSizeBytes: sizeBytes,
+                transferTimeMs: sw.ElapsedMilliseconds,
+                errorCode: TransferResult.ErrorCodes.None);
+        }
+        catch (Exception ex)
+        {
+            sw.Stop();
+
+            // Negative time on error (aligns with EasySave logging requirement)
+            var negativeTime = -(long)Math.Max(1, sw.ElapsedMilliseconds);
+
+            return new TransferResult(
+                fileSizeBytes: sizeBytes,
+                transferTimeMs: negativeTime,
+                errorCode: ex.HResult);
+        }
     }
 }
