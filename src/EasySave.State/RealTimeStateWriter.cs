@@ -23,49 +23,49 @@ public class RealTimeStateWriter : IStateWriter
         if (entry == null)
             throw new ArgumentNullException(nameof(entry));
 
-        // Horodatage de la dernière action
+        // Horodatage de la mise à jour
         entry.timestamp = DateTime.Now;
 
-        // Ajout ou mise à jour de l'entrée
-        this.state.Entries[entry.backupId] = entry;
+        // Détermination du statut à partir du pourcentage
+        if (entry.progressPercent <= 0)
+        {
+            entry.status = BackupStatus.Active;
+        }
+        else if (entry.progressPercent < 100)
+        {
+            entry.status = BackupStatus.Active;
+        }
+        else
+        {
+            entry.status = BackupStatus.Done;
+        }
 
-        // Mise à jour globale
-        this.state.UpdatedAt = DateTime.Now;
+        // Ajout ou mise à jour de la sauvegarde dans le GlobalState
+        state.Entries[entry.backupId] = entry;
+        state.UpdatedAt = DateTime.Now;
 
-        // Écriture immédiate dans le fichier state.json
-        string path = this.pathProvider.GetStatePath();
-        this.serializer.WritePrettyJson(path, this.state);
+        // Appel unique au serializer (écriture + console)
+        serializer.WritePrettyJson(
+            pathProvider.GetStatePath(),
+            state
+        );
     }
 
     public void MarckInnactiv(int backupId)
     {
-        if (!this.state.Entries.ContainsKey(backupId))
+        if (!state.Entries.TryGetValue(backupId, out var entry))
             return;
 
-        var entry = this.state.Entries[backupId];
-
+        // Passage explicite à Inactive
         entry.status = BackupStatus.Inactive;
         entry.timestamp = DateTime.Now;
 
-        // Optionnel mais propre
-        entry.currentSourcePath = string.Empty;
-        entry.currentDestinationPath = string.Empty;
-        entry.progressPercent = 100;
-        entry.remainingFiles = 0;
-        entry.remainingSizeBytes = 0;
+        state.UpdatedAt = DateTime.Now;
 
-        this.state.UpdatedAt = DateTime.Now;
-
-        string path = this.pathProvider.GetStatePath();
-        this.serializer.WritePrettyJson(path, this.state);
-    }
-    void GetDailyLogPath(DateTime date) 
-    {
-    }
-    void GetStatePath()
-    {
-    }
-    void GetJobsConfigPath()
-    {
+        // Appel unique au serializer (écriture + console)
+        serializer.WritePrettyJson(
+            pathProvider.GetStatePath(),
+            state
+        );
     }
 }

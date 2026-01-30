@@ -1,5 +1,7 @@
 using EasySave.State.Configuration.Paths;
 using System;
+using System.IO;
+
 
 namespace EasySave.Configuration.Paths
 {
@@ -9,29 +11,55 @@ namespace EasySave.Configuration.Paths
 
         public DefaultPathProvider()
         {
-            // Emplacement robuste et accepté sur les serveurs
-            baseDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "EasySave"
-            );
-
-            Directory.CreateDirectory(baseDirectory);
+            // Dossier d'exécution de l'application
+            baseDirectory = AppContext.BaseDirectory;
         }
 
+        // Logs journaliers
         public string GetDailyLogPath(DateTime date)
         {
+            string logsDir = Path.Combine(baseDirectory, "logs");
+
+            // Crée le dossier logs s'il n'existe pas
+            Directory.CreateDirectory(logsDir);
+
+            // Nom du fichier log
             string fileName = $"{date:yyyy-MM-dd}.json";
-            return Path.Combine(baseDirectory, "logs", fileName);
+            string fullPath = Path.Combine(logsDir, fileName);
+
+            // Crée le fichier s'il n'existe pas
+            if (!File.Exists(fullPath))
+            {
+                using (File.Create(fullPath)) { } // crée et ferme immédiatement
+            }
+
+            return fullPath;
         }
 
+        // Fichier state.json
         public string GetStatePath()
         {
-            return Path.Combine(baseDirectory, "state.json");
+            string path = Path.Combine(baseDirectory, "state.json");
+
+            if (!File.Exists(path))
+            {
+                using (File.Create(path)) { }
+            }
+
+            return path;
         }
 
+        // Fichier jobs.json
         public string GetJobsConfigPath()
         {
-            return Path.Combine(baseDirectory, "jobs.json");
+            string path = Path.Combine(baseDirectory, "jobs.json");
+
+            if (!File.Exists(path))
+            {
+                using (File.Create(path)) { }
+            }
+
+            return path;
         }
     }
 }
