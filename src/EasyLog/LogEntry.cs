@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization;
-
 namespace EasyLog;
 
 /// <summary>
@@ -7,11 +5,11 @@ namespace EasyLog;
 /// Keep fields stable for backward compatibility.
 /// </summary>
 public sealed record LogEntry(
-    [property: JsonPropertyName("timestamp")] DateTime Timestamp,
-    [property: JsonPropertyName("backupName")] string BackupName,
-    [property: JsonPropertyName("eventType")] LogEventType EventType,
-    [property: JsonPropertyName("sourcePathUNC")] string SourcePathUNC,
-    [property: JsonPropertyName("destinationPathUNC")] string DestinationPathUNC,
-    [property: JsonPropertyName("fileSizeBytes")] long FileSizeBytes,
-    [property: JsonPropertyName("transferTimeMs")] long TransferTimeMs
+    DateTime Timestamp,
+    string BackupName,
+    LogEventType EventType,
+    string SourcePathUNC,
+    string DestinationPathUNC,
+    long FileSizeBytes,
+    long TransferTimeMs
 );

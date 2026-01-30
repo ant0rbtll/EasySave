@@ -21,7 +21,6 @@ public sealed class DefaultPathProvider : IPathProvider
         var baseDir = GetBaseDirectory();
         var dir = Path.Combine(baseDir, _company, _product, _logsFolderName);
 
-        // File name: yyyy-MM-dd.json (local date)
         var file = $"{date:yyyy-MM-dd}.json";
         return Path.Combine(dir, file);
     }
@@ -30,13 +29,11 @@ public sealed class DefaultPathProvider : IPathProvider
     {
         if (OperatingSystem.IsWindows())
         {
-            // Example: C:\ProgramData
             var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             if (!string.IsNullOrWhiteSpace(programData))
                 return programData;
         }
 
-        // Linux/macOS fallback: ~/.local/share
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         if (string.IsNullOrWhiteSpace(home))
             home = AppContext.BaseDirectory;
