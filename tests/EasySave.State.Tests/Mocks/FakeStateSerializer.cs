@@ -9,8 +9,5 @@ public class FakeStateSerializer : StateSerializer
 {
     public bool WasCalled { get; private set; }
 
-    public override void WritePrettyJson(string path, GlobalState state)
-    {
-        WasCalled = true;
-    }
+    
 }

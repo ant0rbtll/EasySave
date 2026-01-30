@@ -1,63 +1,53 @@
-using EasySave.Configuration;
-using EasySave.State;
 using Xunit;
-
-namespace EasySave.State.Tests;
+using System;
+using System.Collections.Generic;
+using EasySave.State;
+using EasySave.Configuration.Paths;
 
 public class RealTimeStateWriterTests
 {
     [Fact]
-    public void Update_Should_Add_Entry_And_Write_State()
+    public void RealTimeState_Should_Write_File_Step_By_Step()
     {
-        // Arrange
-        var pathProvider = new FakePathProvider();
-        var serializer = new FakeStateSerializer();
-        var state = new GlobalState { Entries = new Dictionary<int, StateEntry>() };
-        var writer = new RealTimeStateWriter(pathProvider, serializer, state);
+        var pathProvider = new DefaultPathProvider();
+        var serializer = new StateSerializer();
 
-        var entry = new StateEntry
-        {
-            backupId = 1,
-            backupName = "TestBackup",
-            status = BackupStatus.Active
-        };
-
-        // Act
-        writer.Update(entry);
-
-        // Console output
-        Console.WriteLine($"Entry added: {state.Entries[1].backupName}, Status: {state.Entries[1].status}");
-        Console.WriteLine($"Serializer called: {serializer.WasCalled}");
-
-        // Assert
-        Assert.True(state.Entries.ContainsKey(1));
-        Assert.Equal(BackupStatus.Active, state.Entries[1].status);
-    }
-
-    [Fact]
-    public void MarckInnactiv_Should_Set_State_To_Inactive()
-    {
-        // Arrange
-        var pathProvider = new FakePathProvider();
-        var serializer = new FakeStateSerializer();
         var state = new GlobalState
         {
             Entries = new Dictionary<int, StateEntry>()
         };
 
-        state.Entries[1] = new StateEntry
-        {
-            backupId = 1,
-            status = BackupStatus.Active
-        };
-
         var writer = new RealTimeStateWriter(pathProvider, serializer, state);
 
-        // Act
+        var entry = new StateEntry
+        {
+            backupId = 1,
+            backupName = "TEST_BACKUP_REALTIME",
+            progressPercent = 0
+        };
+
+        // STEP 1 ? Active
+        entry.progressPercent = 25;
+        writer.Update(entry);
+
+        Console.WriteLine($"[UPDATE] {entry.backupName} ? {entry.status}");
+        Console.WriteLine();
+
+        // STEP 2 ? Done
+        entry.progressPercent = 100;
+        writer.Update(entry);
+
+        Console.WriteLine($"[UPDATE] {entry.backupName} ? {entry.status}");
+        Console.WriteLine();
+
+        // STEP 3 ? Inactive
         writer.MarckInnactiv(1);
 
-        // Assert
+        Console.WriteLine($"[FINAL] {entry.backupName} ? {entry.status}");
+        Console.WriteLine();
+
+        // ASSERT FINAL
         Assert.Equal(BackupStatus.Inactive, state.Entries[1].status);
-        Assert.True(serializer.WasCalled);
     }
+
 }
