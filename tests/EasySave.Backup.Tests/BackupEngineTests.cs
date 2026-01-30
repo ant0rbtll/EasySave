@@ -64,6 +64,8 @@ public class BackupEngineTests
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(false);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
 
         _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(new TransferResult { FileSizeBytes = 1000, TransferTimeMs = 10, ErrorCode = 0 });
@@ -79,6 +81,10 @@ public class BackupEngineTests
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/file1.txt", "/destination/file1.txt"), Times.Once);
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/folder/file2.txt", "/destination/folder/file2.txt"), Times.Once);
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/folder/subfolder/file3.txt", "/destination/folder/subfolder/file3.txt"), Times.Once);
+
+        // Vérifier que l'état a été mis à jour
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.status == BackupStatus.Active)), Times.AtLeastOnce);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.status == BackupStatus.Done)), Times.Once);
     }
 
     [Fact]
@@ -101,9 +107,11 @@ public class BackupEngineTests
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
             .Returns(false);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
 
         _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(new TransferResult());
+            .Returns(new TransferResult { FileSizeBytes = 1000 });
 
         // Act
         _backupEngine.Execute(job);
@@ -155,7 +163,7 @@ public class BackupEngineTests
             .Returns(1000);
 
         _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(new TransferResult());
+            .Returns(new TransferResult { FileSizeBytes = 1000 });
 
         // Act
         _backupEngine.Execute(job);
@@ -192,9 +200,11 @@ public class BackupEngineTests
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
             .Returns(false);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
 
         _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(new TransferResult());
+            .Returns(new TransferResult { FileSizeBytes = 1000 });
 
         // Act
         _backupEngine.Execute(job);
@@ -230,9 +240,11 @@ public class BackupEngineTests
             .Returns(false);
         _fileSystemMock.Setup(fs => fs.FileExists("/destination/folder/file.txt"))
             .Returns(false);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
 
         _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>()))
-            .Returns(new TransferResult());
+            .Returns(new TransferResult { FileSizeBytes = 1000 });
 
         // Act
         _backupEngine.Execute(job);
@@ -265,5 +277,9 @@ public class BackupEngineTests
 
         // Assert
         _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+        
+        // Vérifier que l'état a été mis à jour même sans fichiers
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.status == BackupStatus.Active)), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.status == BackupStatus.Done)), Times.Once);
     }
 }
