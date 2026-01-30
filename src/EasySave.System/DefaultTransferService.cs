@@ -14,10 +14,10 @@ public sealed class DefaultTransferService : ITransferService
     public TransferResult TransferFile(string sourcePath, string destinationPath, bool overwrite)
     {
         if (string.IsNullOrWhiteSpace(sourcePath))
-            return new TransferResult(0, -1, -1);
+            return TransferResult.InvalidSourcePath();
 
         if (string.IsNullOrWhiteSpace(destinationPath))
-            return new TransferResult(0, -1, -1);
+            return TransferResult.InvalidDestinationPath();
 
         long sizeBytes = 0;
         var sw = Stopwatch.StartNew();
@@ -25,19 +25,23 @@ public sealed class DefaultTransferService : ITransferService
         try
         {
             if (!_fileSystem.FileExists(sourcePath))
-                return new TransferResult(0, -1, -2);
+                return new TransferResult(
+                    fileSizeBytes: 0,
+                    transferTimeMs: -1,
+                    errorCode: TransferResult.ErrorCodes.SourceNotFound);
 
             sizeBytes = _fileSystem.GetFileSize(sourcePath);
 
             // Ensure destination folder exists
-            var destDir = Path.GetDirectoryName(destinationPath);
-            if (!string.IsNullOrWhiteSpace(destDir) && !_fileSystem.DirectoryExists(destDir))
-                _fileSystem.CreateDirectory(destDir);
+            _fileSystem.EnsureDirectoryForFileExists(destinationPath);
 
             _fileSystem.CopyFile(sourcePath, destinationPath, overwrite);
 
             sw.Stop();
-            return new TransferResult(sizeBytes, sw.ElapsedMilliseconds, 0);
+            return new TransferResult(
+                fileSizeBytes: sizeBytes,
+                transferTimeMs: sw.ElapsedMilliseconds,
+                errorCode: TransferResult.ErrorCodes.None);
         }
         catch (Exception ex)
         {
@@ -46,7 +50,10 @@ public sealed class DefaultTransferService : ITransferService
             // Negative time on error (aligns with EasySave logging requirement)
             var negativeTime = -(long)Math.Max(1, sw.ElapsedMilliseconds);
 
-            return new TransferResult(sizeBytes, negativeTime, ex.HResult);
+            return new TransferResult(
+                fileSizeBytes: sizeBytes,
+                transferTimeMs: negativeTime,
+                errorCode: ex.HResult);
         }
     }
 }

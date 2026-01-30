@@ -10,6 +10,8 @@ public interface IFileSystem
 
     void CopyFile(string sourcePath, string destinationPath, bool overwrite);
 
+    void EnsureDirectoryForFileExists(string filePath);
+
     IEnumerable<string> EnumerateFilesRecursive(string rootPath);
     IEnumerable<string> EnumerateDirectoriesRecursive(string rootPath);
 
