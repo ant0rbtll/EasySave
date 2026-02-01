@@ -35,9 +35,7 @@ public class LocalizationService : ILocalizationService
     /// <inheritdoc/>
     public void setCulture(string culture)
     {
-        Console.WriteLine(culture);
         this.culture = culture;
-        Console.WriteLine(this.culture);
     }
 
     /// <inheritdoc/>
@@ -49,6 +47,7 @@ public class LocalizationService : ILocalizationService
     /// <inheritdoc/>
     public string translateTexte(string key)
     {
+        //TODO link to conf
         var yaml = File.ReadAllText("../EasySave.Localization/Translations/translations." + culture + ".yaml");
 
         var deserializer = new DeserializerBuilder()

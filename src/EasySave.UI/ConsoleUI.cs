@@ -1,5 +1,6 @@
 ﻿using EasySave.Application;
 using EasySave.Localization;
+using EasySave.Core;
 
 namespace EasySave.UI;
 
@@ -9,14 +10,20 @@ namespace EasySave.UI;
 public class ConsoleUI : IUI
 {
 
-    private BackupAppService backUpAppService = new BackupAppService();
-    private ILocalizationService localizationService = new LocalizationService();
+    private BackupAppService BackUpAppService;
+    private ILocalizationService LocalizationService = new LocalizationService();
     
-    /// <inheritdoc />
-    public void showMessage(string key)
+    public ConsoleUI(BackupAppService backUpAppService)
     {
-        string message = localizationService.translateTexte(key);
-        Console.WriteLine(message);
+        BackUpAppService = backUpAppService;
+    }
+
+    /// <inheritdoc />
+    public void showMessage(string key, bool writeLine = true)
+    {
+        string message = LocalizationService.translateTexte(key);
+        if (writeLine) Console.WriteLine(message);
+        else Console.Write(message);
     }
 
     /// <inheritdoc />
@@ -28,7 +35,7 @@ public class ConsoleUI : IUI
     /// <inheritdoc />
     public string askString(string key)
     {
-        showMessage(key);
+        showMessage(key, false);
 
         string? stringInput;
 
@@ -38,7 +45,7 @@ public class ConsoleUI : IUI
 
             if (string.IsNullOrWhiteSpace(stringInput))
             {
-                showMessage("input_string_invalid");
+                showMessage("input_string_invalid", false);
             }
         }
         while (string.IsNullOrWhiteSpace(stringInput));
@@ -69,14 +76,35 @@ public class ConsoleUI : IUI
     }
 
     /// <inheritdoc />
-    public string askBackupType(string key)
+    public BackupType askBackupType(string key)
     {
-        return askString(key);
-        /* in waiting of the list of backupTypes
+        string? backupTypeInput;
+        BackupType backupType;
+
+        showMessage("backupjob_type_list");
+        var values = Enum.GetValues(typeof(BackupType)).Cast<BackupType>().ToArray();
+        for (int i = 0; i < values.Length; i++)
+        {
+            Console.WriteLine($"{i + 1}. {values[i]}");
+        }
+        
+        int choice;
         showMessage(key);
-        string? response = Console.ReadLine();
-        return response;
-        */
+        while (true)
+        {
+            Console.Write("\n");
+            showMessage("user_choice", false);
+            backupTypeInput = Console.ReadLine();
+
+            if (int.TryParse(backupTypeInput, out choice) && choice >= 1 && choice <= values.Length)
+            {
+                break;
+            }
+
+            showMessage("input_backuptype_invalid");
+        }
+
+        return values[choice - 1];
     }
     
     /// <summary>
@@ -87,9 +115,13 @@ public class ConsoleUI : IUI
         labelText("menu_create");
         string nameJob = askString("savework_create_name");
         string sourceJob = askString("savework_create_source");
-        string destination = askString("savework_create_destination");
-        string backupTypeJob = askBackupType("savework_create_type");
+        string destinationJob = askString("savework_create_destination");
+        BackupType backupTypeJob = askBackupType("savework_create_type");
+
         // send to service 
+        //BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
+        showMessage("backupjob_created");
+        waitForUser();
         mainMenu();
     }
 
@@ -99,12 +131,10 @@ public class ConsoleUI : IUI
     public void seeSaveList()
     {
         labelText("menu_list");
-        List<string> listJobs = ["job", "job 2"];
-        foreach (string job in listJobs) {
-            showMessage(job);
+        List<SaveWork> saveWorkList = BackUpAppService.GetAllJobs();
+        foreach (SaveWork job in saveWorkList) {
+            Console.WriteLine(job.Id + " - " + job.Name);
         }
-        //showMenu();
-
     }
 
     /// <summary>
@@ -113,7 +143,13 @@ public class ConsoleUI : IUI
     public void saveJob()
     {
         labelText("menu_save");
-        seeSaveList();
+
+        int backupIndex = askInt("ask_backupjob_save");
+
+        showMessage("backup_saving");
+        BackupAppService.RunJob(backupIndex);
+
+        waitForUser();
 
         mainMenu();
     }
@@ -138,8 +174,8 @@ public class ConsoleUI : IUI
     /// </summary>
     public void showChangeLocale()
     {
-        string currentLocale = localizationService.getCulture();
-        Dictionary<string, string> allCultures = localizationService.getAllCultures();
+        string currentLocale = LocalizationService.getCulture();
+        Dictionary<string, string> allCultures = LocalizationService.getAllCultures();
         string[] menu = allCultures
             .Values
             .Append("back")
@@ -161,7 +197,7 @@ public class ConsoleUI : IUI
     /// <param name="locale"></param>
     public void changeLocale(string locale)
     {
-        localizationService.setCulture(locale);
+        LocalizationService.setCulture(locale);
 
         showChangeLocale();
     }
@@ -256,26 +292,14 @@ public class ConsoleUI : IUI
     private void labelText(string key)
     {
         Console.Write("====");
-        string message = localizationService.translateTexte(key);
+        string message = LocalizationService.translateTexte(key);
         Console.Write(message);
         Console.Write("====\n");
     }
-}
 
-/// <summary>
-/// The main class that start the app
-/// </summary>
-public class MainClass
-{
-    /// <summary>
-    /// The main action that start the app
-    /// </summary>
-    /// <param name="args"></param>
-    public static void Main(string[] args)
+    private void waitForUser()
     {
-        ConsoleUI console = new ConsoleUI();
-        console.mainMenu();
-
+        showMessage("waiting_user");
+        Console.ReadKey(true);
     }
 }
- 

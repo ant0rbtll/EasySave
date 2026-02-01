@@ -1,3 +1,5 @@
+using EasySave.Core;
+
 namespace EasySave.UI;
 
 /// <summary>
@@ -9,7 +11,7 @@ public interface IUI
 	/// Display a message translated
 	/// </summary>
 	/// <param name="key">The translation key</param>
-	public void showMessage(string key);
+	public void showMessage(string key, bool writeLine);
 
 	/// <summary>
 	/// Display an error translated
@@ -36,6 +38,6 @@ public interface IUI
     /// </summary>
     /// <param name="key">The translation key of the question</param>
     /// <returns></returns>
-    public string askBackupType(string key);
+    public BackupType askBackupType(string key);
 
 }
