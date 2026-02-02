@@ -26,9 +26,9 @@ public sealed class DefaultTransferService : ITransferService
         {
             if (!_fileSystem.FileExists(sourcePath))
                 return new TransferResult(
-                    fileSizeBytes: 0,
-                    transferTimeMs: -1,
-                    errorCode: TransferResult.ErrorCodes.SourceNotFound);
+                    FileSizeBytes: 0,
+                    TransferTimeMs: -1,
+                    ErrorCode: TransferResult.ErrorCodes.SourceNotFound);
 
             sizeBytes = _fileSystem.GetFileSize(sourcePath);
 
@@ -39,9 +39,9 @@ public sealed class DefaultTransferService : ITransferService
 
             sw.Stop();
             return new TransferResult(
-                fileSizeBytes: sizeBytes,
-                transferTimeMs: sw.ElapsedMilliseconds,
-                errorCode: TransferResult.ErrorCodes.None);
+                FileSizeBytes: sizeBytes,
+                TransferTimeMs: sw.ElapsedMilliseconds,
+                ErrorCode: TransferResult.ErrorCodes.None);
         }
         catch (Exception ex)
         {
@@ -51,9 +51,9 @@ public sealed class DefaultTransferService : ITransferService
             var negativeTime = -(long)Math.Max(1, sw.ElapsedMilliseconds);
 
             return new TransferResult(
-                fileSizeBytes: sizeBytes,
-                transferTimeMs: negativeTime,
-                errorCode: ex.HResult);
+                FileSizeBytes: sizeBytes,
+                TransferTimeMs: negativeTime,
+                ErrorCode: ex.HResult);
         }
     }
 }
