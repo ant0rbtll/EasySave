@@ -1,39 +1,40 @@
 using System.Runtime.InteropServices.Marshalling;
 using EasySave.Persistence;
-using EasySave.CLI;         
+using EasySave.CLI;
 using EasySave.Backup;
 using EasySave.UI;
 using EasySave.Core;
+
 namespace EasySave.Application;
 
 public class BackupAppService
 {
-    private IBackupJobRepository Repo;
-    private BackupEngine Engine;
-    private IUI Ui;
-    private CommandLineParser Parser;
+    private readonly IBackupJobRepository _repo;
+    private readonly BackupEngine _engine;
+    private readonly IUI _ui;
+    private readonly CommandLineParser _parser;
 
     /// <summary>
-    /// Initialise une nouvelle instance de <see cref="BackupAppService"/>.
+    /// Initializes a new instance of the <see cref="BackupAppService"/> class.
     /// </summary>
-    /// <param name="repo">Le dépôt utilisé pour la persistance des données.</param>
-    /// <param name="ui">L'interface utilisateur pour l'affichage des messages.</param>
+    /// <param name="repo">The repository used for data persistence.</param>
+    /// <param name="ui">The user interface for displaying messages.</param>
     public BackupAppService(IBackupJobRepository repo, IUI ui)
     {
-        Repo = repo;
-        Engine = new BackupEngine();
-        Ui = ui;
-        Parser = new CommandLineParser();
+        _repo = repo;
+        _engine = new BackupEngine();
+        _ui = ui;
+        _parser = new CommandLineParser();
     }
 
     /// <summary>
-    /// Crée et enregistre un nouveau travail de sauvegarde.
+    /// Creates and saves a new backup job.
     /// </summary>
-    /// <param name="name">Nom unique du travail.</param>
-    /// <param name="source">Chemin du dossier source.</param>
-    /// <param name="destination">Chemin du dossier de destination.</param>
-    /// <param name="type">Type de sauvegarde (Complète ou Différentielle).</param>
-    public void CreateJob(string name,string source,string destination,BackupType type)
+    /// <param name="name">Unique name of the job.</param>
+    /// <param name="source">Source folder path.</param>
+    /// <param name="destination">Destination folder path.</param>
+    /// <param name="type">Type of backup (Full or Differential).</param>
+    public void CreateJob(string name, string source, string destination, BackupType type)
     {
         var job = new BackupJob
         {
@@ -43,59 +44,58 @@ public class BackupAppService
             Type = type
         };
 
-        Repo.Add(job);
+        _repo.Add(job);
     }
 
     /// <summary>
-    /// Supprime un travail de sauvegarde existant via son identifiant unique.
+    /// Deletes an existing backup job using its unique identifier.
     /// </summary>
-    /// <param name="id">Identifiant du travail à supprimer.</param>
+    /// <param name="id">Identifier of the job to remove.</param>
     public void RemoveJob(int id)
     {
-        Repo.Remove(id);
+        _repo.Remove(id);
     }
 
-
     /// <summary>
-    /// Exécute une liste spécifique de travaux de sauvegarde.
+    /// Executes a specific list of backup jobs.
     /// </summary>
-    /// <param name="ids">Tableau d'identifiants des travaux à lancer.</param>
+    /// <param name="ids">Array of job identifiers to launch.</param>
     public void RunJobs(int[] ids)
     {
         foreach (int id in ids)
         {
-            var job = Repo.GetById(id);
+            var job = _repo.GetById(id);
             if (job != null)
             {
-                Engine.Execute(job);
+                _engine.Execute(job);
             }
         }
     }
 
     /// <summary>
-    /// Récupère et exécute l'intégralité des travaux de sauvegarde enregistrés.
+    /// Retrieves and executes all registered backup jobs.
     /// </summary>
     public void RunAllJobs()
     {
-        var jobs = Repo.GetAll();
+        var jobs = _repo.GetAll();
         foreach (var job in jobs)
         {
-            Engine.Execute(job);
+            _engine.Execute(job);
         }
     }
 
     /// <summary>
-    /// Affiche la liste des travaux de sauvegarde dans l'interface utilisateur 
-    /// et retourne la liste complète depuis le dépôt.
+    /// Displays the list of backup jobs in the user interface 
+    /// and returns the complete list from the repository.
     /// </summary>
-    /// <returns>Une liste d'objets <see cref="BackupJob"/>.</returns>
+    /// <returns>A list of <see cref="BackupJob"/> objects.</returns>
     public List<BackupJob> GetAllJobs()
     {
-        foreach (var job in Jobs)
+        var jobs = _repo.GetAll();
+        foreach (var job in jobs)
         {
-            Ui.ShowMessage($"[{job.Id}] {job.Name} | {job.Source} -> {job.Destination} ({job.Type})");
+            _ui.ShowMessage($"[{job.Id}] {job.Name} | {job.Source} -> {job.Destination} ({job.Type})");
         }
-        return Repo.GetAll();
+        return jobs;
     }
-
 }
