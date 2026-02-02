@@ -12,16 +12,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '8.0.x'
+      - name: Build test Docker image
+        run: docker build -f Dockerfile.test -t easysave-test .
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build solution
-        run: dotnet build --no-restore --configuration Release
-
-      - name: Run tests
-        run: dotnet test --configuration Release --no-restore --verbosity normal
+      - name: Run tests in Docker
+        run: docker run --rm easysave-test
