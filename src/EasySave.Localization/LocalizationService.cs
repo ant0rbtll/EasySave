@@ -45,7 +45,7 @@ public class LocalizationService : ILocalizationService
         }
 
         // Accès
-        string code = data["translations"].TryGetValue(key, out var value) ? value : key;
+        string code = _translationCache["translations"].TryGetValue(key, out var value) ? value : key;
 
         return code;
     }
