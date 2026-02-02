@@ -29,15 +29,6 @@ public class RealTimeStateWriter : IStateWriter
 
         entry.timestamp = DateTime.Now;
 
-        if (entry.progressPercent < 100)
-        {
-            entry.status = BackupStatus.Active;
-        }
-        else
-        {
-            entry.status = BackupStatus.Done;
-        }
-
         state.Entries[entry.backupId] = entry;
         state.UpdatedAt = DateTime.Now;
 
@@ -57,7 +48,6 @@ public class RealTimeStateWriter : IStateWriter
         if (!state.Entries.TryGetValue(backupId, out var entry))
             return;
 
-        entry.status = BackupStatus.Inactive;
         entry.timestamp = DateTime.Now;
 
         state.UpdatedAt = DateTime.Now;

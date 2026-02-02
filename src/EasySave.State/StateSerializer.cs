@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using System.Text.Json;
+
 namespace EasySave.State;
 
 public class StateSerializer
@@ -11,22 +14,28 @@ public class StateSerializer
         if (state == null)
             throw new ArgumentNullException(nameof(state));
 
-        var json = state.Entries.Values.Select(entry => new
+        var entries = state.Entries.Values.Select(entry => new
         {
             Name = entry.backupName,
             Status = entry.status.ToString(),
             Timestamp = entry.timestamp
-        });
+        }).ToList(); 
 
-        string jobState = json.ToString();
-         jobState = jobState.Replace("{", "").Replace("}", "").Replace("[", "").Replace("]", "");
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true, 
+            Converters = { new JsonStringEnumConverter() } 
+        };
+
+        string json = JsonSerializer.Serialize(entries, options);
+        json = json.Replace("{", "").Replace("}", "").Replace("[", "").Replace("]", "");
 
         Console.WriteLine("=========== STATE FILE UPDATED ===========");
-        Console.WriteLine(jobState);
+        Console.WriteLine(json);
         Console.WriteLine("==========================================");
         Console.WriteLine();
 
-        return json.ToString();
+        return json;
     }
     #endregion
 }
