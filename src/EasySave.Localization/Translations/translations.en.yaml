@@ -9,7 +9,7 @@ translations:
   back: "Back"
   savework_create_name: "Please input the save's name"
   savework_create_source: "Please input the source file or folder"
-  savework_create_destination: "Please input the destionation folder"
+  savework_create_destination: "Please input the destination folder"
   savework_create_type: "Please choose a save type"
   config_locale_fr: "French"
   config_locale_en: "English"

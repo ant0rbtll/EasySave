@@ -14,7 +14,7 @@ translations:
   config_locale_fr: "Français"
   config_locale_en: "Anglais"
   input_string_invalid: "Ce champ ne doit pas être vide. Veuillez réessayer : "
-  input_number_invalid: "Veuillez saisir un nombre valid : "
+  input_number_invalid: "Veuillez saisir un nombre valide : "
   input_backuptype_invalid: "Veuillez sélectionner un type de sauvegarde valide : "
   waiting_user: "Veuillez appuyer sur une touche pour continuer ..."
   backupjob_created: "Le travail de sauvegarde a bien été créé. "
