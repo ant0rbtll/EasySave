@@ -43,7 +43,7 @@ public class BackupEngine
     {
         try
         {
-        var files = GetAllFiles(job.Source).ToList();
+        var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
 
         int totalFiles = files.Count;
         long totalSize = files.Sum(f => _fileSystem.GetFileSize(f));
@@ -174,36 +174,19 @@ public class BackupEngine
     string dst)
 {
     _stateWriter.Update(new StateEntry {
-        backupId = job.Id,
-        backupName = job.Name,
-        timestamp = DateTime.Now,
-        status = status,
-        totalFiles = totalFiles,
-        totalSizeBytes = totalSize,
-        remainingFiles = remainingFiles,
-        remainingSizeBytes = remainingSize,
-        progressPercent = progress,
-        currentSourcePath = src,
-        currentDestinationPath = dst
+        BackupId = job.Id,
+        BackupName = job.Name,
+        Timestamp = DateTime.Now,
+        Status = status,
+        TotalFiles = totalFiles,
+        TotalSizeBytes = totalSize,
+        RemainingFiles = remainingFiles,
+        RemainingSizeBytes = remainingSize,
+        ProgressPercent = progress,
+        CurrentSourcePath = src,
+        CurrentDestinationPath = dst
     });
 }
-
-    /// <summary>
-    /// Recursively retrieves all files from a source directory.
-    /// </summary>
-    /// <param name="source">Source directory path.</param>
-    /// <returns>Enumeration of all file paths.</returns>
-    private IEnumerable<string> GetAllFiles(string source)
-    {
-        var files = _fileSystem.EnumerateFilesRecursive(source);
-
-        foreach (var directory in _fileSystem.EnumerateDirectoriesRecursive(source))
-        {
-            files = files.Concat(GetAllFiles(directory));
-        }
-
-        return files;
-    }
 
     /// <summary>
     /// Logs a backup operation entry.
