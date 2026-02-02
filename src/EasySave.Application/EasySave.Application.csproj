@@ -6,4 +6,11 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\EasySave.Backup\EasySave.Backup.csproj" />
+    <ProjectReference Include="..\EasySave.Persistence\EasySave.Persistence.csproj" />
+    <ProjectReference Include="..\EasySave.UI\EasySave.UI.csproj" />
+    <ProjectReference Include="..\EasySave.CLI\EasySave.CLI.csproj" />
+  </ItemGroup>
+
 </Project>
