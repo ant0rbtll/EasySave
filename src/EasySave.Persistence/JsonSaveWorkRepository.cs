@@ -6,7 +6,7 @@ namespace EasySave.Persistence;
 
 public class JsonSaveWorkRepository : ISaveWorkRepository
 {
-    private readonly int _maxJobs = 5;
+    private readonly int _maxJobs = ISaveWorkRepository.DefaultMaxJobs;
     private readonly IPathProvider _pathProvider;
     private readonly IJobIdProvider _idProvider;
     private readonly JsonSerializerOptions _jsonOptions;

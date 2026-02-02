@@ -4,7 +4,7 @@ namespace EasySave.Persistence;
 
 public class InMemorySaveWorkRepository : ISaveWorkRepository
 {
-    private readonly int _maxJobs = 5;
+    private readonly int _maxJobs = ISaveWorkRepository.DefaultMaxJobs;
     private readonly Dictionary<int, SaveWork> _jobs = new();
     private readonly IJobIdProvider _idProvider;
 
