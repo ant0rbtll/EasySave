@@ -8,84 +8,77 @@ namespace EasySave.Application;
 
 public class BackupAppService
 {
-    private ISaveWorkRepository repo;
-    private BackupEngine engine;
-    private IUI ui;
-    private CommandLineParser parser;
-    private List<SaveWork> jobs;
+    private IBackupJobRepository Repo;
+    private BackupEngine Engine;
+    private IUI Ui;
+    private CommandLineParser Parser;
+    private List<BackupJob> Jobs;
 
-    public BackupAppService(ISaveWorkRepository repo, IUI ui)
+    public BackupAppService(IBackupJobRepository repo, IUI ui)
     {
-        this.repo = repo;
-        this.engine = new BackupEngine();
-        this.ui = ui;
-        this.parser = new CommandLineParser();
+        Repo = repo;
+        Engine = new BackupEngine();
+        Ui = ui;
+        Parser = new CommandLineParser();
     }
 
-    public void runInteractive()
+    public void CreateJob(string name,string source,string destination,BackupType type)
     {
-        ui.showMenu();
-    }
-
-    public void runFromArgs(String[]  args)
-    {
-        int[] ids = parser.parse(args);
-        runJobs(ids);
-    }
-
-    public void createJob(string name,string source,string destination,BackupType type)
-    {
-        var job = new SaveWork
+        var job = new BackupJob
         {
-            name = name,
-            source = source,
-            destination = destination,
-            type = type
+            Name = name,
+            Source = source,
+            Destination = destination,
+            Type = type
         };
 
-        repo.add(job);
+        Repo.Add(job);
     }
 
-    public void removeJob(int id)
+    public void RemoveJob(int id)
     {
-        repo.remove(id);
+        Repo.Remove(id);
     }
 
-    public void runJobs(int[] ids)
+    public void RunJobs(int[] ids)
     {
         foreach (int id in ids)
         {
-            var job = repo.getById(id);
+            var job = Repo.GetById(id);
             if (job != null)
             {
-                engine.execute(job);
+                Engine.Execute(job);
             }
         }
     }
 
-    public void runAllJobs()
+    public void RunAllJobs()
     {
-        var jobs = repo.getAll();
+        var jobs = Repo.GetAll();
         foreach (var job in jobs)
         {
-            engine.execute(job);
+            Engine.Execute(job);
         }
     }
 
-    public List<SaveWork> getAllJobs()
+    public List<BackupJob> GetAllJobs()
     {
-        jobs = repo.getAll();
-
-        if (jobs.Count == 0)
+        foreach (var job in Jobs)
         {
-            ui.DisplayMessage("Aucun travail de sauvegarde configuré.");
+            Ui.ShowMessage($"[{job.Id}] {job.Name} | {job.Source} -> {job.Destination} ({job.Type})");
+        }
+        return Repo.GetAll();
+
+        if (Jobs.Count == 0)
+        {
+            Ui.ShowMessage("Aucun travail de sauvegarde configuré.");
         }
         else
         {
-            ui.DisplayMessage("Liste des travaux de sauvegarde :");
-            foreach (var job in jobs)
+            Ui.ShowMessage("Liste des travaux de sauvegarde :");
+            foreach (var job in Jobs)
             {
-                ui.DisplayMessage($"[{job.Id}] {job.name} | {job.source} -> {job.destination} ({job.type})");
+                Ui.ShowMessage($"[{job.Id}] {job.name} | {job.source} -> {job.destination} ({job.type})");
             }
         }
     }
