@@ -1,6 +1,7 @@
 ﻿using EasySave.Application;
 using EasySave.Localization;
 using EasySave.Core;
+using EasySave.UI.Menu;
 
 namespace EasySave.UI;
 
@@ -11,11 +12,15 @@ public class ConsoleUI : IUI
 {
 
     private BackupAppService BackUpAppService;
-    private ILocalizationService LocalizationService = new LocalizationService();
-    
+    public ILocalizationService LocalizationService { get; }
+    private MenuService MenuService;
+    private MenuFactory MenuFactory;
+
     public ConsoleUI(BackupAppService backUpAppService)
     {
         BackUpAppService = backUpAppService;
+        MenuService = new MenuService(LocalizationService);
+        MenuFactory = new MenuFactory(this);
     }
 
     /// <inheritdoc />
@@ -112,7 +117,7 @@ public class ConsoleUI : IUI
     /// </summary>
     public void CreateSaveWork()
     {
-        LabelText("menu_create");
+        MenuService.DisplayLabel("menu_create");
         string nameJob = AskString("savework_create_name");
         string sourceJob = AskString("savework_create_source");
         string destinationJob = AskString("savework_create_destination");
@@ -121,7 +126,7 @@ public class ConsoleUI : IUI
         // send to service 
         //BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
         ShowMessage("backupjob_created");
-        WaitForUser();
+        MenuService.WaitForUser();
         MainMenu();
     }
 
@@ -130,11 +135,13 @@ public class ConsoleUI : IUI
     /// </summary>
     public void SeeSaveList()
     {
-        LabelText("menu_list");
+        MenuService.DisplayLabel("menu_list");
         List<SaveWork> saveWorkList = BackUpAppService.GetAllJobs();
         foreach (SaveWork job in saveWorkList) {
             Console.WriteLine(job.Id + " - " + job.Name);
         }
+        MenuService.WaitForUser();
+        MainMenu();
     }
 
     /// <summary>
@@ -142,15 +149,14 @@ public class ConsoleUI : IUI
     /// </summary>
     public void SaveJob()
     {
-        LabelText("menu_save");
+        MenuService.DisplayLabel("menu_save");
 
         int backupIndex = AskInt("ask_backupjob_save");
 
         ShowMessage("backup_saving");
         BackupAppService.RunJob(backupIndex);
 
-        WaitForUser();
-
+        MenuService.WaitForUser();
         MainMenu();
     }
 
@@ -159,14 +165,8 @@ public class ConsoleUI : IUI
     /// </summary>
     public void ConfigureParams()
     {
-        string[] menu = { "menu_params_locale", "back" };
-
-        Dictionary<int, Action> menuActions = new()
-    {
-        { 0, ShowChangeLocale },
-        { 1, MainMenu },
-    };
-        ShowMenu(menu, menuActions, "menu_params");
+        var menuConfig = MenuFactory.CreateParamsMenu();
+        MenuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
     }
 
     /// <summary>
@@ -174,21 +174,9 @@ public class ConsoleUI : IUI
     /// </summary>
     public void ShowChangeLocale()
     {
-        string currentLocale = LocalizationService.getCulture();
-        Dictionary<string, string> allCultures = LocalizationService.getAllCultures();
-        string[] menu = allCultures
-            .Values
-            .Append("back")
-            .ToArray();
-
-        Dictionary<int, Action> menuActions = new()
-        {
-            { 0,  () => ChangeLocale("fr")  },
-            { 1,  () => ChangeLocale("en")  },
-            { 2, ConfigureParams }
-        };
-
-        ShowMenu(menu, menuActions,"menu_params_locale");
+        string currentLocale = LocalizationService.Culture;
+        var menuConfig = MenuFactory.CreateLocaleMenu();
+        MenuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
     }
 
     /// <summary>
@@ -197,7 +185,7 @@ public class ConsoleUI : IUI
     /// <param name="locale"></param>
     public void ChangeLocale(string locale)
     {
-        LocalizationService.setCulture(locale);
+        LocalizationService.Culture = locale;
 
         ShowChangeLocale();
     }
@@ -207,18 +195,8 @@ public class ConsoleUI : IUI
     /// </summary>
     public void MainMenu()
     {
-        string[] menu = { "menu_create", "menu_list", "menu_save", "menu_params", "menu_quit" };
-
-        Dictionary<int, Action> menuActions = new()
-    {
-        { 0, CreateSaveWork },
-        { 1, SeeSaveList },
-        { 2, SaveJob },
-        { 3, ConfigureParams },
-        { 4, Quit } // ou juste Environment.Exit(0)
-    };
-
-        ShowMenu(menu, menuActions);
+        var menuConfig = MenuFactory.CreateMainMenu();
+        MenuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
 
     }
 
@@ -228,81 +206,5 @@ public class ConsoleUI : IUI
     public void Quit()
     {
         Console.Clear();
-    }
-
-    /// <summary>
-    /// Show a menu with options
-    /// </summary>
-    /// <param name="menu">The list of displayed text</param>
-    /// <param name="menuActions">A dictionnary with the index and the actions of each options</param>
-    /// <param name="menuLabel">The translation key of the name of the menu</param>
-    public void ShowMenu(string[] menu, Dictionary<int, Action> menuActions, string menuLabel = "menu")
-    {
-        int index = 0;
-        ConsoleKey key;
-
-        do
-        {
-            Console.Clear() ;
-            LabelText(menuLabel);
-            for (int i = 0; i < menu.Length; i++)
-            {
-                if (i == index)
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.Write("> ");
-                    ShowMessage(menu[i]);
-                    Console.ResetColor();
-                }
-                else
-                {
-                    Console.Write("  ");
-                    ShowMessage(menu[i]);
-                }
-            }
-
-            key = Console.ReadKey(true).Key;
-
-            if (key == ConsoleKey.UpArrow && index > 0)
-            {
-                index--;
-                Console.Clear();
-
-            }
-            else if (key == ConsoleKey.DownArrow && index < menu.Length - 1)
-            {
-                index++;
-                Console.Clear();
-
-            }
-
-        } while (key != ConsoleKey.Enter);
-        Console.Clear();
-
-        if (menuActions.TryGetValue(index, out var action))
-        {
-            action();
-        }
-    }
-
-    /// <summary>
-    /// Display the title of the action selected
-    /// </summary>
-    /// <param name="key">the translation key</param>
-    private void LabelText(string key)
-    {
-        Console.Write("====");
-        string message = LocalizationService.TranslateTexte(key);
-        Console.Write(message);
-        Console.Write("====\n");
-    }
-
-    /// <summary>
-    /// Waiting for the user to enter any key
-    /// </summary>
-    private void WaitForUser()
-    {
-        ShowMessage("waiting_user");
-        Console.ReadKey(true);
     }
 }
