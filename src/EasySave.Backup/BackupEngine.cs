@@ -76,6 +76,13 @@ public class BackupEngine
                 }
 
                 TransferResult result = _transferService.TransferFile(file, destinationFile, true);
+
+                if (!result.IsSuccess)
+                {
+                    throw new InvalidOperationException(
+                        $"File transfer failed from '{file}' to '{destinationFile}' with error code {result.ErrorCode}."
+                    );
+                }
                 Log(
                     job.Name,
                     LogEventType.TransferFile,
