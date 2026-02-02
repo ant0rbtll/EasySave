@@ -20,5 +20,5 @@ translations:
   backupjob_created: "The backup job has been created"
   backupjob_type_list: "Backup types"
   user_choice: "Your choice : "
-  ask_backupjob_save: "Please enter the backup job's to save"
+  ask_backupjob_save: "Please enter the index of the backup job to save"
   backup_saving: "Job's saving..."

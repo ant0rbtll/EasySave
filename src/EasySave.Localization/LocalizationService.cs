@@ -1,4 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -10,7 +9,9 @@ namespace EasySave.Localization;
 public class LocalizationService : ILocalizationService
 {
     public Dictionary<string, string> AllCultures { get; }
-    
+
+    private Dictionary<string, Dictionary<string, string>> _translationCache;
+
     /// <summary>
     /// The initialisation of the service
     /// </summary>
@@ -31,13 +32,17 @@ public class LocalizationService : ILocalizationService
     public string TranslateTexte(string key)
     {
         //TODO link to conf
-        var yaml = File.ReadAllText("../EasySave.Localization/Translations/translations." + Culture + ".yaml");
+        if (_translationCache == null)
+        {
+            var yaml = File.ReadAllText("../EasySave.Localization/Translations/translations." + Culture + ".yaml");
 
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                .Build();
 
-        var data = deserializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(yaml);
+            var data = deserializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(yaml);
+            _translationCache = data;
+        }
 
         // Accès
         string code = data["translations"].TryGetValue(key, out var value) ? value : key;

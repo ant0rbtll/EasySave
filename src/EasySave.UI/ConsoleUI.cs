@@ -19,6 +19,7 @@ public class ConsoleUI : IUI
     public ConsoleUI(BackupAppService backUpAppService)
     {
         BackUpAppService = backUpAppService;
+        LocalizationService = new LocalizationService();
         MenuService = new MenuService(LocalizationService);
         MenuFactory = new MenuFactory(this);
     }
