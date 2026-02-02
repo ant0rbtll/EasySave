@@ -5,6 +5,9 @@ using EasyLog;
 
 namespace EasySave.Backup;
 
+/// <summary>
+/// Executes complete and differential backups.
+/// </summary>
 public class BackupEngine
 {
     private readonly IFileSystem _fileSystem;
@@ -12,6 +15,13 @@ public class BackupEngine
     private readonly IStateWriter _stateWriter;
     private readonly ILogger _logger;
 
+    /// <summary>
+    /// Initializes a new instance of the backup engine.
+    /// </summary>
+    /// <param name="fileSystem">File system management service.</param>
+    /// <param name="transferService">File transfer service.</param>
+    /// <param name="stateWriter">Backup state writer service.</param>
+    /// <param name="logger">Logging service.</param>
     public BackupEngine(
         IFileSystem fileSystem,
         ITransferService transferService,
@@ -24,6 +34,11 @@ public class BackupEngine
         _logger = logger;
     }
 
+    /// <summary>
+    /// Executes a complete or differential backup.
+    /// </summary>
+    /// <param name="job">Backup job to execute.</param>
+    /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
     public void Execute(SaveWork job)
     {
         try
@@ -97,6 +112,15 @@ public class BackupEngine
             throw;
         }
     }
+
+    /// <summary>
+    /// Determines if a file should be copied based on the backup type.
+    /// </summary>
+    /// <param name="type">Backup type (complete or differential).</param>
+    /// <param name="sourceFile">Source file path.</param>
+    /// <param name="destinationFile">Destination file path.</param>
+    /// <returns>True if the file should be copied, otherwise false.</returns>
+    /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
     private bool CanCopyFile(BackupType type, string sourceFile, string destinationFile)
     {
         if (type == BackupType.Complete)
@@ -126,6 +150,18 @@ public class BackupEngine
         }
     }
 
+    /// <summary>
+    /// Updates the state of the current backup.
+    /// </summary>
+    /// <param name="job">Backup job.</param>
+    /// <param name="status">Current backup status.</param>
+    /// <param name="totalFiles">Total number of files.</param>
+    /// <param name="totalSize">Total size in bytes.</param>
+    /// <param name="remainingFiles">Number of remaining files.</param>
+    /// <param name="remainingSize">Remaining size in bytes.</param>
+    /// <param name="progress">Progress percentage.</param>
+    /// <param name="src">Current source file path.</param>
+    /// <param name="dst">Current destination file path.</param>
     private void UpdateState(
     SaveWork job,
     BackupStatus status,
@@ -152,7 +188,11 @@ public class BackupEngine
     });
 }
 
-
+    /// <summary>
+    /// Recursively retrieves all files from a source directory.
+    /// </summary>
+    /// <param name="source">Source directory path.</param>
+    /// <returns>Enumeration of all file paths.</returns>
     private IEnumerable<string> GetAllFiles(string source)
     {
         var files = _fileSystem.EnumerateFilesRecursive(source);
@@ -165,6 +205,15 @@ public class BackupEngine
         return files;
     }
 
+    /// <summary>
+    /// Logs a backup operation entry.
+    /// </summary>
+    /// <param name="backupName">Backup name.</param>
+    /// <param name="eventType">Event type.</param>
+    /// <param name="sourcePath">Source file path.</param>
+    /// <param name="destinationPath">Destination file path.</param>
+    /// <param name="fileSizeBytes">File size in bytes.</param>
+    /// <param name="transferTimeMs">Transfer time in milliseconds.</param>
     private void Log(
         string backupName,
         LogEventType eventType,
