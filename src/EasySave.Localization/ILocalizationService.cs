@@ -14,6 +14,6 @@ public interface ILocalizationService
     /// </summary>
     /// <param name="key">The translation key</param>
     /// <returns>The message translated</returns>
-    string TranslateTexte(string key);
+    string TranslateText(string key);
 
 }
