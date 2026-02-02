@@ -13,6 +13,7 @@ services:
     environment:
       - DOTNET_ENVIRONMENT=Development
       - DOTNET_USE_POLLING_FILE_WATCHER=true
+      - HOME=/tmp  # Ajouter cette ligne pour éviter le problème /.dotnet
     stdin_open: true
     tty: true
     networks:

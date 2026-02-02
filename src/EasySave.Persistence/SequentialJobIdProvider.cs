@@ -6,6 +6,9 @@ public class SequentialJobIdProvider : IJobIdProvider
 {
     public int NextId(List<SaveWork> existing)
     {
-        return 0;
+        if (existing == null || existing.Count == 0)
+            return 1;
+        
+        return existing.Max(j => j.Id) + 1;
     }
 }
