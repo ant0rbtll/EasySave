@@ -2,14 +2,14 @@ using EasySave.Core;
 
 namespace EasySave.Persistence;
 
-public interface ISaveWorkRepository
+public interface IBackupJobRepository
 {
     const int DefaultMaxJobs = 5;
 
-    void Add(SaveWork job);
+    void Add(BackupJob job);
     void Remove(int id);
-    SaveWork GetById(int id);
-    List<SaveWork> GetAll();
+    BackupJob GetById(int id);
+    List<BackupJob> GetAll();
     int Count();
     int MaxJobs();
 }

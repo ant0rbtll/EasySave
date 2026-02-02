@@ -33,7 +33,7 @@ public class BackupEngineTests
     public void Execute_CompleteBackup_CopiesAllFiles()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -80,7 +80,7 @@ public class BackupEngineTests
     public void Execute_CompleteBackup_CreatesDirectoriesBeforeCopyingFiles()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -113,7 +113,7 @@ public class BackupEngineTests
     public void Execute_DifferentialBackup_CopiesOnlyNewOrModifiedFiles()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -163,7 +163,7 @@ public class BackupEngineTests
     public void Execute_DifferentialBackup_CreatesDirectoryIfNotExists()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -195,7 +195,7 @@ public class BackupEngineTests
     public void Execute_DifferentialBackup_HandlesNestedDirectories()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -229,7 +229,7 @@ public class BackupEngineTests
     public void Execute_CompleteBackup_WithEmptySource_DoesNotCopyAnything()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -255,7 +255,7 @@ public class BackupEngineTests
     public void Execute_CompleteBackup_UpdatesStateWithCorrectProgress()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -302,7 +302,7 @@ public class BackupEngineTests
     public void Execute_CompleteBackup_LogsFileTransfers()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -340,7 +340,7 @@ public class BackupEngineTests
     public void Execute_CompleteBackup_LogsDirectoryCreation()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",
@@ -375,7 +375,7 @@ public class BackupEngineTests
     public void Execute_WhenExceptionThrown_UpdatesStateToError()
     {
         // Arrange
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = "TestBackup",

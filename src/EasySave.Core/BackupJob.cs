@@ -1,6 +1,6 @@
 namespace EasySave.Core;
 
-public class SaveWork
+public class BackupJob
 {
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;

@@ -39,7 +39,7 @@ public class BackupEngine
     /// </summary>
     /// <param name="job">Backup job to execute.</param>
     /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
-    public void Execute(SaveWork job)
+    public void Execute(BackupJob job)
     {
         try
         {
@@ -171,7 +171,7 @@ public class BackupEngine
     /// <param name="src">Current source file path.</param>
     /// <param name="dst">Current destination file path.</param>
     private void UpdateState(
-    SaveWork job,
+    BackupJob job,
     BackupStatus status,
     int totalFiles,
     long totalSize,

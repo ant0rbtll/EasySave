@@ -18,7 +18,7 @@ namespace EasySave.UI.Menu
             string[] items = { "menu_create", "menu_list", "menu_save", "menu_params", "menu_quit" };
             var actions = new Dictionary<int, Action>
         {
-            { 0, _consoleUI.CreateSaveWork },
+            { 0, _consoleUI.CreateBackupJob },
             { 1, _consoleUI.SeeSaveList },
             { 2, _consoleUI.SaveJob },
             { 3, _consoleUI.ConfigureParams },

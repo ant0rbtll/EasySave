@@ -1,6 +1,6 @@
 using EasySave.Core;
 
-namespace EasySave.UI;
+namespace EasySave.Application;
 
 /// <summary>
 /// The Use interface of the app

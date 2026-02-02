@@ -2,18 +2,18 @@ using EasySave.Core;
 
 namespace EasySave.Persistence;
 
-public class InMemorySaveWorkRepository : ISaveWorkRepository
+public class InMemoryBackupJobRepository : IBackupJobRepository
 {
-    private readonly int _maxJobs = ISaveWorkRepository.DefaultMaxJobs;
-    private readonly Dictionary<int, SaveWork> _jobs = new();
+    private readonly int _maxJobs = IBackupJobRepository.DefaultMaxJobs;
+    private readonly Dictionary<int, BackupJob> _jobs = new();
     private readonly IJobIdProvider _idProvider;
 
-    public InMemorySaveWorkRepository(IJobIdProvider idProvider)
+    public InMemoryBackupJobRepository(IJobIdProvider idProvider)
     {
         _idProvider = idProvider;
     }
 
-    public void Add(SaveWork job)
+    public void Add(BackupJob job)
     {
         if (Count() >= _maxJobs)
             throw new InvalidOperationException($"Cannot add more than {_maxJobs} jobs.");
@@ -35,7 +35,7 @@ public class InMemorySaveWorkRepository : ISaveWorkRepository
             throw new KeyNotFoundException($"Job with ID {id} not found.");
     }
 
-    public SaveWork GetById(int id)
+    public BackupJob GetById(int id)
     {
         if (!_jobs.TryGetValue(id, out var job))
             throw new KeyNotFoundException($"Job with ID {id} not found.");
@@ -43,7 +43,7 @@ public class InMemorySaveWorkRepository : ISaveWorkRepository
         return job;
     }
 
-    public List<SaveWork> GetAll()
+    public List<BackupJob> GetAll()
     {
         return _jobs.Values.OrderBy(j => j.Id).ToList();
     }
