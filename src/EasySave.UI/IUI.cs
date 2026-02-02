@@ -11,33 +11,33 @@ public interface IUI
 	/// Display a message translated
 	/// </summary>
 	/// <param name="key">The translation key</param>
-	public void showMessage(string key, bool writeLine);
+	public void ShowMessage(string key, bool writeLine);
 
 	/// <summary>
 	/// Display an error translated
 	/// </summary>
 	/// <param name="key">The translation key</param>
-	public void showError(string key);
+	public void ShowError(string key);
 
 	/// <summary>
 	/// Ask the user to type a string
 	/// </summary>
 	/// <param name="key">The translation key of the question</param>
 	/// <returns></returns>
-	public string askString(string key);
+	public string AskString(string key);
 
     /// <summary>
     /// Ask the user to type an int
     /// </summary>
     /// <param name="key">The translation key of the question</param>
     /// <returns></returns>
-    public int askInt(string key);
+    public int AskInt(string key);
 
     /// <summary>
     /// Ask the user to choose a save type
     /// </summary>
     /// <param name="key">The translation key of the question</param>
     /// <returns></returns>
-    public BackupType askBackupType(string key);
+    public BackupType AskBackupType(string key);
 
 }

@@ -19,23 +19,23 @@ public class ConsoleUI : IUI
     }
 
     /// <inheritdoc />
-    public void showMessage(string key, bool writeLine = true)
+    public void ShowMessage(string key, bool writeLine = true)
     {
-        string message = LocalizationService.translateTexte(key);
+        string message = LocalizationService.TranslateTexte(key);
         if (writeLine) Console.WriteLine(message);
         else Console.Write(message);
     }
 
     /// <inheritdoc />
-    public void showError(string key)
+    public void ShowError(string key)
     {
         Console.Error.WriteLine(key);
     }
 
     /// <inheritdoc />
-    public string askString(string key)
+    public string AskString(string key)
     {
-        showMessage(key, false);
+        ShowMessage(key, false);
 
         string? stringInput;
 
@@ -45,7 +45,7 @@ public class ConsoleUI : IUI
 
             if (string.IsNullOrWhiteSpace(stringInput))
             {
-                showMessage("input_string_invalid", false);
+                ShowMessage("input_string_invalid", false);
             }
         }
         while (string.IsNullOrWhiteSpace(stringInput));
@@ -54,9 +54,9 @@ public class ConsoleUI : IUI
     }
 
     /// <inheritdoc />
-    public int askInt(string key)
+    public int AskInt(string key)
     {
-        showMessage(key);
+        ShowMessage(key);
 
         string? input;
         int numberInput;
@@ -67,7 +67,7 @@ public class ConsoleUI : IUI
 
             if (!int.TryParse(input, out numberInput))
             {
-                showMessage("input_number_invalid");
+                ShowMessage("input_number_invalid");
             }
         }
         while (!int.TryParse(input, out numberInput));
@@ -76,12 +76,12 @@ public class ConsoleUI : IUI
     }
 
     /// <inheritdoc />
-    public BackupType askBackupType(string key)
+    public BackupType AskBackupType(string key)
     {
         string? backupTypeInput;
         BackupType backupType;
 
-        showMessage("backupjob_type_list");
+        ShowMessage("backupjob_type_list");
         var values = Enum.GetValues(typeof(BackupType)).Cast<BackupType>().ToArray();
         for (int i = 0; i < values.Length; i++)
         {
@@ -89,11 +89,11 @@ public class ConsoleUI : IUI
         }
         
         int choice;
-        showMessage(key);
+        ShowMessage(key);
         while (true)
         {
             Console.Write("\n");
-            showMessage("user_choice", false);
+            ShowMessage("user_choice", false);
             backupTypeInput = Console.ReadLine();
 
             if (int.TryParse(backupTypeInput, out choice) && choice >= 1 && choice <= values.Length)
@@ -101,7 +101,7 @@ public class ConsoleUI : IUI
                 break;
             }
 
-            showMessage("input_backuptype_invalid");
+            ShowMessage("input_backuptype_invalid");
         }
 
         return values[choice - 1];
@@ -110,27 +110,27 @@ public class ConsoleUI : IUI
     /// <summary>
     /// Gather a save's informations and create a saveWork
     /// </summary>
-    public void createSaveWork()
+    public void CreateSaveWork()
     {
-        labelText("menu_create");
-        string nameJob = askString("savework_create_name");
-        string sourceJob = askString("savework_create_source");
-        string destinationJob = askString("savework_create_destination");
-        BackupType backupTypeJob = askBackupType("savework_create_type");
+        LabelText("menu_create");
+        string nameJob = AskString("savework_create_name");
+        string sourceJob = AskString("savework_create_source");
+        string destinationJob = AskString("savework_create_destination");
+        BackupType backupTypeJob = AskBackupType("savework_create_type");
 
         // send to service 
         //BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
-        showMessage("backupjob_created");
-        waitForUser();
-        mainMenu();
+        ShowMessage("backupjob_created");
+        WaitForUser();
+        MainMenu();
     }
 
     /// <summary>
     /// Display the informations of all saveWork created
     /// </summary>
-    public void seeSaveList()
+    public void SeeSaveList()
     {
-        labelText("menu_list");
+        LabelText("menu_list");
         List<SaveWork> saveWorkList = BackUpAppService.GetAllJobs();
         foreach (SaveWork job in saveWorkList) {
             Console.WriteLine(job.Id + " - " + job.Name);
@@ -140,39 +140,39 @@ public class ConsoleUI : IUI
     /// <summary>
     /// Start a save
     /// </summary>
-    public void saveJob()
+    public void SaveJob()
     {
-        labelText("menu_save");
+        LabelText("menu_save");
 
-        int backupIndex = askInt("ask_backupjob_save");
+        int backupIndex = AskInt("ask_backupjob_save");
 
-        showMessage("backup_saving");
+        ShowMessage("backup_saving");
         BackupAppService.RunJob(backupIndex);
 
-        waitForUser();
+        WaitForUser();
 
-        mainMenu();
+        MainMenu();
     }
 
     /// <summary>
     /// The menu of the app's configuration
     /// </summary>
-    public void configureParams()
+    public void ConfigureParams()
     {
         string[] menu = { "menu_params_locale", "back" };
 
         Dictionary<int, Action> menuActions = new()
     {
-        { 0, showChangeLocale },
-        { 1, mainMenu },
+        { 0, ShowChangeLocale },
+        { 1, MainMenu },
     };
-        showMenu(menu, menuActions, "menu_params");
+        ShowMenu(menu, menuActions, "menu_params");
     }
 
     /// <summary>
     /// The menu to change the app language
     /// </summary>
-    public void showChangeLocale()
+    public void ShowChangeLocale()
     {
         string currentLocale = LocalizationService.getCulture();
         Dictionary<string, string> allCultures = LocalizationService.getAllCultures();
@@ -183,49 +183,49 @@ public class ConsoleUI : IUI
 
         Dictionary<int, Action> menuActions = new()
         {
-            { 0,  () => changeLocale("fr")  },
-            { 1,  () => changeLocale("en")  },
-            { 2, configureParams }
+            { 0,  () => ChangeLocale("fr")  },
+            { 1,  () => ChangeLocale("en")  },
+            { 2, ConfigureParams }
         };
 
-        showMenu(menu, menuActions,"menu_params_locale");
+        ShowMenu(menu, menuActions,"menu_params_locale");
     }
 
     /// <summary>
     /// The action of changing the language
     /// </summary>
     /// <param name="locale"></param>
-    public void changeLocale(string locale)
+    public void ChangeLocale(string locale)
     {
         LocalizationService.setCulture(locale);
 
-        showChangeLocale();
+        ShowChangeLocale();
     }
 
     /// <summary>
     /// The main menu of the application
     /// </summary>
-    public void mainMenu()
+    public void MainMenu()
     {
         string[] menu = { "menu_create", "menu_list", "menu_save", "menu_params", "menu_quit" };
 
         Dictionary<int, Action> menuActions = new()
     {
-        { 0, createSaveWork },
-        { 1, seeSaveList },
-        { 2, saveJob },
-        { 3, configureParams },
-        { 4, quit } // ou juste Environment.Exit(0)
+        { 0, CreateSaveWork },
+        { 1, SeeSaveList },
+        { 2, SaveJob },
+        { 3, ConfigureParams },
+        { 4, Quit } // ou juste Environment.Exit(0)
     };
 
-        showMenu(menu, menuActions);
+        ShowMenu(menu, menuActions);
 
     }
 
     /// <summary>
     /// Quit the application
     /// </summary>
-    public void quit()
+    public void Quit()
     {
         Console.Clear();
     }
@@ -236,7 +236,7 @@ public class ConsoleUI : IUI
     /// <param name="menu">The list of displayed text</param>
     /// <param name="menuActions">A dictionnary with the index and the actions of each options</param>
     /// <param name="menuLabel">The translation key of the name of the menu</param>
-    public void showMenu(string[] menu, Dictionary<int, Action> menuActions, string menuLabel = "menu")
+    public void ShowMenu(string[] menu, Dictionary<int, Action> menuActions, string menuLabel = "menu")
     {
         int index = 0;
         ConsoleKey key;
@@ -244,20 +244,20 @@ public class ConsoleUI : IUI
         do
         {
             Console.Clear() ;
-            labelText(menuLabel);
+            LabelText(menuLabel);
             for (int i = 0; i < menu.Length; i++)
             {
                 if (i == index)
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("> ");
-                    showMessage(menu[i]);
+                    ShowMessage(menu[i]);
                     Console.ResetColor();
                 }
                 else
                 {
                     Console.Write("  ");
-                    showMessage(menu[i]);
+                    ShowMessage(menu[i]);
                 }
             }
 
@@ -289,17 +289,20 @@ public class ConsoleUI : IUI
     /// Display the title of the action selected
     /// </summary>
     /// <param name="key">the translation key</param>
-    private void labelText(string key)
+    private void LabelText(string key)
     {
         Console.Write("====");
-        string message = LocalizationService.translateTexte(key);
+        string message = LocalizationService.TranslateTexte(key);
         Console.Write(message);
         Console.Write("====\n");
     }
 
-    private void waitForUser()
+    /// <summary>
+    /// Waiting for the user to enter any key
+    /// </summary>
+    private void WaitForUser()
     {
-        showMessage("waiting_user");
+        ShowMessage("waiting_user");
         Console.ReadKey(true);
     }
 }

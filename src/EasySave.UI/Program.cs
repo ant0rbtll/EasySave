@@ -16,7 +16,7 @@ public class Program
         BackupAppService backupAppService = new BackupAppService();
 
         ConsoleUI console = new ConsoleUI(backupAppService);
-        console.mainMenu();
+        console.MainMenu();
 
     }
 }

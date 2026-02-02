@@ -9,46 +9,29 @@ namespace EasySave.Localization;
 /// </summary>
 public class LocalizationService : ILocalizationService
 {
-
-    private string culture;
-
-    private Dictionary<string, string> allCultures = new()
-    {
-        { "fr", "config_locale_fr" },
-        { "en", "config_locale_en" },
-    };
-
+    public Dictionary<string, string> AllCultures { get; }
+    
     /// <summary>
     /// The initialisation of the service
     /// </summary>
     public LocalizationService()
     {
-        culture = "fr";
+        AllCultures = new()
+        {
+            { "fr", "config_locale_fr" },
+            { "en", "config_locale_en" },
+        };
+        Culture = "fr";
+
     }
 
-    /// <inheritdoc/>
-    public string getCulture()
-    {
-        return culture;
-    }
+    public string Culture { get; set; }
 
     /// <inheritdoc/>
-    public void setCulture(string culture)
-    {
-        this.culture = culture;
-    }
-
-    /// <inheritdoc/>
-    public Dictionary<string, string> getAllCultures()
-    {
-        return allCultures;
-    }
-
-    /// <inheritdoc/>
-    public string translateTexte(string key)
+    public string TranslateTexte(string key)
     {
         //TODO link to conf
-        var yaml = File.ReadAllText("../EasySave.Localization/Translations/translations." + culture + ".yaml");
+        var yaml = File.ReadAllText("../EasySave.Localization/Translations/translations." + Culture + ".yaml");
 
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
