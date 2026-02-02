@@ -88,9 +88,9 @@ public class BackupEngine
                 remainingFiles--;
                 remainingSize -= result.FileSizeBytes;
 
-                int progress = (int)(
-                    100.0 * (totalFiles - remainingFiles) / totalFiles
-                );
+                int progress = totalFiles > 0
+                    ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles)
+                    : 0;
 
                 UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, file, destinationFile);
             }
