@@ -11,10 +11,10 @@ namespace EasySave.UI;
 public class ConsoleUI : IUI
 {
 
-    private BackupAppService BackUpAppService;
+    private readonly BackupAppService BackUpAppService;
     public ILocalizationService LocalizationService { get; }
-    private MenuService MenuService;
-    private MenuFactory MenuFactory;
+    private readonly MenuService MenuService;
+    private readonly MenuFactory MenuFactory;
 
     public ConsoleUI(BackupAppService backUpAppService)
     {
@@ -125,7 +125,7 @@ public class ConsoleUI : IUI
         BackupType backupTypeJob = AskBackupType("savework_create_type");
 
         // send to service 
-        //BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
+        BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
         ShowMessage("backupjob_created");
         MenuService.WaitForUser();
         MainMenu();
@@ -175,7 +175,6 @@ public class ConsoleUI : IUI
     /// </summary>
     public void ShowChangeLocale()
     {
-        string currentLocale = LocalizationService.Culture;
         var menuConfig = MenuFactory.CreateLocaleMenu();
         MenuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
     }

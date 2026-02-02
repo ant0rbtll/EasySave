@@ -29,24 +29,50 @@ public class LocalizationService : ILocalizationService
     public string Culture { get; set; }
 
     /// <inheritdoc/>
-    public string TranslateTexte(string key)
+    public string TranslateText(string key)
     {
         //TODO link to conf
-        if (_translationCache == null)
+        if (string.IsNullOrEmpty(key))
         {
-            var yaml = File.ReadAllText("../EasySave.Localization/Translations/translations." + Culture + ".yaml");
+            return key;
+        }
+        try
+        {
+            if (_translationCache == null)
+            {
+                var translationFilePath = Path.Combine("..", "EasySave.Localization", "Translations", $"translations.{Culture}.yaml");
+                if (!File.Exists(translationFilePath))
+                {
+                    return key;
+                }
+                var yaml = File.ReadAllText(translationFilePath, Encoding.UTF8);
 
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                .Build();
+                var deserializer = new DeserializerBuilder()
+                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                    .Build();
 
-            var data = deserializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(yaml);
-            _translationCache = data;
+                var data = deserializer.Deserialize<Dictionary<string, Dictionary<string, string>>>(yaml);
+                _translationCache = data;
+            }
+
+            if (_translationCache != null &&
+                data.TryGetValue("translations", out var translations) &&
+                translations != null &&
+                translations.TryGetValue(key, out var value))
+            {
+                return value;
+            }
+            return key;
+
         }
 
-        // Accès
-        string code = _translationCache["translations"].TryGetValue(key, out var value) ? value : key;
-
-        return code;
+        catch (IOException)
+        {
+            return key;
+        }
+        catch (Exception e)
+        {
+            return key;
+        }
     }
 }
