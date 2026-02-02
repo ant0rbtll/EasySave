@@ -17,8 +17,8 @@ public sealed record TransferResult(
     public bool IsSuccess => ErrorCode == 0;
 
     public static TransferResult InvalidSourcePath() =>
-        new(fileSizeBytes: 0, transferTimeMs: -1, errorCode: ErrorCodes.InvalidSourcePath);
+        new(FileSizeBytes: 0, TransferTimeMs: -1, ErrorCode: ErrorCodes.InvalidSourcePath);
 
     public static TransferResult InvalidDestinationPath() =>
-        new(fileSizeBytes: 0, transferTimeMs: -1, errorCode: ErrorCodes.InvalidDestinationPath);
+        new(FileSizeBytes: 0, TransferTimeMs: -1, ErrorCode: ErrorCodes.InvalidDestinationPath);
 }

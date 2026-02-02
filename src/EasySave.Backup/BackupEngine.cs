@@ -52,7 +52,7 @@ public class BackupEngine
                     _fileSystem.CreateDirectory(destinationDir);
                     Log(
                         job.Name,
-                        LogEventType.DirectoryCreated,
+                        LogEventType.CreateDirectory,
                         destinationDir,
                         destinationDir,
                         0,
@@ -83,7 +83,7 @@ public class BackupEngine
 
         UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
             Log(
