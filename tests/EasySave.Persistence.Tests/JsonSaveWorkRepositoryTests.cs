@@ -66,6 +66,19 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void Add_JobWithExistingId_ThrowsException()
+    {
+        // Arrange
+        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var job1 = new SaveWork { Id = 1, Name = "Job1", Source = "/src", Destination = "/dst" };
+        var job2 = new SaveWork { Id = 1, Name = "Job2", Source = "/src", Destination = "/dst" };
+        repo.Add(job1);
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => repo.Add(job2));
+    }
+
+    [Fact]
     public void Add_MoreThanMaxJobs_ThrowsException()
     {
         // Arrange

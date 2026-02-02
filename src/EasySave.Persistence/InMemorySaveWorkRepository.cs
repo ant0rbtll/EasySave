@@ -31,18 +31,16 @@ public class InMemorySaveWorkRepository : ISaveWorkRepository
 
     public void Remove(int id)
     {
-        if (!_jobs.ContainsKey(id))
+        if (!_jobs.Remove(id))
             throw new KeyNotFoundException($"Job with ID {id} not found.");
-
-        _jobs.Remove(id);
     }
 
     public SaveWork GetById(int id)
     {
-        if (!_jobs.ContainsKey(id))
+        if (!_jobs.TryGetValue(id, out var job))
             throw new KeyNotFoundException($"Job with ID {id} not found.");
 
-        return _jobs[id];
+        return job;
     }
 
     public List<SaveWork> GetAll()
