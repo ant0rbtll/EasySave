@@ -1,9 +1,4 @@
-using EasySave.State.Configuration.Paths;
-using System;
-using System.IO;
-
-
-namespace EasySave.Configuration.Paths
+namespace EasySave.Configuration
 {
     public class DefaultPathProvider : IPathProvider
     {
@@ -11,55 +6,68 @@ namespace EasySave.Configuration.Paths
 
         public DefaultPathProvider()
         {
-            // Dossier d'exécution de l'application
             baseDirectory = AppContext.BaseDirectory;
         }
 
-        // Logs journaliers
+        /// <summary>
+        /// Création ou récupération du dossier de log et du fichier journalier
+        /// </summary>
+        #region GetDailyLogPath
         public string GetDailyLogPath(DateTime date)
         {
             string logsDir = Path.Combine(baseDirectory, "logs");
 
-            // Crée le dossier logs s'il n'existe pas
-            Directory.CreateDirectory(logsDir);
+            // Création du dossier logs si nécessaire
+            if (!Directory.Exists(logsDir))
+            {
+                Directory.CreateDirectory(logsDir);
+            }
 
-            // Nom du fichier log
             string fileName = $"{date:yyyy-MM-dd}.json";
             string fullPath = Path.Combine(logsDir, fileName);
 
-            // Crée le fichier s'il n'existe pas
+            // Création du fichier si nécessaire
             if (!File.Exists(fullPath))
             {
-                using (File.Create(fullPath)) { } // crée et ferme immédiatement
+                File.WriteAllText(fullPath, string.Empty);
             }
 
             return fullPath;
         }
+        #endregion
 
-        // Fichier state.json
+        /// <summary>
+        /// Création ou récupération du fichier d'état
+        /// </summary>
+        #region GetStatePath
         public string GetStatePath()
         {
             string path = Path.Combine(baseDirectory, "state.json");
 
             if (!File.Exists(path))
             {
-                using (File.Create(path)) { }
+                File.WriteAllText(path, string.Empty);
             }
 
             return path;
         }
+        #endregion
 
-        // Fichier jobs.json
+        /// <summary>
+        /// Création ou récupération du fichier de configuration des jobs
+        /// </summary>
+        #region GetJobsConfigPath
         public string GetJobsConfigPath()
         {
             string path = Path.Combine(baseDirectory, "jobs.json");
 
             if (!File.Exists(path))
             {
-                using (File.Create(path)) { }
+                File.WriteAllText(path, string.Empty);
             }
 
             return path;
         }
+        #endregion
     }
 }

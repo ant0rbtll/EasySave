@@ -1,4 +1,4 @@
-using EasySave.State.Configuration.Paths;
+using EasySave.Configuration;
 
 namespace EasySave.State;
 
@@ -18,20 +18,18 @@ public class RealTimeStateWriter : IStateWriter
         this.state = state;
     }
 
+    /// <summary>
+    /// Lancement de l'écriture dans le fichier d'ETR
+    /// </summary>
+    #region Update
     public void Update(StateEntry entry)
     {
         if (entry == null)
             throw new ArgumentNullException(nameof(entry));
 
-        // Horodatage de la mise à jour
         entry.timestamp = DateTime.Now;
 
-        // Détermination du statut à partir du pourcentage
-        if (entry.progressPercent <= 0)
-        {
-            entry.status = BackupStatus.Active;
-        }
-        else if (entry.progressPercent < 100)
+        if (entry.progressPercent < 100)
         {
             entry.status = BackupStatus.Active;
         }
@@ -40,32 +38,34 @@ public class RealTimeStateWriter : IStateWriter
             entry.status = BackupStatus.Done;
         }
 
-        // Ajout ou mise à jour de la sauvegarde dans le GlobalState
         state.Entries[entry.backupId] = entry;
         state.UpdatedAt = DateTime.Now;
 
-        // Appel unique au serializer (écriture + console)
-        serializer.WritePrettyJson(
-            pathProvider.GetStatePath(),
-            state
-        );
-    }
+        string json = serializer.WritePrettyJson(state);
 
-    public void MarckInnactiv(int backupId)
+        string path = pathProvider.GetStatePath();
+        File.WriteAllText(path, json);
+    }
+    #endregion
+
+    /// <summary>
+    /// Lancement de l'écriture dans le fichier d'ETR en cas d'innactivité
+    /// </summary>
+    #region MarkInactiv
+    public void MarkInactiv(int backupId)
     {
         if (!state.Entries.TryGetValue(backupId, out var entry))
             return;
 
-        // Passage explicite à Inactive
         entry.status = BackupStatus.Inactive;
         entry.timestamp = DateTime.Now;
 
         state.UpdatedAt = DateTime.Now;
 
-        // Appel unique au serializer (écriture + console)
-        serializer.WritePrettyJson(
-            pathProvider.GetStatePath(),
-            state
-        );
+        string json = serializer.WritePrettyJson(state);
+
+        string path = pathProvider.GetStatePath();
+        File.WriteAllText(path, json);
     }
+    #endregion
 }

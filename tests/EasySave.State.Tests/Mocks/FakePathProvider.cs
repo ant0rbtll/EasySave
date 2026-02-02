@@ -1,4 +1,4 @@
-﻿using EasySave.State.Configuration.Paths;
+﻿using EasySave.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;

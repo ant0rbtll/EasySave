@@ -2,6 +2,6 @@ namespace EasySave.State;
 
 public interface IStateWriter
 {
-    public void  Update(StateEntry entry);
-    public void MarckInnactiv(int backupId);
+    public void Update(StateEntry entry);
+    public void MarkInactiv(int backupId);
 }

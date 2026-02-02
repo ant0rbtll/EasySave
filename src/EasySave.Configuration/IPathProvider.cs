@@ -1,4 +1,4 @@
-namespace EasySave.State.Configuration.Paths
+namespace EasySave.Configuration
 {
     public interface IPathProvider
     {

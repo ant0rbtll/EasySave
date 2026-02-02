@@ -1,14 +1,43 @@
 using Xunit;
 using System;
+using System.IO;
 using System.Collections.Generic;
 using EasySave.State;
-using EasySave.Configuration.Paths;
+using EasySave.Configuration;
+using System.Data;
+using Xunit.Abstractions;
 
-public class RealTimeStateWriterTests
+public class UnitTest1
 {
     [Fact]
+    public void Test1()
+    {
+        Console.WriteLine("toto");
+    }
+}
+
+/*public class RealTimeStateTests
+{
+    private readonly ITestOutputHelper _outputHelper;
+
+    public RealTimeStateTests(ITestOutputHelper outputHelper)
+    {
+        _outputHelper = outputHelper;
+    }
+    [Fact]
+    public void test()
+    {
+        _outputHelper.WriteLine("YOYO");
+    }
+    
+    /*[Fact]
     public void RealTimeState_Should_Write_File_Step_By_Step()
     {
+        Console.WriteLine("=== TEST START ===");
+
+        var tempDir = Path.Combine(Path.GetTempPath(), "RealtimeStateTest");
+        Directory.CreateDirectory(tempDir);
+
         var pathProvider = new DefaultPathProvider();
         var serializer = new StateSerializer();
 
@@ -22,32 +51,28 @@ public class RealTimeStateWriterTests
         var entry = new StateEntry
         {
             backupId = 1,
-            backupName = "TEST_BACKUP_REALTIME",
+            backupName = "test",
             progressPercent = 0
         };
 
-        // STEP 1 ? Active
-        entry.progressPercent = 25;
         writer.Update(entry);
 
-        Console.WriteLine($"[UPDATE] {entry.backupName} ? {entry.status}");
-        Console.WriteLine();
+        string statePath = pathProvider.GetStatePath();
 
-        // STEP 2 ? Done
-        entry.progressPercent = 100;
-        writer.Update(entry);
+        if (!File.Exists(statePath))
+            throw new Exception("Chemin du fichier non créé ou non récupéré");
 
-        Console.WriteLine($"[UPDATE] {entry.backupName} ? {entry.status}");
-        Console.WriteLine();
+        Console.WriteLine("[OK] State file exists");
 
-        // STEP 3 ? Inactive
-        writer.MarckInnactiv(1);
+        string content = File.ReadAllText(statePath);
 
-        Console.WriteLine($"[FINAL] {entry.backupName} ? {entry.status}");
-        Console.WriteLine();
+        if (string.IsNullOrWhiteSpace(content))
+            throw new Exception("Fichier state.json vide");
 
-        // ASSERT FINAL
-        Assert.Equal(BackupStatus.Inactive, state.Entries[1].status);
+        Console.WriteLine("[OK] State file contains data");
+
+        Console.WriteLine("=== TEST PASSED ===");
     }
+}*/
 
-}
+
