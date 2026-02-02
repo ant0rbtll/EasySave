@@ -23,6 +23,7 @@ COPY tests/EasyLog.Tests/*.csproj ./tests/EasyLog.Tests/
 COPY tests/EasySave.Backup.Tests/*.csproj ./tests/EasySave.Backup.Tests/
 COPY tests/EasySave.Application.Tests/*.csproj ./tests/EasySave.Application.Tests/
 COPY tests/EasySave.State.Tests/*.csproj ./tests/EasySave.State.Tests/
+COPY tests/EasySave.Persistence.Tests/*.csproj ./tests/EasySave.Persistence.Tests/
 
 # Restaurer les dépendances
 RUN dotnet restore

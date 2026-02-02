@@ -13,6 +13,8 @@ services:
     environment:
       - DOTNET_ENVIRONMENT=Development
       - DOTNET_USE_POLLING_FILE_WATCHER=true
+      - HOME=/tmp  # Éviter le problème /.dotnet
+      - NUGET_PACKAGES=/root/.nuget/packages  # Utiliser le cache monté
     stdin_open: true
     tty: true
     networks:

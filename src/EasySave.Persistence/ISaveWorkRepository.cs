@@ -4,6 +4,8 @@ namespace EasySave.Persistence;
 
 public interface ISaveWorkRepository
 {
+    const int DefaultMaxJobs = 5;
+
     void Add(SaveWork job);
     void Remove(int id);
     SaveWork GetById(int id);

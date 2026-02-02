@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EasySave.Core\EasySave.Core.csproj" />
+    <ProjectReference Include="..\EasySave.Configuration\EasySave.Configuration.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
