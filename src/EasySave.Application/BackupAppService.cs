@@ -26,8 +26,8 @@ public class BackupAppService
         _engine = backupEngine;
         _eventService = eventService;
         _ui = ui;
-        _eventService.OnCreateJob += HandleCreateJob;
-        _eventService.OnGetAllJobsRequested += HandleGetAllJobsRequested;
+        _eventService.OnCreateJob += CreateJob;
+        _eventService.OnGetAllJobsRequested += GetAllJobs;
         _eventService.OnRunJobs += RunJobs;
 
 
@@ -46,7 +46,7 @@ public class BackupAppService
     /// <param name="source">Source folder path.</param>
     /// <param name="destination">Destination folder path.</param>
     /// <param name="type">Type of backup (Full or Differential).</param>
-    public void HandleCreateJob(object? sender, CreateJobEventArgs e)
+    public void CreateJob(object? sender, CreateJobEventArgs e)
     {
         var job = new BackupJob
         {
@@ -101,7 +101,7 @@ public class BackupAppService
     /// and returns the complete list from the repository.
     /// </summary>
     /// <returns>A list of <see cref="BackupJob"/> objects.</returns>
-    private void HandleGetAllJobsRequested(object sender, GetAllJobsRequestedEventArgs e)
+    private void GetAllJobs(object sender, GetAllJobsRequestedEventArgs e)
     {
         var jobs = _repo.GetAll();
         _eventService.RaiseAllJobsProvided(jobs);
