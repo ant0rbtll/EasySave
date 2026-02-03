@@ -2,40 +2,57 @@
 using System.Collections.Generic;
 using System.Linq;
 using EasySave.Localization;
+using EasySave.Application;
 
 namespace EasySave.UI.Menu
 {
     internal class MenuFactory
     {
         private readonly ConsoleUI _consoleUI;
+        private readonly BackupAppService _backupAppService;
 
-        public MenuFactory(ConsoleUI consoleUI)
+        public MenuFactory(ConsoleUI consoleUI, BackupAppService backupAppService)
         {
             _consoleUI = consoleUI;
+            _backupAppService = backupAppService;
         }
 
         public MenuConfig CreateMainMenu()
         {
-            LocalizationKey[] items =
-            {
-                LocalizationKey.menu_create,
-                LocalizationKey.menu_list,
-                LocalizationKey.menu_save,
-                LocalizationKey.menu_delete,
-                LocalizationKey.menu_params,
-                LocalizationKey.menu_quit
-            };
-            var actions = new Dictionary<int, Action>
-        {
-            { 0, _consoleUI.CreateBackupJob },
-            { 1, _consoleUI.SeeSaveList },
-            { 2, _consoleUI.SaveJob },
-            { 3, _consoleUI.DeleteBackupJob },
-            { 4, _consoleUI.ConfigureParams },
-            { 5, _consoleUI.Quit }
-        };
+            const int maxJobs = 5;
+            int currentJobCount = _backupAppService.GetAllJobs().Count;
+            bool hasJobs = currentJobCount > 0;
+            bool canCreateJob = currentJobCount < maxJobs;
 
-            return new MenuConfig(items, actions, LocalizationKey.menu);
+            var items = new List<LocalizationKey>();
+            var actions = new Dictionary<int, Action>();
+            int index = 0;
+
+            if (canCreateJob)
+            {
+                items.Add(LocalizationKey.menu_create);
+                actions[index++] = _consoleUI.CreateBackupJob;
+            }
+
+            if (hasJobs)
+            {
+                items.Add(LocalizationKey.menu_list);
+                actions[index++] = _consoleUI.SeeSaveList;
+
+                items.Add(LocalizationKey.menu_save);
+                actions[index++] = _consoleUI.SaveJob;
+
+                items.Add(LocalizationKey.menu_delete);
+                actions[index++] = _consoleUI.DeleteBackupJob;
+            }
+
+            items.Add(LocalizationKey.menu_params);
+            actions[index++] = _consoleUI.ConfigureParams;
+
+            items.Add(LocalizationKey.menu_quit);
+            actions[index] = _consoleUI.Quit;
+
+            return new MenuConfig(items.ToArray(), actions, LocalizationKey.menu);
         }
 
         public MenuConfig CreateLocaleMenu()

@@ -22,7 +22,7 @@ public class ConsoleUI
         _backupAppService = backupAppService;
         LocalizationService = new LocalizationService();
         _menuService = new MenuService(LocalizationService);
-        _menuFactory = new MenuFactory(this);
+        _menuFactory = new MenuFactory(this, _backupAppService);
     }
 
     /// <inheritdoc />
