@@ -17,6 +17,7 @@ public class BackupAppService
     /// </summary>
     /// <param name="repo">The repository used for data persistence.</param>
     /// <param name="ui">The user interface for displaying messages.</param>
+    /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
     public BackupAppService(IBackupJobRepository repo, IUI ui, BackupEngine backupEngine)
     {
         _repo = repo;
