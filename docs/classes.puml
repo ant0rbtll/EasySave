@@ -41,7 +41,9 @@ package "Application" as APP {
     + RunFromArgs(args : String[]) : void
     + CreateJob(name : String, source : String, destination : String, type : CORE.BackupType) : void
     + RemoveJob(id : int) : void
-    + RunJobs(ids : int[]) : void
+    + RunJobById(id : int) : void
+    + RunJob(job : CORE.BackupJob) : void
+    + RunJobsByIds(ids : int[]) : void
     + RunAllJobs() : void
   }
 }

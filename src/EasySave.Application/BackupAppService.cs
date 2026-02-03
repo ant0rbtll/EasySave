@@ -56,18 +56,37 @@ public class BackupAppService
     }
 
     /// <summary>
+    /// Executes a specific backup job.
+    /// </summary>
+    public void RunJob(BackupJob job)
+    {
+        try
+        {
+            _ui.ShowMessage($"Starting backup job: {job.Name}");
+            _engine.Execute(job);
+        }
+        catch
+        {
+            _ui.ShowMessage($"Error executing backup job: {job.Name}");
+        }
+    }
+
+    public void RunJobById(int id)
+    {
+        var job = _repo.GetById(id);
+        if (job != null) RunJob(job);
+    }
+
+    /// <summary>
     /// Executes a specific list of backup jobs.
     /// </summary>
     /// <param name="ids">Array of job identifiers to launch.</param>
-    public void RunJobs(int[] ids)
+    public void RunJobsByIds(int[] ids)
     {
         foreach (int id in ids)
         {
             var job = _repo.GetById(id);
-            if (job != null)
-            {
-                _engine.Execute(job);
-            }
+            if (job != null) RunJob(job);
         }
     }
 
@@ -79,7 +98,7 @@ public class BackupAppService
         var jobs = _repo.GetAll();
         foreach (var job in jobs)
         {
-            _engine.Execute(job);
+            RunJob(job);
         }
     }
 
