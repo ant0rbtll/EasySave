@@ -1,7 +1,8 @@
 ﻿using EasySave.Application;
-using EasySave.Localization;
 using EasySave.Core;
+using EasySave.Localization;
 using EasySave.UI.Menu;
+using YamlDotNet.Core.Tokens;
 
 namespace EasySave.UI;
 
@@ -11,14 +12,14 @@ namespace EasySave.UI;
 public class ConsoleUI : IUI
 {
 
-    private readonly BackupAppService BackUpAppService;
+    private readonly IEventService EventService;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService MenuService;
     private readonly MenuFactory MenuFactory;
 
-    public ConsoleUI(BackupAppService backUpAppService)
+    public ConsoleUI(IEventService eventService)
     {
-        BackUpAppService = backUpAppService;
+        EventService = eventService;
         LocalizationService = new LocalizationService();
         MenuService = new MenuService(LocalizationService);
         MenuFactory = new MenuFactory(this);
@@ -125,7 +126,7 @@ public class ConsoleUI : IUI
         BackupType backupTypeJob = AskBackupType("backupjob_create_type");
 
         // send to service 
-        BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
+       // BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
         ShowMessage("backupjob_created");
         MenuService.WaitForUser();
         MainMenu();
@@ -137,10 +138,11 @@ public class ConsoleUI : IUI
     public void SeeSaveList()
     {
         MenuService.DisplayLabel("menu_list");
-        List<BackupJob> backupJobList = BackUpAppService.GetAllJobs();
-        foreach (BackupJob job in backupJobList) {
+        /*List<SaveWork> saveWorkList = BackUpAppService.GetAllJobs();
+        foreach (SaveWork job in saveWorkList) {
             Console.WriteLine(job.Id + " - " + job.Name);
         }
+        */
         MenuService.WaitForUser();
         MainMenu();
     }
@@ -155,7 +157,7 @@ public class ConsoleUI : IUI
         int backupIndex = AskInt("ask_backupjob_save");
 
         ShowMessage("backup_saving");
-        BackupAppService.RunJob(backupIndex);
+        //BackupAppService.RunJob(backupIndex);
 
         MenuService.WaitForUser();
         MainMenu();
@@ -205,6 +207,82 @@ public class ConsoleUI : IUI
     /// </summary>
     public void Quit()
     {
+        ShowMessage("quit");
+        MenuService.WaitForUser();
         Console.Clear();
+   }
+
+    public void SeeOneJob(BackupJob job)
+    {
+
     }
+    /*
+
+    public void DeleteJob()
+    {
+        //confirm
+        bool confirm = MenuService.WaitForUser("job_delete_confirm", ConsoleKey.Y);
+        if (confirm)
+        {
+            var job = BackUpAppService.RemoveJob(index);
+            ShowMessage("job_deleted");
+
+        } else {
+            ShowMessage("job_delete_canceled");
+        }
+        MenuService.WaitForUser();
+        SeeOneJob(job);
+    }
+
+    public void StartUpdateJob(SaveWork job, string field)
+    {
+        switch (field)
+        {
+            case "name":
+                job.Name = AskString("job_update_name");
+                break;
+            case "source":
+                job.Source = AskString("job_update_source");
+                break;
+            case "destination":
+                job.Destination = AskString("job_update_destination");
+                break;
+            case "type":
+                job.Type = AskBackupType("job_update_type");
+                break;
+            case null:
+                SaveWork tempBackUpJob = new SaveWork
+                {
+                    Id = job.Id,
+                    Name = job.Name,
+                    Source = job.Source,
+                    Destination = job.Destination,
+                    Type = job.Type
+                }
+                job = tempBackUpJob;
+                break;
+        }
+        MenuConfig menu = MenuFactory.CreateUpdateJobMenu(job);
+        MenuService.ShowMenuWithActions(menu.Items, menu.Actions, menu.Label);
+    }
+
+    public void UpdateJob(SaveWork job)
+    {
+
+    }
+
+    public void CancelUpdate(SaveWork job)
+    {
+        bool confirm = MenuService.WaitForUser("update_job_cancel", ConsoleKey.Y);
+        if (confirm)
+        {
+            ShowMessage("job_update_canceled");
+            MenuService.WaitForUser();
+            MainMenu();
+        } else
+        {
+            StartUpdateJob(job);
+        }
+    }
+    */
 }

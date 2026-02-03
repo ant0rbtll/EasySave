@@ -21,7 +21,6 @@ namespace EasySave.UI.Menu
 
             do
             {
-                Console.Clear();
                 DisplayLabel(menuLabel);
 
                 for (int i = 0; i < menuItems.Length; i++)
@@ -30,13 +29,13 @@ namespace EasySave.UI.Menu
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.Write("> ");
-                        Console.WriteLine(_localizationService.TranslateTexte(menuItems[i]));
+                        Console.WriteLine(_localizationService.TranslateText(menuItems[i]));
                         Console.ResetColor();
                     }
                     else
                     {
                         Console.Write("  ");
-                        Console.WriteLine(_localizationService.TranslateTexte(menuItems[i]));
+                        Console.WriteLine(_localizationService.TranslateText(menuItems[i]));
                     }
                 }
 
@@ -76,7 +75,7 @@ namespace EasySave.UI.Menu
         public void DisplayLabel(string key)
         {
             Console.Write("====");
-            string message = _localizationService.TranslateTexte(key);
+            string message = _localizationService.TranslateText(key);
             Console.Write(message);
             Console.Write("====\n");
         }
@@ -84,10 +83,22 @@ namespace EasySave.UI.Menu
         /// <summary>
         /// Wait for user to press any key
         /// </summary>
-        public void WaitForUser(string messageKey = "waiting_user")
+        public bool WaitForUser(string messageKey = "waiting_user", ConsoleKey? key = null)
         {
-            Console.WriteLine(_localizationService.TranslateTexte(messageKey));
-            Console.ReadKey(true);
+            Console.WriteLine(_localizationService.TranslateText(messageKey));
+            if (key == null)
+            {
+                Console.ReadKey(true);
+                return true;
+            } /*else {
+               ConsoleKey? pressedKey = null;
+                do
+                {
+                    pressedKey = Console.ReadKey(true);
+                } while (pressedKey != key || pressedKey != ConsoleKey.N);
+                return pressedKey == key;
+            }*/
+            return true;
         }
     }
 }

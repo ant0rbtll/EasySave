@@ -9,7 +9,8 @@ public class BackupAppService
 {
     private readonly IBackupJobRepository _repo;
     private readonly BackupEngine _engine;
-    private readonly IUI _ui;
+    private readonly IEventService _eventService;
+
     // private readonly CommandLineParser _parser;
 
     /// <summary>
@@ -18,12 +19,21 @@ public class BackupAppService
     /// <param name="repo">The repository used for data persistence.</param>
     /// <param name="ui">The user interface for displaying messages.</param>
     /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
-    public BackupAppService(IBackupJobRepository repo, IUI ui, BackupEngine backupEngine)
+    public BackupAppService(IBackupJobRepository repo, BackupEngine backupEngine, IEventService eventService)
     {
         _repo = repo;
         _engine = backupEngine;
-        _ui = ui;
+        _eventService = eventService;
+
+        _eventService.OnCreateJob += HandleCreateJob;
+
+
         // _parser = new CommandLineParser();
+    }
+
+    public void RunInteractive()
+    {
+        Console.Write("ok");
     }
 
     /// <summary>
@@ -33,14 +43,14 @@ public class BackupAppService
     /// <param name="source">Source folder path.</param>
     /// <param name="destination">Destination folder path.</param>
     /// <param name="type">Type of backup (Full or Differential).</param>
-    public void CreateJob(string name, string source, string destination, BackupType type)
+    public void HandleCreateJob(object? sender, CreateJobEventArgs e)
     {
         var job = new BackupJob
         {
-            Name = name,
-            Source = source,
-            Destination = destination,
-            Type = type
+            Name = e.Name,
+            Source = e.Source,
+            Destination = e.Destination,
+            Type = e.Type
         };
 
         _repo.Add(job);
@@ -93,7 +103,7 @@ public class BackupAppService
         var jobs = _repo.GetAll();
         foreach (var job in jobs)
         {
-            _ui.ShowMessage($"[{job.Id}] {job.Name} | {job.Source} -> {job.Destination} ({job.Type})");
+            //_ui.ShowMessage($"[{job.Id}] {job.Name} | {job.Source} -> {job.Destination} ({job.Type})");
         }
         return jobs;
     }
