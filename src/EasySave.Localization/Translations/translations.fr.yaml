@@ -26,3 +26,4 @@ translations:
   user_choice: "Votre choix : "
   ask_backupjob_save: "Veuillez indiquer l'index du BackupJob"
   backup_saving: "BackupJob en cours de sauvegarde..."
+  backup_error: "Erreur lors de la sauvegarde"

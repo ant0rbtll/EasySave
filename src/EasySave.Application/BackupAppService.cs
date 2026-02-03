@@ -2,6 +2,7 @@ using EasySave.Persistence;
 using EasySave.Backup;
 //using EasySave.CLI;
 using EasySave.Core;
+using EasySave.Localization;
 
 namespace EasySave.Application;
 
@@ -62,12 +63,12 @@ public class BackupAppService
     {
         try
         {
-            _ui.ShowMessage($"Starting backup job: {job.Name}");
+            _ui.ShowMessage(LocalizationKey.backup_saving);
             _engine.Execute(job);
         }
         catch
         {
-            _ui.ShowMessage($"Error executing backup job: {job.Name}");
+            _ui.ShowMessage(LocalizationKey.backup_error);
         }
     }
 

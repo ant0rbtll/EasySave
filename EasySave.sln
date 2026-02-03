@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.State.Tests", "tes
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Persistence.Tests", "tests\EasySave.Persistence.Tests\EasySave.Persistence.Tests.csproj", "{D9957A78-70BA-49A5-8F2F-9AD984604DB5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Localization.Tests", "tests\EasySave.Localization.Tests\EasySave.Localization.Tests.csproj", "{A78AC2C3-EF8A-4B4C-A443-9505FC4D905E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -106,6 +108,10 @@ Global
 		{D9957A78-70BA-49A5-8F2F-9AD984604DB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D9957A78-70BA-49A5-8F2F-9AD984604DB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D9957A78-70BA-49A5-8F2F-9AD984604DB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A78AC2C3-EF8A-4B4C-A443-9505FC4D905E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A78AC2C3-EF8A-4B4C-A443-9505FC4D905E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A78AC2C3-EF8A-4B4C-A443-9505FC4D905E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A78AC2C3-EF8A-4B4C-A443-9505FC4D905E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D51E5DDC-9716-4E93-B1B5-CCA00D0695C5} = {F86F7A98-F514-4CE2-8811-D39077FF82E6}
@@ -123,5 +129,6 @@ Global
 		{3D90A88D-E945-4A96-A53D-58F741E2FF76} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
 		{C6B55246-D290-49BA-8794-FAA886E3B41B} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
 		{D9957A78-70BA-49A5-8F2F-9AD984604DB5} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
+		{A78AC2C3-EF8A-4B4C-A443-9505FC4D905E} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
 	EndGlobalSection
 EndGlobal
