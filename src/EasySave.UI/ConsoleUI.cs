@@ -2,7 +2,6 @@
 using EasySave.Localization;
 using EasySave.Core;
 using EasySave.UI.Menu;
-using YamlDotNet.Serialization;
 
 namespace EasySave.UI;
 
@@ -53,7 +52,7 @@ public class ConsoleUI
         ShowMessage(LocalizationKey.input_escape_to_cancel, false);
         Console.Write(" : ");
 
-        string input = "";
+        var input = new global::System.Text.StringBuilder();
         ConsoleKeyInfo keyInfo;
 
         do
@@ -68,12 +67,12 @@ public class ConsoleUI
             else if (keyInfo.Key == ConsoleKey.Enter)
             {
                 Console.WriteLine();
-                if (string.IsNullOrWhiteSpace(input))
+                if (input.Length == 0 || string.IsNullOrWhiteSpace(input.ToString()))
                 {
                     ShowMessage(LocalizationKey.input_string_invalid, false);
                     ShowMessage(LocalizationKey.input_escape_to_cancel, false);
                     Console.Write(" : ");
-                    input = "";
+                    input.Clear();
                 }
                 else
                 {
@@ -82,18 +81,18 @@ public class ConsoleUI
             }
             else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
-                input = input.Substring(0, input.Length - 1);
+                input.Remove(input.Length - 1, 1);
                 Console.Write("\b \b"); // Erase the character on screen
             }
             else if (!char.IsControl(keyInfo.KeyChar))
             {
-                input += keyInfo.KeyChar;
+                input.Append(keyInfo.KeyChar);
                 Console.Write(keyInfo.KeyChar);
             }
         }
         while (true);
 
-        return input;
+        return input.ToString();
     }
 
     /// <inheritdoc />
@@ -102,7 +101,7 @@ public class ConsoleUI
         ShowMessage(key, false);
         ShowMessage(LocalizationKey.input_escape_to_cancel, false);
         Console.Write(" : ");
-        string input = "";
+        var input = new global::System.Text.StringBuilder();
         ConsoleKeyInfo keyInfo;
 
         do
@@ -117,7 +116,7 @@ public class ConsoleUI
             else if (keyInfo.Key == ConsoleKey.Enter)
             {
                 Console.WriteLine();
-                if (int.TryParse(input, out int numberInput))
+                if (int.TryParse(input.ToString(), out int numberInput))
                 {
                     return numberInput;
                 }
@@ -126,17 +125,17 @@ public class ConsoleUI
                     ShowMessage(LocalizationKey.input_number_invalid, false);
                     ShowMessage(LocalizationKey.input_escape_to_cancel, false);
                     Console.Write(" : " );
-                    input = "";
+                    input.Clear();
                 }
             }
             else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
-                input = input.Substring(0, input.Length - 1);
+                input.Remove(input.Length - 1, 1);
                 Console.Write("\b \b");
             }
             else if (char.IsDigit(keyInfo.KeyChar) || (keyInfo.KeyChar == '-' && input.Length == 0))
             {
-                input += keyInfo.KeyChar;
+                input.Append(keyInfo.KeyChar);
                 Console.Write(keyInfo.KeyChar);
             }
         }
