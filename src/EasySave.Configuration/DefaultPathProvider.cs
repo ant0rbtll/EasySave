@@ -10,7 +10,7 @@ namespace EasySave.Configuration
         }
 
         /// <summary>
-        /// Création ou récupération du dossier de log et du fichier journalier
+        /// Creation ou recuperation du dossier de log et du fichier journalier
         /// </summary>
         #region GetDailyLogPath
         public string GetDailyLogPath(DateTime date)
@@ -35,7 +35,7 @@ namespace EasySave.Configuration
         #endregion
 
         /// <summary>
-        /// Création ou récupération du fichier d'état
+        /// Creation ou recuperation du fichier d'etat
         /// </summary>
         #region GetStatePath
         public string GetStatePath()
@@ -52,7 +52,7 @@ namespace EasySave.Configuration
         #endregion
 
         /// <summary>
-        /// Création ou récupération du fichier de configuration des jobs
+        /// Creation ou recuperation du fichier de configuration des jobs
         /// </summary>
         #region GetJobsConfigPath
         public string GetJobsConfigPath()

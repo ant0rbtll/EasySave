@@ -30,6 +30,7 @@ public class RealTimeStateWriter(
         if (!state.Entries.TryGetValue(backupId, out var entry))
             return;
 
+        //entry.Status = BackupStatus.Inactive;
         entry.Timestamp = DateTime.Now;
 
         WriteStateFile();
@@ -39,7 +40,7 @@ public class RealTimeStateWriter(
     private void WriteStateFile()
     {
         state.UpdatedAt = DateTime.Now;
-        string json = StateSerializer.WritePrettyJson(state);
+        string json = StateSerializer.ToPrettyJson(state);
         string path = pathProvider.GetStatePath();
         File.WriteAllText(path, json);
     }

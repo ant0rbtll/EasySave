@@ -4,10 +4,10 @@ namespace EasySave.State.Tests;
 
 public class RealTimeStateWriterTests
 {
-    [Fact]
     /// <summary>
-    /// Appelle l'update lorsque le statue est mock "active"
+    /// Appelle l'update lorsque le status est mock "active"
     /// </summary>
+    [Fact]
     #region UpdateProgressActive
     public void Update_WhenProgressLessThan100_SetsStatusActive()
     {
@@ -48,10 +48,10 @@ public class RealTimeStateWriterTests
     }
     #endregion
 
-    [Fact]
     /// <summary>
-    /// Appelle l'ecriture innactif lorsque le statue est mock "Inactive"
+    /// Appelle l'ecriture inactif lorsque le status est mock "Inactive"
     /// </summary>
+    [Fact]
     #region MarkInactiveProgressInactive
     public void MarkInactive_WhenEntryExists_UpdatesTimestampAndWritesFile()
     {

@@ -4,21 +4,21 @@ namespace EasySave.State.Tests.Mocks;
 
 public class FakePathProvider(string? statePath = null) : IPathProvider
 {
-    private string statePath = statePath ?? Path.Combine(Path.GetTempPath(), $"state_{Guid.NewGuid():N}.json");
+    private string _statePath = statePath ?? Path.Combine(Path.GetTempPath(), $"state_{Guid.NewGuid():N}.json");
 
 
     /// <summary>
-    /// Mock des chemins pour le fichier d'état temps réél
+    /// Mock des chemins pour le fichier d'état temps réel
     /// </summary>
     #region MockPath
     public string GetStatePath()
     {
-        return statePath;
+        return _statePath;
     }
 
     public void SetStatePath(string path)
     {
-        statePath = path;
+        _statePath = path;
     }
 
     public string GetJobsConfigPath()
