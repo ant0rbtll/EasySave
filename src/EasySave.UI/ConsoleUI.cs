@@ -160,7 +160,7 @@ public class ConsoleUI : IUI
         int backupIndex = AskInt(LocalizationKey.ask_backupjob_save);
 
         ShowMessage(LocalizationKey.backup_saving);
-        _backupAppService.RunJob(backupIndex);
+        _backupAppService.RunJobById(backupIndex);
 
         _menuService.WaitForUser();
         MainMenu();
