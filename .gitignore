@@ -4,7 +4,7 @@ obj/
 out/
 
 test-results/
-tests/
+
 
 # Visual Studio / VS Code
 .vs/
