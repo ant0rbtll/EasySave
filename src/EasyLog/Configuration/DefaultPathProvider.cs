@@ -19,8 +19,6 @@ public sealed class DefaultPathProvider : IPathProvider
             configFolderName);
     }
 
-    public string GetDailyLogFilePath(DateTime date) => _inner.GetDailyLogPath(date);
-
     public string GetDailyLogPath(DateTime date) => _inner.GetDailyLogPath(date);
 
     public string GetStatePath() => _inner.GetStatePath();
