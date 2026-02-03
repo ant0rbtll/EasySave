@@ -1,8 +1,6 @@
 using EasySave.Persistence;
 using EasySave.Backup;
-//using EasySave.CLI;
 using EasySave.Core;
-using EasySave.Localization;
 
 namespace EasySave.Application;
 
@@ -10,21 +8,16 @@ public class BackupAppService
 {
     private readonly IBackupJobRepository _repo;
     private readonly BackupEngine _engine;
-    private readonly IUI _ui;
-    // private readonly CommandLineParser _parser;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BackupAppService"/> class.
     /// </summary>
     /// <param name="repo">The repository used for data persistence.</param>
-    /// <param name="ui">The user interface for displaying messages.</param>
     /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
-    public BackupAppService(IBackupJobRepository repo, IUI ui, BackupEngine backupEngine)
+    public BackupAppService(IBackupJobRepository repo, BackupEngine backupEngine)
     {
         _repo = repo;
         _engine = backupEngine;
-        _ui = ui;
-        // _parser = new CommandLineParser();
     }
 
     /// <summary>
@@ -61,15 +54,7 @@ public class BackupAppService
     /// </summary>
     public void RunJob(BackupJob job)
     {
-        try
-        {
-            _ui.ShowMessage(LocalizationKey.backup_saving);
-            _engine.Execute(job);
-        }
-        catch
-        {
-            _ui.ShowMessage(LocalizationKey.backup_error);
-        }
+        _engine.Execute(job);
     }
 
     public void RunJobById(int id)
@@ -110,5 +95,15 @@ public class BackupAppService
     public List<BackupJob> GetAllJobs()
     {
         return _repo.GetAll();
+    }
+
+    /// <summary>
+    /// Retrieves a specific backup job by ID.
+    /// </summary>
+    /// <param name="id">The job identifier.</param>
+    /// <returns>The BackupJob if found, null otherwise.</returns>
+    public BackupJob? GetJobById(int id)
+    {
+        return _repo.GetById(id);
     }
 }

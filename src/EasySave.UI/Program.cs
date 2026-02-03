@@ -1,4 +1,10 @@
 ﻿using EasySave.Application;
+using EasySave.Persistence;
+using EasySave.Backup;
+using EasySave.State;
+using EasySave.Configuration;
+using EasySave.System;
+using EasyLog;
 
 namespace EasySave.UI;
 
@@ -13,10 +19,25 @@ public class Program
     /// <param name="args">Command-line arguments passed to the application.</param>
     public static void Main(string[] args)
     {
-        BackupAppService backupAppService = new BackupAppService();
+        // Setup configuration providers
+        var pathProvider = new DefaultPathProvider();
+        var idProvider = new SequentialJobIdProvider();
+        
+        // Setup infrastructure
+        var formatter = new JsonLogFormatter();
+        var logger = new DailyFileLogger(formatter, pathProvider);
+        var globalState = new GlobalState();
+        var stateWriter = new RealTimeStateWriter(pathProvider, globalState);
+        var repository = new JsonBackupJobRepository(pathProvider, idProvider);
+        var fileSystem = new DefaultFileSystem();
+        var transferService = new DefaultTransferService(fileSystem);
+        var backupEngine = new BackupEngine(fileSystem, transferService, stateWriter, logger);
 
-        ConsoleUI console = new ConsoleUI(backupAppService);
+        // Setup application service
+        var backupAppService = new BackupAppService(repository, backupEngine);
+
+        // Setup and run UI
+        var console = new ConsoleUI(backupAppService);
         console.MainMenu();
-
     }
 }

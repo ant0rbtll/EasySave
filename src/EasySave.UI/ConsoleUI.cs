@@ -8,7 +8,7 @@ namespace EasySave.UI;
 /// <summary>
 /// Actions and display of the application with the console
 /// </summary>
-public class ConsoleUI : IUI
+public class ConsoleUI
 {
 
     private readonly BackupAppService _backupAppService;
@@ -25,25 +25,19 @@ public class ConsoleUI : IUI
     }
 
     /// <inheritdoc />
-    public void ShowMessage(LocalizationKey key, bool writeLine = true)
+    private void ShowMessage(LocalizationKey key, bool writeLine = true)
     {
         string message = LocalizationService.TranslateText(key);
         if (writeLine) Console.WriteLine(message);
         else Console.Write(message);
     }
 
-    public void ShowMessage(LocalizationKey key, Dictionary<string, string> parameters, bool writeLine = true)
+    private void ShowMessageParam(LocalizationKey key, Dictionary<string, string> parameters, bool writeLine = true)
     {
         string message = LocalizationService.TranslateText(key, parameters);
         if (writeLine) Console.WriteLine(message);
         else Console.Write(message);
     }
-
-    // public void ShowMessage(string message, bool writeLine = true)
-    // {
-    //     if (writeLine) Console.WriteLine(message);
-    //     else Console.Write(message);
-    // }
 
     /// <inheritdoc />
     public void ShowError(LocalizationKey key)
