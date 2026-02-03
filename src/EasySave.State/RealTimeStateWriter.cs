@@ -22,7 +22,7 @@ public class RealTimeStateWriter(
     #endregion
 
     /// <summary>
-    /// Lancement de l'ecriture dans le fichier d'ETR en cas d'innactivite
+    /// Lancement de l'ecriture dans le fichier d'ETR en cas d'inactivité
     /// </summary>
     #region MarkInactive
     public void MarkInactive(int backupId)
@@ -30,7 +30,7 @@ public class RealTimeStateWriter(
         if (!state.Entries.TryGetValue(backupId, out var entry))
             return;
 
-        //entry.Status = BackupStatus.Inactive;
+        entry.Status = BackupStatus.Inactive;
         entry.Timestamp = DateTime.Now;
 
         WriteStateFile();
