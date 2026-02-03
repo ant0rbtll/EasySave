@@ -11,4 +11,8 @@
 
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasySave.Configuration\EasySave.Configuration.csproj" />
+  </ItemGroup>
 </Project>
