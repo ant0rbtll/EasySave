@@ -52,11 +52,16 @@ public class BackupAppService
     /// <summary>
     /// Executes a specific backup job.
     /// </summary>
+    /// <param name="job">The backup job to execute.</param>
     public void RunJob(BackupJob job)
     {
         _engine.Execute(job);
     }
 
+    /// <summary>
+    /// Executes a specific backup job by its identifier.
+    /// </summary>
+    /// <param name="id">Identifier of the job to run.</param>
     public void RunJobById(int id)
     {
         var job = _repo.GetById(id);

@@ -23,6 +23,6 @@ public interface ILocalizationService
     /// <param name="key">The translation key</param>
     /// <param name="parameters">Dictionary of parameters to inject (e.g., {"name", "value"})</param>
     /// <returns>The message translated with parameters replaced</returns>
-    string TranslateText(LocalizationKey key, Dictionary<string, string> parameters);
+    // string TranslateText(LocalizationKey key, Dictionary<string, string> parameters);
 
 }

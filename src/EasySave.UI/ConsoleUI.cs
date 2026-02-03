@@ -33,12 +33,12 @@ public class ConsoleUI
         else Console.Write(message);
     }
 
-    private void ShowMessageParam(LocalizationKey key, Dictionary<string, string> parameters, bool writeLine = true)
-    {
-        string message = LocalizationService.TranslateText(key, parameters);
-        if (writeLine) Console.WriteLine(message);
-        else Console.Write(message);
-    }
+    // private void ShowMessageParam(LocalizationKey key, Dictionary<string, string> parameters, bool writeLine = true)
+    // {
+    //     string message = LocalizationService.TranslateText(key, parameters);
+    //     if (writeLine) Console.WriteLine(message);
+    //     else Console.Write(message);
+    // }
 
     /// <inheritdoc />
     public void ShowError(LocalizationKey key)
@@ -83,7 +83,7 @@ public class ConsoleUI
             else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
                 input = input.Substring(0, input.Length - 1);
-                Console.Write("\b \b"); // Efface le caractère à l'écran
+                Console.Write("\b \b"); // Erase the character on screen
             }
             else if (!char.IsControl(keyInfo.KeyChar))
             {
