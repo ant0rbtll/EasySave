@@ -1,7 +1,6 @@
-skinparam classAttributeIconSize 0
-title EasySave v1.0 - Diagramme de classes
 @startuml
-skinparam classAttributeIconSize 0
+title EasySave v1.0 - Diagramme de classes
+
 
 ' =========================================================
 ' EasySave v1.0 - UML adapté livrable 1
@@ -125,6 +124,7 @@ package "Persistence" as Persistence {
     - maxJobs : int = 5
     - pathProvider : CFG.IPathProvider
     - idProvider : IJobIdProvider
+    - jsonOptions : JsonSerializerOptions
     + Add(job : CORE.BackupJob) : void
     + Remove(id : int) : void
     + GetById(id : int) : CORE.BackupJob
@@ -154,40 +154,71 @@ package "Configuration (Paths)" as CFG {
 package "Backup (Execution)" as Backup {
 
   class BackupEngine {
-    - fs : SystemAbstractions.IFileSystem
-    - transfer : SystemAbstractions.ITransferService
+    - fileSystem : SystemAbstractions.IFileSystem
+    - transferService : SystemAbstractions.ITransferService
     - stateWriter : ETR.IStateWriter
-    - log : EasyLog.ILogger
+    - logger : EasyLog.ILogger
     + Execute(job : CORE.BackupJob) : void
+    + CanCopyFile(type : BackupType, sourceFile : string, destinationFile : string) : bool
   }
 }
 
 ' ===================== System Abstractions =====================
 package "SystemAbstractions" as SystemAbstractions {
+
+  ' ---------- Interfaces ----------
   interface IFileSystem {
     + DirectoryExists(path : String) : bool
     + CreateDirectory(path : String) : void
-    + EnumerateFiles(path : String) : List<String>
-    + EnumerateDirectories(path : String) : List<String>
-    + CopyFile(src : String, dst : String) : void
+    + FileExists(path : String) : bool
     + GetFileSize(path : String) : long
-    + GetFullPath(path : String) : String
-  }
-
-  class TransferResult {
-    + fileSizeBytes : long
-    + transferTimeMs : long
-    + errorCode : int
+    + CopyFile(src : String, dst : String) : void
+    + EnsureDirectoryForFileExists(filePath : String) : void
+    + EnumerateFilesRecursive(rootPath : String) : IEnumerable<string>
+    + EnumerateDirectoriesRecursive(rootPath : String) : IEnumerable<string>
+    + Combine(parts : params string[]) : string
+    + NormalizePath(path : string) : string
+    + GetRelativePath(rootPath : string, fullPath : string) : string
   }
 
   interface ITransferService {
-    + TransferFile(src : String, dst : String) : TransferResult
+    + TransferFile(
+        sourcePath : string,
+        destinationPath : string,
+        overwrite : bool
+      ) : TransferResult
   }
 
-  class DefaultTransferService
-  ITransferService <|.. DefaultTransferService
-}
+  ' ---------- Implementations ----------
+  class DefaultFileSystem
+  class DefaultTransferService {
+    - fileSystem : IFileSystem
+  }
 
+  IFileSystem <|.. DefaultFileSystem
+  ITransferService <|.. DefaultTransferService
+
+  ' ---------- Transfer Result ----------
+  class TransferResult <<record, sealed>> {
+    - FileSizeBytes : long
+    - TransferTimeMs : long
+    - ErrorCode : int
+
+    + IsSuccess : bool
+    --
+    + InvalidSourcePath() : TransferResult
+    + InvalidDestinationPath() : TransferResult
+  }
+
+  class ErrorCodes <<static>> {
+    + None : int = 0
+    + InvalidSourcePath : int = -1
+    + InvalidDestinationPath : int = -2
+    + SourceNotFound : int = -3
+  }
+
+  TransferResult *-- ErrorCodes
+}
 ' ===================== EasyLog.dll (Journalier) =====================
 package "EasyLog.dll" as EasyLog {
   enum LogEventType {
@@ -222,12 +253,17 @@ package "EasyLog.dll" as EasyLog {
     - formatter : ILogFormatter
     - pathProvider : CFG.IPathProvider
     + Write(entry : LogEntry) : void
+    + Dispose() : void
+    - NormalizeEntry(e : LogEntry) : static NormalizeEntry
+    - NormalizePath(path : string) : static string
+    - EnsureDirectoryExists(filePath : string) : static void
+    - AppendJsonObjectToArrayFile(path : string, jsonObject : string) : static void
+    - IndentBlock(text : string, spaces : int) : static string
   }
 
   ILogger <|.. DailyFileLogger
   ILogFormatter <|.. JsonLogFormatter
   DailyFileLogger --> ILogFormatter
-  DailyFileLogger --> CFG.IPathProvider
 }
 
 ' ===================== ETR (Etat Temps Réel - fichier unique) =====================
@@ -264,11 +300,10 @@ package "ETR (Etat Temps Réel)" as ETR {
   }
 
   class StateSerializer {
-    + WritePrettyJson(path : String, state : GlobalState) : void
+    + ToPrettyJson(path : String, state : GlobalState) : void
   }
 
   class RealTimeStateWriter {
-    - serializer : StateSerializer
     - pathProvider : CFG.IPathProvider
     - state : GlobalState
     + Update(entry : StateEntry) : void
@@ -277,7 +312,6 @@ package "ETR (Etat Temps Réel)" as ETR {
 
   IStateWriter <|.. RealTimeStateWriter
   RealTimeStateWriter --> StateSerializer
-  RealTimeStateWriter --> CFG.IPathProvider
 }
 
 ' ===================== Cross-package wiring =====================
@@ -290,9 +324,9 @@ Backup.BackupEngine --> SystemAbstractions.IFileSystem
 Backup.BackupEngine --> SystemAbstractions.ITransferService
 Backup.BackupEngine --> ETR.IStateWriter
 Backup.BackupEngine --> EasyLog.ILogger
+TransferResult --> DefaultTransferService
 
 Persistence.JsonBackupJobRepository --> CFG.IPathProvider
 EasyLog.DailyFileLogger --> CFG.IPathProvider
 ETR.RealTimeStateWriter --> CFG.IPathProvider
-
 @enduml
