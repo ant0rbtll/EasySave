@@ -47,7 +47,7 @@ public class DailyFileLoggerTests
         File.WriteAllText(sourceFileB, contentB);
 
         var jobName = $"Job_{Guid.NewGuid():N}";
-        var job = new SaveWork
+        var job = new BackupJob
         {
             Id = 1,
             Name = jobName,
