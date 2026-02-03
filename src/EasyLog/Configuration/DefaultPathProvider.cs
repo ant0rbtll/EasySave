@@ -11,12 +11,7 @@ public sealed class DefaultPathProvider : IPathProvider
         string stateFolderName = "State",
         string configFolderName = "Config")
     {
-        _inner = new EasySave.Configuration.DefaultPathProvider(
-            company,
-            product,
-            logsFolderName,
-            stateFolderName,
-            configFolderName);
+        _inner = new EasySave.Configuration.DefaultPathProvider();
     }
 
     public string GetDailyLogPath(DateTime date) => _inner.GetDailyLogPath(date);
