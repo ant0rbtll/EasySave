@@ -11,17 +11,17 @@ namespace EasySave.UI;
 public class ConsoleUI : IUI
 {
 
-    private readonly BackupAppService BackUpAppService;
+    private readonly BackupAppService _backupAppService;
     public ILocalizationService LocalizationService { get; }
-    private readonly MenuService MenuService;
-    private readonly MenuFactory MenuFactory;
+    private readonly MenuService _menuService;
+    private readonly MenuFactory _menuFactory;
 
-    public ConsoleUI(BackupAppService backUpAppService)
+    public ConsoleUI(BackupAppService backupAppService)
     {
-        BackUpAppService = backUpAppService;
+        _backupAppService = backupAppService;
         LocalizationService = new LocalizationService();
-        MenuService = new MenuService(LocalizationService);
-        MenuFactory = new MenuFactory(this);
+        _menuService = new MenuService(LocalizationService);
+        _menuFactory = new MenuFactory(this);
     }
 
     /// <inheritdoc />
@@ -91,7 +91,6 @@ public class ConsoleUI : IUI
     public BackupType AskBackupType(LocalizationKey key)
     {
         string? backupTypeInput;
-        BackupType backupType;
 
         ShowMessage(LocalizationKey.backupjob_type_list);
         var values = Enum.GetValues(typeof(BackupType)).Cast<BackupType>().ToArray();
@@ -124,16 +123,16 @@ public class ConsoleUI : IUI
     /// </summary>
     public void CreateBackupJob()
     {
-        MenuService.DisplayLabel(LocalizationKey.menu_create);
-        string nameJob = AskString(LocalizationKey.savework_create_name);
-        string sourceJob = AskString(LocalizationKey.savework_create_source);
-        string destinationJob = AskString(LocalizationKey.savework_create_destination);
-        BackupType backupTypeJob = AskBackupType(LocalizationKey.savework_create_type);
+        _menuService.DisplayLabel(LocalizationKey.menu_create);
+        string nameJob = AskString(LocalizationKey.backupjob_create_name);
+        string sourceJob = AskString(LocalizationKey.backupjob_create_source);
+        string destinationJob = AskString(LocalizationKey.backupjob_create_destination);
+        BackupType backupTypeJob = AskBackupType(LocalizationKey.backupjob_create_type);
 
-        // send to service 
-        BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
+        // send to service
+        _backupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
         ShowMessage(LocalizationKey.backupjob_created);
-        MenuService.WaitForUser();
+        _menuService.WaitForUser();
         MainMenu();
     }
 
@@ -142,12 +141,12 @@ public class ConsoleUI : IUI
     /// </summary>
     public void SeeSaveList()
     {
-        MenuService.DisplayLabel(LocalizationKey.menu_list);
-        List<BackupJob> backupJobList = BackUpAppService.GetAllJobs();
+        _menuService.DisplayLabel(LocalizationKey.menu_list);
+        List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
         foreach (BackupJob job in backupJobList) {
             Console.WriteLine(job.Id + " - " + job.Name);
         }
-        MenuService.WaitForUser();
+        _menuService.WaitForUser();
         MainMenu();
     }
 
@@ -156,14 +155,14 @@ public class ConsoleUI : IUI
     /// </summary>
     public void SaveJob()
     {
-        MenuService.DisplayLabel(LocalizationKey.menu_save);
+        _menuService.DisplayLabel(LocalizationKey.menu_save);
 
         int backupIndex = AskInt(LocalizationKey.ask_backupjob_save);
 
         ShowMessage(LocalizationKey.backup_saving);
-        BackupAppService.RunJob(backupIndex);
+        _backupAppService.RunJob(backupIndex);
 
-        MenuService.WaitForUser();
+        _menuService.WaitForUser();
         MainMenu();
     }
 
@@ -172,8 +171,8 @@ public class ConsoleUI : IUI
     /// </summary>
     public void ConfigureParams()
     {
-        var menuConfig = MenuFactory.CreateParamsMenu();
-        MenuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
+        var menuConfig = _menuFactory.CreateParamsMenu();
+        _menuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
     }
 
     /// <summary>
@@ -181,8 +180,8 @@ public class ConsoleUI : IUI
     /// </summary>
     public void ShowChangeLocale()
     {
-        var menuConfig = MenuFactory.CreateLocaleMenu();
-        MenuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
+        var menuConfig = _menuFactory.CreateLocaleMenu();
+        _menuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
     }
 
     /// <summary>
@@ -201,8 +200,8 @@ public class ConsoleUI : IUI
     /// </summary>
     public void MainMenu()
     {
-        var menuConfig = MenuFactory.CreateMainMenu();
-        MenuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
+        var menuConfig = _menuFactory.CreateMainMenu();
+        _menuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
 
     }
 
