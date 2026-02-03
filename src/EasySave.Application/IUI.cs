@@ -11,7 +11,7 @@ public interface IUI
 	/// Display a message translated
 	/// </summary>
 	/// <param name="key">The translation key</param>
-	public void ShowMessage(string key, bool writeLine);
+	public void ShowMessage(string key, bool writeLine = true);
 
 	/// <summary>
 	/// Display an error translated
