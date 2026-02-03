@@ -1,0 +1,43 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor "Utilisateur" as User
+
+rectangle "EasySave 1.0" {
+
+  usecase "Gérer les travaux\nde sauvegarde" as UC_Manage
+  usecase "Créer un travail" as UC_Create
+  usecase "Modifier un travail" as UC_Edit
+  usecase "Supprimer un travail" as UC_Delete
+  usecase "Lister les travaux" as UC_List
+
+  usecase "Exécuter un travail" as UC_RunOne
+  usecase "Exécuter tous les travaux" as UC_RunAll
+
+  usecase "Lancer via\nligne de commande" as UC_CLI
+
+  usecase "Choisir la langue\n(FR / EN)" as UC_Lang
+
+  usecase "Consulter\nl'avancement" as UC_Status
+}
+
+' Acteur
+User --> UC_Manage
+User --> UC_RunOne
+User --> UC_RunAll
+User --> UC_CLI
+User --> UC_Lang
+User --> UC_Status
+
+' Gestion
+UC_Manage .> UC_Create : <<include>>
+UC_Manage .> UC_Edit   : <<include>>
+UC_Manage .> UC_Delete : <<include>>
+UC_Manage .> UC_List   : <<include>>
+
+' Exécution globale
+UC_RunAll .> UC_RunOne : <<include>>
+
+@enduml
