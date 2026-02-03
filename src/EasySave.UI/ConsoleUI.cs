@@ -137,8 +137,8 @@ public class ConsoleUI : IUI
     public void SeeSaveList()
     {
         MenuService.DisplayLabel("menu_list");
-        List<BackupJob> BackupJobList = BackUpAppService.GetAllJobs();
-        foreach (BackupJob job in BackupJobList) {
+        List<BackupJob> backupJobList = BackUpAppService.GetAllJobs();
+        foreach (BackupJob job in backupJobList) {
             Console.WriteLine(job.Id + " - " + job.Name);
         }
         MenuService.WaitForUser();
