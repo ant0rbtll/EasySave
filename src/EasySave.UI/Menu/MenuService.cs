@@ -14,7 +14,7 @@ namespace EasySave.UI.Menu
         /// <summary>
         /// Display a menu and return the selected index
         /// </summary>
-        public int ShowMenu(string[] menuItems, string menuLabel = "menu")
+        public int ShowMenu(LocalizationKey[] menuItems, LocalizationKey menuLabel = LocalizationKey.menu)
         {
             int index = 0;
             ConsoleKey key;
@@ -30,13 +30,13 @@ namespace EasySave.UI.Menu
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.Write("> ");
-                        Console.WriteLine(_localizationService.TranslateTexte(menuItems[i]));
+                        Console.WriteLine(_localizationService.TranslateText(menuItems[i]));
                         Console.ResetColor();
                     }
                     else
                     {
                         Console.Write("  ");
-                        Console.WriteLine(_localizationService.TranslateTexte(menuItems[i]));
+                        Console.WriteLine(_localizationService.TranslateText(menuItems[i]));
                     }
                 }
 
@@ -60,7 +60,7 @@ namespace EasySave.UI.Menu
         /// <summary>
         /// Display a menu and execute the associated action
         /// </summary>
-        public void ShowMenuWithActions(string[] menuItems, Dictionary<int, Action> menuActions, string menuLabel = "menu")
+        public void ShowMenuWithActions(LocalizationKey[] menuItems, Dictionary<int, Action> menuActions, LocalizationKey menuLabel = LocalizationKey.menu)
         {
             int selectedIndex = ShowMenu(menuItems, menuLabel);
 
@@ -73,10 +73,10 @@ namespace EasySave.UI.Menu
         /// <summary>
         /// Display the title of a section
         /// </summary>
-        public void DisplayLabel(string key)
+        public void DisplayLabel(LocalizationKey key)
         {
             Console.Write("====");
-            string message = _localizationService.TranslateTexte(key);
+            string message = _localizationService.TranslateText(key);
             Console.Write(message);
             Console.Write("====\n");
         }
@@ -84,9 +84,9 @@ namespace EasySave.UI.Menu
         /// <summary>
         /// Wait for user to press any key
         /// </summary>
-        public void WaitForUser(string messageKey = "waiting_user")
+        public void WaitForUser(LocalizationKey messageKey = LocalizationKey.waiting_user)
         {
-            Console.WriteLine(_localizationService.TranslateTexte(messageKey));
+            Console.WriteLine(_localizationService.TranslateText(messageKey));
             Console.ReadKey(true);
         }
     }

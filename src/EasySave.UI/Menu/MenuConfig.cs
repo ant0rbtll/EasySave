@@ -1,14 +1,14 @@
-﻿
+﻿using EasySave.Localization;
 
 namespace EasySave.UI.Menu
 {
     internal class MenuConfig
     {
-        public string[] Items { get; }
+        public LocalizationKey[] Items { get; }
         public Dictionary<int, Action> Actions { get; }
-        public string Label { get; }
+        public LocalizationKey Label { get; }
 
-        public MenuConfig(string[] items, Dictionary<int, Action> actions, string label = "menu")
+        public MenuConfig(LocalizationKey[] items, Dictionary<int, Action> actions, LocalizationKey label = LocalizationKey.menu)
         {
             Items = items;
             Actions = actions;

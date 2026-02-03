@@ -9,7 +9,7 @@ namespace EasySave.Localization;
 /// </summary>
 public class LocalizationService : ILocalizationService
 {
-    public Dictionary<string, string> AllCultures { get; }
+    public Dictionary<string, LocalizationKey> AllCultures { get; }
 
     private Dictionary<string, Dictionary<string, string>>? _translationCache;
 
@@ -20,14 +20,20 @@ public class LocalizationService : ILocalizationService
     {
         AllCultures = new()
         {
-            { "fr", "config_locale_fr" },
-            { "en", "config_locale_en" },
+            { "fr", LocalizationKey.config_locale_fr },
+            { "en", LocalizationKey.config_locale_en },
         };
         Culture = "fr";
 
     }
 
     public string Culture { get; set; }
+
+    /// <inheritdoc/>
+    public string TranslateText(LocalizationKey key)
+    {
+        return TranslateText(key.ToString());
+    }
 
     /// <inheritdoc/>
     public string TranslateText(string key)

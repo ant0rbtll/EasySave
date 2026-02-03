@@ -7,7 +7,7 @@ public interface ILocalizationService
 {
 
     public string Culture { get; set; }
-    public Dictionary<string, string> AllCultures { get; }
+    public Dictionary<string, LocalizationKey> AllCultures { get; }
 
     /// <summary>
     /// Translate a message with the current language
@@ -15,5 +15,6 @@ public interface ILocalizationService
     /// <param name="key">The translation key</param>
     /// <returns>The message translated</returns>
     string TranslateText(string key);
+    string TranslateText(LocalizationKey key);
 
 }
