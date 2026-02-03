@@ -1,0 +1,63 @@
+@startuml
+title EasySave 1.0 - Diagramme d'activités : Exécution via ligne de commande
+
+skinparam direction left to right
+
+start
+
+:Utilisateur lance EasySave.exe\navec args (ex: "1-3" ou "1;3");
+:APP.BackupAppService.RunFromArgs(args);
+
+:CLI.CommandLineParser.Parse(args);
+if (Syntaxe valide ?) then (Oui)
+  :ids = int[];
+else (Non)
+  :UI.ShowError("Syntaxe invalide / aide");
+  stop
+endif
+
+:APP.BackupAppService.RunJobs(ids);
+
+:Charger les jobs demandés\n(Persistence.ISaveWorkRepository.GetById);
+if (Au moins 1 job ?) then (Oui)
+else (Non)
+  :UI.ShowMessage("Aucun travail");
+  stop
+endif
+
+repeat
+  :Sélectionner job suivant;
+
+  :Backup.BackupEngine.Execute(job);
+
+  :ETR.IStateWriter.Update(entry)\nstatus=Active + init totaux;
+  :EasyLog.ILogger.Write(entry)\n(eventType start / action);
+
+  :Lister fichiers + sous-dossiers\n(SystemAbstractions.IFileSystem.Enumerate*);
+  if (Fichiers à traiter ?) then (Oui)
+    repeat
+      :Définir fichier courant\n(src, dst, remaining, progress);
+      :ETR.IStateWriter.Update(entry);
+
+      :Transférer fichier\n(SystemAbstractions.ITransferService.TransferFile);
+      if (Transfert OK ?) then (Oui)
+        :EasyLog.ILogger.Write(LogEntry)\nTransferFile (ms>=0);
+      else (Non)
+        :EasyLog.ILogger.Write(LogEntry)\nError (ms<0, code);
+        :ETR.IStateWriter.Update(entry)\nstatus=Error;
+      endif
+
+    repeat while (Fichier suivant ?) is (Oui)
+  else (Non)
+    :Aucun fichier trouvé;
+  endif
+
+  :ETR.IStateWriter.Update(entry)\nstatus=Done;
+  :ETR.IStateWriter.MarkInactive(backupId);
+
+repeat while (Job suivant ?) is (Oui)
+
+:UI.ShowMessage("Résumé exécution");
+stop
+
+@enduml

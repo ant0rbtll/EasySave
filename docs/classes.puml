@@ -1,4 +1,3 @@
-!theme spacelab
 skinparam classAttributeIconSize 0
 title EasySave v1.0 - Diagramme de classes
 @startuml
