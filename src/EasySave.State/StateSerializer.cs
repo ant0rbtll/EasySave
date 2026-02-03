@@ -1,33 +1,30 @@
-using System.Text.Json.Serialization;
 using System.Text.Json;
 
 namespace EasySave.State;
 
 public class StateSerializer
 {
+    private static readonly JsonSerializerOptions s_jsonOptions = new()
+    {
+        WriteIndented = true
+    };
+
     /// <summary>
-    /// renvoie un json indenté 
+    /// Returns an indented JSON string. 
     /// </summary>
     #region WritePrettyJson
-    public string WritePrettyJson(GlobalState state)
+    public static string WritePrettyJson(GlobalState state)
     {
-        if (state == null)
-            throw new ArgumentNullException(nameof(state));
+        ArgumentNullException.ThrowIfNull(state);
 
         var entries = state.Entries.Values.Select(entry => new
         {
             Name = entry.BackupName,
             Status = entry.Status.ToString(),
-            Timestamp = entry.Timestamp
+            entry.Timestamp
         }).ToList(); 
 
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true, 
-            Converters = { new JsonStringEnumConverter() } 
-        };
-
-        string json = JsonSerializer.Serialize(entries, options);
+        string json = JsonSerializer.Serialize(entries, s_jsonOptions);
         
         return json;
     }

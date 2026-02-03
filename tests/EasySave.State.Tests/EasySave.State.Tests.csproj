@@ -24,8 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\EasySave.Backup\EasySave.Backup.csproj" />
-    <ProjectReference Include="..\..\src\EasySave.Configuration\EasySave.Configuration.csproj" />
     <ProjectReference Include="..\..\src\EasySave.State\EasySave.State.csproj" />
   </ItemGroup>
 

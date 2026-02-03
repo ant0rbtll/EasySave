@@ -2,60 +2,45 @@ using EasySave.Configuration;
 
 namespace EasySave.State;
 
-public class RealTimeStateWriter : IStateWriter
+public class RealTimeStateWriter(
+    IPathProvider pathProvider,
+    GlobalState state) : IStateWriter
 {
-    private readonly StateSerializer serializer;
-    private readonly IPathProvider pathProvider;
-    private readonly GlobalState state;
-
-    public RealTimeStateWriter(
-        IPathProvider pathProvider,
-        StateSerializer serializer,
-        GlobalState state)
-    {
-        this.pathProvider = pathProvider;
-        this.serializer = serializer;
-        this.state = state;
-    }
-
     /// <summary>
-    /// Lancement de l'écriture dans le fichier d'ETR
+    /// Lancement de l'ecriture dans le fichier d'ETR
     /// </summary>
     #region Update
     public void Update(StateEntry entry)
     {
-        if (entry == null)
-            throw new ArgumentNullException(nameof(entry));
+        ArgumentNullException.ThrowIfNull(entry);
 
         entry.Timestamp = DateTime.Now;
-
         state.Entries[entry.BackupId] = entry;
-        state.UpdatedAt = DateTime.Now;
 
-        string json = serializer.WritePrettyJson(state);
-
-        string path = pathProvider.GetStatePath();
-        File.WriteAllText(path, json);
+        WriteStateFile();
     }
     #endregion
 
     /// <summary>
-    /// Lancement de l'écriture dans le fichier d'ETR en cas d'innactivité
+    /// Lancement de l'ecriture dans le fichier d'ETR en cas d'innactivite
     /// </summary>
-    #region MarkInactiv
-    public void MarkInactiv(int backupId)
+    #region MarkInactive
+    public void MarkInactive(int backupId)
     {
         if (!state.Entries.TryGetValue(backupId, out var entry))
             return;
 
         entry.Timestamp = DateTime.Now;
 
+        WriteStateFile();
+    }
+    #endregion
+
+    private void WriteStateFile()
+    {
         state.UpdatedAt = DateTime.Now;
-
-        string json = serializer.WritePrettyJson(state);
-
+        string json = StateSerializer.WritePrettyJson(state);
         string path = pathProvider.GetStatePath();
         File.WriteAllText(path, json);
     }
-    #endregion
 }

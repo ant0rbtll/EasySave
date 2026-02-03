@@ -1,15 +1,10 @@
 ﻿using EasySave.Configuration;
 
-public class TestPathProvider : IPathProvider
+namespace EasySave.State.Tests.Mocks;
+
+public class FakePathProvider(string? statePath = null) : IPathProvider
 {
-    private string statePath;
-
-    private const string defaultStatePath = @"state.json";
-
-    public TestPathProvider(string statePath = null)
-    {
-        this.statePath = statePath ?? defaultStatePath;
-    }
+    private string statePath = statePath ?? Path.Combine(Path.GetTempPath(), $"state_{Guid.NewGuid():N}.json");
 
 
     /// <summary>
