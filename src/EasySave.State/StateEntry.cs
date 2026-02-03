@@ -2,15 +2,15 @@ namespace EasySave.State;
 
 public class StateEntry
 {
-    public int backupId;
-    public string backupName;
-    public DateTime timestamp;
-    public BackupStatus status;
-    public int totalFiles;
+    public int BackupId;
+    public string BackupName;
+    public DateTime Timestamp;
+    public BackupStatus Status;
+    public int TotalFiles;
     public long totalSizeBytes;
-    public int remainingFiles;
-    public long remainingSizeBytes;
-    public int progressPercent;
-    public string currentSourcePath;
-    public string currentDestinationPath;
+    public int RemainingFiles;
+    public long RemainingSizeBytes;
+    public int ProgressPercent;
+    public string CurrentSourcePath;
+    public string CurrentDestinationPath;
 }

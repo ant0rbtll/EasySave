@@ -16,9 +16,9 @@ public class StateSerializer
 
         var entries = state.Entries.Values.Select(entry => new
         {
-            Name = entry.backupName,
-            Status = entry.status.ToString(),
-            Timestamp = entry.timestamp
+            Name = entry.BackupName,
+            Status = entry.Status.ToString(),
+            Timestamp = entry.Timestamp
         }).ToList(); 
 
         var options = new JsonSerializerOptions
@@ -28,13 +28,7 @@ public class StateSerializer
         };
 
         string json = JsonSerializer.Serialize(entries, options);
-        json = json.Replace("{", "").Replace("}", "").Replace("[", "").Replace("]", "");
-
-        Console.WriteLine("=========== STATE FILE UPDATED ===========");
-        Console.WriteLine(json);
-        Console.WriteLine("==========================================");
-        Console.WriteLine();
-
+        
         return json;
     }
     #endregion

@@ -17,7 +17,6 @@ namespace EasySave.Configuration
         {
             string logsDir = Path.Combine(baseDirectory, "logs");
 
-            // Création du dossier logs si nécessaire
             if (!Directory.Exists(logsDir))
             {
                 Directory.CreateDirectory(logsDir);
@@ -26,7 +25,6 @@ namespace EasySave.Configuration
             string fileName = $"{date:yyyy-MM-dd}.json";
             string fullPath = Path.Combine(logsDir, fileName);
 
-            // Création du fichier si nécessaire
             if (!File.Exists(fullPath))
             {
                 File.WriteAllText(fullPath, string.Empty);

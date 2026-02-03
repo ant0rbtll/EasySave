@@ -27,9 +27,9 @@ public class RealTimeStateWriter : IStateWriter
         if (entry == null)
             throw new ArgumentNullException(nameof(entry));
 
-        entry.timestamp = DateTime.Now;
+        entry.Timestamp = DateTime.Now;
 
-        state.Entries[entry.backupId] = entry;
+        state.Entries[entry.BackupId] = entry;
         state.UpdatedAt = DateTime.Now;
 
         string json = serializer.WritePrettyJson(state);
@@ -48,7 +48,7 @@ public class RealTimeStateWriter : IStateWriter
         if (!state.Entries.TryGetValue(backupId, out var entry))
             return;
 
-        entry.timestamp = DateTime.Now;
+        entry.Timestamp = DateTime.Now;
 
         state.UpdatedAt = DateTime.Now;
 
