@@ -10,7 +10,6 @@
     <ProjectReference Include="..\EasySave.Backup\EasySave.Backup.csproj" />
     <ProjectReference Include="..\EasySave.Core\EasySave.Core.csproj" />
     <ProjectReference Include="..\EasySave.Persistence\EasySave.Persistence.csproj" />
-    <ProjectReference Include="..\EasySave.CLI\EasySave.CLI.csproj" />
   </ItemGroup>
 
 </Project>
