@@ -1,8 +1,9 @@
-namespace EasySave.Configuration;
-
-public interface IPathProvider
+namespace EasySave.Configuration
 {
-    string GetDailyLogPath(DateTime date);
-    string GetStatePath();
-    string GetJobsConfigPath();
+    public interface IPathProvider
+    {
+        string GetDailyLogPath(DateTime date);
+        string GetStatePath();
+        string GetJobsConfigPath();
+    }
 }

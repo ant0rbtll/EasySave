@@ -104,6 +104,7 @@ public class BackupEngine
         }
 
         UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
+        _stateWriter.MarkInactive(job.Id);
         }
         catch (Exception)
         {
