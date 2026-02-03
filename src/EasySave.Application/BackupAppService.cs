@@ -28,6 +28,7 @@ public class BackupAppService
         _ui = ui;
         _eventService.OnCreateJob += HandleCreateJob;
         _eventService.OnGetAllJobsRequested += HandleGetAllJobsRequested;
+        _eventService.OnRunJobs += RunJobs;
 
 
         // _parser = new CommandLineParser();
@@ -35,7 +36,7 @@ public class BackupAppService
 
     public void RunInteractive()
     {
-        _ui.MainMenu();
+        _ui.Start();
     }
 
     /// <summary>
@@ -47,7 +48,6 @@ public class BackupAppService
     /// <param name="type">Type of backup (Full or Differential).</param>
     public void HandleCreateJob(object? sender, CreateJobEventArgs e)
     {
-        _ui.ShowMessage("test");
         var job = new BackupJob
         {
             Name = e.Name,
@@ -72,9 +72,9 @@ public class BackupAppService
     /// Executes a specific list of backup jobs.
     /// </summary>
     /// <param name="ids">Array of job identifiers to launch.</param>
-    public void RunJobs(int[] ids)
+    public void RunJobs(object? sender, LaunchBackupJobsEventArgs e)
     {
-        foreach (int id in ids)
+        foreach (int id in e.Jobs)
         {
             var job = _repo.GetById(id);
             if (job != null)

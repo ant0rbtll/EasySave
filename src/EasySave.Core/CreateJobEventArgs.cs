@@ -45,4 +45,14 @@ namespace EasySave.Core
     {
         
     }
+
+    public class LaunchBackupJobsEventArgs : EventArgs
+    {
+        public IReadOnlyList<int> Jobs { get; }
+
+        public LaunchBackupJobsEventArgs(IReadOnlyList<int> jobs)
+        {
+            Jobs = jobs;
+        }
+    }
 }

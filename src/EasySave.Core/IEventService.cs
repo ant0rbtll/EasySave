@@ -21,8 +21,8 @@ namespace EasySave.Core
         void RaiseDeleteJob(int id);
 
         // Événements d'exécution
-        event EventHandler<int> OnRunJob;
-        void RaiseRunJob(int id);
+        event EventHandler<LaunchBackupJobsEventArgs> OnRunJobs;
+        void RaiseRunJobs(LaunchBackupJobsEventArgs args);
 
         event EventHandler<GetAllJobsRequestedEventArgs> OnGetAllJobsRequested;
         event EventHandler<AllJobsProvidedEventArgs> OnAllJobsProvided;

@@ -156,7 +156,7 @@ public class ConsoleUI : IUI
     {
 
         ShowMessage("backup_saving");
-        //BackupAppService.RunJob(backupIndex);
+        _eventService.RaiseRunJobs(new LaunchBackupJobsEventArgs(new List<int>(jobId))); ;
 
         MenuService.WaitForUser();
         MainMenu();
@@ -297,5 +297,10 @@ public class ConsoleUI : IUI
         {
             StartUpdateJob(job);
         }
+    }
+
+    public void Start()
+    {
+        MainMenu();
     }
 }

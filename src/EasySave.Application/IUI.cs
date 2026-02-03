@@ -40,6 +40,6 @@ public interface IUI
     /// <returns></returns>
     public BackupType AskBackupType(string key);
 
-	public void MainMenu();
+	public void Start();
 
 }
