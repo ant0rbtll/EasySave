@@ -2,6 +2,7 @@
 using EasySave.Localization;
 using EasySave.Core;
 using EasySave.UI.Menu;
+using YamlDotNet.Serialization;
 
 namespace EasySave.UI;
 
@@ -193,7 +194,7 @@ public class ConsoleUI
     {
         LocalizationService.Culture = locale;
 
-        ShowChangeLocale();
+        MainMenu();
     }
 
     /// <summary>
