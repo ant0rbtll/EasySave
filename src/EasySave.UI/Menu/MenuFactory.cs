@@ -16,14 +16,13 @@ namespace EasySave.UI.Menu
 
         public MenuConfig CreateMainMenu()
         {
-            string[] items = { "menu_create", "menu_list", "menu_see" ,"menu_save", "menu_params", "menu_quit" };
+            string[] items = { "menu_create", "menu_list", "menu_params", "menu_quit" };
             var actions = new Dictionary<int, Action>
         {
             { 0, _consoleUI.CreateBackupJob },
             { 1, _consoleUI.SeeSaveList },
-            { 2, _consoleUI.SaveJob },
-            { 3, _consoleUI.ConfigureParams },
-            { 4, _consoleUI.Quit }
+            { 2, _consoleUI.ConfigureParams },
+            { 3, _consoleUI.Quit }
         };
 
             return new MenuConfig(items, actions, "menu");
@@ -74,17 +73,17 @@ namespace EasySave.UI.Menu
             items.Add("back");
             actions.Add(index, _consoleUI.MainMenu);
 
-            return new MenuConfig(items.ToArray(), actions, "menu_savelist");
+            return new MenuConfig(items.ToArray(), actions, "menu_joblist");
         }
-        /*
+        
         public MenuConfig CreateSeeJobMenu(BackupJob job)
         {
-            string[] items = { "backupjob_update", "backupjob_delete", "backupjob_save", "back" };
+            string[] items = { "job_update", "job_delete", "job_save", "back" };
             Dictionary<int, Action> actions = new()
             {
-                { 0, _consoleUI.StartUpdateJob(job) },
-                { 1, _consoleUI.DeleteJob(job.Id) },
-                { 2, _consoleUI.SaveJob(job.Id) },
+                { 0, () => _consoleUI.StartUpdateJob(job) },
+                { 1, () => _consoleUI.DeleteJob(job) },
+                { 2, () => _consoleUI.SaveJob(job.Id) },
                 { 3, _consoleUI.MainMenu }
             };
 
@@ -97,16 +96,16 @@ namespace EasySave.UI.Menu
             string[] items = { "backupjob_update_name", "backupjob_update_source", "backupjob_update_destination", "backupjob_update_type", "backupjob_update_save","back_unsave" };
             Dictionary<int, Action> actions = new()
             {
-                { 0, _consoleUI.UpdateJob(job, "name") },
-                { 1, _consoleUI.UpdateJob(job, "source") },
-                { 2, _consoleUI.UpdateJob(job, "destination") },
-                { 3, _consoleUI.UpdateJob(job, "type") },
-                { 4, _consoleUI.UpdateJob(job, "save") },
-                { 4, _consoleUI.CancelUpdate(job) }
+                { 0, () => _consoleUI.StartUpdateJob(job, "name") },
+                { 1, () => _consoleUI.StartUpdateJob(job, "source") },
+                { 2, () => _consoleUI.StartUpdateJob(job, "destination") },
+                { 3, () => _consoleUI.StartUpdateJob(job, "type") },
+                { 4, () => _consoleUI.UpdateJob(job) },
+                { 5, () => _consoleUI.CancelUpdate(job) }
             };
 
             return new MenuConfig(items, actions, "menu_backupJob_update");
         }
-        */
+       
     }
 }

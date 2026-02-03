@@ -14,7 +14,7 @@ namespace EasySave.UI.Menu
         /// <summary>
         /// Display a menu and return the selected index
         /// </summary>
-        public int ShowMenu(string[] menuItems, string menuLabel = "menu")
+        public int ShowMenu(string[] menuItems, string menuLabel = "menu", bool clearAferMove = true)
         {
             int index = 0;
             ConsoleKey key;
@@ -49,6 +49,7 @@ namespace EasySave.UI.Menu
                 {
                     index++;
                 }
+                if (clearAferMove) Console.Clear();
 
             } while (key != ConsoleKey.Enter);
 
@@ -59,9 +60,9 @@ namespace EasySave.UI.Menu
         /// <summary>
         /// Display a menu and execute the associated action
         /// </summary>
-        public void ShowMenuWithActions(string[] menuItems, Dictionary<int, Action> menuActions, string menuLabel = "menu")
+        public void ShowMenuWithActions(string[] menuItems, Dictionary<int, Action> menuActions, string menuLabel = "menu", bool clearAferMove = true)
         {
-            int selectedIndex = ShowMenu(menuItems, menuLabel);
+            int selectedIndex = ShowMenu(menuItems, menuLabel, clearAferMove);
 
             if (menuActions.TryGetValue(selectedIndex, out var action))
             {

@@ -8,6 +8,7 @@ namespace EasySave.Application;
 public class BackupAppService
 {
     private readonly IBackupJobRepository _repo;
+    private readonly IUI _ui;
     private readonly BackupEngine _engine;
     private readonly IEventService _eventService;
 
@@ -19,13 +20,14 @@ public class BackupAppService
     /// <param name="repo">The repository used for data persistence.</param>
     /// <param name="ui">The user interface for displaying messages.</param>
     /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
-    public BackupAppService(IBackupJobRepository repo, BackupEngine backupEngine, IEventService eventService)
+    public BackupAppService(IBackupJobRepository repo, BackupEngine backupEngine, IEventService eventService, IUI ui)
     {
         _repo = repo;
         _engine = backupEngine;
         _eventService = eventService;
-
+        _ui = ui;
         _eventService.OnCreateJob += HandleCreateJob;
+        _eventService.OnGetAllJobsRequested += HandleGetAllJobsRequested;
 
 
         // _parser = new CommandLineParser();
@@ -33,7 +35,7 @@ public class BackupAppService
 
     public void RunInteractive()
     {
-        Console.Write("ok");
+        _ui.MainMenu();
     }
 
     /// <summary>
@@ -45,6 +47,7 @@ public class BackupAppService
     /// <param name="type">Type of backup (Full or Differential).</param>
     public void HandleCreateJob(object? sender, CreateJobEventArgs e)
     {
+        _ui.ShowMessage("test");
         var job = new BackupJob
         {
             Name = e.Name,
@@ -98,13 +101,9 @@ public class BackupAppService
     /// and returns the complete list from the repository.
     /// </summary>
     /// <returns>A list of <see cref="BackupJob"/> objects.</returns>
-    public List<BackupJob> GetAllJobs()
+    private void HandleGetAllJobsRequested(object sender, GetAllJobsRequestedEventArgs e)
     {
         var jobs = _repo.GetAll();
-        foreach (var job in jobs)
-        {
-            //_ui.ShowMessage($"[{job.Id}] {job.Name} | {job.Source} -> {job.Destination} ({job.Type})");
-        }
-        return jobs;
+        _eventService.RaiseAllJobsProvided(jobs);
     }
 }

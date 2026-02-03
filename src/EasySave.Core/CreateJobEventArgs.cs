@@ -30,4 +30,19 @@ namespace EasySave.Core
             Job = job;
         }
     }
+
+    public class AllJobsProvidedEventArgs : EventArgs
+    {
+        public IReadOnlyList<BackupJob> Jobs { get; }
+
+        public AllJobsProvidedEventArgs(IReadOnlyList<BackupJob> jobs)
+        {
+            Jobs = jobs;
+        }
+    }
+
+    public class GetAllJobsRequestedEventArgs : EventArgs
+    {
+        
+    }
 }

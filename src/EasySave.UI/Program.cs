@@ -43,14 +43,11 @@ public class Program
 
         var engine = new BackupEngine(fileSystem, transferService, stateWritter, logger);
 
-        var app = new BackupAppService(repo, engine, eventService);
+        var app = new BackupAppService(repo, engine, eventService, console);
 
         app.RunInteractive();
 
         //var backupAppService = this.init();
-
-        console.MainMenu();
-
     }
 
     /*public static void init()

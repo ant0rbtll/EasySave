@@ -12,17 +12,19 @@ namespace EasySave.UI;
 public class ConsoleUI : IUI
 {
 
-    private readonly IEventService EventService;
+    private readonly IEventService _eventService;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService MenuService;
     private readonly MenuFactory MenuFactory;
 
     public ConsoleUI(IEventService eventService)
     {
-        EventService = eventService;
+        _eventService = eventService;
         LocalizationService = new LocalizationService();
         MenuService = new MenuService(LocalizationService);
         MenuFactory = new MenuFactory(this);
+
+        _eventService.OnAllJobsProvided += HandleAllJobsProvided;
     }
 
     /// <inheritdoc />
@@ -126,7 +128,8 @@ public class ConsoleUI : IUI
         BackupType backupTypeJob = AskBackupType("backupjob_create_type");
 
         // send to service 
-       // BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
+        // BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
+        _eventService.RaiseCreateJob(new CreateJobEventArgs(nameJob, sourceJob, destinationJob, backupTypeJob));
         ShowMessage("backupjob_created");
         MenuService.WaitForUser();
         MainMenu();
@@ -137,24 +140,20 @@ public class ConsoleUI : IUI
     /// </summary>
     public void SeeSaveList()
     {
-        MenuService.DisplayLabel("menu_list");
-        /*List<SaveWork> saveWorkList = BackUpAppService.GetAllJobs();
-        foreach (SaveWork job in saveWorkList) {
-            Console.WriteLine(job.Id + " - " + job.Name);
-        }
-        */
-        MenuService.WaitForUser();
-        MainMenu();
+        _eventService.RaiseGetAllJobsRequested();
+    }
+
+    public void HandleAllJobsProvided(object sender, AllJobsProvidedEventArgs e)
+    {
+        var menu = MenuFactory.createSaveListMenu(e.Jobs.ToList());
+        MenuService.ShowMenuWithActions(menu.Items, menu.Actions, menu.Label);
     }
 
     /// <summary>
     /// Start a save
     /// </summary>
-    public void SaveJob()
+    public void SaveJob(int jobId)
     {
-        MenuService.DisplayLabel("menu_save");
-
-        int backupIndex = AskInt("ask_backupjob_save");
 
         ShowMessage("backup_saving");
         //BackupAppService.RunJob(backupIndex);
@@ -214,17 +213,32 @@ public class ConsoleUI : IUI
 
     public void SeeOneJob(BackupJob job)
     {
+        ShowMessage("job_index", false);
+        Console.WriteLine(job.Id);
 
+        ShowMessage("job_name", false);
+        Console.WriteLine(job.Name);
+
+        ShowMessage("job_source", false);
+        Console.WriteLine(job.Source);
+
+        ShowMessage("job_destination", false);
+        Console.WriteLine(job.Destination);
+
+        ShowMessage("job_type", false);
+        Console.WriteLine(job.Type);
+
+        var menu = MenuFactory.CreateSeeJobMenu(job);
+        MenuService.ShowMenuWithActions(menu.Items, menu.Actions, menu.Label);
     }
-    /*
 
-    public void DeleteJob()
+    public void DeleteJob(BackupJob job)
     {
         //confirm
         bool confirm = MenuService.WaitForUser("job_delete_confirm", ConsoleKey.Y);
         if (confirm)
         {
-            var job = BackUpAppService.RemoveJob(index);
+            //var job = BackUpAppService.RemoveJob(index);
             ShowMessage("job_deleted");
 
         } else {
@@ -234,7 +248,7 @@ public class ConsoleUI : IUI
         SeeOneJob(job);
     }
 
-    public void StartUpdateJob(SaveWork job, string field)
+    public void StartUpdateJob(BackupJob job, string? field = null)
     {
         switch (field)
         {
@@ -251,14 +265,14 @@ public class ConsoleUI : IUI
                 job.Type = AskBackupType("job_update_type");
                 break;
             case null:
-                SaveWork tempBackUpJob = new SaveWork
+                BackupJob tempBackUpJob = new BackupJob
                 {
                     Id = job.Id,
                     Name = job.Name,
                     Source = job.Source,
                     Destination = job.Destination,
                     Type = job.Type
-                }
+                };
                 job = tempBackUpJob;
                 break;
         }
@@ -266,12 +280,12 @@ public class ConsoleUI : IUI
         MenuService.ShowMenuWithActions(menu.Items, menu.Actions, menu.Label);
     }
 
-    public void UpdateJob(SaveWork job)
+    public void UpdateJob(BackupJob job)
     {
 
     }
 
-    public void CancelUpdate(SaveWork job)
+    public void CancelUpdate(BackupJob job)
     {
         bool confirm = MenuService.WaitForUser("update_job_cancel", ConsoleKey.Y);
         if (confirm)
@@ -284,5 +298,4 @@ public class ConsoleUI : IUI
             StartUpdateJob(job);
         }
     }
-    */
 }

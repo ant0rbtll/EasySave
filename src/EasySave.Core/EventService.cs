@@ -13,9 +13,19 @@ namespace EasySave.Core
         public event EventHandler<int> OnDeleteJob;
         public event EventHandler<int> OnRunJob;
 
+        public event EventHandler<GetAllJobsRequestedEventArgs> OnGetAllJobsRequested;
+        public event EventHandler<AllJobsProvidedEventArgs> OnAllJobsProvided;
+
+        public void RaiseGetAllJobsRequested()
+            => OnGetAllJobsRequested?.Invoke(this, new GetAllJobsRequestedEventArgs());
+
+        public void RaiseAllJobsProvided(IReadOnlyList<BackupJob> jobs)
+            => OnAllJobsProvided?.Invoke(this, new AllJobsProvidedEventArgs(jobs));
+
         public void RaiseCreateJob(CreateJobEventArgs args) => OnCreateJob?.Invoke(this, args);
         public void RaiseUpdateJob(UpdateJobEventArgs args) => OnUpdateJob?.Invoke(this, args);
         public void RaiseDeleteJob(int id) => OnDeleteJob?.Invoke(this, id);
         public void RaiseRunJob(int id) => OnRunJob?.Invoke(this, id);
+
     }
 }
