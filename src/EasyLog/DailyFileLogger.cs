@@ -1,5 +1,5 @@
 using System.Text;
-using EasySave.Configuration;
+using EasyLog.Configuration;
 
 namespace EasyLog;
 
