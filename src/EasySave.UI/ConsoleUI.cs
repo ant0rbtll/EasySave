@@ -252,6 +252,36 @@ public class ConsoleUI
     }
 
     /// <summary>
+    /// Delete a BackupJob
+    /// </summary>
+    public void DeleteBackupJob()
+    {
+        _menuService.DisplayLabel(LocalizationKey.menu_delete);
+        DisplayJobsList();
+        Console.WriteLine();
+
+        while (true)
+        {
+            int? backupIndex = AskInt(LocalizationKey.ask_backupjob_delete);
+            if (backupIndex == null) { MainMenu(); return; }
+
+            BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+            if (job == null)
+            {
+                ShowMessage(LocalizationKey.backupjob_id_not_found);
+                continue;
+            }
+
+            _backupAppService.RemoveJob(backupIndex.Value);
+            ShowMessage(LocalizationKey.backupjob_deleted);
+            break;
+        }
+
+        _menuService.WaitForUser();
+        MainMenu();
+    }
+
+    /// <summary>
     /// The menu of the app's configuration
     /// </summary>
     public void ConfigureParams()

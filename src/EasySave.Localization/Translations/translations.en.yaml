@@ -29,3 +29,6 @@ translations:
   backup_error: "Error during backup"
   input_escape_to_cancel: " (Escape to cancel)"
   backupjob_id_not_found: "No BackupJob found with this ID. Please try again."
+  menu_delete: "Delete a BackupJob"
+  ask_backupjob_delete: "Please enter the ID of the BackupJob to delete"
+  backupjob_deleted: "The BackupJob has been successfully deleted."

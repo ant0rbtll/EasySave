@@ -21,6 +21,7 @@ namespace EasySave.UI.Menu
                 LocalizationKey.menu_create,
                 LocalizationKey.menu_list,
                 LocalizationKey.menu_save,
+                LocalizationKey.menu_delete,
                 LocalizationKey.menu_params,
                 LocalizationKey.menu_quit
             };
@@ -29,8 +30,9 @@ namespace EasySave.UI.Menu
             { 0, _consoleUI.CreateBackupJob },
             { 1, _consoleUI.SeeSaveList },
             { 2, _consoleUI.SaveJob },
-            { 3, _consoleUI.ConfigureParams },
-            { 4, _consoleUI.Quit }
+            { 3, _consoleUI.DeleteBackupJob },
+            { 4, _consoleUI.ConfigureParams },
+            { 5, _consoleUI.Quit }
         };
 
             return new MenuConfig(items, actions, LocalizationKey.menu);

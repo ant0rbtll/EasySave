@@ -29,7 +29,7 @@ public interface IBackupJobRepository
     /// </summary>
     /// <param name="id">L'identifiant du job.</param>
     /// <returns>Le job correspondant.</returns>
-    BackupJob GetById(int id);
+    BackupJob? GetById(int id);
 
     /// <summary>
     /// Récupère tous les jobs.
