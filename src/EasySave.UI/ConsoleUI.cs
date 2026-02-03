@@ -52,7 +52,7 @@ public class ConsoleUI
         ShowMessage(LocalizationKey.input_escape_to_cancel, false);
         Console.Write(" : ");
 
-        var input = new global::System.Text.StringBuilder();
+        string input = "";
         ConsoleKeyInfo keyInfo;
 
         do
@@ -67,12 +67,12 @@ public class ConsoleUI
             else if (keyInfo.Key == ConsoleKey.Enter)
             {
                 Console.WriteLine();
-                if (input.Length == 0 || string.IsNullOrWhiteSpace(input.ToString()))
+                if (string.IsNullOrWhiteSpace(input))
                 {
                     ShowMessage(LocalizationKey.input_string_invalid, false);
                     ShowMessage(LocalizationKey.input_escape_to_cancel, false);
                     Console.Write(" : ");
-                    input.Clear();
+                    input = "";
                 }
                 else
                 {
@@ -81,18 +81,18 @@ public class ConsoleUI
             }
             else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
-                input.Remove(input.Length - 1, 1);
+                input = input.Substring(0, input.Length - 1);
                 Console.Write("\b \b"); // Erase the character on screen
             }
             else if (!char.IsControl(keyInfo.KeyChar))
             {
-                input.Append(keyInfo.KeyChar);
+                input += keyInfo.KeyChar;
                 Console.Write(keyInfo.KeyChar);
             }
         }
         while (true);
 
-        return input.ToString();
+        return input;
     }
 
     /// <inheritdoc />
@@ -101,7 +101,7 @@ public class ConsoleUI
         ShowMessage(key, false);
         ShowMessage(LocalizationKey.input_escape_to_cancel, false);
         Console.Write(" : ");
-        var input = new global::System.Text.StringBuilder();
+        string input = "";
         ConsoleKeyInfo keyInfo;
 
         do
@@ -116,7 +116,7 @@ public class ConsoleUI
             else if (keyInfo.Key == ConsoleKey.Enter)
             {
                 Console.WriteLine();
-                if (int.TryParse(input.ToString(), out int numberInput))
+                if (int.TryParse(input, out int numberInput))
                 {
                     return numberInput;
                 }
@@ -125,17 +125,17 @@ public class ConsoleUI
                     ShowMessage(LocalizationKey.input_number_invalid, false);
                     ShowMessage(LocalizationKey.input_escape_to_cancel, false);
                     Console.Write(" : " );
-                    input.Clear();
+                    input = "";
                 }
             }
             else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
-                input.Remove(input.Length - 1, 1);
+                input = input.Substring(0, input.Length - 1);
                 Console.Write("\b \b");
             }
             else if (char.IsDigit(keyInfo.KeyChar) || (keyInfo.KeyChar == '-' && input.Length == 0))
             {
-                input.Append(keyInfo.KeyChar);
+                input += keyInfo.KeyChar;
                 Console.Write(keyInfo.KeyChar);
             }
         }
