@@ -32,11 +32,18 @@ public class ConsoleUI : IUI
         else Console.Write(message);
     }
 
-    public void ShowMessage(string message, bool writeLine = true)
+    public void ShowMessage(LocalizationKey key, Dictionary<string, string> parameters, bool writeLine = true)
     {
+        string message = LocalizationService.TranslateText(key, parameters);
         if (writeLine) Console.WriteLine(message);
         else Console.Write(message);
     }
+
+    // public void ShowMessage(string message, bool writeLine = true)
+    // {
+    //     if (writeLine) Console.WriteLine(message);
+    //     else Console.Write(message);
+    // }
 
     /// <inheritdoc />
     public void ShowError(LocalizationKey key)

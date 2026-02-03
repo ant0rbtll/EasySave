@@ -104,17 +104,11 @@ public class BackupAppService
     }
 
     /// <summary>
-    /// Displays the list of backup jobs in the user interface 
-    /// and returns the complete list from the repository.
+    /// Retrieves all backup jobs from the repository.
     /// </summary>
     /// <returns>A list of <see cref="BackupJob"/> objects.</returns>
     public List<BackupJob> GetAllJobs()
     {
-        var jobs = _repo.GetAll();
-        foreach (var job in jobs)
-        {
-            _ui.ShowMessage($"[{job.Id}] {job.Name} | {job.Source} -> {job.Destination} ({job.Type})");
-        }
-        return jobs;
+        return _repo.GetAll();
     }
 }

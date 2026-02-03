@@ -36,6 +36,12 @@ public class LocalizationService : ILocalizationService
     }
 
     /// <inheritdoc/>
+    public string TranslateText(LocalizationKey key, Dictionary<string, string> parameters)
+    {
+        return TranslateText(key, parameters);
+    }
+
+    /// <inheritdoc/>
     public string TranslateText(string key)
     {
         //TODO link to conf
