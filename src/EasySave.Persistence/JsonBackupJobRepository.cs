@@ -4,6 +4,9 @@ using EasySave.Core;
 
 namespace EasySave.Persistence;
 
+/// <summary>
+/// Implémentation du dépôt de jobs avec persistance JSON sur disque.
+/// </summary>
 public class JsonBackupJobRepository : IBackupJobRepository
 {
     private readonly int _maxJobs = IBackupJobRepository.DefaultMaxJobs;
@@ -11,6 +14,11 @@ public class JsonBackupJobRepository : IBackupJobRepository
     private readonly IJobIdProvider _idProvider;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    /// <summary>
+    /// Initialise une nouvelle instance du dépôt JSON.
+    /// </summary>
+    /// <param name="pathProvider">Fournisseur de chemins pour le fichier de configuration.</param>
+    /// <param name="idProvider">Fournisseur d'identifiants pour les nouveaux jobs.</param>
     public JsonBackupJobRepository(IPathProvider pathProvider, IJobIdProvider idProvider)
     {
         _pathProvider = pathProvider;
@@ -22,6 +30,10 @@ public class JsonBackupJobRepository : IBackupJobRepository
         };
     }
 
+    /// <inheritdoc />
+    /// <exception cref="InvalidOperationException">
+    /// Levée si le nombre maximum de jobs est atteint ou si l'ID existe déjà.
+    /// </exception>
     public void Add(BackupJob job)
     {
         var all = Load();
@@ -41,6 +53,8 @@ public class JsonBackupJobRepository : IBackupJobRepository
         Save(all);
     }
 
+    /// <inheritdoc />
+    /// <exception cref="KeyNotFoundException">Levée si le job n'existe pas.</exception>
     public void Remove(int id)
     {
         var all = Load();
@@ -53,6 +67,8 @@ public class JsonBackupJobRepository : IBackupJobRepository
         Save(all);
     }
 
+    /// <inheritdoc />
+    /// <exception cref="KeyNotFoundException">Levée si le job n'existe pas.</exception>
     public BackupJob GetById(int id)
     {
         var all = Load();
@@ -64,21 +80,28 @@ public class JsonBackupJobRepository : IBackupJobRepository
         return job;
     }
 
+    /// <inheritdoc />
     public List<BackupJob> GetAll()
     {
         return Load();
     }
 
+    /// <inheritdoc />
     public int Count()
     {
         return Load().Count;
     }
 
+    /// <inheritdoc />
     public int MaxJobs()
     {
         return _maxJobs;
     }
 
+    /// <summary>
+    /// Charge les jobs depuis le fichier JSON.
+    /// </summary>
+    /// <returns>Liste des jobs, ou liste vide si le fichier n'existe pas ou est corrompu.</returns>
     private List<BackupJob> Load()
     {
         var path = _pathProvider.GetJobsConfigPath();
@@ -89,16 +112,19 @@ public class JsonBackupJobRepository : IBackupJobRepository
         try
         {
             var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<List<BackupJob>>(json, _jsonOptions) 
+            return JsonSerializer.Deserialize<List<BackupJob>>(json, _jsonOptions)
                    ?? new List<BackupJob>();
         }
         catch (JsonException)
         {
-            // Fichier corrompu, retourner liste vide
             return new List<BackupJob>();
         }
     }
-    
+
+    /// <summary>
+    /// Sauvegarde les jobs dans le fichier JSON.
+    /// </summary>
+    /// <param name="all">Liste des jobs à sauvegarder.</param>
     private void Save(List<BackupJob> all)
     {
         var path = _pathProvider.GetJobsConfigPath();
