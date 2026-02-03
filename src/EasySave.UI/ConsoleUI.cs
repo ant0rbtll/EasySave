@@ -119,10 +119,10 @@ public class ConsoleUI : IUI
     public void CreateBackupJob()
     {
         MenuService.DisplayLabel("menu_create");
-        string nameJob = AskString("BackupJob_create_name");
-        string sourceJob = AskString("BackupJob_create_source");
-        string destinationJob = AskString("BackupJob_create_destination");
-        BackupType backupTypeJob = AskBackupType("BackupJob_create_type");
+        string nameJob = AskString("backupjob_create_name");
+        string sourceJob = AskString("backupjob_create_source");
+        string destinationJob = AskString("backupjob_create_destination");
+        BackupType backupTypeJob = AskBackupType("backupjob_create_type");
 
         // send to service 
         BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
