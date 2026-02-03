@@ -1,14 +1,29 @@
 namespace EasyLog.Configuration;
 
-public sealed class DefaultPathProvider : EasySave.Configuration.DefaultPathProvider, IPathProvider
+public sealed class DefaultPathProvider : IPathProvider
 {
+    private readonly EasySave.Configuration.DefaultPathProvider _inner;
+
     public DefaultPathProvider(
         string company = "ProSoft",
         string product = "EasySave",
         string logsFolderName = "Logs",
         string stateFolderName = "State",
         string configFolderName = "Config")
-        : base(company, product, logsFolderName, stateFolderName, configFolderName)
     {
+        _inner = new EasySave.Configuration.DefaultPathProvider(
+            company,
+            product,
+            logsFolderName,
+            stateFolderName,
+            configFolderName);
     }
+
+    public string GetDailyLogFilePath(DateTime date) => _inner.GetDailyLogPath(date);
+
+    public string GetDailyLogPath(DateTime date) => _inner.GetDailyLogPath(date);
+
+    public string GetStatePath() => _inner.GetStatePath();
+
+    public string GetJobsConfigPath() => _inner.GetJobsConfigPath();
 }
