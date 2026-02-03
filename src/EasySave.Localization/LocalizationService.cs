@@ -1,3 +1,4 @@
+using System.Text;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -10,7 +11,7 @@ public class LocalizationService : ILocalizationService
 {
     public Dictionary<string, string> AllCultures { get; }
 
-    private Dictionary<string, Dictionary<string, string>> _translationCache;
+    private Dictionary<string, Dictionary<string, string>>? _translationCache;
 
     /// <summary>
     /// The initialisation of the service
@@ -56,7 +57,7 @@ public class LocalizationService : ILocalizationService
             }
 
             if (_translationCache != null &&
-                data.TryGetValue("translations", out var translations) &&
+                _translationCache.TryGetValue("translations", out var translations) &&
                 translations != null &&
                 translations.TryGetValue(key, out var value))
             {
@@ -70,7 +71,7 @@ public class LocalizationService : ILocalizationService
         {
             return key;
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return key;
         }

@@ -4,14 +4,14 @@ using EasySave.Core;
 
 namespace EasySave.Persistence;
 
-public class JsonSaveWorkRepository : ISaveWorkRepository
+public class JsonBackupJobRepository : IBackupJobRepository
 {
-    private readonly int _maxJobs = ISaveWorkRepository.DefaultMaxJobs;
+    private readonly int _maxJobs = IBackupJobRepository.DefaultMaxJobs;
     private readonly IPathProvider _pathProvider;
     private readonly IJobIdProvider _idProvider;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public JsonSaveWorkRepository(IPathProvider pathProvider, IJobIdProvider idProvider)
+    public JsonBackupJobRepository(IPathProvider pathProvider, IJobIdProvider idProvider)
     {
         _pathProvider = pathProvider;
         _idProvider = idProvider;
@@ -22,7 +22,7 @@ public class JsonSaveWorkRepository : ISaveWorkRepository
         };
     }
 
-    public void Add(SaveWork job)
+    public void Add(BackupJob job)
     {
         var all = Load();
 
@@ -53,7 +53,7 @@ public class JsonSaveWorkRepository : ISaveWorkRepository
         Save(all);
     }
 
-    public SaveWork GetById(int id)
+    public BackupJob GetById(int id)
     {
         var all = Load();
         var job = all.FirstOrDefault(j => j.Id == id);
@@ -64,7 +64,7 @@ public class JsonSaveWorkRepository : ISaveWorkRepository
         return job;
     }
 
-    public List<SaveWork> GetAll()
+    public List<BackupJob> GetAll()
     {
         return Load();
     }
@@ -79,27 +79,27 @@ public class JsonSaveWorkRepository : ISaveWorkRepository
         return _maxJobs;
     }
 
-    private List<SaveWork> Load()
+    private List<BackupJob> Load()
     {
         var path = _pathProvider.GetJobsConfigPath();
 
         if (!File.Exists(path))
-            return new List<SaveWork>();
+            return new List<BackupJob>();
 
         try
         {
             var json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<List<SaveWork>>(json, _jsonOptions) 
-                   ?? new List<SaveWork>();
+            return JsonSerializer.Deserialize<List<BackupJob>>(json, _jsonOptions) 
+                   ?? new List<BackupJob>();
         }
         catch (JsonException)
         {
             // Fichier corrompu, retourner liste vide
-            return new List<SaveWork>();
+            return new List<BackupJob>();
         }
     }
     
-    private void Save(List<SaveWork> all)
+    private void Save(List<BackupJob> all)
     {
         var path = _pathProvider.GetJobsConfigPath();
         var directory = Path.GetDirectoryName(path);

@@ -4,7 +4,7 @@ namespace EasySave.Persistence;
 
 public class SequentialJobIdProvider : IJobIdProvider
 {
-    public int NextId(List<SaveWork> existing)
+    public int NextId(List<BackupJob> existing)
     {
         if (existing == null || existing.Count == 0)
             return 1;

@@ -9,7 +9,7 @@ public class SequentialJobIdProviderTests
     public void NextId_EmptyList_Returns1()
     {
         var provider = new SequentialJobIdProvider();
-        var result = provider.NextId(new List<SaveWork>());
+        var result = provider.NextId(new List<BackupJob>());
         Assert.Equal(1, result);
     }
 
@@ -17,7 +17,7 @@ public class SequentialJobIdProviderTests
     public void NextId_WithExisting_ReturnsMaxPlusOne()
     {
         var provider = new SequentialJobIdProvider();
-        var jobs = new List<SaveWork>
+        var jobs = new List<BackupJob>
         {
             new() { Id = 1 },
             new() { Id = 3 },

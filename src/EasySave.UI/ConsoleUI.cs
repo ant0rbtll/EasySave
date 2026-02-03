@@ -27,7 +27,7 @@ public class ConsoleUI : IUI
     /// <inheritdoc />
     public void ShowMessage(string key, bool writeLine = true)
     {
-        string message = LocalizationService.TranslateTexte(key);
+        string message = LocalizationService.TranslateText(key);
         if (writeLine) Console.WriteLine(message);
         else Console.Write(message);
     }
@@ -114,15 +114,15 @@ public class ConsoleUI : IUI
     }
     
     /// <summary>
-    /// Gather a save's informations and create a saveWork
+    /// Gather a save's informations and create a BackupJob
     /// </summary>
-    public void CreateSaveWork()
+    public void CreateBackupJob()
     {
         MenuService.DisplayLabel("menu_create");
-        string nameJob = AskString("savework_create_name");
-        string sourceJob = AskString("savework_create_source");
-        string destinationJob = AskString("savework_create_destination");
-        BackupType backupTypeJob = AskBackupType("savework_create_type");
+        string nameJob = AskString("backupjob_create_name");
+        string sourceJob = AskString("backupjob_create_source");
+        string destinationJob = AskString("backupjob_create_destination");
+        BackupType backupTypeJob = AskBackupType("backupjob_create_type");
 
         // send to service 
         BackupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
@@ -132,13 +132,13 @@ public class ConsoleUI : IUI
     }
 
     /// <summary>
-    /// Display the informations of all saveWork created
+    /// Display the informations of all BackupJob created
     /// </summary>
     public void SeeSaveList()
     {
         MenuService.DisplayLabel("menu_list");
-        List<SaveWork> saveWorkList = BackUpAppService.GetAllJobs();
-        foreach (SaveWork job in saveWorkList) {
+        List<BackupJob> backupJobList = BackUpAppService.GetAllJobs();
+        foreach (BackupJob job in backupJobList) {
             Console.WriteLine(job.Id + " - " + job.Name);
         }
         MenuService.WaitForUser();

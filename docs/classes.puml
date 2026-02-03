@@ -7,7 +7,7 @@ skinparam classAttributeIconSize 0
 ' =========================================================
 ' EasySave v1.0 - UML adapté livrable 1
 ' Objectifs:
-' - SaveWork = définition (pas d’exécution)
+' - BackupJob = définition (pas d’exécution)
 ' - Exécution portée par BackupEngine
 ' - Etat temps réel = fichier unique contenant tous les jobs
 ' - Log = journalier, temps réel, actions (transfert + création dossier)
@@ -22,7 +22,7 @@ package "Core (Domain)" as CORE {
     Differential
   }
 
-  class SaveWork {
+  class BackupJob {
     - id : int
     - name : String
     - source : String
@@ -34,7 +34,7 @@ package "Core (Domain)" as CORE {
 ' ===================== Application (Use cases) =====================
 package "Application" as APP {
   class BackupAppService {
-    - repo : Persistence.ISaveWorkRepository
+    - repo : Persistence.IBackupJobRepository
     - engine : Backup.BackupEngine
     - ui : UI.IUI
     - parser : CLI.CommandLineParser
@@ -87,54 +87,54 @@ package "CLI" as CLI {
 
 ' ===================== Persistence (Jobs) =====================
 package "Persistence" as Persistence {
-  interface ISaveWorkRepository {
-    + Add(job : CORE.SaveWork) : void
+  interface IBackupJobRepository {
+    + Add(job : CORE.BackupJob) : void
     + Remove(id : int) : void
-    + GetById(id : int) : CORE.SaveWork
-    + GetAll() : List<CORE.SaveWork>
+    + GetById(id : int) : CORE.BackupJob
+    + GetAll() : List<CORE.BackupJob>
     + Count() : int
     + MaxJobs() : int
   }
 
   interface IJobIdProvider {
-    + NextId(existing : List<CORE.SaveWork>) : int
+    + NextId(existing : List<CORE.BackupJob>) : int
   }
 
   class SequentialJobIdProvider {
-    + NextId(existing : List<CORE.SaveWork>) : int
+    + NextId(existing : List<CORE.BackupJob>) : int
   }
 
-  class InMemorySaveWorkRepository {
+  class InMemoryBackupJobRepository {
     - maxJobs : int = 5
-    - jobs : Dictionary<int, CORE.SaveWork>
+    - jobs : Dictionary<int, CORE.BackupJob>
     - idProvider : IJobIdProvider
-    + Add(job : CORE.SaveWork) : void
+    + Add(job : CORE.BackupJob) : void
     + Remove(id : int) : void
-    + GetById(id : int) : CORE.SaveWork
-    + GetAll() : List<CORE.SaveWork>
+    + GetById(id : int) : CORE.BackupJob
+    + GetAll() : List<CORE.BackupJob>
     + Count() : int
     + MaxJobs() : int
   }
 
-  ISaveWorkRepository <|.. InMemorySaveWorkRepository
+  IBackupJobRepository <|.. InMemoryBackupJobRepository
   IJobIdProvider <|.. SequentialJobIdProvider
 
   ' Optionnel v1 mais très utile en prod: persistance JSON des jobs
-  class JsonSaveWorkRepository {
+  class JsonBackupJobRepository {
     - maxJobs : int = 5
     - pathProvider : CFG.IPathProvider
     - idProvider : IJobIdProvider
-    + Add(job : CORE.SaveWork) : void
+    + Add(job : CORE.BackupJob) : void
     + Remove(id : int) : void
-    + GetById(id : int) : CORE.SaveWork
-    + GetAll() : List<CORE.SaveWork>
+    + GetById(id : int) : CORE.BackupJob
+    + GetAll() : List<CORE.BackupJob>
     + Count() : int
     + MaxJobs() : int
-    - Load() : List<CORE.SaveWork>
-    - Save(all : List<CORE.SaveWork>) : void
+    - Load() : List<CORE.BackupJob>
+    - Save(all : List<CORE.BackupJob>) : void
   }
 
-  ISaveWorkRepository <|.. JsonSaveWorkRepository
+  IBackupJobRepository <|.. JsonBackupJobRepository
 }
 
 ' ===================== Configuration (Paths) =====================
@@ -157,7 +157,7 @@ package "Backup (Execution)" as Backup {
     - transfer : SystemAbstractions.ITransferService
     - stateWriter : ETR.IStateWriter
     - log : EasyLog.ILogger
-    + Execute(job : CORE.SaveWork) : void
+    + Execute(job : CORE.BackupJob) : void
   }
 }
 
@@ -280,7 +280,7 @@ package "ETR (Etat Temps Réel)" as ETR {
 }
 
 ' ===================== Cross-package wiring =====================
-APP.BackupAppService --> Persistence.ISaveWorkRepository
+APP.BackupAppService --> Persistence.IBackupJobRepository
 APP.BackupAppService --> Backup.BackupEngine
 APP.BackupAppService --> UI.IUI
 APP.BackupAppService --> CLI.CommandLineParser
@@ -290,7 +290,7 @@ Backup.BackupEngine --> SystemAbstractions.ITransferService
 Backup.BackupEngine --> ETR.IStateWriter
 Backup.BackupEngine --> EasyLog.ILogger
 
-Persistence.JsonSaveWorkRepository --> CFG.IPathProvider
+Persistence.JsonBackupJobRepository --> CFG.IPathProvider
 EasyLog.DailyFileLogger --> CFG.IPathProvider
 ETR.RealTimeStateWriter --> CFG.IPathProvider
 

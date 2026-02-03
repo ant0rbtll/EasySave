@@ -1,8 +1,6 @@
-using System.Runtime.InteropServices.Marshalling;
 using EasySave.Persistence;
-using EasySave.CLI;
 using EasySave.Backup;
-using EasySave.UI;
+//using EasySave.CLI;
 using EasySave.Core;
 
 namespace EasySave.Application;
@@ -12,19 +10,20 @@ public class BackupAppService
     private readonly IBackupJobRepository _repo;
     private readonly BackupEngine _engine;
     private readonly IUI _ui;
-    private readonly CommandLineParser _parser;
+    // private readonly CommandLineParser _parser;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BackupAppService"/> class.
     /// </summary>
     /// <param name="repo">The repository used for data persistence.</param>
     /// <param name="ui">The user interface for displaying messages.</param>
-    public BackupAppService(IBackupJobRepository repo, IUI ui)
+    /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
+    public BackupAppService(IBackupJobRepository repo, IUI ui, BackupEngine backupEngine)
     {
         _repo = repo;
-        _engine = new BackupEngine();
+        _engine = backupEngine;
         _ui = ui;
-        _parser = new CommandLineParser();
+        // _parser = new CommandLineParser();
     }
 
     /// <summary>

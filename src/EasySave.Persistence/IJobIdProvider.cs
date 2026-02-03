@@ -4,5 +4,5 @@ namespace EasySave.Persistence;
 
 public interface IJobIdProvider
 {
-    int NextId(List<SaveWork> existing);
+    int NextId(List<BackupJob> existing);
 }

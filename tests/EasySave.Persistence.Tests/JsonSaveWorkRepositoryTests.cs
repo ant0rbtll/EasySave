@@ -4,13 +4,13 @@ using EasySave.Persistence;
 
 namespace EasySave.Persistence.Tests;
 
-public class JsonSaveWorkRepositoryTests : IDisposable
+public class JsonBackupJobRepositoryTests : IDisposable
 {
     private readonly string _testDirectory;
     private readonly string _testFilePath;
     private readonly TestPathProvider _pathProvider;
 
-    public JsonSaveWorkRepositoryTests()
+    public JsonBackupJobRepositoryTests()
     {
         // Créer un répertoire temporaire pour les tests
         _testDirectory = Path.Combine(Path.GetTempPath(), $"EasySaveTests_{Guid.NewGuid()}");
@@ -32,8 +32,8 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void Add_NewJob_CreatesFileAndSavesJob()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
-        var job = new SaveWork 
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
+        var job = new BackupJob 
         { 
             Name = "Test", 
             Source = "/src", 
@@ -54,14 +54,14 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void Add_MultipleTimes_PersistsAllJobs()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         
         // Act
-        repo.Add(new SaveWork { Name = "Job1", Source = "/src1", Destination = "/dst1" });
-        repo.Add(new SaveWork { Name = "Job2", Source = "/src2", Destination = "/dst2" });
+        repo.Add(new BackupJob { Name = "Job1", Source = "/src1", Destination = "/dst1" });
+        repo.Add(new BackupJob { Name = "Job2", Source = "/src2", Destination = "/dst2" });
         
         // Assert - Créer une nouvelle instance pour vérifier la persistance
-        var repo2 = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo2 = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         Assert.Equal(2, repo2.Count());
     }
 
@@ -69,9 +69,9 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void Add_JobWithExistingId_ThrowsException()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
-        var job1 = new SaveWork { Id = 1, Name = "Job1", Source = "/src", Destination = "/dst" };
-        var job2 = new SaveWork { Id = 1, Name = "Job2", Source = "/src", Destination = "/dst" };
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
+        var job1 = new BackupJob { Id = 1, Name = "Job1", Source = "/src", Destination = "/dst" };
+        var job2 = new BackupJob { Id = 1, Name = "Job2", Source = "/src", Destination = "/dst" };
         repo.Add(job1);
 
         // Act & Assert
@@ -82,12 +82,12 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void Add_MoreThanMaxJobs_ThrowsException()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         
         // Act - Ajouter 5 jobs (limite)
         for (int i = 0; i < 5; i++)
         {
-            repo.Add(new SaveWork 
+            repo.Add(new BackupJob 
             { 
                 Name = $"Job{i}", 
                 Source = "/src", 
@@ -98,15 +98,15 @@ public class JsonSaveWorkRepositoryTests : IDisposable
         
         // Assert - Le 6ème doit échouer
         Assert.Throws<InvalidOperationException>(() => 
-            repo.Add(new SaveWork { Name = "Job6", Source = "/src", Destination = "/dst" }));
+            repo.Add(new BackupJob { Name = "Job6", Source = "/src", Destination = "/dst" }));
     }
 
     [Fact]
     public void Remove_ExistingJob_UpdatesFile()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
-        var job = new SaveWork { Name = "Test", Source = "/src", Destination = "/dst" };
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
+        var job = new BackupJob { Name = "Test", Source = "/src", Destination = "/dst" };
         repo.Add(job);
         
         // Act
@@ -116,7 +116,7 @@ public class JsonSaveWorkRepositoryTests : IDisposable
         Assert.Equal(0, repo.Count());
         
         // Vérifier la persistance
-        var repo2 = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo2 = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         Assert.Equal(0, repo2.Count());
     }
 
@@ -124,7 +124,7 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void Remove_NonExistentJob_ThrowsException()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         
         // Act & Assert
         Assert.Throws<KeyNotFoundException>(() => repo.Remove(999));
@@ -134,8 +134,8 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void GetById_ExistingJob_ReturnsJob()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
-        var job = new SaveWork { Name = "Test", Source = "/src", Destination = "/dst" };
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
+        var job = new BackupJob { Name = "Test", Source = "/src", Destination = "/dst" };
         repo.Add(job);
         
         // Act
@@ -150,7 +150,7 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void GetById_NonExistentJob_ThrowsException()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         
         // Act & Assert
         Assert.Throws<KeyNotFoundException>(() => repo.GetById(999));
@@ -160,7 +160,7 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void GetAll_NoFile_ReturnsEmptyList()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         
         // Act
         var result = repo.GetAll();
@@ -173,12 +173,12 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void GetAll_WithJobs_ReturnsAllJobsPersisted()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
-        repo.Add(new SaveWork { Name = "Job1", Source = "/src", Destination = "/dst" });
-        repo.Add(new SaveWork { Name = "Job2", Source = "/src", Destination = "/dst" });
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
+        repo.Add(new BackupJob { Name = "Job1", Source = "/src", Destination = "/dst" });
+        repo.Add(new BackupJob { Name = "Job2", Source = "/src", Destination = "/dst" });
         
         // Act - Nouvelle instance pour vérifier la persistance
-        var repo2 = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo2 = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         var result = repo2.GetAll();
         
         // Assert
@@ -190,7 +190,7 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     {
         // Arrange
         File.WriteAllText(_testFilePath, "{ invalid json }");
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         
         // Act
         var result = repo.GetAll();
@@ -203,7 +203,7 @@ public class JsonSaveWorkRepositoryTests : IDisposable
     public void MaxJobs_Always_Returns5()
     {
         // Arrange
-        var repo = new JsonSaveWorkRepository(_pathProvider, new SequentialJobIdProvider());
+        var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         
         // Act & Assert
         Assert.Equal(5, repo.MaxJobs());
