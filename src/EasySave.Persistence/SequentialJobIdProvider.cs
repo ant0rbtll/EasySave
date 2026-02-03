@@ -3,7 +3,7 @@ using EasySave.Core;
 namespace EasySave.Persistence;
 
 /// <summary>
-/// Fournisseur d'identifiants séquentiels basé sur l'ID maximum existant.
+/// Fournisseur d'identifiants trouvant le plus petit ID disponible.
 /// </summary>
 public class SequentialJobIdProvider : IJobIdProvider
 {
@@ -16,9 +16,27 @@ public class SequentialJobIdProvider : IJobIdProvider
         if (existing == null || existing.Count == 0)
             return 1;
 
-        var maxId = existing.Max(j => j.Id);
-        if (maxId == int.MaxValue)
+        // Trouve le plus petit ID disponible (trous dans la séquence)
+        var existingIds = existing.Select(j => j.Id).OrderBy(id => id).ToList();
+
+        int nextId = 1;
+        foreach (var id in existingIds)
+        {
+            if (id == nextId)
+            {
+                nextId++;
+            }
+            else
+            {
+                // Trouvé un trou dans la séquence
+                return nextId;
+            }
+        }
+
+        // Pas de trou, retourne l'ID suivant après le max
+        if (nextId == int.MaxValue)
             throw new InvalidOperationException("Cannot generate a new job ID because the maximum allowed ID value has been reached.");
-        return maxId + 1;
+        
+        return nextId;
     }
 }
