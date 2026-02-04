@@ -14,6 +14,7 @@ public class ConsoleUI
 
     private readonly BackupAppService _backupAppService;
     private readonly IUserPreferencesRepository _preferencesRepository;
+    private readonly UserPreferences _userPreferences;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
@@ -24,8 +25,8 @@ public class ConsoleUI
         _preferencesRepository = preferencesRepository;
         LocalizationService = new LocalizationService();
 
-        var preferences = _preferencesRepository.Load();
-        var language = preferences.Language;
+        _userPreferences = _preferencesRepository.Load();
+        var language = _userPreferences.Language;
 
         if (string.IsNullOrWhiteSpace(language) || !LocalizationService.AllCultures.ContainsKey(language))
         {
@@ -319,11 +320,10 @@ public class ConsoleUI
     public void ChangeLocale(string locale)
     {
         LocalizationService.Culture = locale;
-        
-        // Save the user preference
-        var preferences = _preferencesRepository.Load();
-        preferences.Language = locale;
-        _preferencesRepository.Save(preferences);
+
+        // Update cached preferences and save
+        _userPreferences.Language = locale;
+        _preferencesRepository.Save(_userPreferences);
 
         MainMenu();
     }
