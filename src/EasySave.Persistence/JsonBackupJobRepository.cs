@@ -66,7 +66,15 @@ public class JsonBackupJobRepository : IBackupJobRepository
     public void Remove(int id)
     {
         var all = Load();
-        var job = all.FirstOrDefault(j => j.Id == id) ?? throw new KeyNotFoundException($"Job with ID {id} not found.");
+        var job = all.FirstOrDefault(j => j.Id == id);
+
+        if (job == null)
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["jobId"] = id;
+            throw e;
+        }
+
         all.Remove(job);
         Save(all);
     }
@@ -101,7 +109,15 @@ public class JsonBackupJobRepository : IBackupJobRepository
     public void Update(BackupJob job)
     {
         var all = Load();
-        var existing = all.FirstOrDefault(j => j.Id == job.Id) ?? throw new KeyNotFoundException($"Job with ID {job.Id} not found.");
+        var existing = all.FirstOrDefault(j => j.Id == job.Id);
+
+        if (existing == null)
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["jobId"] = job.Id;
+            throw e;
+        }
+
         existing.Name = job.Name;
         existing.Source = job.Source;
         existing.Destination = job.Destination;

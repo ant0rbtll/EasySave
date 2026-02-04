@@ -53,7 +53,11 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     public void Remove(int id)
     {
         if (!_jobs.Remove(id))
-            throw new KeyNotFoundException($"Job with ID {id} not found.");
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["jobId"] = id;
+            throw e;
+        }
     }
 
     /// <inheritdoc />
@@ -61,8 +65,11 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     public BackupJob GetById(int id)
     {
         if (!_jobs.TryGetValue(id, out var job))
-            throw new KeyNotFoundException($"Job with ID {id} not found.");
-
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["jobId"] = id;
+            throw e;
+        }
         return job;
     }
 
@@ -89,8 +96,11 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     public void Update(BackupJob job)
     {
         if (!_jobs.ContainsKey(job.Id))
-            throw new KeyNotFoundException($"Job with ID {job.Id} not found.");
-
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["jobId"] = job.Id;
+            throw e;
+        }
         _jobs[job.Id] = job;
     }
 }

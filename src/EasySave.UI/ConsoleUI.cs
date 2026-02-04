@@ -1,8 +1,8 @@
 ﻿using EasySave.Application;
-using EasySave.Localization;
 using EasySave.Core;
-using EasySave.UI.Menu;
+using EasySave.Localization;
 using EasySave.Persistence;
+using EasySave.UI.Menu;
 
 namespace EasySave.UI;
 
@@ -65,10 +65,11 @@ public class ConsoleUI
     {
         ShowMessage(LocalizationKey.error);
         var key = _errorManager.getMessage(e.Message);
-        ShowMessageParam(key, 
-            e.Data.Values
-            .Cast<object>()
-            .Select(v => v?.ToString() ?? "null")
+        ShowMessageParam(key,
+            e.Data.Keys
+            .Cast<string>()
+            .OrderBy(k => k)
+            .Select(k => e.Data[k]?.ToString())
             .ToArray()
         );
     }
@@ -152,7 +153,7 @@ public class ConsoleUI
                 {
                     ShowMessage(LocalizationKey.input_number_invalid, false);
                     ShowMessage(LocalizationKey.input_escape_to_cancel, false);
-                    Console.Write(" : " );
+                    Console.Write(" : ");
                     input = "";
                 }
             }
@@ -240,14 +241,16 @@ public class ConsoleUI
         try
         {
             List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
+            foreach (BackupJob job in backupJobList)
+            {
+                Console.WriteLine(job.Id + " - " + job.Name);
+            }
         }
         catch (Exception e)
         {
             ShowError(e);
-        }
-        foreach (BackupJob job in backupJobList)
-        {
-            Console.WriteLine(job.Id + " - " + job.Name);
+            _menuService.WaitForUser();
+            MainMenu();
         }
     }
 
@@ -321,14 +324,14 @@ public class ConsoleUI
                     continue;
                 }
                 _backupAppService.RemoveJob(backupIndex.Value);
+                ShowMessage(LocalizationKey.backupjob_deleted);
+                break;
             }
             catch (Exception ex)
             {
                 ShowError(ex);
             }
 
-            ShowMessage(LocalizationKey.backupjob_deleted);
-            break;
         }
 
         _menuService.WaitForUser();
@@ -441,12 +444,12 @@ public class ConsoleUI
         try
         {
             _backupAppService.RunJobById(job.Id);
+            ShowMessage(LocalizationKey.backupjob_completed);
         }
         catch (Exception ex)
         {
             ShowError(ex);
         }
-        ShowMessage(LocalizationKey.backupjob_completed);
 
         _menuService.WaitForUser();
         ShowJobsList();
@@ -501,12 +504,12 @@ public class ConsoleUI
         try
         {
             _backupAppService.UpdateJob(job);
+            ShowMessage(LocalizationKey.backupjob_updated);
         }
         catch (Exception e)
         {
             ShowError(e);
         }
-        ShowMessage(LocalizationKey.backupjob_updated);
         _menuService.WaitForUser();
         ShowJobsList();
     }
@@ -536,15 +539,15 @@ public class ConsoleUI
                 ShowError(ex);
             }
             ShowMessage(LocalizationKey.backupjob_deleted);
-            _menuService.WaitForUser();
-            ShowJobsList();
         }
         else
         {
             ShowJobDetails(job);
         }
+        _menuService.WaitForUser();
+        ShowJobsList();
     }
-    
+
     /// <summary>
     /// Run the app through the arguments
     /// </summary>

@@ -61,5 +61,14 @@ public enum LocalizationKey
     error_parser_arg_null,
     error_parser_arg_invalid,
     error_file_null,
-    error_default
+    error_default,
+    error_job_not_found,
+    error_max_id,
+    error_file_transfer_failed,
+    error_backup_type_invalid,
+    error_file_not_found,
+    error_directory_not_found,
+    error_parts_empty,
+    error_parts_null
+
 }
