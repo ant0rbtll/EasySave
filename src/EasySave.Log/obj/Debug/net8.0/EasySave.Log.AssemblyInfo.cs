@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("EasySave.Log")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+52f8850c422d62202d7a36b2734b25e393280a16")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2e0a72ac268535af49e47ff5bd0d1ba1d6967cf7")]
 [assembly: System.Reflection.AssemblyProductAttribute("EasySave.Log")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EasySave.Log")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

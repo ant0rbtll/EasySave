@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\EasySave.Backup\EasySave.Backup.csproj" />
+    <ProjectReference Include="..\..\src\EasyLog\EasyLog.csproj" />
   </ItemGroup>
 
 </Project>

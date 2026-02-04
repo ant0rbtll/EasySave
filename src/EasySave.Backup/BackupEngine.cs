@@ -2,7 +2,6 @@ using EasySave.Core;
 using EasySave.Log;
 using EasySave.System;
 using EasySave.State;
-using EasySave.Log;
 
 namespace EasySave.Backup;
 
