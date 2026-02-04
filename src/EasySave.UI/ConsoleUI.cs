@@ -18,12 +18,15 @@ public class ConsoleUI
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
+    private readonly CommandLineParser _parser;
 
-    public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository)
+    public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository, CommandLineParser parser)
     {
         _backupAppService = backupAppService;
         _preferencesRepository = preferencesRepository;
         LocalizationService = new LocalizationService();
+        _parser = parser;
+        
 
         _userPreferences = _preferencesRepository.Load();
         var language = _userPreferences.Language;
@@ -484,5 +487,23 @@ public class ConsoleUI
         {
             ShowJobDetails(job);
         }
+    }
+    
+    /// <summary>
+    /// Run the app through the arguments
+    /// </summary>
+    /// <param name="args">The args of the command</param>
+    internal void RunFromArgs(string[] args)
+    {
+        try
+        {
+            var jobs = _parser.Parse(args);
+            _backupAppService.RunJobsByIds(jobs);
+        }
+        catch (Exception)
+        {
+            ShowMessage(LocalizationKey.backup_error);
+        }
+        _menuService.WaitForUser();
     }
 }

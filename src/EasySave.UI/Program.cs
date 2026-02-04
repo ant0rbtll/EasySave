@@ -5,6 +5,8 @@ using EasySave.State;
 using EasySave.Configuration;
 using EasySave.System;
 using EasyLog;
+using Microsoft.Extensions.DependencyInjection;
+
 
 namespace EasySave.UI;
 
@@ -19,26 +21,49 @@ public class Program
     /// <param name="args">Command-line arguments passed to the application.</param>
     public static void Main(string[] args)
     {
+        var provider = InitServices();
+        var console = provider.GetRequiredService<ConsoleUI>();
+
+        if (args.Length == 0)
+        {
+            console.MainMenu();
+        }
+        else
+        {
+            console.RunFromArgs(args);
+        }
+    }
+
+    /// <summary>
+    /// Initialisation of all the services of the app
+    /// </summary>
+    /// <returns>The provider to get any Service</returns>
+    private static IServiceProvider InitServices()
+    {
+        var services = new ServiceCollection();
+
         // Setup configuration providers
-        var pathProvider = new DefaultPathProvider();
-        var idProvider = new SequentialJobIdProvider();
+        services.AddSingleton<IPathProvider, DefaultPathProvider>();
+        services.AddSingleton<IJobIdProvider, SequentialJobIdProvider>();
 
         // Setup infrastructure
-        var formatter = new JsonLogFormatter();
-        var logger = new DailyFileLogger(formatter, pathProvider);
-        var globalState = new GlobalState();
-        var stateWriter = new RealTimeStateWriter(pathProvider, globalState);
-        var repository = new JsonBackupJobRepository(pathProvider, idProvider);
-        var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
-        var fileSystem = new DefaultFileSystem();
-        var transferService = new DefaultTransferService(fileSystem);
-        var backupEngine = new BackupEngine(fileSystem, transferService, stateWriter, logger);
+        services.AddSingleton<ILogFormatter, JsonLogFormatter>();
+        services.AddSingleton<ILogger, DailyFileLogger>();
+        services.AddSingleton<GlobalState>();
+        services.AddSingleton<IStateWriter, RealTimeStateWriter>();
+        services.AddSingleton<IBackupJobRepository, JsonBackupJobRepository>();
+        services.AddSingleton<IUserPreferencesRepository, JsonUserPreferencesRepository>();
+        services.AddSingleton<IFileSystem, DefaultFileSystem>();
+        services.AddSingleton<ITransferService, DefaultTransferService>();
+        services.AddSingleton<BackupEngine>();
+        services.AddSingleton<CommandLineParser>();
 
         // Setup application service
-        var backupAppService = new BackupAppService(repository, backupEngine);
+        services.AddSingleton<BackupAppService>();
 
         // Setup and run UI
-        var console = new ConsoleUI(backupAppService, preferencesRepository);
-        console.MainMenu();
+        services.AddSingleton<ConsoleUI>();
+
+        return services.BuildServiceProvider();
     }
 }
