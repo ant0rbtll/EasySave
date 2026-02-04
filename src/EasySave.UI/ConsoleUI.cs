@@ -321,6 +321,11 @@ public class ConsoleUI
     /// <param name="locale"></param>
     public void ChangeLocale(string locale)
     {
+        if (string.IsNullOrWhiteSpace(locale) || !LocalizationService.AllCultures.ContainsKey(locale))
+        {
+            locale = "fr";
+        }
+
         LocalizationService.Culture = locale;
 
         // Update cached preferences and save
