@@ -26,8 +26,14 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
             string json = File.ReadAllText(path);
             return JsonSerializer.Deserialize<UserPreferences>(json) ?? new UserPreferences();
         }
-        catch
+        catch (JsonException)
         {
+            // Corrupted or invalid JSON - return defaults
+            return new UserPreferences();
+        }
+        catch (IOException)
+        {
+            // File read error (locked, concurrent access) - return defaults
             return new UserPreferences();
         }
     }
