@@ -7,37 +7,55 @@ actor "Utilisateur" as User
 
 rectangle "EasySave 1.0" {
 
+  usecase "Naviguer dans\nles menus interactifs" as UC_Interactive
+  
   usecase "Gérer les travaux\nde sauvegarde" as UC_Manage
   usecase "Créer un travail" as UC_Create
   usecase "Modifier un travail" as UC_Edit
   usecase "Supprimer un travail" as UC_Delete
   usecase "Lister les travaux" as UC_List
+  usecase "Voir les détails\nd'un travail" as UC_Details
 
   usecase "Exécuter un travail" as UC_RunOne
+  usecase "Exécuter plusieurs travaux" as UC_RunMultiple
   usecase "Exécuter tous les travaux" as UC_RunAll
 
   usecase "Lancer via\nligne de commande" as UC_CLI
 
   usecase "Choisir la langue\n(FR / EN)" as UC_Lang
 
-  usecase "Consulter\nl'avancement" as UC_Status
+  usecase "Consulter l'état\ntemps réel (JSON)" as UC_Status
+  usecase "Consulter les logs\njournaliers (JSON)" as UC_Logs
 }
 
 ' Acteur
-User --> UC_Manage
-User --> UC_RunOne
-User --> UC_RunAll
+User --> UC_Interactive
 User --> UC_CLI
-User --> UC_Lang
 User --> UC_Status
+User --> UC_Logs
 
-' Gestion
+' Navigation interactive
+UC_Interactive .> UC_Manage : <<include>>
+UC_Interactive .> UC_Lang : <<include>>
+UC_Interactive .> UC_RunOne : <<include>>
+UC_Interactive .> UC_RunAll : <<include>>
+
+' Gestion des travaux
 UC_Manage .> UC_Create : <<include>>
 UC_Manage .> UC_Edit   : <<include>>
 UC_Manage .> UC_Delete : <<include>>
 UC_Manage .> UC_List   : <<include>>
+UC_Manage .> UC_Details : <<include>>
 
-' Exécution globale
+' Exécution
 UC_RunAll .> UC_RunOne : <<include>>
+UC_RunMultiple .> UC_RunOne : <<include>>
+UC_CLI .> UC_RunMultiple : <<extend>>
+UC_CLI .> UC_RunAll : <<extend>>
+
+' Détails et actions
+UC_Details .> UC_RunOne : <<extend>>
+UC_Details .> UC_Edit : <<extend>>
+UC_Details .> UC_Delete : <<extend>>
 
 @enduml

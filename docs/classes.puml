@@ -143,6 +143,13 @@ package "UI" {
     + RunAll : bool
     + {static} Main(args[]) : void
   }
+
+  class ErrorManager {
+    - errors : Dictionary<string, LocalizationKey>
+    --
+    + ErrorManager()
+    + getMessage(message) : LocalizationKey
+  }
 }
 
 ' ===================== Localization =====================
@@ -454,12 +461,14 @@ UI.ConsoleUI --> Persistence.IUserPreferencesRepository
 UI.ConsoleUI --> Persistence.UserPreferences
 UI.ConsoleUI --> UI.MenuService
 UI.ConsoleUI --> UI.MenuFactory
+UI.ConsoleUI --> UI.ErrorManager
 UI.ConsoleUI --> LOC.ILocalizationService
 UI.ConsoleUI --> UI.CommandLineArgs : uses
 UI.MenuService --> LOC.ILocalizationService
 UI.MenuFactory --> UI.ConsoleUI
 UI.MenuFactory --> APP.BackupAppService
 UI.MenuFactory ..> UI.MenuConfig
+UI.ErrorManager --> LOC.LocalizationKey
 
 UI.Program --> UI.CommandLineParser : uses
 UI.CommandLineParser ..> UI.CommandLineArgs : creates

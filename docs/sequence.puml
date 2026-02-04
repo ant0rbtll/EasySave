@@ -3,38 +3,54 @@ title EasySave 1.0 - Séquence : Lancer via CLI et exécuter des travaux
 
 actor Utilisateur as User
 boundary "UI.ConsoleUI" as UI
-control "CLI.CommandLineParser" as Parser
+control "UI.CommandLineParser" as Parser
+control "UI.ErrorManager" as ErrorMgr
 control "APP.BackupAppService" as App
-entity "Persistence.ISaveWorkRepository" as Repo
+entity "Persistence.IBackupJobRepository" as Repo
 control "Backup.BackupEngine" as Engine
-control "EasyLog.ILogger\n(EasyLog.dll)" as Log
-control "ETR.IStateWriter\n(state.json)" as State
+control "SystemAbstractions.IFileSystem" as FileSystem
+control "SystemAbstractions.ITransferService" as Transfer
+control "EasyLog.ILogger\n(DailyFileLogger)" as Log
+control "ETR.IStateWriter\n(RealTimeStateWriter)" as State
 
 == Démarrage ==
-User -> UI : EasySave.exe "1-3" / "1;3"
-UI -> App : RunFromArgs(args)
-App -> Parser : Parse(args)
+User -> UI : EasySave.exe ["1,3"] ou ["--all"]
+
+alt args[] vide
+  UI -> UI : MainMenu()
+  note right: Mode interactif
+  return
+end
+
+UI -> UI : RunFromArgs(args)
+UI -> Parser : Parse(args)
 
 alt Syntaxe invalide
-  Parser --> App : erreur
-  App -> UI : ShowError(key)
-  UI --> User : message d'aide
+  Parser --> UI : null
+  UI -> ErrorMgr : getMessage("error_parser_arg_invalid")
+  ErrorMgr --> UI : LocalizationKey
+  UI -> UI : ShowError(key)
+  UI --> User : message d'erreur localisé
   return
 else OK
-  Parser --> App : ids : int[]
+  Parser --> UI : CommandLineArgs\n(JobIds[], RunAll)
 end
 
 == Sélection des travaux ==
-App -> App : RunJobs(ids)
-
-loop pour chaque id
-  App -> Repo : GetById(id)
-  Repo --> App : job : CORE.SaveWork
+alt RunAll = true
+  UI -> App : RunAllJobs()
+  App -> Repo : GetAll()
+else RunAll = false
+  UI -> App : RunJobsByIds(JobIds)
+  loop pour chaque id
+    App -> Repo : GetById(id)
+    Repo --> App : BackupJob?
+  end
 end
 
-alt Aucun travail
-  App --> UI : ShowMessage(key)
-  UI --> User : afficher
+alt Aucun travail trouvé
+  App --> UI : (liste vide)
+  UI --> User : message "Aucun travail"
   return
 end
 
@@ -42,24 +58,42 @@ end
 loop pour chaque job
   App -> Engine : Execute(job)
 
-  Engine -> State : Update(entry)\n(status=Active, init totaux)
-  Engine -> Log : Write(entry)\n(eventType=TransferFile/CreateDirectory)
+  Engine -> State : Update(entry)\n(status=Active, TotalFiles, TotalSizeBytes)
+  Engine -> FileSystem : EnumerateFilesRecursive(source)
+  FileSystem --> Engine : IEnumerable<string>
+  
+  Engine -> Log : Write(LogEntry)\n(eventType=CreateDirectory)
 
   loop pour chaque fichier
-    Engine -> State : Update(entry)\n(currentFile, progress, remaining)
-    Engine -> Engine : TransferFile(src->dst)
-    alt OK
-      Engine -> Log : Write(entry)\n(transferTimeMs>=0)
+    Engine -> State : Update(entry)\n(CurrentSourcePath, RemainingFiles, ProgressPercent)
+    
+    alt BackupType = Differential
+      Engine -> Engine : CanCopyFile()\n(comparer dates modification)
+      alt Fichier non modifié
+        note right: Passer au suivant
+      end
+    end
+    
+    Engine -> Transfer : TransferFile(src, dst, overwrite)
+    Transfer -> FileSystem : CopyFile(src, dst, overwrite)
+    
+    alt Succès
+      FileSystem --> Transfer : (copie OK)
+      Transfer --> Engine : TransferResult\n(Success=true, TransferTimeMs, FileSizeBytes)
+      Engine -> Log : Write(LogEntry)\n(eventType=TransferFile, TransferTimeMs)
     else Erreur
-      Engine -> Log : Write(entry)\n(transferTimeMs<0, errorCode)
+      FileSystem --> Transfer : IOException
+      Transfer --> Engine : TransferResult\n(Success=false)
+      Engine -> Log : Write(LogEntry)\n(eventType=Error)
+      Engine -> State : Update(entry)\n(status=Error)
     end
   end
 
-  Engine -> State : Update(entry)\n(status=Done)
+  Engine -> State : Update(entry)\n(status=Done, ProgressPercent=100)
   Engine -> State : MarkInactive(backupId)
 end
 
-App --> UI : ShowMessage(key)\n(résumé)
-UI --> User : afficher
+App --> UI : (fin)
+UI --> User : (retour terminal)
 
 @enduml
