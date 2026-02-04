@@ -1,6 +1,6 @@
 using System.Text.Encodings.Web;
 using System.Text.Json;
-using EasySave.Core.Logging;
+using EasySave.Log;
 
 namespace EasyLog;
 
@@ -13,9 +13,10 @@ public sealed class JsonLogFormatter : ILogFormatter
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
 
-    public string Format(EasySave.Core.Logging.LogEntry entry)
+    public string Format(EasySave.Log.LogEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
         return JsonSerializer.Serialize(entry, Options);
     }
 }
+

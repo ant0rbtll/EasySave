@@ -1,7 +1,8 @@
-using EasySave.Core.Logging;
+using EasySave.Log;
 
 namespace EasyLog;
 
-public interface ILogger : EasySave.Core.Logging.ILogger
+public interface ILogger : EasySave.Log.ILogger
 {
 }
+

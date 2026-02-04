@@ -1,11 +1,13 @@
 ﻿using System.Reflection;
+using System.Reflection;
 using EasySave.Application;
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.State;
 using EasySave.Configuration;
 using EasySave.System;
-using EasySave.Core.Logging;
+using EasySave.Log;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace EasySave.UI;
@@ -47,16 +49,16 @@ public class Program
         services.AddSingleton<IJobIdProvider, SequentialJobIdProvider>();
 
         // Setup infrastructure
-        var logger = CreateLogger(pathProvider);
-        Console.Error.WriteLine($"[EasyLog] Loaded: {logger.GetType().FullName}");
-        var globalState = new GlobalState();
-        var stateWriter = new RealTimeStateWriter(pathProvider, globalState);
-        var repository = new JsonBackupJobRepository(pathProvider, idProvider);
-        var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
-        var fileSystem = new DefaultFileSystem();
-        var transferService = new DefaultTransferService(fileSystem);
-        var backupEngine = new BackupEngine(fileSystem, transferService, stateWriter, logger);
-
+        services.AddSingleton<ILogger>(sp =>
+            CreateLogger(sp.GetRequiredService<IPathProvider>()));
+        services.AddSingleton<GlobalState>();
+        services.AddSingleton<IStateWriter, RealTimeStateWriter>();
+        services.AddSingleton<IBackupJobRepository, JsonBackupJobRepository>();
+        services.AddSingleton<IUserPreferencesRepository, JsonUserPreferencesRepository>();
+        services.AddSingleton<IFileSystem, DefaultFileSystem>();
+        services.AddSingleton<ITransferService, DefaultTransferService>();
+        services.AddSingleton<BackupEngine>();
+        services.AddSingleton<CommandLineParser>();
 
         // Setup application service
         services.AddSingleton<BackupAppService>();
@@ -71,12 +73,7 @@ public class Program
     {
         var easyLogPath = Path.Combine(AppContext.BaseDirectory, "EasyLog.dll");
         if (!File.Exists(easyLogPath))
-        {
-            File.WriteAllText(
-                Path.Combine(AppContext.BaseDirectory, "easylog-load.txt"),
-                $"EasyLog.dll not found at: {easyLogPath}");
             return new NoOpLogger();
-        }
 
         try
         {
@@ -94,11 +91,8 @@ public class Program
 
             return logger as ILogger ?? new NoOpLogger();
         }
-        catch (Exception ex)
+        catch
         {
-            File.WriteAllText(
-                Path.Combine(AppContext.BaseDirectory, "easylog-load.txt"),
-                ex.ToString());
             return new NoOpLogger();
         }
     }
