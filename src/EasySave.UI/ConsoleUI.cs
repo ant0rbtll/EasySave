@@ -2,6 +2,7 @@
 using EasySave.Localization;
 using EasySave.Core;
 using EasySave.UI.Menu;
+using EasySave.Persistence;
 
 namespace EasySave.UI;
 
@@ -12,14 +13,30 @@ public class ConsoleUI
 {
 
     private readonly BackupAppService _backupAppService;
+    private readonly IUserPreferencesRepository _preferencesRepository;
+    private readonly UserPreferences _userPreferences;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
 
-    public ConsoleUI(BackupAppService backupAppService)
+    public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository)
     {
         _backupAppService = backupAppService;
+        _preferencesRepository = preferencesRepository;
         LocalizationService = new LocalizationService();
+
+        _userPreferences = _preferencesRepository.Load();
+        var language = _userPreferences.Language;
+
+        if (string.IsNullOrWhiteSpace(language) || !LocalizationService.AllCultures.ContainsKey(language))
+        {
+            language = "fr";
+            _userPreferences.Language = language;
+            _preferencesRepository.Save(_userPreferences);
+        }
+
+        LocalizationService.Culture = language;
+
         _menuService = new MenuService(LocalizationService);
         _menuFactory = new MenuFactory(this, _backupAppService);
     }
@@ -304,7 +321,16 @@ public class ConsoleUI
     /// <param name="locale"></param>
     public void ChangeLocale(string locale)
     {
+        if (string.IsNullOrWhiteSpace(locale) || !LocalizationService.AllCultures.ContainsKey(locale))
+        {
+            locale = "fr";
+        }
+
         LocalizationService.Culture = locale;
+
+        // Update cached preferences and save
+        _userPreferences.Language = locale;
+        _preferencesRepository.Save(_userPreferences);
 
         MainMenu();
     }

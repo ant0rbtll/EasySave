@@ -5,5 +5,6 @@ namespace EasySave.Configuration
         string GetDailyLogPath(DateTime date);
         string GetStatePath();
         string GetJobsConfigPath();
+        string GetUserPreferencesPath();
     }
 }

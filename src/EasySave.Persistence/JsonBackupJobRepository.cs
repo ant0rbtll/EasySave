@@ -5,7 +5,7 @@ using EasySave.Core;
 namespace EasySave.Persistence;
 
 /// <summary>
-/// Implémentation du dépôt de jobs avec persistance JSON sur disque.
+/// JSON-based repository implementation for backup job persistence.
 /// </summary>
 public class JsonBackupJobRepository : IBackupJobRepository
 {
@@ -15,10 +15,10 @@ public class JsonBackupJobRepository : IBackupJobRepository
     private readonly JsonSerializerOptions _jsonOptions;
 
     /// <summary>
-    /// Initialise une nouvelle instance du dépôt JSON.
+    /// Initializes a new instance of the JSON backup job repository.
     /// </summary>
-    /// <param name="pathProvider">Fournisseur de chemins pour le fichier de configuration.</param>
-    /// <param name="idProvider">Fournisseur d'identifiants pour les nouveaux jobs.</param>
+    /// <param name="pathProvider">Path provider for the configuration file.</param>
+    /// <param name="idProvider">ID provider for new jobs.</param>
     public JsonBackupJobRepository(IPathProvider pathProvider, IJobIdProvider idProvider)
     {
         _pathProvider = pathProvider;
@@ -32,7 +32,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
 
     /// <inheritdoc />
     /// <exception cref="InvalidOperationException">
-    /// Levée si le nombre maximum de jobs est atteint ou si l'ID existe déjà.
+    /// Thrown if the maximum number of jobs is reached or if the ID already exists.
     /// </exception>
     public void Add(BackupJob job)
     {
@@ -54,7 +54,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Levée si le job n'existe pas.</exception>
+    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
     public void Remove(int id)
     {
         var all = Load();
@@ -93,9 +93,9 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <summary>
-    /// Charge les jobs depuis le fichier JSON.
+    /// Loads jobs from the JSON file.
     /// </summary>
-    /// <returns>Liste des jobs, ou liste vide si le fichier n'existe pas ou est corrompu.</returns>
+    /// <returns>List of jobs, or empty list if file does not exist or is corrupted.</returns>
     private List<BackupJob> Load()
     {
         var path = _pathProvider.GetJobsConfigPath();
@@ -116,9 +116,9 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <summary>
-    /// Sauvegarde les jobs dans le fichier JSON.
+    /// Saves jobs to the JSON file.
     /// </summary>
-    /// <param name="all">Liste des jobs à sauvegarder.</param>
+    /// <param name="all">List of jobs to save.</param>
     private void Save(List<BackupJob> all)
     {
         var path = _pathProvider.GetJobsConfigPath();

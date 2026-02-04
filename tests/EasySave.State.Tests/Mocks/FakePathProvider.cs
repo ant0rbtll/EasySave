@@ -30,5 +30,10 @@ public class FakePathProvider(string? statePath = null) : IPathProvider
     {
         return $"unused_log_{date:yyyyMMdd}.log";
     }
+
+    public string GetUserPreferencesPath()
+    {
+        return "unused_preferences.json";
+    }
     #endregion
 }
