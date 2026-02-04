@@ -225,5 +225,6 @@ public class JsonBackupJobRepositoryTests : IDisposable
         public string GetDailyLogPath(DateTime date) => throw new NotImplementedException();
         public string GetStatePath() => throw new NotImplementedException();
         public string GetJobsConfigPath() => _jobsPath;
+        public string GetUserPreferencesPath() => throw new NotImplementedException();
     }
 }
