@@ -147,13 +147,16 @@ public class JsonBackupJobRepositoryTests : IDisposable
     }
 
     [Fact]
-    public void GetById_NonExistentJob_ThrowsException()
+    public void GetById_NonExistentJob_ReturnsNull()
     {
         // Arrange
         var repo = new JsonBackupJobRepository(_pathProvider, new SequentialJobIdProvider());
         
-        // Act & Assert
-        Assert.Throws<KeyNotFoundException>(() => repo.GetById(999));
+        // Act
+        var result = repo.GetById(999);
+        
+        // Assert
+        Assert.Null(result);
     }
 
     [Fact]

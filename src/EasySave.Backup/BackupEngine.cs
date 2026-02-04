@@ -8,31 +8,23 @@ namespace EasySave.Backup;
 /// <summary>
 /// Executes complete and differential backups.
 /// </summary>
-public class BackupEngine
+/// <remarks>
+/// Initializes a new instance of the backup engine.
+/// </remarks>
+/// <param name="fileSystem">File system management service.</param>
+/// <param name="transferService">File transfer service.</param>
+/// <param name="stateWriter">Backup state writer service.</param>
+/// <param name="logger">Logging service.</param>
+public class BackupEngine(
+    IFileSystem fileSystem,
+    ITransferService transferService,
+    IStateWriter stateWriter,
+    ILogger logger)
 {
-    private readonly IFileSystem _fileSystem;
-    private readonly ITransferService _transferService;
-    private readonly IStateWriter _stateWriter;
-    private readonly ILogger _logger;
-
-    /// <summary>
-    /// Initializes a new instance of the backup engine.
-    /// </summary>
-    /// <param name="fileSystem">File system management service.</param>
-    /// <param name="transferService">File transfer service.</param>
-    /// <param name="stateWriter">Backup state writer service.</param>
-    /// <param name="logger">Logging service.</param>
-    public BackupEngine(
-        IFileSystem fileSystem,
-        ITransferService transferService,
-        IStateWriter stateWriter,
-        ILogger logger)
-    {
-        _fileSystem = fileSystem;
-        _transferService = transferService;
-        _stateWriter = stateWriter;
-        _logger = logger;
-    }
+    private readonly IFileSystem _fileSystem = fileSystem;
+    private readonly ITransferService _transferService = transferService;
+    private readonly IStateWriter _stateWriter = stateWriter;
+    private readonly ILogger _logger = logger;
 
     /// <summary>
     /// Executes a complete or differential backup.
@@ -43,68 +35,68 @@ public class BackupEngine
     {
         try
         {
-        var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
+            var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
 
-        int totalFiles = files.Count;
-        long totalSize = files.Sum(f => _fileSystem.GetFileSize(f));
+            int totalFiles = files.Count;
+            long totalSize = files.Sum(f => _fileSystem.GetFileSize(f));
 
-        int remainingFiles = totalFiles;
-        long remainingSize = totalSize;
+            int remainingFiles = totalFiles;
+            long remainingSize = totalSize;
 
-        UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
+            UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
 
-        foreach (var file in files)
-        {
-            var relativePath = Path.GetRelativePath(job.Source, file);
-            var destinationFile = Path.Combine(job.Destination, relativePath);
-
-            if (CanCopyFile(job.Type, file, destinationFile))
+            foreach (var file in files)
             {
-                var destinationDir = Path.GetDirectoryName(destinationFile)!;
+                var relativePath = Path.GetRelativePath(job.Source, file);
+                var destinationFile = Path.Combine(job.Destination, relativePath);
 
-                if (!_fileSystem.DirectoryExists(destinationDir))
+                if (CanCopyFile(job.Type, file, destinationFile))
                 {
-                    _fileSystem.CreateDirectory(destinationDir);
+                    var destinationDir = Path.GetDirectoryName(destinationFile)!;
+
+                    if (!_fileSystem.DirectoryExists(destinationDir))
+                    {
+                        _fileSystem.CreateDirectory(destinationDir);
+                        Log(
+                            job.Name,
+                            LogEventType.CreateDirectory,
+                            destinationDir,
+                            destinationDir,
+                            0,
+                            0
+                        );
+                    }
+
+                    TransferResult result = _transferService.TransferFile(file, destinationFile, true);
+
+                    if (!result.IsSuccess)
+                    {
+                        throw new InvalidOperationException(
+                            $"File transfer failed from '{file}' to '{destinationFile}' with error code {result.ErrorCode}."
+                        );
+                    }
                     Log(
                         job.Name,
-                        LogEventType.CreateDirectory,
-                        destinationDir,
-                        destinationDir,
-                        0,
-                        0
+                        LogEventType.TransferFile,
+                        file,
+                        destinationFile,
+                        result.FileSizeBytes,
+                        result.TransferTimeMs
                     );
+
+                    remainingFiles--;
+                    remainingSize -= result.FileSizeBytes;
+
+                    int progress = totalFiles > 0
+                        ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles)
+                        : 0;
+
+                    UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, file, destinationFile);
                 }
-
-                TransferResult result = _transferService.TransferFile(file, destinationFile, true);
-
-                if (!result.IsSuccess)
-                {
-                    throw new InvalidOperationException(
-                        $"File transfer failed from '{file}' to '{destinationFile}' with error code {result.ErrorCode}."
-                    );
-                }
-                Log(
-                    job.Name,
-                    LogEventType.TransferFile,
-                    file,
-                    destinationFile,
-                    result.FileSizeBytes,
-                    result.TransferTimeMs
-                );
-
-                remainingFiles--;
-                remainingSize -= result.FileSizeBytes;
-
-                int progress = totalFiles > 0
-                    ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles)
-                    : 0;
-
-                UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, file, destinationFile);
             }
-        }
 
-        UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
-        _stateWriter.MarkInactive(job.Id);
+            UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
+            _stateWriter.MarkInactive(job.Id);
         }
         catch (Exception)
         {

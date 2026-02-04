@@ -23,17 +23,35 @@ public class LocalizationService : ILocalizationService
             { "fr", LocalizationKey.config_locale_fr },
             { "en", LocalizationKey.config_locale_en },
         };
-        Culture = "fr";
+        _culture = "fr";
 
     }
 
-    public string Culture { get; set; }
+    private string _culture;
+    public string Culture
+    {
+        get => _culture;
+        set
+        {
+            if (_culture != value)
+            {
+                _culture = value;
+                _translationCache = null; // Invalidate cache when culture changes
+            }
+        }
+    }
 
     /// <inheritdoc/>
     public string TranslateText(LocalizationKey key)
     {
         return TranslateText(key.ToString());
     }
+
+    /// <inheritdoc/>
+    // public string TranslateText(LocalizationKey key, Dictionary<string, string> parameters)
+    // {
+    //     return TranslateText(key, parameters);
+    // }
 
     /// <inheritdoc/>
     public string TranslateText(string key)
@@ -47,7 +65,9 @@ public class LocalizationService : ILocalizationService
         {
             if (_translationCache == null)
             {
-                var translationFilePath = Path.Combine("..", "EasySave.Localization", "Translations", $"translations.{Culture}.yaml");
+                // Use assembly location to find translation files
+                var assemblyLocation = Path.GetDirectoryName(typeof(LocalizationService).Assembly.Location);
+                var translationFilePath = Path.Combine(assemblyLocation ?? ".", "Translations", $"translations.{Culture}.yaml");
                 if (!File.Exists(translationFilePath))
                 {
                     return key;

@@ -11,6 +11,12 @@
 		<ProjectReference Include="..\EasySave.Application\EasySave.Application.csproj" />
 		<ProjectReference Include="..\EasySave.Localization\EasySave.Localization.csproj" />
 		<ProjectReference Include="..\EasySave.Core\EasySave.Core.csproj" />
+		<ProjectReference Include="..\EasySave.Persistence\EasySave.Persistence.csproj" />
+		<ProjectReference Include="..\EasySave.Backup\EasySave.Backup.csproj" />
+		<ProjectReference Include="..\EasySave.State\EasySave.State.csproj" />
+		<ProjectReference Include="..\EasySave.Configuration\EasySave.Configuration.csproj" />
+		<ProjectReference Include="..\EasySave.System\EasySave.System.csproj" />
+		<ProjectReference Include="..\EasyLog\EasyLog.csproj" />
 	</ItemGroup>
 
 </Project>

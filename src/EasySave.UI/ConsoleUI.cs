@@ -8,7 +8,7 @@ namespace EasySave.UI;
 /// <summary>
 /// Actions and display of the application with the console
 /// </summary>
-public class ConsoleUI : IUI
+public class ConsoleUI
 {
 
     private readonly BackupAppService _backupAppService;
@@ -21,22 +21,23 @@ public class ConsoleUI : IUI
         _backupAppService = backupAppService;
         LocalizationService = new LocalizationService();
         _menuService = new MenuService(LocalizationService);
-        _menuFactory = new MenuFactory(this);
+        _menuFactory = new MenuFactory(this, _backupAppService);
     }
 
     /// <inheritdoc />
-    public void ShowMessage(LocalizationKey key, bool writeLine = true)
+    private void ShowMessage(LocalizationKey key, bool writeLine = true)
     {
         string message = LocalizationService.TranslateText(key);
         if (writeLine) Console.WriteLine(message);
         else Console.Write(message);
     }
 
-    public void ShowMessage(string message, bool writeLine = true)
-    {
-        if (writeLine) Console.WriteLine(message);
-        else Console.Write(message);
-    }
+    // private void ShowMessageParam(LocalizationKey key, Dictionary<string, string> parameters, bool writeLine = true)
+    // {
+    //     string message = LocalizationService.TranslateText(key, parameters);
+    //     if (writeLine) Console.WriteLine(message);
+    //     else Console.Write(message);
+    // }
 
     /// <inheritdoc />
     public void ShowError(LocalizationKey key)
@@ -45,95 +46,167 @@ public class ConsoleUI : IUI
     }
 
     /// <inheritdoc />
-    public string AskString(LocalizationKey key)
+    public string? AskString(LocalizationKey key)
     {
         ShowMessage(key, false);
+        ShowMessage(LocalizationKey.input_escape_to_cancel, false);
+        Console.Write(" : ");
 
-        string? stringInput;
-
-        do
-        {
-            stringInput = Console.ReadLine();
-
-            if (string.IsNullOrWhiteSpace(stringInput))
-            {
-                ShowMessage(LocalizationKey.input_string_invalid, false);
-            }
-        }
-        while (string.IsNullOrWhiteSpace(stringInput));
-
-        return stringInput;
-    }
-
-    /// <inheritdoc />
-    public int AskInt(LocalizationKey key)
-    {
-        ShowMessage(key);
-
-        string? input;
-        int numberInput;
+        string input = "";
+        ConsoleKeyInfo keyInfo;
 
         do
         {
-            input = Console.ReadLine();
+            keyInfo = Console.ReadKey(intercept: true);
 
-            if (!int.TryParse(input, out numberInput))
+            if (keyInfo.Key == ConsoleKey.Escape)
             {
-                ShowMessage(LocalizationKey.input_number_invalid);
+                Console.WriteLine();
+                return null;
+            }
+            else if (keyInfo.Key == ConsoleKey.Enter)
+            {
+                Console.WriteLine();
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    ShowMessage(LocalizationKey.input_string_invalid, false);
+                    ShowMessage(LocalizationKey.input_escape_to_cancel, false);
+                    Console.Write(" : ");
+                    input = "";
+                }
+                else
+                {
+                    break;
+                }
+            }
+            else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
+            {
+                input = input.Substring(0, input.Length - 1);
+                Console.Write("\b \b"); // Erase the character on screen
+            }
+            else if (!char.IsControl(keyInfo.KeyChar))
+            {
+                input += keyInfo.KeyChar;
+                Console.Write(keyInfo.KeyChar);
             }
         }
-        while (!int.TryParse(input, out numberInput));
+        while (true);
 
-        return numberInput;
+        return input;
     }
 
     /// <inheritdoc />
-    public BackupType AskBackupType(LocalizationKey key)
+    public int? AskInt(LocalizationKey key)
     {
-        string? backupTypeInput;
+        ShowMessage(key, false);
+        ShowMessage(LocalizationKey.input_escape_to_cancel, false);
+        Console.Write(" : ");
+        string input = "";
+        ConsoleKeyInfo keyInfo;
 
+        do
+        {
+            keyInfo = Console.ReadKey(intercept: true);
+
+            if (keyInfo.Key == ConsoleKey.Escape)
+            {
+                Console.WriteLine();
+                return null;
+            }
+            else if (keyInfo.Key == ConsoleKey.Enter)
+            {
+                Console.WriteLine();
+                if (int.TryParse(input, out int numberInput))
+                {
+                    return numberInput;
+                }
+                else
+                {
+                    ShowMessage(LocalizationKey.input_number_invalid, false);
+                    ShowMessage(LocalizationKey.input_escape_to_cancel, false);
+                    Console.Write(" : " );
+                    input = "";
+                }
+            }
+            else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
+            {
+                input = input.Substring(0, input.Length - 1);
+                Console.Write("\b \b");
+            }
+            else if (char.IsDigit(keyInfo.KeyChar) || (keyInfo.KeyChar == '-' && input.Length == 0))
+            {
+                input += keyInfo.KeyChar;
+                Console.Write(keyInfo.KeyChar);
+            }
+        }
+        while (true);
+    }
+
+    /// <inheritdoc />
+    public BackupType? AskBackupType(LocalizationKey key)
+    {
         ShowMessage(LocalizationKey.backupjob_type_list);
         var values = Enum.GetValues(typeof(BackupType)).Cast<BackupType>().ToArray();
         for (int i = 0; i < values.Length; i++)
         {
             Console.WriteLine($"{i + 1}. {values[i]}");
         }
-        
-        int choice;
+
         ShowMessage(key);
         while (true)
         {
-            Console.Write("\n");
-            ShowMessage(LocalizationKey.user_choice, false);
-            backupTypeInput = Console.ReadLine();
-
-            if (int.TryParse(backupTypeInput, out choice) && choice >= 1 && choice <= values.Length)
+            int? backupTypeInput = AskInt(LocalizationKey.user_choice);
+            if (backupTypeInput == null)
             {
-                break;
+                return null;
+            }
+
+            int choice = backupTypeInput.Value;
+            if (choice >= 1 && choice <= values.Length)
+            {
+                return values[choice - 1];
             }
 
             ShowMessage(LocalizationKey.input_backuptype_invalid);
         }
-
-        return values[choice - 1];
     }
-    
+
     /// <summary>
     /// Gather a save's informations and create a BackupJob
     /// </summary>
     public void CreateBackupJob()
     {
         _menuService.DisplayLabel(LocalizationKey.menu_create);
-        string nameJob = AskString(LocalizationKey.backupjob_create_name);
-        string sourceJob = AskString(LocalizationKey.backupjob_create_source);
-        string destinationJob = AskString(LocalizationKey.backupjob_create_destination);
-        BackupType backupTypeJob = AskBackupType(LocalizationKey.backupjob_create_type);
+
+        string? nameJob = AskString(LocalizationKey.backupjob_create_name);
+        if (nameJob == null) { MainMenu(); return; }
+
+        string? sourceJob = AskString(LocalizationKey.backupjob_create_source);
+        if (sourceJob == null) { MainMenu(); return; }
+
+        string? destinationJob = AskString(LocalizationKey.backupjob_create_destination);
+        if (destinationJob == null) { MainMenu(); return; }
+
+        BackupType? backupTypeJob = AskBackupType(LocalizationKey.backupjob_create_type);
+        if (backupTypeJob == null) { MainMenu(); return; }
 
         // send to service
-        _backupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob);
+        _backupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
         ShowMessage(LocalizationKey.backupjob_created);
         _menuService.WaitForUser();
         MainMenu();
+    }
+
+    /// <summary>
+    /// Display the list of BackupJobs
+    /// </summary>
+    private void DisplayJobsList()
+    {
+        List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
+        foreach (BackupJob job in backupJobList)
+        {
+            Console.WriteLine(job.Id + " - " + job.Name);
+        }
     }
 
     /// <summary>
@@ -142,10 +215,7 @@ public class ConsoleUI : IUI
     public void SeeSaveList()
     {
         _menuService.DisplayLabel(LocalizationKey.menu_list);
-        List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
-        foreach (BackupJob job in backupJobList) {
-            Console.WriteLine(job.Id + " - " + job.Name);
-        }
+        DisplayJobsList();
         _menuService.WaitForUser();
         MainMenu();
     }
@@ -156,11 +226,55 @@ public class ConsoleUI : IUI
     public void SaveJob()
     {
         _menuService.DisplayLabel(LocalizationKey.menu_save);
+        DisplayJobsList();
+        Console.WriteLine();
 
-        int backupIndex = AskInt(LocalizationKey.ask_backupjob_save);
+        while (true)
+        {
+            int? backupIndex = AskInt(LocalizationKey.ask_backupjob_save);
+            if (backupIndex == null) { MainMenu(); return; }
 
-        ShowMessage(LocalizationKey.backup_saving);
-        _backupAppService.RunJob(backupIndex);
+            BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+            if (job == null)
+            {
+                ShowMessage(LocalizationKey.backupjob_id_not_found);
+                continue;
+            }
+
+            ShowMessage(LocalizationKey.backup_saving);
+            _backupAppService.RunJobById(backupIndex.Value);
+            break;
+        }
+
+        _menuService.WaitForUser();
+        MainMenu();
+    }
+
+    /// <summary>
+    /// Delete a BackupJob
+    /// </summary>
+    public void DeleteBackupJob()
+    {
+        _menuService.DisplayLabel(LocalizationKey.menu_delete);
+        DisplayJobsList();
+        Console.WriteLine();
+
+        while (true)
+        {
+            int? backupIndex = AskInt(LocalizationKey.ask_backupjob_delete);
+            if (backupIndex == null) { MainMenu(); return; }
+
+            BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+            if (job == null)
+            {
+                ShowMessage(LocalizationKey.backupjob_id_not_found);
+                continue;
+            }
+
+            _backupAppService.RemoveJob(backupIndex.Value);
+            ShowMessage(LocalizationKey.backupjob_deleted);
+            break;
+        }
 
         _menuService.WaitForUser();
         MainMenu();
@@ -192,7 +306,7 @@ public class ConsoleUI : IUI
     {
         LocalizationService.Culture = locale;
 
-        ShowChangeLocale();
+        MainMenu();
     }
 
     /// <summary>

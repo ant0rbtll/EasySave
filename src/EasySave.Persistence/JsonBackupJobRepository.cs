@@ -68,16 +68,10 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Levée si le job n'existe pas.</exception>
-    public BackupJob GetById(int id)
+    public BackupJob? GetById(int id)
     {
         var all = Load();
-        var job = all.FirstOrDefault(j => j.Id == id);
-
-        if (job == null)
-            throw new KeyNotFoundException($"Job with ID {id} not found.");
-
-        return job;
+        return all.FirstOrDefault(j => j.Id == id);
     }
 
     /// <inheritdoc />

@@ -14,7 +14,6 @@ public class RealTimeStateWriter(
     {
         ArgumentNullException.ThrowIfNull(entry);
 
-        entry.Timestamp = DateTime.Now;
         state.Entries[entry.BackupId] = entry;
 
         WriteStateFile();

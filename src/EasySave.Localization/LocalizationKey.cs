@@ -28,5 +28,11 @@ public enum LocalizationKey
     backupjob_type_list,
     user_choice,
     ask_backupjob_save,
-    backup_saving
+    backup_saving,
+    backup_error,
+    input_escape_to_cancel,
+    backupjob_id_not_found,
+    menu_delete,
+    ask_backupjob_delete,
+    backupjob_deleted
 }
