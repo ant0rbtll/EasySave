@@ -470,6 +470,7 @@ UI.Program ..> Persistence.JsonUserPreferencesRepository : creates
 UI.Program ..> Backup.BackupEngine : creates
 UI.Program ..> ETR.RealTimeStateWriter : creates
 UI.Program ..> EasyLog.DailyFileLogger : creates
+UI.Program ..> CFG.DefaultPathProvider : creates
 
 Backup.BackupEngine --> SystemAbstractions.IFileSystem
 Backup.BackupEngine --> SystemAbstractions.ITransferService
