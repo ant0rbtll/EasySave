@@ -32,5 +32,13 @@ RUN dotnet restore
 # Copier le reste du code
 COPY . .
 
-# Exécuter tous les tests
-CMD ["dotnet", "test", "--logger:trx", "--results-directory", "/app/test-results"]
+# Installer ReportGenerator pour générer les rapports de coverage
+RUN dotnet tool install --global dotnet-reportgenerator-globaltool
+ENV PATH="${PATH}:/root/.dotnet/tools"
+
+# Exécuter tous les tests avec code coverage
+CMD dotnet test --collect:"XPlat Code Coverage" --results-directory /app/test-results && \
+    reportgenerator \
+    -reports:/app/test-results/**/coverage.cobertura.xml \
+    -targetdir:/app/coverage-report \
+    -reporttypes:Html

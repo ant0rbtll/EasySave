@@ -28,6 +28,7 @@ services:
     volumes:
       - .:/app
       - ./test-results:/app/test-results
+      - ./coverage-report:/app/coverage-report
       - nuget-cache:/root/.nuget/packages
     environment:
       - DOTNET_ENVIRONMENT=Test
