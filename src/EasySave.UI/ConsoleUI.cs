@@ -23,11 +23,17 @@ public class ConsoleUI
         _backupAppService = backupAppService;
         _preferencesRepository = preferencesRepository;
         LocalizationService = new LocalizationService();
-        
-        // Load user preferences and set the culture
+
         var preferences = _preferencesRepository.Load();
-        LocalizationService.Culture = preferences.Language;
-        
+        var language = preferences.Language;
+
+        if (string.IsNullOrWhiteSpace(language) || !LocalizationService.AllCultures.ContainsKey(language))
+        {
+            language = "fr";
+        }
+
+        LocalizationService.Culture = language;
+
         _menuService = new MenuService(LocalizationService);
         _menuFactory = new MenuFactory(this, _backupAppService);
     }
