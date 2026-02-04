@@ -111,4 +111,13 @@ public class BackupAppService
     {
         return _repo.GetById(id);
     }
+
+    /// <summary>
+    /// Updates an existing backup job with new values.
+    /// </summary>
+    /// <param name="job">The backup job with updated values.</param>
+    public void UpdateJob(BackupJob job)
+    {
+        _repo.Update(job);
+    }
 }

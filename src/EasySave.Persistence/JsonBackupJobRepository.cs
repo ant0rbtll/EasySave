@@ -92,6 +92,24 @@ public class JsonBackupJobRepository : IBackupJobRepository
         return _maxJobs;
     }
 
+    /// <inheritdoc />
+    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    public void Update(BackupJob job)
+    {
+        var all = Load();
+        var existing = all.FirstOrDefault(j => j.Id == job.Id);
+
+        if (existing == null)
+            throw new KeyNotFoundException($"Job with ID {job.Id} not found.");
+
+        existing.Name = job.Name;
+        existing.Source = job.Source;
+        existing.Destination = job.Destination;
+        existing.Type = job.Type;
+
+        Save(all);
+    }
+
     /// <summary>
     /// Loads jobs from the JSON file.
     /// </summary>
