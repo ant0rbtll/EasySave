@@ -133,11 +133,11 @@ namespace EasySave.UI.Menu
         {
             if (menuConfig.ItemsAsStrings != null)
             {
-                ShowMenuWithActions(menuConfig.ItemsAsStrings, menuConfig.Actions, menuConfig.Label);
+                ShowMenuWithActions(menuConfig.ItemsAsStrings, menuConfig.Actions, menuConfig.Label, menuConfig.RenderHeader);
             }
             else if (menuConfig.Items != null)
             {
-                ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
+                ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label, menuConfig.RenderHeader);
             }
             else
             {

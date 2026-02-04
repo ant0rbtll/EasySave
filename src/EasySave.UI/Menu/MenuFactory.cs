@@ -97,7 +97,7 @@ namespace EasySave.UI.Menu
             return new MenuConfig(items.ToArray(), actions, LocalizationKey.menu_manage_jobs);
         }
 
-        public MenuConfig CreateJobDetailsMenu(Core.BackupJob job)
+        public MenuConfig CreateJobDetailsMenu(Core.BackupJob job, Action? renderHeader = null)
         {
             LocalizationKey[] items = { 
                 LocalizationKey.menu_job_run,
@@ -114,7 +114,7 @@ namespace EasySave.UI.Menu
                 { 3, () => _consoleUI.ShowJobsList() }
             };
 
-            return new MenuConfig(items, actions, LocalizationKey.menu_job_details);
+            return new MenuConfig(items, actions, LocalizationKey.menu_job_details, renderHeader);
         }
 
         public MenuConfig CreateJobUpdateMenu(Core.BackupJob job)

@@ -367,8 +367,6 @@ public class ConsoleUI
     /// </summary>
     public void ShowJobDetails(BackupJob job)
     {
-        var menuConfig = _menuFactory.CreateJobDetailsMenu(job);
-
         Action renderJobDetails = () =>
         {
             ShowMessage(LocalizationKey.backupjob_id, false);
@@ -389,14 +387,8 @@ public class ConsoleUI
             Console.WriteLine();
         };
 
-        if (menuConfig.ItemsAsStrings != null)
-        {
-            _menuService.ShowMenuWithActions(menuConfig.ItemsAsStrings, menuConfig.Actions, menuConfig.Label, renderJobDetails);
-        }
-        else if (menuConfig.Items != null)
-        {
-            _menuService.ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label, renderJobDetails);
-        }
+        var menuConfig = _menuFactory.CreateJobDetailsMenu(job, renderJobDetails);
+        _menuService.ShowMenuWithActions(menuConfig);
     }
 
     /// <summary>

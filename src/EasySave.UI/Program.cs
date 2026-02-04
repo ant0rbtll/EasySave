@@ -22,7 +22,7 @@ public class Program
         // Setup configuration providers
         var pathProvider = new DefaultPathProvider();
         var idProvider = new SequentialJobIdProvider();
-        
+
         // Setup infrastructure
         var formatter = new JsonLogFormatter();
         var logger = new DailyFileLogger(formatter, pathProvider);
