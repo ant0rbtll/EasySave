@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EasySave.UI
 {
@@ -17,6 +14,10 @@ namespace EasySave.UI
         /// <returns>The complete list of job's index</returns>
         public int[] Parse(string[] args)
         {
+            if (args == null || args.Length == 0)
+            {
+                throw new ArgumentException("The argument array must not be null or empty.", nameof(args));
+            }
             string input = args[0];
             List<int> numbers = new List<int>();
 

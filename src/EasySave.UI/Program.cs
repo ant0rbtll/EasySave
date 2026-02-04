@@ -27,7 +27,8 @@ public class Program
         if (args.Length == 0)
         {
             console.MainMenu();
-        } else
+        }
+        else
         {
             console.RunFromArgs(args);
         }
