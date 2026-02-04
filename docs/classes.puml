@@ -68,6 +68,7 @@ package "UI" {
     --
     + ConsoleUI(backupAppService, preferencesRepository)
     + MainMenu() : void
+    + RunFromArgs(parsedArgs) : void
     + ConfigureParams() : void
     + ShowChangeLocale() : void
     + ChangeLocale(locale) : void
@@ -130,6 +131,16 @@ package "UI" {
   }
 
   class Program {
+    - {static} initServices() : IServiceProvider
+  }
+
+  class CommandLineParser {
+    + {static} Parse(args[]) : CommandLineArgs
+  }
+
+  class CommandLineArgs {
+    + JobIds : int[]
+    + RunAll : bool
     + {static} Main(args[]) : void
   }
 }
@@ -248,9 +259,7 @@ package "Persistence" {
   IJobIdProvider <|.. SequentialJobIdProvider
   IUserPreferencesRepository <|.. JsonUserPreferencesRepository
   
-  JsonBackupJobRepository --> CFG.IPathProvider
   JsonBackupJobRepository --> IJobIdProvider
-  JsonUserPreferencesRepository --> CFG.IPathProvider
   InMemoryBackupJobRepository --> IJobIdProvider
 }
 
@@ -383,7 +392,6 @@ package "EasyLog" {
   ILogger <|.. DailyFileLogger
   ILogFormatter <|.. JsonLogFormatter
   DailyFileLogger --> ILogFormatter
-  DailyFileLogger --> CFG.IPathProvider
   DailyFileLogger ..> LogEntry
 }
 
@@ -437,7 +445,6 @@ package "ETR" {
 
   IStateWriter <|.. RealTimeStateWriter
   RealTimeStateWriter --> GlobalState
-  RealTimeStateWriter --> CFG.IPathProvider
   RealTimeStateWriter ..> StateSerializer
 }
 
@@ -448,12 +455,15 @@ UI.ConsoleUI --> Persistence.UserPreferences
 UI.ConsoleUI --> UI.MenuService
 UI.ConsoleUI --> UI.MenuFactory
 UI.ConsoleUI --> LOC.ILocalizationService
+UI.ConsoleUI --> UI.CommandLineArgs : uses
 UI.MenuService --> LOC.ILocalizationService
 UI.MenuFactory --> UI.ConsoleUI
 UI.MenuFactory --> APP.BackupAppService
 UI.MenuFactory ..> UI.MenuConfig
 
 UI.Program ..> UI.ConsoleUI : creates
+UI.Program --> UI.CommandLineParser : uses
+UI.CommandLineParser ..> UI.CommandLineArgs : creates
 UI.Program ..> APP.BackupAppService : creates
 UI.Program ..> Persistence.JsonBackupJobRepository : creates
 UI.Program ..> Persistence.JsonUserPreferencesRepository : creates
@@ -465,5 +475,10 @@ Backup.BackupEngine --> SystemAbstractions.IFileSystem
 Backup.BackupEngine --> SystemAbstractions.ITransferService
 Backup.BackupEngine --> ETR.IStateWriter
 Backup.BackupEngine --> EasyLog.ILogger
+
+Persistence.JsonBackupJobRepository --> CFG.IPathProvider
+Persistence.JsonUserPreferencesRepository --> CFG.IPathProvider
+EasyLog.DailyFileLogger --> CFG.IPathProvider
+ETR.RealTimeStateWriter --> CFG.IPathProvider
 
 @enduml
