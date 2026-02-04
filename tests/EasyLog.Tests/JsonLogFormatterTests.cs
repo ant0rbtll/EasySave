@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EasySave.Log;
 
 namespace EasyLog.Tests;
 

@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/EasySave.Log.csproj",
+      "projectUniqueName": "/Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/EasySave.Log.csproj",
       "projectName": "EasySave.Log",
-      "projectPath": "/Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/EasySave.Log.csproj",
+      "projectPath": "/Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/EasySave.Log.csproj",
       "packagesPath": "/Users/youcefafane/.nuget/packages/",
-      "outputPath": "/Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/obj/",
+      "outputPath": "/Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/youcefafane/.nuget/NuGet/NuGet.Config"

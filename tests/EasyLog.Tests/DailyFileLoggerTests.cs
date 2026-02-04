@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EasySave.Log;
 using EasySave.Backup;
 using EasySave.Configuration;
 using EasySave.Core;

@@ -1,7 +1,7 @@
 using EasySave.Core;
 using EasySave.State;
 using EasySave.System;
-using EasyLog;
+using EasySave.Log;
 using Moq;
 
 namespace EasySave.Backup.Tests;

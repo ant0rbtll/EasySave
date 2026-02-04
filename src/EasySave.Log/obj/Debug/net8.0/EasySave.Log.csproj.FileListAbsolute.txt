@@ -1,4 +1,3 @@
-/Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/bin/Debug/net8.0/EasySave.Log.deps.json
 /Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/bin/Debug/net8.0/EasySave.Log.dll
 /Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/bin/Debug/net8.0/EasySave.Log.pdb
 /Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/obj/Debug/net8.0/EasySave.Log.GeneratedMSBuildEditorConfig.editorconfig
@@ -9,4 +8,3 @@
 /Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/obj/Debug/net8.0/EasySave.Log.dll
 /Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/obj/Debug/net8.0/refint/EasySave.Log.dll
 /Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/obj/Debug/net8.0/EasySave.Log.pdb
-/Users/youcefafane/Desktop/Ingé/EasySave/EasySave/src/EasySave.Log/obj/Debug/net8.0/ref/EasySave.Log.dll
