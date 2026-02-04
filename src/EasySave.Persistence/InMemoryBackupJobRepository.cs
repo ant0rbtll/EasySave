@@ -27,8 +27,12 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     /// </exception>
     public void Add(BackupJob job)
     {
-        if (Count() >= _maxJobs)
-            throw new InvalidOperationException($"Cannot add more than {_maxJobs} jobs.");
+        if (Count() >= _maxJobs) {
+            var e = new InvalidOperationException("error_add_max");
+            e.Data["maxJobs"] = _maxJobs;
+            throw e;
+        }
+
 
         if (job.Id == 0)
         {
@@ -36,8 +40,11 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
         }
 
         if (_jobs.ContainsKey(job.Id))
-            throw new InvalidOperationException($"Job with ID {job.Id} already exists.");
-
+        {
+            var e = new InvalidOperationException("error_add_exists");
+            e.Data["job_id"] = job.Id;
+            throw e;
+        }
         _jobs[job.Id] = job;
     }
 

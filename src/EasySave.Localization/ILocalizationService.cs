@@ -15,6 +15,7 @@ public interface ILocalizationService
     /// <param name="key">The translation key</param>
     /// <returns>The message translated</returns>
     string TranslateText(string key);
+    string TranslateTextWithParams(LocalizationKey key, string[] parameters);
     string TranslateText(LocalizationKey key);
 
     /// <summary>

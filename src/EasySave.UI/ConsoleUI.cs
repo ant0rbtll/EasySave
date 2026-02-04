@@ -19,6 +19,7 @@ public class ConsoleUI
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
     private readonly CommandLineParser _parser;
+    private readonly ErrorManager _errorManager;
 
     public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository, CommandLineParser parser)
     {
@@ -26,7 +27,7 @@ public class ConsoleUI
         _preferencesRepository = preferencesRepository;
         LocalizationService = new LocalizationService();
         _parser = parser;
-        
+        _errorManager = new ErrorManager();
 
         _userPreferences = _preferencesRepository.Load();
         var language = _userPreferences.Language;
@@ -52,17 +53,24 @@ public class ConsoleUI
         else Console.Write(message);
     }
 
-    // private void ShowMessageParam(LocalizationKey key, Dictionary<string, string> parameters, bool writeLine = true)
-    // {
-    //     string message = LocalizationService.TranslateText(key, parameters);
-    //     if (writeLine) Console.WriteLine(message);
-    //     else Console.Write(message);
-    // }
+    private void ShowMessageParam(LocalizationKey key, string[] parameters, bool writeLine = true)
+    {
+        string message = LocalizationService.TranslateTextWithParams(key, parameters);
+        if (writeLine) Console.WriteLine(message);
+        else Console.Write(message);
+    }
 
     /// <inheritdoc />
-    public void ShowError(LocalizationKey key)
+    public void ShowError(Exception e)
     {
-        Console.Error.WriteLine(LocalizationService.TranslateText(key));
+        ShowMessage(LocalizationKey.error);
+        var key = _errorManager.getMessage(e.Message);
+        ShowMessageParam(key, 
+            e.Data.Values
+            .Cast<object>()
+            .Select(v => v?.ToString() ?? "null")
+            .ToArray()
+        );
     }
 
     /// <inheritdoc />
@@ -211,8 +219,15 @@ public class ConsoleUI
         if (backupTypeJob == null) { MainMenu(); return; }
 
         // send to service
-        _backupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
-        ShowMessage(LocalizationKey.backupjob_created);
+        try
+        {
+            _backupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
+            ShowMessage(LocalizationKey.backupjob_created);
+        }
+        catch (Exception e)
+        {
+            ShowError(e);
+        }
         _menuService.WaitForUser();
         MainMenu();
     }
@@ -500,9 +515,9 @@ public class ConsoleUI
             var jobs = _parser.Parse(args);
             _backupAppService.RunJobsByIds(jobs);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            ShowMessage(LocalizationKey.backup_error);
+            ShowError(e);
         }
         _menuService.WaitForUser();
     }

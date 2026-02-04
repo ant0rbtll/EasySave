@@ -5,32 +5,44 @@ public sealed class DefaultFileSystem : IFileSystem
     public bool DirectoryExists(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            throw new ArgumentException("Path cannot be null or whitespace.", nameof(path));
-
+        {
+            var e = new ArgumentException("error_file_null");
+            e.Data["path"] = path;
+            throw e;
+        }
         return Directory.Exists(path);
     }
 
     public void CreateDirectory(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            throw new ArgumentException("Path cannot be null or whitespace.", nameof(path));
-
+        {
+            var e = new ArgumentException("error_file_null");
+            e.Data["path"] = path;
+            throw e;
+        }
         Directory.CreateDirectory(path);
     }
 
     public bool FileExists(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            throw new ArgumentException("Path cannot be null or whitespace.", nameof(path));
-
+        {
+            var e = new ArgumentException("error_file_null");
+            e.Data["path"] = path;
+            throw e;
+        }
         return File.Exists(path);
     }
 
     public long GetFileSize(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            throw new ArgumentException("Path cannot be null or whitespace.", nameof(path));
-
+        {
+            var e = new ArgumentException("error_file_null");
+            e.Data["path"] = path;
+            throw e;
+        }
         if (!File.Exists(path))
             throw new FileNotFoundException("File not found.", path);
 
@@ -95,8 +107,11 @@ public sealed class DefaultFileSystem : IFileSystem
     public string NormalizePath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
-            throw new ArgumentException("Path cannot be null or whitespace.", nameof(path));
-
+        {
+            var e = new ArgumentException("error_file_null");
+            e.Data["path"] = path;
+            throw e;
+        }
         var p = path.Trim();
         p = p.Replace('\\', Path.DirectorySeparatorChar)
              .Replace('/', Path.DirectorySeparatorChar);

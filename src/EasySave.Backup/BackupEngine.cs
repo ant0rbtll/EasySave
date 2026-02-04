@@ -98,7 +98,7 @@ public class BackupEngine(
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
             _stateWriter.MarkInactive(job.Id);
         }
-        catch (Exception)
+        catch (Exception e)
         {
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
             Log(
@@ -109,7 +109,7 @@ public class BackupEngine(
                 0,
                 0
             );
-            throw;
+            throw e;
         }
     }
 

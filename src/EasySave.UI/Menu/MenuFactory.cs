@@ -22,7 +22,7 @@ namespace EasySave.UI.Menu
             const int maxJobs = 5;
             int currentJobCount = _backupAppService.GetAllJobs().Count;
             bool hasJobs = currentJobCount > 0;
-            bool canCreateJob = currentJobCount < maxJobs;
+            bool canCreateJob = true;
 
             var items = new List<LocalizationKey>();
             var actions = new Dictionary<int, Action>();

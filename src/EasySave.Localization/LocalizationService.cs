@@ -47,11 +47,15 @@ public class LocalizationService : ILocalizationService
         return TranslateText(key.ToString());
     }
 
-    /// <inheritdoc/>
-    // public string TranslateText(LocalizationKey key, Dictionary<string, string> parameters)
-    // {
-    //     return TranslateText(key, parameters);
-    // }
+    public string TranslateTextWithParams(LocalizationKey key, string[] parameters)
+    {
+        var message = TranslateText(key);
+        if (message == key.ToString())
+        {
+            return TranslateText(LocalizationKey.error);
+        }
+        return String.Format(message, parameters);
+     }
 
     /// <inheritdoc/>
     public string TranslateText(string key)
