@@ -31,6 +31,8 @@ public class ConsoleUI
         if (string.IsNullOrWhiteSpace(language) || !LocalizationService.AllCultures.ContainsKey(language))
         {
             language = "fr";
+            _userPreferences.Language = language;
+            _preferencesRepository.Save(_userPreferences);
         }
 
         LocalizationService.Culture = language;
