@@ -20,12 +20,12 @@ public class ConsoleUI
     private readonly MenuFactory _menuFactory;
     private readonly CommandLineParser _parser;
 
-    public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository)
+    public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository, CommandLineParser parser)
     {
         _backupAppService = backupAppService;
         _preferencesRepository = preferencesRepository;
         LocalizationService = new LocalizationService();
-        _parser = new CommandLineParser();
+        _parser = parser;
         
 
         _userPreferences = _preferencesRepository.Load();
@@ -488,7 +488,11 @@ public class ConsoleUI
             ShowJobDetails(job);
         }
     }
-
+    
+    /// <summary>
+    /// Run the app through the arguments
+    /// </summary>
+    /// <param name="args">The args of the command</param>
     internal void RunFromArgs(string[] args)
     {
         try

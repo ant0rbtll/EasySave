@@ -7,9 +7,14 @@ using System.Threading.Tasks;
 
 namespace EasySave.UI
 {
-    internal class CommandLineParser
+    public class CommandLineParser
     {
 
+        /// <summary>
+        /// Parse the arguments for list the job's ids
+        /// </summary>
+        /// <param name="args"> The args of the command</param>
+        /// <returns>The complete list of job's index</returns>
         public int[] Parse(string[] args)
         {
             string input = args[0];

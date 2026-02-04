@@ -17,7 +17,9 @@
 		<ProjectReference Include="..\EasySave.Configuration\EasySave.Configuration.csproj" />
 		<ProjectReference Include="..\EasySave.System\EasySave.System.csproj" />
 		<ProjectReference Include="..\EasyLog\EasyLog.csproj" />
-	  <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
 
 	</ItemGroup>
 

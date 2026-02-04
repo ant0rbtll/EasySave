@@ -21,7 +21,7 @@ public class Program
     /// <param name="args">Command-line arguments passed to the application.</param>
     public static void Main(string[] args)
     {
-        var provider = initServices();
+        var provider = InitServices();
         var console = provider.GetRequiredService<ConsoleUI>();
 
         if (args.Length == 0)
@@ -33,7 +33,11 @@ public class Program
         }
     }
 
-    private static IServiceProvider initServices()
+    /// <summary>
+    /// Initialisation of all the services of the app
+    /// </summary>
+    /// <returns>The provider to get any Service</returns>
+    private static IServiceProvider InitServices()
     {
         var services = new ServiceCollection();
 
@@ -51,6 +55,7 @@ public class Program
         services.AddSingleton<IFileSystem, DefaultFileSystem>();
         services.AddSingleton<ITransferService, DefaultTransferService>();
         services.AddSingleton<BackupEngine>();
+        services.AddSingleton<CommandLineParser>();
 
         // Setup application service
         services.AddSingleton<BackupAppService>();
