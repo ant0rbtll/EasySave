@@ -6,10 +6,16 @@ namespace EasySave.Persistence;
 public class JsonUserPreferencesRepository : IUserPreferencesRepository
 {
     private readonly IPathProvider _pathProvider;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public JsonUserPreferencesRepository(IPathProvider pathProvider)
     {
         _pathProvider = pathProvider;
+        _jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
     }
 
     public UserPreferences Load()
@@ -41,7 +47,14 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
     public void Save(UserPreferences preferences)
     {
         string path = _pathProvider.GetUserPreferencesPath();
-        string json = JsonSerializer.Serialize(preferences, new JsonSerializerOptions { WriteIndented = true });
+        string? directory = Path.GetDirectoryName(path);
+
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        string json = JsonSerializer.Serialize(preferences, _jsonOptions);
         File.WriteAllText(path, json);
     }
 }
