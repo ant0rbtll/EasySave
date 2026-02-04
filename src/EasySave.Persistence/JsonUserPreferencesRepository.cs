@@ -30,7 +30,7 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
         try
         {
             string json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<UserPreferences>(json) ?? new UserPreferences();
+            return JsonSerializer.Deserialize<UserPreferences>(json, _jsonOptions) ?? new UserPreferences();
         }
         catch (JsonException)
         {

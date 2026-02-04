@@ -67,7 +67,7 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         // Assert
         Assert.True(File.Exists(_testFilePath));
         var content = File.ReadAllText(_testFilePath);
-        Assert.Contains("\"Language\"", content);
+        Assert.Contains("\"language\"", content);
         Assert.Contains("\"en\"", content);
     }
 
