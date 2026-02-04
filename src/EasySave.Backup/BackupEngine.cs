@@ -1,5 +1,5 @@
 using EasySave.Core;
-using EasySave.Core.Logging;
+using EasySave.Log;
 using EasySave.System;
 using EasySave.State;
 using EasySave.Log;
