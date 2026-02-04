@@ -237,7 +237,14 @@ public class ConsoleUI
     /// </summary>
     private void DisplayJobsList()
     {
-        List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
+        try
+        {
+            List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
+        }
+        catch (Exception e)
+        {
+            ShowError(e);
+        }
         foreach (BackupJob job in backupJobList)
         {
             Console.WriteLine(job.Id + " - " + job.Name);
@@ -268,16 +275,22 @@ public class ConsoleUI
         {
             int? backupIndex = AskInt(LocalizationKey.ask_backupjob_save);
             if (backupIndex == null) { MainMenu(); return; }
-
-            BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
-            if (job == null)
+            try
             {
-                ShowMessage(LocalizationKey.backupjob_id_not_found);
-                continue;
-            }
+                BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+                if (job == null)
+                {
+                    ShowMessage(LocalizationKey.backupjob_id_not_found);
+                    continue;
+                }
 
-            ShowMessage(LocalizationKey.backup_saving);
-            _backupAppService.RunJobById(backupIndex.Value);
+                ShowMessage(LocalizationKey.backup_saving);
+                _backupAppService.RunJobById(backupIndex.Value);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
             break;
         }
 
@@ -299,14 +312,21 @@ public class ConsoleUI
             int? backupIndex = AskInt(LocalizationKey.ask_backupjob_delete);
             if (backupIndex == null) { MainMenu(); return; }
 
-            BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
-            if (job == null)
+            try
             {
-                ShowMessage(LocalizationKey.backupjob_id_not_found);
-                continue;
+                BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+                if (job == null)
+                {
+                    ShowMessage(LocalizationKey.backupjob_id_not_found);
+                    continue;
+                }
+                _backupAppService.RemoveJob(backupIndex.Value);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
             }
 
-            _backupAppService.RemoveJob(backupIndex.Value);
             ShowMessage(LocalizationKey.backupjob_deleted);
             break;
         }
@@ -418,7 +438,14 @@ public class ConsoleUI
         _menuService.DisplayLabel(LocalizationKey.menu_job_run);
 
         ShowMessage(LocalizationKey.backupjob_running);
-        _backupAppService.RunJobById(job.Id);
+        try
+        {
+            _backupAppService.RunJobById(job.Id);
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+        }
         ShowMessage(LocalizationKey.backupjob_completed);
 
         _menuService.WaitForUser();
@@ -471,7 +498,14 @@ public class ConsoleUI
     /// </summary>
     public void SaveJobUpdate(BackupJob job)
     {
-        _backupAppService.UpdateJob(job);
+        try
+        {
+            _backupAppService.UpdateJob(job);
+        }
+        catch (Exception e)
+        {
+            ShowError(e);
+        }
         ShowMessage(LocalizationKey.backupjob_updated);
         _menuService.WaitForUser();
         ShowJobsList();
@@ -493,7 +527,14 @@ public class ConsoleUI
         var key = Console.ReadKey(intercept: true);
         if (key.Key == ConsoleKey.Y || key.Key == ConsoleKey.Enter)
         {
-            _backupAppService.RemoveJob(job.Id);
+            try
+            {
+                _backupAppService.RemoveJob(job.Id);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
             ShowMessage(LocalizationKey.backupjob_deleted);
             _menuService.WaitForUser();
             ShowJobsList();

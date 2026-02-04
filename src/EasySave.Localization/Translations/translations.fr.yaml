@@ -58,3 +58,4 @@ translations:
   error_parser_arg_null: "L'argument ne doit pas être vide ou null"
   error_parser_arg_invalid: "L'argument n'est pas pas valide"
   error_file_null: "Le chemin ne peut pas être null ou vide : \"{0}\""
+  error_default: "Une erreur est survenue..."

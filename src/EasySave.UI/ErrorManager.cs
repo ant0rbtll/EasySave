@@ -15,6 +15,7 @@ namespace EasySave.UI
         {
             errors = new Dictionary<string, LocalizationKey>()
             {
+                { "error_default", LocalizationKey.error_default },
                 { "error_add_max", LocalizationKey.error_add_max },
                 { "error_add_exists", LocalizationKey.error_add_exists  },
                 { "error_parser_arg_null", LocalizationKey.error_parser_arg_null },
@@ -26,7 +27,11 @@ namespace EasySave.UI
 
         public LocalizationKey getMessage(string message)
         {
-            return errors[message];
+            try { return errors[message]; }
+            catch
+            {
+                return errors["error_default"];
+            }
         }
     }
 }

@@ -60,5 +60,6 @@ public enum LocalizationKey
     error_add_exists,
     error_parser_arg_null,
     error_parser_arg_invalid,
-    error_file_null
+    error_file_null,
+    error_default
 }
