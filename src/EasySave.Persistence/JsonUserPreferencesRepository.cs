@@ -37,14 +37,15 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
     {
         string path = _pathProvider.GetUserPreferencesPath();
 
-        if (!File.Exists(path) || new FileInfo(path).Length == 0)
-        {
-            return new UserPreferences();
-        }
-
         try
         {
             string json = File.ReadAllText(path);
+
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return new UserPreferences();
+            }
+
             return JsonSerializer.Deserialize<UserPreferences>(json, _jsonOptions) ?? new UserPreferences();
         }
         catch (JsonException)
@@ -55,6 +56,11 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
         catch (IOException)
         {
             // File read error (locked, concurrent access) - return defaults
+            return new UserPreferences();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Permission denied - return defaults
             return new UserPreferences();
         }
     }
