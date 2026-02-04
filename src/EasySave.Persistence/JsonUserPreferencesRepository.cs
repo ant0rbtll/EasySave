@@ -3,11 +3,19 @@ using EasySave.Configuration;
 
 namespace EasySave.Persistence;
 
+/// <summary>
+/// JSON-based repository for user preferences persistence.
+/// Returns default preferences when file is missing, empty, or corrupted.
+/// </summary>
 public class JsonUserPreferencesRepository : IUserPreferencesRepository
 {
     private readonly IPathProvider _pathProvider;
     private readonly JsonSerializerOptions _jsonOptions;
 
+    /// <summary>
+    /// Initializes a new instance of the JSON user preferences repository.
+    /// </summary>
+    /// <param name="pathProvider">Path provider for the preferences file location.</param>
     public JsonUserPreferencesRepository(IPathProvider pathProvider)
     {
         _pathProvider = pathProvider;
@@ -18,6 +26,11 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
         };
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Returns default preferences if file does not exist, is empty, or contains invalid JSON.
+    /// Catches specific exceptions (JsonException, IOException) and falls back to defaults.
+    /// </remarks>
     public UserPreferences Load()
     {
         string path = _pathProvider.GetUserPreferencesPath();
@@ -44,6 +57,11 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Creates the target directory if it does not exist before writing.
+    /// Serializes preferences with camelCase property naming for consistency.
+    /// </remarks>
     public void Save(UserPreferences preferences)
     {
         string path = _pathProvider.GetUserPreferencesPath();
