@@ -485,4 +485,13 @@ public class ConsoleUI
             ShowJobDetails(job);
         }
     }
+
+    internal void RunFromArgs(int[] ints)
+    {
+        foreach (int i in ints)
+        {
+            Console.WriteLine($"{i}");
+        }
+        _backupAppService.RunJobsByIds(ints);
+    }
 }
