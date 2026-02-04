@@ -139,6 +139,10 @@ namespace EasySave.UI.Menu
             {
                 ShowMenuWithActions(menuConfig.Items, menuConfig.Actions, menuConfig.Label);
             }
+            else
+            {
+                throw new ArgumentException("MenuConfig must have either ItemsAsStrings or Items set.", nameof(menuConfig));
+            }
         }
 
         /// <summary>
