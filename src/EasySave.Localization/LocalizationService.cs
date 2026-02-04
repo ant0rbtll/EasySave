@@ -56,7 +56,6 @@ public class LocalizationService : ILocalizationService
     /// <inheritdoc/>
     public string TranslateText(string key)
     {
-        //TODO link to conf
         if (string.IsNullOrEmpty(key))
         {
             return key;

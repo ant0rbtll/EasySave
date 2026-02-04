@@ -398,4 +398,287 @@ public class BackupEngineTests
             le.EventType == LogEventType.Error
         )), Times.Once);
     }
+
+    [Fact]
+    public void Execute_UnsupportedBackupType_ThrowsNotSupportedException()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = (BackupType)999 // Unsupported type
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        // Act & Assert
+        Assert.Throws<NotSupportedException>(() => _backupEngine.Execute(job));
+    }
+
+    [Fact]
+    public void Execute_TransferFails_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 0, TransferTimeMs: 0, ErrorCode: 1)); // Error code != 0
+
+        // Act & Assert
+        var ex = Assert.Throws<InvalidOperationException>(() => _backupEngine.Execute(job));
+        Assert.Contains("File transfer failed", ex.Message);
+        Assert.Contains("error code 1", ex.Message);
+    }
+
+    [Fact]
+    public void Execute_CompleteBackup_CallsMarkInactiveAtEnd()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        // Act
+        _backupEngine.Execute(job);
+
+        // Assert
+        _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
+    }
+
+    [Fact]
+    public void Execute_DifferentialBackup_CallsMarkInactiveAtEnd()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 2,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Differential
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string>());
+
+        // Act
+        _backupEngine.Execute(job);
+
+        // Assert
+        _stateWriterMock.Verify(sw => sw.MarkInactive(2), Times.Once);
+    }
+
+    [Fact]
+    public void Execute_WhenExceptionThrown_DoesNotCallMarkInactive()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Throws(new Exception("Test exception"));
+
+        // Act & Assert
+        Assert.Throws<Exception>(() => _backupEngine.Execute(job));
+
+        _stateWriterMock.Verify(sw => sw.MarkInactive(It.IsAny<int>()), Times.Never);
+    }
+
+    [Fact]
+    public void Execute_CompleteBackup_WithZeroSizeFile_CopiesFile()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/empty.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(0);
+
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 0, TransferTimeMs: 1, ErrorCode: 0));
+
+        // Act
+        _backupEngine.Execute(job);
+
+        // Assert
+        _transferServiceMock.Verify(ts => ts.TransferFile("/source/empty.txt", "/destination/empty.txt", true), Times.Once);
+    }
+
+    [Fact]
+    public void Execute_DifferentialBackup_SameSizeFiles_DoesNotCopy()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Differential
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.FileExists("/destination/file.txt"))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize("/source/file.txt"))
+            .Returns(1000);
+        _fileSystemMock.Setup(fs => fs.GetFileSize("/destination/file.txt"))
+            .Returns(1000);
+
+        // Act
+        _backupEngine.Execute(job);
+
+        // Assert
+        _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
+    }
+
+    [Fact]
+    public void Execute_DifferentialBackup_FileNotExistsInDestination_CopiesFile()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Differential
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/newfile.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.FileExists("/destination/newfile.txt"))
+            .Returns(false);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        // Act
+        _backupEngine.Execute(job);
+
+        // Assert
+        _transferServiceMock.Verify(ts => ts.TransferFile("/source/newfile.txt", "/destination/newfile.txt", true), Times.Once);
+    }
+
+    [Fact]
+    public void Execute_CompleteBackup_MultipleFiles_UpdatesProgressCorrectly()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt", "/source/file2.txt", "/source/file3.txt", "/source/file4.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        // Act
+        _backupEngine.Execute(job);
+
+        // Assert - Check that progress updates happened
+        // Note: 100% is called twice (after last file + final Done state)
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.ProgressPercent == 25)), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.ProgressPercent == 50)), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.ProgressPercent == 75)), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.ProgressPercent == 100 && se.Status == BackupStatus.Active)), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.ProgressPercent == 100 && se.Status == BackupStatus.Done)), Times.Once);
+    }
+
+    [Fact]
+    public void Execute_TransferFails_UpdatesStateToError()
+    {
+        // Arrange
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 0, TransferTimeMs: 0, ErrorCode: 5));
+
+        // Act & Assert
+        Assert.Throws<InvalidOperationException>(() => _backupEngine.Execute(job));
+
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Once);
+    }
 }
