@@ -461,16 +461,8 @@ UI.MenuFactory --> UI.ConsoleUI
 UI.MenuFactory --> APP.BackupAppService
 UI.MenuFactory ..> UI.MenuConfig
 
-UI.Program ..> UI.ConsoleUI : creates
 UI.Program --> UI.CommandLineParser : uses
 UI.CommandLineParser ..> UI.CommandLineArgs : creates
-UI.Program ..> APP.BackupAppService : creates
-UI.Program ..> Persistence.JsonBackupJobRepository : creates
-UI.Program ..> Persistence.JsonUserPreferencesRepository : creates
-UI.Program ..> Backup.BackupEngine : creates
-UI.Program ..> ETR.RealTimeStateWriter : creates
-UI.Program ..> EasyLog.DailyFileLogger : creates
-UI.Program ..> CFG.DefaultPathProvider : creates
 
 Backup.BackupEngine --> SystemAbstractions.IFileSystem
 Backup.BackupEngine --> SystemAbstractions.ITransferService
