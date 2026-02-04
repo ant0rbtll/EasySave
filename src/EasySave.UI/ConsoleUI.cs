@@ -18,12 +18,15 @@ public class ConsoleUI
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
+    private readonly CommandLineParser _parser;
 
     public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository)
     {
         _backupAppService = backupAppService;
         _preferencesRepository = preferencesRepository;
         LocalizationService = new LocalizationService();
+        _parser = new CommandLineParser();
+        
 
         _userPreferences = _preferencesRepository.Load();
         var language = _userPreferences.Language;
@@ -486,12 +489,17 @@ public class ConsoleUI
         }
     }
 
-    internal void RunFromArgs(int[] ints)
+    internal void RunFromArgs(string[] args)
     {
-        foreach (int i in ints)
+        try
         {
-            Console.WriteLine($"{i}");
+            var jobs = _parser.Parse(args);
+            _backupAppService.RunJobsByIds(jobs);
         }
-        _backupAppService.RunJobsByIds(ints);
+        catch (Exception)
+        {
+            ShowMessage(LocalizationKey.backup_error);
+        }
+        _menuService.WaitForUser();
     }
 }

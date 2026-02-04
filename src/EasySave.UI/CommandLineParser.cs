@@ -10,7 +10,7 @@ namespace EasySave.UI
     internal class CommandLineParser
     {
 
-        public static int[] Parse(string[] args)
+        public int[] Parse(string[] args)
         {
             string input = args[0];
             List<int> numbers = new List<int>();
@@ -18,6 +18,12 @@ namespace EasySave.UI
             if (input.Contains(';'))
             {
                 string[] parts = input.Split(';');
+
+                if (parts.Any(string.IsNullOrWhiteSpace))
+                {
+                    throw new ArgumentException();
+                }
+
                 foreach (string part in parts)
                 {
                     numbers.Add(int.Parse(part));
@@ -26,13 +32,18 @@ namespace EasySave.UI
             else if (input.Contains('-'))
             {
                 string[] parts = input.Split('-');
-                Console.WriteLine(parts.Length);
-                if (parts.Length != 2)
+                if (parts.Length != 2 || parts.Any(string.IsNullOrWhiteSpace))
                 {
                     throw new ArgumentException();
                 }
+                
                 int start = int.Parse(parts[0]);
                 int end = int.Parse(parts[1]);
+
+                if (end < start)
+                {
+                    throw new ArgumentException();
+                }
 
                 for (int i = start; i <= end; i++)
                 {

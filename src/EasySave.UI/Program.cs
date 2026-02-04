@@ -29,7 +29,7 @@ public class Program
             console.MainMenu();
         } else
         {
-            console.RunFromArgs(CommandLineParser.Parse(args));
+            console.RunFromArgs(args);
         }
     }
 
