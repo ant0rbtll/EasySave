@@ -29,6 +29,7 @@ public class Program
         var globalState = new GlobalState();
         var stateWriter = new RealTimeStateWriter(pathProvider, globalState);
         var repository = new JsonBackupJobRepository(pathProvider, idProvider);
+        var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
         var fileSystem = new DefaultFileSystem();
         var transferService = new DefaultTransferService(fileSystem);
         var backupEngine = new BackupEngine(fileSystem, transferService, stateWriter, logger);
@@ -37,7 +38,7 @@ public class Program
         var backupAppService = new BackupAppService(repository, backupEngine);
 
         // Setup and run UI
-        var console = new ConsoleUI(backupAppService);
+        var console = new ConsoleUI(backupAppService, preferencesRepository);
         console.MainMenu();
     }
 }

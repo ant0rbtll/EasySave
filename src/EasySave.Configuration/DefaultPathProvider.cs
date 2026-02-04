@@ -67,5 +67,22 @@ namespace EasySave.Configuration
             return path;
         }
         #endregion
+
+        /// <summary>
+        /// Creation ou recuperation du fichier de preferences utilisateur
+        /// </summary>
+        #region GetUserPreferencesPath
+        public string GetUserPreferencesPath()
+        {
+            string path = Path.Combine(baseDirectory, "user-preferences.json");
+
+            if (!File.Exists(path))
+            {
+                File.WriteAllText(path, string.Empty);
+            }
+
+            return path;
+        }
+        #endregion
     }
 }

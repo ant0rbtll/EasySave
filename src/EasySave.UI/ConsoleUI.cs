@@ -2,6 +2,7 @@
 using EasySave.Localization;
 using EasySave.Core;
 using EasySave.UI.Menu;
+using EasySave.Persistence;
 
 namespace EasySave.UI;
 
@@ -12,14 +13,21 @@ public class ConsoleUI
 {
 
     private readonly BackupAppService _backupAppService;
+    private readonly IUserPreferencesRepository _preferencesRepository;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
 
-    public ConsoleUI(BackupAppService backupAppService)
+    public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository)
     {
         _backupAppService = backupAppService;
+        _preferencesRepository = preferencesRepository;
         LocalizationService = new LocalizationService();
+        
+        // Load user preferences and set the culture
+        var preferences = _preferencesRepository.Load();
+        LocalizationService.Culture = preferences.Language;
+        
         _menuService = new MenuService(LocalizationService);
         _menuFactory = new MenuFactory(this, _backupAppService);
     }
@@ -305,6 +313,11 @@ public class ConsoleUI
     public void ChangeLocale(string locale)
     {
         LocalizationService.Culture = locale;
+        
+        // Save the user preference
+        var preferences = _preferencesRepository.Load();
+        preferences.Language = locale;
+        _preferencesRepository.Save(preferences);
 
         MainMenu();
     }
