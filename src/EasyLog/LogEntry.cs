@@ -1,3 +1,5 @@
+using EasySave.Core.Logging;
+
 namespace EasyLog;
 
 /// <summary>
@@ -7,9 +9,17 @@ namespace EasyLog;
 public sealed record LogEntry(
     DateTime Timestamp,
     string BackupName,
-    LogEventType EventType,
+    EasySave.Core.Logging.LogEventType EventType,
     string SourcePathUNC,
     string DestinationPathUNC,
     long FileSizeBytes,
     long TransferTimeMs
+) : EasySave.Core.Logging.LogEntry(
+    Timestamp,
+    BackupName,
+    EventType,
+    SourcePathUNC,
+    DestinationPathUNC,
+    FileSizeBytes,
+    TransferTimeMs
 );

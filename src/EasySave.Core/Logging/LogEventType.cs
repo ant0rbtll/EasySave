@@ -1,4 +1,4 @@
-namespace EasyLog;
+namespace EasySave.Core.Logging;
 
 public enum LogEventType
 {

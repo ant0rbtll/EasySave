@@ -5,6 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
 
 	<ItemGroup>
@@ -16,7 +17,21 @@
 		<ProjectReference Include="..\EasySave.State\EasySave.State.csproj" />
 		<ProjectReference Include="..\EasySave.Configuration\EasySave.Configuration.csproj" />
 		<ProjectReference Include="..\EasySave.System\EasySave.System.csproj" />
-		<ProjectReference Include="..\EasyLog\EasyLog.csproj" />
+		<ProjectReference Include="..\EasyLog\EasyLog.csproj" ReferenceOutputAssembly="false" />
 	</ItemGroup>
+
+	<Target Name="CopyEasyLogToOutput" AfterTargets="Build">
+		<ItemGroup>
+			<_EasyLogDll Include="$(MSBuildProjectDirectory)\..\EasyLog\bin\$(Configuration)\$(TargetFramework)\EasyLog.dll" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_EasyLogDll)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
+	</Target>
+
+	<Target Name="CopyEasyLogToPublish" AfterTargets="Publish">
+		<ItemGroup>
+			<_EasyLogDll Include="$(MSBuildProjectDirectory)\..\EasyLog\bin\$(Configuration)\$(TargetFramework)\EasyLog.dll" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_EasyLogDll)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
+	</Target>
 
 </Project>

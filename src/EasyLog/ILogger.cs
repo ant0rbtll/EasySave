@@ -1,6 +1,7 @@
+using EasySave.Core.Logging;
+
 namespace EasyLog;
 
-public interface ILogger
+public interface ILogger : EasySave.Core.Logging.ILogger
 {
-    void Write(LogEntry entry);
 }
