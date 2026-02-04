@@ -87,7 +87,7 @@ namespace EasySave.UI.Menu
             foreach (var job in jobs)
             {
                 items.Add($"{job.Id} - {job.Name}");
-                var capturedJob = job; // Capture for closure
+                var capturedJob = job;
                 actions[index++] = () => _consoleUI.ShowJobDetails(capturedJob);
             }
 
