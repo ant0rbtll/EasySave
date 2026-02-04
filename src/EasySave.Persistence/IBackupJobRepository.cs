@@ -48,4 +48,10 @@ public interface IBackupJobRepository
     /// </summary>
     /// <returns>Le nombre maximum de jobs.</returns>
     int MaxJobs();
+
+    /// <summary>
+    /// Met à jour un job existant.
+    /// </summary>
+    /// <param name="job">Le job avec les nouvelles valeurs.</param>
+    void Update(BackupJob job);
 }
