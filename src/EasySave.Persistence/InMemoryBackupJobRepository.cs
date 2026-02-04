@@ -76,4 +76,14 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     {
         return _maxJobs;
     }
+
+    /// <inheritdoc />
+    /// <exception cref="KeyNotFoundException">Levée si le job n'existe pas.</exception>
+    public void Update(BackupJob job)
+    {
+        if (!_jobs.ContainsKey(job.Id))
+            throw new KeyNotFoundException($"Job with ID {job.Id} not found.");
+
+        _jobs[job.Id] = job;
+    }
 }
