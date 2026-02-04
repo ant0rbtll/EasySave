@@ -63,6 +63,8 @@ public class ConsoleUI
     /// <inheritdoc />
     public void ShowError(Exception e)
     {
+        Console.WriteLine("");
+        Console.ForegroundColor = ConsoleColor.Red;
         ShowMessage(LocalizationKey.error);
         var key = _errorManager.getMessage(e.Message);
         ShowMessageParam(key,
@@ -72,6 +74,7 @@ public class ConsoleUI
             .Select(k => e.Data[k]?.ToString())
             .ToArray()
         );
+        Console.ResetColor();
     }
 
     /// <inheritdoc />
