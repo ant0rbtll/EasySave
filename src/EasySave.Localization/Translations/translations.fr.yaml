@@ -66,5 +66,5 @@ translations:
   error_file_not_found: "Fichier non trouvé : \"{0}\""
   error_directory_not_found: "Dossier non trouvé : \"{0}\""
   error_parts_empty: "Les parties ne peuvent pas être vide"
-  error_parts_null: "Les parties du chemin ne ne peuvent être null"
+  error_parts_null: "Les parties du chemin ne peuvent être null"
 
