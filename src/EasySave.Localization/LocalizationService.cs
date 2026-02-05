@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -69,13 +70,25 @@ public class LocalizationService : ILocalizationService
         {
             if (_translationCache == null)
             {
-                // Use assembly location to find translation files
+                // Use assembly and base directory to find translation files
                 var assemblyLocation = Path.GetDirectoryName(typeof(LocalizationService).Assembly.Location);
-                var translationFilePath = Path.Combine(assemblyLocation ?? ".", "Translations", $"translations.{Culture}.yaml");
-                if (!File.Exists(translationFilePath))
+                var baseDirectory = AppContext.BaseDirectory;
+                var fileName = $"translations.{Culture}.yaml";
+
+                var candidatePaths = new[]
+                {
+                    Path.Combine(assemblyLocation ?? ".", "Translations", fileName),
+                    Path.Combine(assemblyLocation ?? ".", fileName),
+                    Path.Combine(baseDirectory, "Translations", fileName),
+                    Path.Combine(baseDirectory, fileName)
+                };
+
+                var translationFilePath = candidatePaths.FirstOrDefault(File.Exists);
+                if (translationFilePath == null)
                 {
                     return key;
                 }
+
                 var yaml = File.ReadAllText(translationFilePath, Encoding.UTF8);
 
                 var deserializer = new DeserializerBuilder()

@@ -71,7 +71,9 @@ public class BackupEngine(
 
                     if (!result.IsSuccess)
                     {
-                        var e = new InvalidOperationException("error_file_transfer_failed");
+                        var message = $"File transfer failed from {file} to {destinationFile} with error code {result.ErrorCode}";
+                        var e = new InvalidOperationException(message);
+                        e.Data["errorKey"] = "error_file_transfer_failed";
                         e.Data["0_from"] = file;
                         e.Data["1_destination"] = destinationFile;
                         e.Data["2_errorCode"] = result.ErrorCode;

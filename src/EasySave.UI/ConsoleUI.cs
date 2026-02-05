@@ -75,14 +75,26 @@ public class ConsoleUI
         Console.WriteLine("");
         Console.ForegroundColor = ConsoleColor.Red;
         ShowMessage(LocalizationKey.error);
-        var key = _errorManager.getMessage(e.Message);
-        ShowMessageParam(key,
-            e.Data.Keys
-            .Cast<string>()
-            .OrderBy(k => k)
-            .Select(k => e.Data[k]?.ToString() ?? string.Empty)
-            .ToArray()
-        );
+        var messageKey = e.Message;
+        if (e.Data.Contains("errorKey") && e.Data["errorKey"] is string dataKey)
+        {
+            messageKey = dataKey;
+        }
+
+        if (_errorManager.TryGetMessage(messageKey, out var key))
+        {
+            ShowMessageParam(key,
+                e.Data.Keys
+                .Cast<string>()
+                .OrderBy(k => k)
+                .Select(k => e.Data[k]?.ToString() ?? string.Empty)
+                .ToArray()
+            );
+        }
+        else
+        {
+            Console.WriteLine(e.Message);
+        }
         Console.ResetColor();
     }
 
@@ -391,7 +403,7 @@ public class ConsoleUI
 
         if (!IsValidPath(input))
         {
-            ShowError(LocalizationKey.log_path_invalid);
+            ShowMessage(LocalizationKey.log_path_invalid);
             _menuService.WaitForUser();
             ConfigureParams();
             return;

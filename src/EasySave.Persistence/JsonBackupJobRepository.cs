@@ -40,7 +40,8 @@ public class JsonBackupJobRepository : IBackupJobRepository
 
         if (all.Count >= _maxJobs)
         {
-            var e = new InvalidOperationException("error_add_max");
+            var e = new InvalidOperationException($"Cannot add more than {_maxJobs} jobs.");
+            e.Data["errorKey"] = "error_add_max";
             e.Data["max_jobs"] = _maxJobs;
             throw e;
         }
@@ -52,7 +53,8 @@ public class JsonBackupJobRepository : IBackupJobRepository
 
         if (all.Any(j => j.Id == job.Id))
         {
-            var e = new InvalidOperationException("error_add_exists");
+            var e = new InvalidOperationException($"Job with ID {job.Id} already exists.");
+            e.Data["errorKey"] = "error_add_exists";
             e.Data["job_id"] = job.Id;
             throw e;
         }
@@ -71,7 +73,8 @@ public class JsonBackupJobRepository : IBackupJobRepository
 
         if (job == null)
         {
-            var e = new KeyNotFoundException("error_job_not_found");
+            var e = new KeyNotFoundException($"Job with ID {id} not found");
+            e.Data["errorKey"] = "error_job_not_found";
             e.Data["job_id"] = id;
             throw e;
         }
@@ -115,7 +118,8 @@ public class JsonBackupJobRepository : IBackupJobRepository
 
         if (existing == null)
         {
-            var e = new KeyNotFoundException("error_job_not_found");
+            var e = new KeyNotFoundException($"Job with ID {job.Id} not found");
+            e.Data["errorKey"] = "error_job_not_found";
             e.Data["job_id"] = job.Id;
             throw e;
         }
