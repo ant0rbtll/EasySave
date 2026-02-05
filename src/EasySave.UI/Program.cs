@@ -58,11 +58,11 @@ public class Program
         services.AddSingleton<IUserPreferencesRepository, JsonUserPreferencesRepository>();
         services.AddSingleton<IFileSystem, DefaultFileSystem>();
         services.AddSingleton<ITransferService, DefaultTransferService>();
-        services.AddSingleton<BackupEngine>();
+        services.AddSingleton<IBackupEngine, BackupEngine>();
         services.AddSingleton<CommandLineParser>();
 
         // Setup application service
-        services.AddSingleton<BackupAppService>();
+        services.AddSingleton<BackupApplicationService>();
 
         // Setup and run UI
         services.AddSingleton<ConsoleUI>();
