@@ -3,6 +3,7 @@ namespace EasySave.Configuration
     public class DefaultPathProvider : IPathProvider
     {
         private readonly string baseDirectory;
+        private string? _logDirectoryOverride;
 
         public DefaultPathProvider()
         {
@@ -15,7 +16,7 @@ namespace EasySave.Configuration
         #region GetDailyLogPath
         public string GetDailyLogPath(DateTime date)
         {
-            string logsDir = Path.Combine(baseDirectory, "logs");
+            string logsDir = ResolveLogsDirectory();
 
             if (!Directory.Exists(logsDir))
             {
@@ -33,6 +34,33 @@ namespace EasySave.Configuration
             return fullPath;
         }
         #endregion
+
+        public void SetLogDirectoryOverride(string? directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                _logDirectoryOverride = null;
+                return;
+            }
+
+            _logDirectoryOverride = directory.Trim();
+        }
+
+        private string ResolveLogsDirectory()
+        {
+            if (string.IsNullOrWhiteSpace(_logDirectoryOverride))
+            {
+                return Path.Combine(baseDirectory, "logs");
+            }
+
+            var candidate = _logDirectoryOverride.Trim();
+            if (Path.IsPathRooted(candidate))
+            {
+                return candidate;
+            }
+
+            return Path.GetFullPath(Path.Combine(baseDirectory, candidate));
+        }
 
         /// <summary>
         /// Creation ou recuperation du fichier d'etat

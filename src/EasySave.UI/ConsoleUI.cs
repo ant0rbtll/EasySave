@@ -3,6 +3,7 @@ using EasySave.Localization;
 using EasySave.Core;
 using EasySave.UI.Menu;
 using EasySave.Persistence;
+using EasySave.Configuration;
 
 namespace EasySave.UI;
 
@@ -15,21 +16,29 @@ public class ConsoleUI
     private readonly BackupAppService _backupAppService;
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly UserPreferences _userPreferences;
+    private readonly IPathProvider _pathProvider;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
     private readonly CommandLineParser _parser;
 
-    public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository, CommandLineParser parser)
+    public ConsoleUI(
+        BackupAppService backupAppService,
+        IUserPreferencesRepository preferencesRepository,
+        IPathProvider pathProvider,
+        CommandLineParser parser)
     {
         _backupAppService = backupAppService;
         _preferencesRepository = preferencesRepository;
+        _pathProvider = pathProvider;
         LocalizationService = new LocalizationService();
         _parser = parser;
         
 
         _userPreferences = _preferencesRepository.Load();
         var language = _userPreferences.Language;
+
+        ApplyLogDirectoryPreference(_userPreferences.LogDirectory);
 
         if (string.IsNullOrWhiteSpace(language) || !LocalizationService.AllCultures.ContainsKey(language))
         {
@@ -319,6 +328,38 @@ public class ConsoleUI
     }
 
     /// <summary>
+    /// The menu to change the log directory
+    /// </summary>
+    public void ShowChangeLogDirectory()
+    {
+        Console.Clear();
+        _menuService.DisplayLabel(LocalizationKey.menu_params_log_path);
+
+        string? input = AskString(LocalizationKey.ask_log_path);
+        if (input == null)
+        {
+            ConfigureParams();
+            return;
+        }
+
+        if (input.Equals("default", StringComparison.OrdinalIgnoreCase))
+        {
+            ChangeLogDirectory(null);
+            return;
+        }
+
+        if (!IsValidPath(input))
+        {
+            ShowError(LocalizationKey.log_path_invalid);
+            _menuService.WaitForUser();
+            ConfigureParams();
+            return;
+        }
+
+        ChangeLogDirectory(input);
+    }
+
+    /// <summary>
     /// The action of changing the language
     /// </summary>
     /// <param name="locale"></param>
@@ -336,6 +377,52 @@ public class ConsoleUI
         _preferencesRepository.Save(_userPreferences);
 
         MainMenu();
+    }
+
+    private void ChangeLogDirectory(string? directory)
+    {
+        ApplyLogDirectoryPreference(directory);
+        _userPreferences.LogDirectory = string.IsNullOrWhiteSpace(directory) ? null : directory;
+        _preferencesRepository.Save(_userPreferences);
+
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            ShowMessage(LocalizationKey.log_path_reset);
+        }
+        else
+        {
+            ShowMessage(LocalizationKey.log_path_updated);
+        }
+
+        _menuService.WaitForUser();
+        ConfigureParams();
+    }
+
+    private void ApplyLogDirectoryPreference(string? directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            _pathProvider.SetLogDirectoryOverride(null);
+            return;
+        }
+
+        if (!IsValidPath(directory))
+        {
+            _pathProvider.SetLogDirectoryOverride(null);
+            return;
+        }
+
+        _pathProvider.SetLogDirectoryOverride(directory);
+    }
+
+    private static bool IsValidPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        return path.IndexOfAny(Path.GetInvalidPathChars()) < 0;
     }
 
     /// <summary>
