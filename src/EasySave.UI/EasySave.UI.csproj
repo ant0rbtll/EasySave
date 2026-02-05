@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PublishSingleFile>false</PublishSingleFile>
+    <AssemblyName>EasySave</AssemblyName>
   </PropertyGroup>
 
 	<ItemGroup>
