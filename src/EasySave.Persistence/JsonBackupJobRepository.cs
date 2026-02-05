@@ -39,7 +39,11 @@ public class JsonBackupJobRepository : IBackupJobRepository
         var all = Load();
 
         if (all.Count >= _maxJobs)
-            throw new InvalidOperationException($"Cannot add more than {_maxJobs} jobs.");
+        {
+            var e = new InvalidOperationException("error_add_max");
+            e.Data["max_jobs"] = _maxJobs;
+            throw e;
+        }
 
         if (job.Id == 0)
         {
@@ -47,7 +51,11 @@ public class JsonBackupJobRepository : IBackupJobRepository
         }
 
         if (all.Any(j => j.Id == job.Id))
-            throw new InvalidOperationException($"Job with ID {job.Id} already exists.");
+        {
+            var e = new InvalidOperationException("error_add_exists");
+            e.Data["job_id"] = job.Id;
+            throw e;
+        }
 
         all.Add(job);
         Save(all);
@@ -58,7 +66,16 @@ public class JsonBackupJobRepository : IBackupJobRepository
     public void Remove(int id)
     {
         var all = Load();
-        var job = all.FirstOrDefault(j => j.Id == id) ?? throw new KeyNotFoundException($"Job with ID {id} not found.");
+
+        var job = all.FirstOrDefault(j => j.Id == id);
+
+        if (job == null)
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["job_id"] = id;
+            throw e;
+        }
+
         all.Remove(job);
         Save(all);
     }
@@ -93,7 +110,16 @@ public class JsonBackupJobRepository : IBackupJobRepository
     public void Update(BackupJob job)
     {
         var all = Load();
-        var existing = all.FirstOrDefault(j => j.Id == job.Id) ?? throw new KeyNotFoundException($"Job with ID {job.Id} not found.");
+
+        var existing = all.FirstOrDefault(j => j.Id == job.Id);
+
+        if (existing == null)
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["job_id"] = job.Id;
+            throw e;
+        }
+
         existing.Name = job.Name;
         existing.Source = job.Source;
         existing.Destination = job.Destination;

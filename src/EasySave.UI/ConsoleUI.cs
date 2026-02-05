@@ -1,9 +1,9 @@
 ﻿using EasySave.Application;
-using EasySave.Localization;
 using EasySave.Core;
-using EasySave.UI.Menu;
+using EasySave.Localization;
 using EasySave.Persistence;
 using EasySave.Configuration;
+using EasySave.UI.Menu;
 
 namespace EasySave.UI;
 
@@ -21,6 +21,7 @@ public class ConsoleUI
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
     private readonly CommandLineParser _parser;
+    private readonly ErrorManager _errorManager;
 
     public ConsoleUI(
         BackupAppService backupAppService,
@@ -33,7 +34,7 @@ public class ConsoleUI
         _pathProvider = pathProvider;
         LocalizationService = new LocalizationService();
         _parser = parser;
-        
+        _errorManager = new ErrorManager();
 
         _userPreferences = _preferencesRepository.Load();
         var language = _userPreferences.Language;
@@ -61,17 +62,28 @@ public class ConsoleUI
         else Console.Write(message);
     }
 
-    // private void ShowMessageParam(LocalizationKey key, Dictionary<string, string> parameters, bool writeLine = true)
-    // {
-    //     string message = LocalizationService.TranslateText(key, parameters);
-    //     if (writeLine) Console.WriteLine(message);
-    //     else Console.Write(message);
-    // }
+    private void ShowMessageParam(LocalizationKey key, string[] parameters, bool writeLine = true)
+    {
+        string message = LocalizationService.TranslateTextWithParams(key, parameters);
+        if (writeLine) Console.WriteLine(message);
+        else Console.Write(message);
+    }
 
     /// <inheritdoc />
-    public void ShowError(LocalizationKey key)
+    public void ShowError(Exception e)
     {
-        Console.Error.WriteLine(LocalizationService.TranslateText(key));
+        Console.WriteLine("");
+        Console.ForegroundColor = ConsoleColor.Red;
+        ShowMessage(LocalizationKey.error);
+        var key = _errorManager.getMessage(e.Message);
+        ShowMessageParam(key,
+            e.Data.Keys
+            .Cast<string>()
+            .OrderBy(k => k)
+            .Select(k => e.Data[k]?.ToString() ?? string.Empty)
+            .ToArray()
+        );
+        Console.ResetColor();
     }
 
     /// <inheritdoc />
@@ -153,7 +165,7 @@ public class ConsoleUI
                 {
                     ShowMessage(LocalizationKey.input_number_invalid, false);
                     ShowMessage(LocalizationKey.input_escape_to_cancel, false);
-                    Console.Write(" : " );
+                    Console.Write(" : ");
                     input = "";
                 }
             }
@@ -220,8 +232,15 @@ public class ConsoleUI
         if (backupTypeJob == null) { MainMenu(); return; }
 
         // send to service
-        _backupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
-        ShowMessage(LocalizationKey.backupjob_created);
+        try
+        {
+            _backupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
+            ShowMessage(LocalizationKey.backupjob_created);
+        }
+        catch (Exception e)
+        {
+            ShowError(e);
+        }
         _menuService.WaitForUser();
         MainMenu();
     }
@@ -231,10 +250,19 @@ public class ConsoleUI
     /// </summary>
     private void DisplayJobsList()
     {
-        List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
-        foreach (BackupJob job in backupJobList)
+        try
         {
-            Console.WriteLine(job.Id + " - " + job.Name);
+            List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
+            foreach (BackupJob job in backupJobList)
+            {
+                Console.WriteLine(job.Id + " - " + job.Name);
+            }
+        }
+        catch (Exception e)
+        {
+            ShowError(e);
+            _menuService.WaitForUser();
+            MainMenu();
         }
     }
 
@@ -262,16 +290,22 @@ public class ConsoleUI
         {
             int? backupIndex = AskInt(LocalizationKey.ask_backupjob_save);
             if (backupIndex == null) { MainMenu(); return; }
-
-            BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
-            if (job == null)
+            try
             {
-                ShowMessage(LocalizationKey.backupjob_id_not_found);
-                continue;
-            }
+                BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+                if (job == null)
+                {
+                    ShowMessage(LocalizationKey.backupjob_id_not_found);
+                    continue;
+                }
 
-            ShowMessage(LocalizationKey.backup_saving);
-            _backupAppService.RunJobById(backupIndex.Value);
+                ShowMessage(LocalizationKey.backup_saving);
+                _backupAppService.RunJobById(backupIndex.Value);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
             break;
         }
 
@@ -293,16 +327,23 @@ public class ConsoleUI
             int? backupIndex = AskInt(LocalizationKey.ask_backupjob_delete);
             if (backupIndex == null) { MainMenu(); return; }
 
-            BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
-            if (job == null)
+            try
             {
-                ShowMessage(LocalizationKey.backupjob_id_not_found);
-                continue;
+                BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+                if (job == null)
+                {
+                    ShowMessage(LocalizationKey.backupjob_id_not_found);
+                    continue;
+                }
+                _backupAppService.RemoveJob(backupIndex.Value);
+                ShowMessage(LocalizationKey.backupjob_deleted);
+                break;
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
             }
 
-            _backupAppService.RemoveJob(backupIndex.Value);
-            ShowMessage(LocalizationKey.backupjob_deleted);
-            break;
         }
 
         _menuService.WaitForUser();
@@ -535,8 +576,15 @@ public class ConsoleUI
         _menuService.DisplayLabel(LocalizationKey.menu_job_run);
 
         ShowMessage(LocalizationKey.backupjob_running);
-        _backupAppService.RunJobById(job.Id);
-        ShowMessage(LocalizationKey.backupjob_completed);
+        try
+        {
+            _backupAppService.RunJobById(job.Id);
+            ShowMessage(LocalizationKey.backupjob_completed);
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+        }
 
         _menuService.WaitForUser();
         ShowJobsList();
@@ -588,8 +636,15 @@ public class ConsoleUI
     /// </summary>
     public void SaveJobUpdate(BackupJob job)
     {
-        _backupAppService.UpdateJob(job);
-        ShowMessage(LocalizationKey.backupjob_updated);
+        try
+        {
+            _backupAppService.UpdateJob(job);
+            ShowMessage(LocalizationKey.backupjob_updated);
+        }
+        catch (Exception e)
+        {
+            ShowError(e);
+        }
         _menuService.WaitForUser();
         ShowJobsList();
     }
@@ -610,17 +665,24 @@ public class ConsoleUI
         var key = Console.ReadKey(intercept: true);
         if (key.Key == ConsoleKey.Y || key.Key == ConsoleKey.Enter)
         {
-            _backupAppService.RemoveJob(job.Id);
+            try
+            {
+                _backupAppService.RemoveJob(job.Id);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
             ShowMessage(LocalizationKey.backupjob_deleted);
-            _menuService.WaitForUser();
-            ShowJobsList();
         }
         else
         {
             ShowJobDetails(job);
         }
+        _menuService.WaitForUser();
+        ShowJobsList();
     }
-    
+
     /// <summary>
     /// Run the app through the arguments
     /// </summary>
@@ -632,9 +694,9 @@ public class ConsoleUI
             var jobs = _parser.Parse(args);
             _backupAppService.RunJobsByIds(jobs);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            ShowMessage(LocalizationKey.backup_error);
+            ShowError(e);
         }
         _menuService.WaitForUser();
     }

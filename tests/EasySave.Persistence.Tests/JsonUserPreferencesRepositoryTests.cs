@@ -42,6 +42,29 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         Assert.Throws<ArgumentNullException>(() => new JsonUserPreferencesRepository(null!));
     }
 
+    #region Constructor Tests
+
+    [Fact]
+    public void Constructor_WithNullPathProvider_ThrowsArgumentNullException()
+    {
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => new JsonUserPreferencesRepository(null!));
+    }
+
+    [Fact]
+    public void Constructor_WithValidPathProvider_CreatesInstance()
+    {
+        // Act
+        var repo = CreateRepository();
+
+        // Assert
+        Assert.NotNull(repo);
+    }
+
+    #endregion
+
+    #region Load Tests
+
     [Fact]
     public void Constructor_WithValidPathProvider_CreatesInstance()
     {
@@ -166,9 +189,13 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         // Arrange
         var repo = CreateRepository();
         var preferences = new UserPreferences { Language = "en" };
+    {
+        // Arrange
+        File.WriteAllText(_testFilePath, "   \n\t  ");
+        var repo = CreateRepository();
 
         // Act
-        repo.Save(preferences);
+        var preferences = repo.Load();
 
         // Assert
         Assert.True(File.Exists(_testFilePath));
@@ -222,6 +249,46 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
             Language = "en",
             LogDirectory = "/tmp/easysave-logs"
         };
+        Assert.NotNull(preferences);
+        Assert.Equal("fr", preferences.Language);
+    }
+
+    [Fact]
+    public void Load_WithCorruptedJson_ReturnsDefaultPreferences()
+    {
+        // Arrange
+        File.WriteAllText(_testFilePath, "{ invalid json content ]}");
+        var repo = CreateRepository();
+
+        // Act
+        var preferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(preferences);
+        Assert.Equal("fr", preferences.Language);
+    }
+
+    [Fact]
+    public void Load_WithValidJson_ReturnsDeserializedPreferences()
+    {
+        // Arrange
+        File.WriteAllText(_testFilePath, "{\"language\": \"en\"}");
+        var repo = CreateRepository();
+
+        // Act
+        var preferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(preferences);
+        Assert.Equal("en", preferences.Language);
+    }
+
+    [Fact]
+    public void Load_WithNullDeserializationResult_ReturnsDefaultPreferences()
+    {
+        // Arrange
+        File.WriteAllText(_testFilePath, "null");
+        var repo = CreateRepository();
 
         // Act
         repo.Save(preferences);
@@ -232,12 +299,61 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         Assert.Equal("/tmp/easysave-logs", loadedPreferences.LogDirectory);
     }
 
+    #endregion
+
+    #region Save Tests
+
+    [Fact]
+    public void Save_WithNullPreferences_ThrowsArgumentNullException()
+    {
+        // Arrange
+        var repo = CreateRepository();
+
+        // Act & Assert
+        Assert.Throws<ArgumentNullException>(() => repo.Save(null!));
+    }
+
+    [Fact]
+    public void Save_CreatesFileAndPersistsData()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        var preferences = new UserPreferences { Language = "en" };
+
+        // Act
+        repo.Save(preferences);
+
+        // Assert
+        Assert.True(File.Exists(_testFilePath));
+        var content = File.ReadAllText(_testFilePath);
+        Assert.Contains("\"language\"", content);
+        Assert.Contains("\"en\"", content);
+        _pathProviderMock.Verify(p => p.GetUserPreferencesPath(), Times.Once);
+    }
+
+    [Fact]
+    public void Save_CreatesDirectoryIfNotExists()
+    {
+        // Arrange
+        var nestedPath = Path.Combine(_testDirectory, "nested", "folder", "prefs.json");
+        _pathProviderMock.Setup(p => p.GetUserPreferencesPath()).Returns(nestedPath);
+        var repo = CreateRepository();
+        var preferences = new UserPreferences { Language = "de" };
+
+        // Act
+        repo.Save(preferences);
+
+        // Assert
+        Assert.True(File.Exists(nestedPath));
+    }
+
     [Fact]
     public void Load_WhenLogDirectoryIsMissing_ReturnsNull()
     {
         // Arrange
-        var repo = new JsonUserPreferencesRepository(_pathProvider);
-        File.WriteAllText(_testFilePath, "{ \"language\": \"en\" }");
+        var repo = CreateRepository();
+        var firstPreferences = new UserPreferences { Language = "en" };
+        var secondPreferences = new UserPreferences { Language = "es" };
 
         // Act
         var loadedPreferences = repo.Load();
@@ -247,15 +363,15 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         Assert.Null(loadedPreferences.LogDirectory);
     }
 
-    // Helper class for tests
-    private class TestPathProvider : IPathProvider
+    [Fact]
+    public void Save_UsesCorrectJsonFormat()
     {
-        private readonly string _preferencesPath;
+        // Arrange
+        var repo = CreateRepository();
+        var preferences = new UserPreferences { Language = "it" };
 
-        public TestPathProvider(string preferencesPath)
-        {
-            _preferencesPath = preferencesPath;
-        }
+        // Act
+        repo.Save(preferences);
 
         public string GetDailyLogPath(DateTime date) => throw new NotImplementedException();
         public string GetStatePath() => throw new NotImplementedException();

@@ -93,6 +93,7 @@ public class InMemoryBackupJobRepositoryTests
         // Act & Assert
         var ex = Assert.Throws<InvalidOperationException>(() => repo.Add(job2));
         Assert.Contains("already exists", ex.Message);
+
     }
 
     [Fact]

@@ -71,9 +71,11 @@ public class BackupEngine(
 
                     if (!result.IsSuccess)
                     {
-                        throw new InvalidOperationException(
-                            $"File transfer failed from '{file}' to '{destinationFile}' with error code {result.ErrorCode}."
-                        );
+                        var e = new InvalidOperationException("error_file_transfer_failed");
+                        e.Data["0_from"] = file;
+                        e.Data["1_destination"] = destinationFile;
+                        e.Data["2_errorCode"] = result.ErrorCode;
+                        throw e;
                     }
                     Log(
                         job.Name,
@@ -98,7 +100,7 @@ public class BackupEngine(
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
             _stateWriter.MarkInactive(job.Id);
         }
-        catch (Exception)
+        catch (Exception e)
         {
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
             Log(
@@ -109,7 +111,7 @@ public class BackupEngine(
                 0,
                 0
             );
-            throw;
+            throw e;
         }
     }
 
@@ -146,7 +148,9 @@ public class BackupEngine(
         }
         else
         {
-            throw new NotSupportedException($"Backup type {type} is not supported.");
+            var e = new NotSupportedException("error_backup_type_invalid");
+            e.Data["0_type"] = type;
+            throw e;
         }
     }
 

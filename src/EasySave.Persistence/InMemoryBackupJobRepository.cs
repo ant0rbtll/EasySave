@@ -27,8 +27,12 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     /// </exception>
     public void Add(BackupJob job)
     {
-        if (Count() >= _maxJobs)
-            throw new InvalidOperationException($"Cannot add more than {_maxJobs} jobs.");
+        if (Count() >= _maxJobs) 
+        {
+            var e = new InvalidOperationException("error_add_max");
+            e.Data["max_jobs"] = _maxJobs;
+            throw e;
+        }
 
         if (job.Id == 0)
         {
@@ -36,8 +40,11 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
         }
 
         if (_jobs.ContainsKey(job.Id))
-            throw new InvalidOperationException($"Job with ID {job.Id} already exists.");
-
+        {
+            var e = new InvalidOperationException("error_add_exists");
+            e.Data["job_id"] = job.Id;
+            throw e;
+        }
         _jobs[job.Id] = job;
     }
 
@@ -46,7 +53,11 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     public void Remove(int id)
     {
         if (!_jobs.Remove(id))
-            throw new KeyNotFoundException($"Job with ID {id} not found.");
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["job_id"] = id;
+            throw e;
+        }
     }
 
     /// <inheritdoc />
@@ -54,8 +65,11 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     public BackupJob GetById(int id)
     {
         if (!_jobs.TryGetValue(id, out var job))
-            throw new KeyNotFoundException($"Job with ID {id} not found.");
-
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["job_id"] = id;
+            throw e;
+        }
         return job;
     }
 
@@ -82,8 +96,11 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     public void Update(BackupJob job)
     {
         if (!_jobs.ContainsKey(job.Id))
-            throw new KeyNotFoundException($"Job with ID {job.Id} not found.");
-
+        {
+            var e = new KeyNotFoundException("error_job_not_found");
+            e.Data["job_id"] = job.Id;
+            throw e;
+        }
         _jobs[job.Id] = job;
     }
 }
