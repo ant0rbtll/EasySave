@@ -149,7 +149,7 @@ public class BackupEngine(
         else
         {
             var e = new NotSupportedException("error_backup_type_invalid");
-            e.Data["type"] = type;
+            e.Data["0_type"] = type;
             throw e;
         }
     }
