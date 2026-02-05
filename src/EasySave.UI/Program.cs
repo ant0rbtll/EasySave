@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Reflection;
 using EasySave.Application;
 using EasySave.Persistence;
 using EasySave.Backup;
@@ -17,6 +16,9 @@ namespace EasySave.UI;
 /// </summary>
 public class Program
 {
+    // EasyLog expects this global mutex name; keep in sync with EasyLog.DailyFileLogger.
+    private const string EasyLogDailyFileMutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile";
+
     /// <summary>
     /// The main action that start the app
     /// </summary>
@@ -79,20 +81,32 @@ public class Program
         {
             var assembly = Assembly.LoadFrom(easyLogPath);
 
-            var formatterType = assembly.GetType("EasyLog.JsonLogFormatter", throwOnError: true);
-            var loggerType = assembly.GetType("EasyLog.DailyFileLogger", throwOnError: true);
+            // Expected EasyLog types (string-based reflection is brittle; keep names in sync).
+            var formatterType = assembly.GetType("EasyLog.JsonLogFormatter", throwOnError: false);
+            var loggerType = assembly.GetType("EasyLog.DailyFileLogger", throwOnError: false);
+            if (formatterType is null || loggerType is null)
+                return new NoOpLogger();
 
             var formatter = Activator.CreateInstance(formatterType!);
             var logger = Activator.CreateInstance(
                 loggerType!,
                 formatter,
                 pathProvider,
-                "Global\\ProSoft_EasySave_EasyLog_DailyFile");
+                EasyLogDailyFileMutexName);
 
             return logger as ILogger ?? new NoOpLogger();
         }
-        catch
+        catch (Exception ex)
         {
+            try
+            {
+                Console.Error.WriteLine($"EasyLog initialization failed: {ex}");
+            }
+            catch
+            {
+                // Best-effort logging only.
+            }
+
             return new NoOpLogger();
         }
     }
