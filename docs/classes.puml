@@ -1,14 +1,15 @@
 @startuml
-title EasySave - Diagramme de classes (Version actuelle)
+title EasySave - Diagramme de classes V1 (Architecture complète)
 
 
 ' =========================================================
-' EasySave - Architecture complète et à jour
+' EasySave V1 - Architecture complète et à jour
 ' - BackupJob = définition avec ID, Name, Source, Destination, Type
-' - BackupAppService = couche application (CreateJob, UpdateJob, RunJob, etc.)
-' - BackupEngine = exécution des backups (Complete/Differential)
+' - BackupApplicationService = couche application (CreateJob, UpdateJob, RunJob, etc.)
+' - IBackupEngine + BackupEngine = exécution des backups (Complete/Differential)
 ' - État temps réel = GlobalState avec StateEntry par job
-' - Logs = journaliers avec LogEntry (CreateDirectory, TransferFile, Error)
+' - Logs = package Log (ILogger, LogEntry, NoOpLogger)
+'         + package EasyLog (journaliers avec DailyFileLogger, JsonLogFormatter)
 ' - Localisation = support multilingue (FR/EN) avec LocalizationKey enum
 ' - Menus interactifs = MenuFactory, MenuService, MenuConfig
 ' - Préférences utilisateur = UserPreferences (langue persistée)
@@ -35,11 +36,11 @@ package "Core" {
 
 ' ===================== Application =====================
 package "Application" as APP {
-  class BackupAppService {
+  class BackupApplicationService {
     - _repo : IBackupJobRepository
-    - _engine : BackupEngine
+    - _engine : IBackupEngine
     --
-    + BackupAppService(repo, engine)
+    + BackupApplicationService(repo, engine)
     + CreateJob(name, source, destination, type) : void
     + RemoveJob(id) : void
     + UpdateJob(job) : void
@@ -52,23 +53,26 @@ package "Application" as APP {
   }
 }
 
-APP.BackupAppService --> Persistence.IBackupJobRepository
-APP.BackupAppService --> Backup.BackupEngine
+APP.BackupApplicationService --> Persistence.IBackupJobRepository
+APP.BackupApplicationService --> Backup.IBackupEngine
 
 ' ===================== UI (Console) =====================
 package "UI" {
   class ConsoleUI {
-    - _backupAppService : BackupAppService
+    - _backupAppService : BackupApplicationService
     - _preferencesRepository : IUserPreferencesRepository
     - _userPreferences : UserPreferences
+    - _pathProvider : IPathProvider
     - _menuService : MenuService
     - _menuFactory : MenuFactory
+    - _parser : CommandLineParser
+    - _errorManager : ErrorManager
     --
     + LocalizationService : ILocalizationService
     --
-    + ConsoleUI(backupAppService, preferencesRepository)
+    + ConsoleUI(backupAppService, preferencesRepository, pathProvider, parser)
     + MainMenu() : void
-    + RunFromArgs(parsedArgs) : void
+    + RunFromArgs(args[]) : void
     + ConfigureParams() : void
     + ShowChangeLocale() : void
     + ChangeLocale(locale) : void
@@ -118,7 +122,7 @@ package "UI" {
 
   class MenuFactory {
     - _consoleUI : ConsoleUI
-    - _backupAppService : BackupAppService
+    - _backupAppService : BackupApplicationService
     --
     + MenuFactory(consoleUI, backupAppService)
     + CreateMainMenu() : MenuConfig
@@ -131,17 +135,15 @@ package "UI" {
   }
 
   class Program {
-    - {static} initServices() : IServiceProvider
+    - {static} EasyLogDailyFileMutexName : string = "Global\\ProSoft_EasySave_EasyLog_DailyFile"
+    --
+    + {static} Main(args[]) : void
+    - {static} InitServices() : IServiceProvider
+    - {static} CreateLogger(pathProvider) : ILogger
   }
 
   class CommandLineParser {
-    + {static} Parse(args[]) : CommandLineArgs
-  }
-
-  class CommandLineArgs {
-    + JobIds : int[]
-    + RunAll : bool
-    + {static} Main(args[]) : void
+    + Parse(args[]) : int[]
   }
 
   class ErrorManager {
@@ -242,6 +244,7 @@ package "Persistence" {
 
   class UserPreferences {
     + Language : string = "fr"
+    + LogDirectory : string?
   }
 
   interface IUserPreferencesRepository {
@@ -291,6 +294,10 @@ package "Configuration" as CFG {
 
 ' ===================== Backup (Execution) =====================
 package "Backup" {
+  interface IBackupEngine {
+    + Execute(job) : void
+  }
+
   class BackupEngine {
     - _fileSystem : IFileSystem
     - _transferService : ITransferService
@@ -303,6 +310,8 @@ package "Backup" {
     - UpdateState(...) : void
     - Log(eventType, backup, src, dst, size, time) : void
   }
+
+  IBackupEngine <|.. BackupEngine
 }
 
 ' ===================== System =====================
@@ -357,8 +366,8 @@ package "SystemAbstractions" {
   DefaultTransferService --> IFileSystem
   DefaultTransferService ..> TransferResult
 }
-' ===================== EasyLog (Journalier) =====================
-package "EasyLog" {
+' ===================== Log =====================
+package "Log" {
   enum LogEventType {
     CreateDirectory = 0
     TransferFile = 1
@@ -379,6 +388,16 @@ package "EasyLog" {
     + Write(entry) : void
   }
 
+  class NoOpLogger {
+    + Write(entry) : void
+  }
+
+  ILogger <|.. NoOpLogger
+  NoOpLogger ..> LogEntry
+}
+
+' ===================== EasyLog (Journalier) =====================
+package "EasyLog" {
   interface ILogFormatter {
     + Format(entry) : string
   }
@@ -396,10 +415,10 @@ package "EasyLog" {
     - GetLogPath(date) : string
   }
 
-  ILogger <|.. DailyFileLogger
   ILogFormatter <|.. JsonLogFormatter
   DailyFileLogger --> ILogFormatter
-  DailyFileLogger ..> LogEntry
+  DailyFileLogger --> Log.ILogger : implements
+  DailyFileLogger ..> Log.LogEntry : uses
 }
 
 ' ===================== State (Temps Réel) =====================
@@ -456,27 +475,28 @@ package "ETR" {
 }
 
 ' ===================== Relations cross-package =====================
-UI.ConsoleUI --> APP.BackupAppService
+UI.ConsoleUI --> APP.BackupApplicationService
 UI.ConsoleUI --> Persistence.IUserPreferencesRepository
 UI.ConsoleUI --> Persistence.UserPreferences
+UI.ConsoleUI --> CFG.IPathProvider
 UI.ConsoleUI --> UI.MenuService
 UI.ConsoleUI --> UI.MenuFactory
+UI.ConsoleUI --> UI.CommandLineParser
 UI.ConsoleUI --> UI.ErrorManager
 UI.ConsoleUI --> LOC.ILocalizationService
-UI.ConsoleUI --> UI.CommandLineArgs : uses
 UI.MenuService --> LOC.ILocalizationService
 UI.MenuFactory --> UI.ConsoleUI
-UI.MenuFactory --> APP.BackupAppService
+UI.MenuFactory --> APP.BackupApplicationService
 UI.MenuFactory ..> UI.MenuConfig
 UI.ErrorManager --> LOC.LocalizationKey
 
-UI.Program --> UI.CommandLineParser : uses
-UI.CommandLineParser ..> UI.CommandLineArgs : creates
+UI.Program ..> UI.ConsoleUI : creates
+UI.Program ..> UI.CommandLineParser : registers
 
 Backup.BackupEngine --> SystemAbstractions.IFileSystem
 Backup.BackupEngine --> SystemAbstractions.ITransferService
 Backup.BackupEngine --> ETR.IStateWriter
-Backup.BackupEngine --> EasyLog.ILogger
+Backup.BackupEngine --> Log.ILogger
 
 Persistence.JsonBackupJobRepository --> CFG.IPathProvider
 Persistence.JsonUserPreferencesRepository --> CFG.IPathProvider
