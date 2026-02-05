@@ -13,11 +13,11 @@ public class JsonBackupJobRepositoryTests : IDisposable
 
     public JsonBackupJobRepositoryTests()
     {
-        _testDirectory = Path.Combine(Path.GetTempPath(), $"EasySaveTests_{Guid.NewGuid()}");                                                                                                                                  
-        Directory.CreateDirectory(_testDirectory);                                                                                                                                                                             
-        _testFilePath = Path.Combine(_testDirectory, "jobs.json");                                                                                                                                                             
-                                                                                                                                                                            
-        _pathProviderMock = new Mock<IPathProvider>();                                                                                                                                                                         
+        _testDirectory = Path.Combine(Path.GetTempPath(), $"EasySaveTests_{Guid.NewGuid()}");
+        Directory.CreateDirectory(_testDirectory);
+        _testFilePath = Path.Combine(_testDirectory, "jobs.json");
+
+        _pathProviderMock = new Mock<IPathProvider>();
         _pathProviderMock.Setup(p => p.GetJobsConfigPath()).Returns(_testFilePath);                                                                                                                                            
                                                                                                                                                                             
         _idProviderMock = new Mock<IJobIdProvider>();
@@ -97,7 +97,7 @@ public class JsonBackupJobRepositoryTests : IDisposable
         repo.Add(new BackupJob { Name = "Job1", Source = "/src1", Destination = "/dst1" });                                                                                                                                   
         repo.Add(new BackupJob { Name = "Job2", Source = "/src2", Destination = "/dst2" });                                                                                                                                   
                                                                                                                                                                                                                             
-        // Assert - Nouvelle instance pour verifier la persistance                                                                                                                                                            
+        // Assert - New instance to verify persistence                                                                                                                                                            
         var repo2 = CreateRepository();                                                                                                                                                                                       
         Assert.Equal(2, repo2.Count());                                                                                                                                                                                       
         _pathProviderMock.Verify(p => p.GetJobsConfigPath(), Times.AtLeast(2));                                                                                                                                               
@@ -126,7 +126,7 @@ public class JsonBackupJobRepositoryTests : IDisposable
         .Returns(() => ++callCount);                                                                                                                                                                                      
         var repo = CreateRepository();                                                                                                                                                                                        
                                                                                                                                                                                                                         
-        // Act - Ajouter 5 jobs (limite)                                                                                                                                                                                      
+        // Act - Add 5 jobs (limit)                                                                                                                                                                                      
         for (int i = 0; i < 5; i++)                                                                                                                                                                                           
         {                                                                                                                                                                                                                     
             repo.Add(new BackupJob                                                                                                                                                                                            
@@ -138,7 +138,7 @@ public class JsonBackupJobRepositoryTests : IDisposable
             });                                                                                                                                                                                                               
         }                                                                                                                                                                                                                     
                                                                                                                                                                                                                     
-        // Assert - Le 6eme doit echouer                                                                                                                                                                                      
+        // Assert - 6th job should throw exception                                                                                                                                                                                      
         var ex = Assert.Throws<InvalidOperationException>(() => repo.Add(new BackupJob { Name = "Job6", Source = "/src", Destination = "/dst" }));                                                                                                                                
         Assert.Contains("Cannot add more than", ex.Message);                                                                                                                                                                  
     }                                                                                                                                                                                                                         

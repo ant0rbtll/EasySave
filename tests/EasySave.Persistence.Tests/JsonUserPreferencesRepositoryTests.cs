@@ -256,7 +256,7 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         var originalPreferences = new UserPreferences { Language = "pt" };
         repo1.Save(originalPreferences);
 
-        // Act - Nouvelle instance pour verifier la persistance
+        // Act - New instance to verify persistence
         var repo2 = CreateRepository();
         var loadedPreferences = repo2.Load();
 

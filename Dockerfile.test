@@ -37,7 +37,7 @@ RUN dotnet restore
 COPY . .
 
 # Installer ReportGenerator pour générer les rapports de coverage
-RUN dotnet tool install --global dotnet-reportgenerator-globaltool
+RUN dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.5.1
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # Exécuter tous les tests avec code coverage
