@@ -73,6 +73,7 @@ public class Program
 
     private static ILogger CreateLogger(IPathProvider pathProvider)
     {
+        // Optional plugin: if EasyLog.dll is present, load it; otherwise fall back to NoOpLogger.
         var easyLogPath = Path.Combine(AppContext.BaseDirectory, "EasyLog.dll");
         if (!File.Exists(easyLogPath))
             return new NoOpLogger();

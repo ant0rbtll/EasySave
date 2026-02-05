@@ -5,6 +5,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Keep single-file publish off so optional EasyLog.dll can be loaded from disk at runtime. -->
     <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
 
