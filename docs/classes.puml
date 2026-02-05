@@ -1,251 +1,428 @@
-skinparam classAttributeIconSize 0
-title EasySave v1.0 - Diagramme de classes
 @startuml
-skinparam classAttributeIconSize 0
+title EasySave - Diagramme de classes V1 (Architecture complète)
+
 
 ' =========================================================
-' EasySave v1.0 - UML adapté livrable 1
-' Objectifs:
-' - BackupJob = définition (pas d’exécution)
-' - Exécution portée par BackupEngine
-' - Etat temps réel = fichier unique contenant tous les jobs
-' - Log = journalier, temps réel, actions (transfert + création dossier)
-' - Limite 5 jobs + stockage (mémoire ou JSON) via repository
-' - CLI parsing 1-3 / 1;3 / espaces
+' EasySave V1 - Architecture complète et à jour
+' - BackupJob = définition avec ID, Name, Source, Destination, Type
+' - BackupApplicationService = couche application (CreateJob, UpdateJob, RunJob, etc.)
+' - IBackupEngine + BackupEngine = exécution des backups (Complete/Differential)
+' - État temps réel = GlobalState avec StateEntry par job
+' - Logs = package Log (ILogger, LogEntry, NoOpLogger)
+'         + package EasyLog (journaliers avec DailyFileLogger, JsonLogFormatter)
+' - Localisation = support multilingue (FR/EN) avec LocalizationKey enum
+' - Menus interactifs = MenuFactory, MenuService, MenuConfig
+' - Préférences utilisateur = UserPreferences (langue persistée)
+' - Limite 5 jobs max (IBackupJobRepository.DefaultMaxJobs)
 ' =========================================================
 
 ' ===================== Core (Domain) =====================
-package "Core (Domain)" as CORE {
+package "Core" {
   enum BackupType {
     Complete
     Differential
   }
 
   class BackupJob {
-    - id : int
-    - name : String
-    - source : String
-    - destination : String
-    - type : BackupType
+    + Id : int
+    + Name : string
+    + Source : string
+    + Destination : string
+    + Type : BackupType
+  }
+  
+  BackupJob --> BackupType
+}
+
+' ===================== Application =====================
+package "Application" as APP {
+  class BackupApplicationService {
+    - _repo : IBackupJobRepository
+    - _engine : IBackupEngine
+    --
+    + BackupApplicationService(repo, engine)
+    + CreateJob(name, source, destination, type) : void
+    + RemoveJob(id) : void
+    + UpdateJob(job) : void
+    + RunJob(job) : void
+    + RunJobById(id) : void
+    + RunJobsByIds(ids[]) : void
+    + RunAllJobs() : void
+    + GetAllJobs() : List<BackupJob>
+    + GetJobById(id) : BackupJob?
   }
 }
 
-' ===================== Application (Use cases) =====================
-package "Application" as APP {
-  class BackupAppService {
-    - repo : Persistence.IBackupJobRepository
-    - engine : Backup.BackupEngine
-    - ui : UI.IUI
-    - parser : CLI.CommandLineParser
-    + RunInteractive() : void
-    + RunFromArgs(args : String[]) : void
-    + CreateJob(name : String, source : String, destination : String, type : CORE.BackupType) : void
-    + RemoveJob(id : int) : void
-    + RunJobById(id : int) : void
-    + RunJob(job : CORE.BackupJob) : void
-    + RunJobsByIds(ids : int[]) : void
-    + RunAllJobs() : void
-  }
-}
+APP.BackupApplicationService --> Persistence.IBackupJobRepository
+APP.BackupApplicationService --> Backup.IBackupEngine
 
 ' ===================== UI (Console) =====================
-package "UI (Console)" as UI {
-  interface IUI {
-    + ShowMessage(key : String) : void
-    + ShowError(key : String) : void
-    + AskString(key : String) : String
-    + AskInt(key : String) : int
-    + AskBackupType(key : String) : CORE.BackupType
+package "UI" {
+  class ConsoleUI {
+    - _backupAppService : BackupApplicationService
+    - _preferencesRepository : IUserPreferencesRepository
+    - _userPreferences : UserPreferences
+    - _pathProvider : IPathProvider
+    - _menuService : MenuService
+    - _menuFactory : MenuFactory
+    - _parser : CommandLineParser
+    - _errorManager : ErrorManager
+    --
+    + LocalizationService : ILocalizationService
+    --
+    + ConsoleUI(backupAppService, preferencesRepository, pathProvider, parser)
+    + MainMenu() : void
+    + RunFromArgs(args[]) : void
+    + ConfigureParams() : void
+    + ShowChangeLocale() : void
+    + ChangeLocale(locale) : void
+    + CreateBackupJob() : void
+    + SeeSaveList() : void
+    + SaveJob() : void
+    + DeleteBackupJob() : void
+    + ShowJobsList() : void
+    + ShowJobDetails(job) : void
+    + RunJob(job) : void
+    + UpdateJob(job) : void
+    + UpdateJobField(job, field) : void
+    + SaveJobUpdate(job) : void
+    + DeleteJob(job) : void
+    + Quit() : void
+    - ShowMessage(key, writeLine) : void
+    - ShowError(key) : void
+    - AskString(key) : string?
+    - AskInt(key) : int?
+    - AskBackupType(key) : BackupType?
+    - DisplayJobsList() : void
   }
 
-  class ConsoleUI
-  IUI <|.. ConsoleUI
+  class MenuService {
+    - _localizationService : ILocalizationService
+    --
+    + MenuService(localizationService)
+    + ShowMenu(menuItems : LocalizationKey[], label, renderHeader?) : int
+    + ShowMenu(menuItems : string[], label, renderHeader?) : int
+    + ShowMenuWithActions(menuItems : LocalizationKey[], actions, label, renderHeader?) : void
+    + ShowMenuWithActions(menuItems : string[], actions, label, renderHeader?) : void
+    + ShowMenuWithActions(menuConfig) : void
+    + DisplayLabel(key) : void
+    + WaitForUser(messageKey?) : void
+  }
+
+  class MenuConfig {
+    + Items : LocalizationKey[]?
+    + ItemsAsStrings : string[]?
+    + Actions : Dictionary<int, Action>
+    + Label : LocalizationKey
+    + RenderHeader : Action?
+    --
+    + MenuConfig(items : LocalizationKey[], actions, label, renderHeader?)
+    + MenuConfig(items : string[], actions, label, renderHeader?)
+  }
+
+  class MenuFactory {
+    - _consoleUI : ConsoleUI
+    - _backupAppService : BackupApplicationService
+    --
+    + MenuFactory(consoleUI, backupAppService)
+    + CreateMainMenu() : MenuConfig
+    + CreateLocaleMenu() : MenuConfig
+    + CreateParamsMenu() : MenuConfig
+    + CreateBackupJobCreationMenu() : MenuConfig
+    + CreateJobsListMenu() : MenuConfig
+    + CreateJobDetailsMenu(job, renderHeader?) : MenuConfig
+    + CreateJobUpdateMenu(job) : MenuConfig
+  }
+
+  class Program {
+    - {static} EasyLogDailyFileMutexName : string = "Global\\ProSoft_EasySave_EasyLog_DailyFile"
+    --
+    + {static} Main(args[]) : void
+    - {static} InitServices() : IServiceProvider
+    - {static} CreateLogger(pathProvider) : ILogger
+  }
+
+  class CommandLineParser {
+    + Parse(args[]) : int[]
+  }
+
+  class ErrorManager {
+    - errors : Dictionary<string, LocalizationKey>
+    --
+    + ErrorManager()
+    + getMessage(message) : LocalizationKey
+  }
 }
 
 ' ===================== Localization =====================
 package "Localization" as LOC {
+  enum LocalizationKey {
+    menu
+    menu_create
+    menu_list
+    menu_job_delete
+    config_locale_fr
+    config_locale_en
+    ...
+  }
+
   interface ILocalizationService {
-    + Get(key : String) : String
+    + Culture : string
+    + AllCultures : Dictionary<string, LocalizationKey>
+    --
+    + TranslateText(key : string) : string
+    + TranslateText(key : LocalizationKey) : string
   }
 
   class LocalizationService {
-    - culture : String
-    + SetCulture(culture : String) : void
-    + Get(key : String) : String
+    - _translations : Dictionary<string, Dictionary<string, string>>
+    - _culture : string
+    --
+    + LocalizationService(culture)
+    + Culture : string
+    + AllCultures : Dictionary<string, LocalizationKey>
+    + TranslateText(key : string) : string
+    + TranslateText(key : LocalizationKey) : string
+    - LoadTranslations(culture) : Dictionary<string, string>
   }
 
   ILocalizationService <|.. LocalizationService
 }
 
-UI.ConsoleUI --> LOC.ILocalizationService
-
-' ===================== CLI =====================
-package "CLI" as CLI {
-  class CommandLineParser {
-    + Parse(args : String[]) : int[]
-  }
-}
-
-' ===================== Persistence (Jobs) =====================
-package "Persistence" as Persistence {
+' ===================== Persistence =====================
+package "Persistence" {
   interface IBackupJobRepository {
-    + Add(job : CORE.BackupJob) : void
-    + Remove(id : int) : void
-    + GetById(id : int) : CORE.BackupJob
-    + GetAll() : List<CORE.BackupJob>
+    + {static} DefaultMaxJobs : int = 5
+    --
+    + Add(job) : void
+    + Remove(id) : void
+    + GetById(id) : BackupJob?
+    + GetAll() : List<BackupJob>
     + Count() : int
     + MaxJobs() : int
+    + Update(job) : void
   }
 
-  interface IJobIdProvider {
-    + NextId(existing : List<CORE.BackupJob>) : int
-  }
-
-  class SequentialJobIdProvider {
-    + NextId(existing : List<CORE.BackupJob>) : int
+  class JsonBackupJobRepository {
+    - _pathProvider : IPathProvider
+    - _idProvider : IJobIdProvider
+    - _jsonOptions : JsonSerializerOptions
+    --
+    + JsonBackupJobRepository(pathProvider, idProvider)
+    + Add(job) : void
+    + Remove(id) : void
+    + GetById(id) : BackupJob?
+    + GetAll() : List<BackupJob>
+    + Count() : int
+    + MaxJobs() : int
+    + Update(job) : void
+    - Load() : List<BackupJob>
+    - Save(jobs) : void
   }
 
   class InMemoryBackupJobRepository {
-    - maxJobs : int = 5
-    - jobs : Dictionary<int, CORE.BackupJob>
-    - idProvider : IJobIdProvider
-    + Add(job : CORE.BackupJob) : void
-    + Remove(id : int) : void
-    + GetById(id : int) : CORE.BackupJob
-    + GetAll() : List<CORE.BackupJob>
+    - _jobs : Dictionary<int, BackupJob>
+    - _idProvider : IJobIdProvider
+    --
+    + InMemoryBackupJobRepository(idProvider)
+    + Add(job) : void
+    + Remove(id) : void
+    + GetById(id) : BackupJob?
+    + GetAll() : List<BackupJob>
     + Count() : int
     + MaxJobs() : int
+    + Update(job) : void
   }
 
-  IBackupJobRepository <|.. InMemoryBackupJobRepository
-  IJobIdProvider <|.. SequentialJobIdProvider
+  interface IJobIdProvider {
+    + NextId(existing) : int
+  }
 
-  ' Optionnel v1 mais très utile en prod: persistance JSON des jobs
-  class JsonBackupJobRepository {
-    - maxJobs : int = 5
-    - pathProvider : CFG.IPathProvider
-    - idProvider : IJobIdProvider
-    + Add(job : CORE.BackupJob) : void
-    + Remove(id : int) : void
-    + GetById(id : int) : CORE.BackupJob
-    + GetAll() : List<CORE.BackupJob>
-    + Count() : int
-    + MaxJobs() : int
-    - Load() : List<CORE.BackupJob>
-    - Save(all : List<CORE.BackupJob>) : void
+  class SequentialJobIdProvider {
+    + NextId(existing) : int
+  }
+
+  class UserPreferences {
+    + Language : string = "fr"
+    + LogDirectory : string?
+  }
+
+  interface IUserPreferencesRepository {
+    + Load() : UserPreferences
+    + Save(preferences) : void
+  }
+
+  class JsonUserPreferencesRepository {
+    - _pathProvider : IPathProvider
+    - _jsonOptions : JsonSerializerOptions
+    --
+    + JsonUserPreferencesRepository(pathProvider)
+    + Load() : UserPreferences
+    + Save(preferences) : void
+    - EnsureDirectoryExists() : void
+    - LoadFromFile() : UserPreferences
+    - SaveToFile(preferences) : void
   }
 
   IBackupJobRepository <|.. JsonBackupJobRepository
+  IBackupJobRepository <|.. InMemoryBackupJobRepository
+  IJobIdProvider <|.. SequentialJobIdProvider
+  IUserPreferencesRepository <|.. JsonUserPreferencesRepository
+  
+  JsonBackupJobRepository --> IJobIdProvider
+  InMemoryBackupJobRepository --> IJobIdProvider
 }
 
-' ===================== Configuration (Paths) =====================
-package "Configuration (Paths)" as CFG {
+' ===================== Configuration =====================
+package "Configuration" as CFG {
   interface IPathProvider {
-    + GetDailyLogPath(date : DateTime) : String
-    + GetStatePath() : String
-    + GetJobsConfigPath() : String
+    + GetDailyLogPath(date) : string
+    + GetStatePath() : string
+    + GetJobsConfigPath() : string
+    + GetUserPreferencesPath() : string
   }
 
-  class DefaultPathProvider
+  class DefaultPathProvider {
+    + GetDailyLogPath(date) : string
+    + GetStatePath() : string
+    + GetJobsConfigPath() : string
+    + GetUserPreferencesPath() : string
+  }
+
   IPathProvider <|.. DefaultPathProvider
 }
 
 ' ===================== Backup (Execution) =====================
-package "Backup (Execution)" as Backup {
+package "Backup" {
+  interface IBackupEngine {
+    + Execute(job) : void
+  }
 
   class BackupEngine {
-    - fs : SystemAbstractions.IFileSystem
-    - transfer : SystemAbstractions.ITransferService
-    - stateWriter : ETR.IStateWriter
-    - log : EasyLog.ILogger
-    + Execute(job : CORE.BackupJob) : void
+    - _fileSystem : IFileSystem
+    - _transferService : ITransferService
+    - _stateWriter : IStateWriter
+    - _logger : ILogger
+    --
+    + BackupEngine(fileSystem, transferService, stateWriter, logger)
+    + Execute(job) : void
+    - CanCopyFile(type, source, dest) : bool
+    - UpdateState(...) : void
+    - Log(eventType, backup, src, dst, size, time) : void
   }
+
+  IBackupEngine <|.. BackupEngine
 }
 
-' ===================== System Abstractions =====================
-package "SystemAbstractions" as SystemAbstractions {
+' ===================== System =====================
+package "SystemAbstractions" {
   interface IFileSystem {
-    + DirectoryExists(path : String) : bool
-    + CreateDirectory(path : String) : void
-    + EnumerateFiles(path : String) : List<String>
-    + EnumerateDirectories(path : String) : List<String>
-    + CopyFile(src : String, dst : String) : void
-    + GetFileSize(path : String) : long
-    + GetFullPath(path : String) : String
+    + DirectoryExists(path) : bool
+    + CreateDirectory(path) : void
+    + FileExists(path) : bool
+    + GetFileSize(path) : long
+    + CopyFile(src, dst, overwrite) : void
+    + EnsureDirectoryForFileExists(filePath) : void
+    + EnumerateFilesRecursive(rootPath) : IEnumerable<string>
+    + EnumerateDirectoriesRecursive(rootPath) : IEnumerable<string>
+    + Combine(parts...) : string
+    + NormalizePath(path) : string
+    + GetRelativePath(root, full) : string
   }
 
-  class TransferResult {
-    + fileSizeBytes : long
-    + transferTimeMs : long
-    + errorCode : int
+  class DefaultFileSystem {
+    + DirectoryExists(path) : bool
+    + CreateDirectory(path) : void
+    + FileExists(path) : bool
+    + GetFileSize(path) : long
+    + CopyFile(src, dst, overwrite) : void
+    + EnsureDirectoryForFileExists(filePath) : void
+    + EnumerateFilesRecursive(rootPath) : IEnumerable<string>
+    + EnumerateDirectoriesRecursive(rootPath) : IEnumerable<string>
+    + Combine(parts...) : string
+    + NormalizePath(path) : string
+    + GetRelativePath(root, full) : string
   }
 
   interface ITransferService {
-    + TransferFile(src : String, dst : String) : TransferResult
+    + TransferFile(source, dest, overwrite) : TransferResult
   }
 
-  class DefaultTransferService
+  class DefaultTransferService {
+    - _fileSystem : IFileSystem
+    --
+    + DefaultTransferService(fileSystem)
+    + TransferFile(source, dest, overwrite) : TransferResult
+  }
+
+  class TransferResult {
+    + Success : bool
+    + TransferTimeMs : long
+    + FileSizeBytes : long
+  }
+
+  IFileSystem <|.. DefaultFileSystem
   ITransferService <|.. DefaultTransferService
+  DefaultTransferService --> IFileSystem
+  DefaultTransferService ..> TransferResult
 }
-
-' ===================== EasyLog.dll (Journalier) =====================
-package "EasyLog.dll" as EasyLog {
+' ===================== Log =====================
+package "Log" {
   enum LogEventType {
-    CreateDirectory
-    TransferFile
-    Error
+    CreateDirectory = 0
+    TransferFile = 1
+    Error = 2
   }
 
-  class LogEntry {
-    + timestamp : DateTime
-    + backupName : String
-    + eventType : LogEventType
-    + sourcePathUNC : String
-    + destinationPathUNC : String
-    + fileSizeBytes : long
-    + transferTimeMs : long
+  class LogEntry <<record>> {
+    + Timestamp : DateTime
+    + BackupName : string
+    + EventType : LogEventType
+    + SourcePathUNC : string
+    + DestinationPathUNC : string
+    + FileSizeBytes : long
+    + TransferTimeMs : long
   }
 
   interface ILogger {
-    + Write(entry : LogEntry) : void
+    + Write(entry) : void
   }
 
+  class NoOpLogger {
+    + Write(entry) : void
+  }
+
+  ILogger <|.. NoOpLogger
+  NoOpLogger ..> LogEntry
+}
+
+' ===================== EasyLog (Journalier) =====================
+package "EasyLog" {
   interface ILogFormatter {
-    + Format(entry : LogEntry) : String
+    + Format(entry) : string
   }
 
   class JsonLogFormatter {
-    + Format(entry : LogEntry) : String
+    + Format(entry) : string
   }
 
   class DailyFileLogger {
-    - formatter : ILogFormatter
-    - pathProvider : CFG.IPathProvider
-    + Write(entry : LogEntry) : void
+    - _formatter : ILogFormatter
+    - _pathProvider : IPathProvider
+    --
+    + DailyFileLogger(formatter, pathProvider)
+    + Write(entry) : void
+    - GetLogPath(date) : string
   }
 
-  ILogger <|.. DailyFileLogger
   ILogFormatter <|.. JsonLogFormatter
   DailyFileLogger --> ILogFormatter
-  DailyFileLogger --> CFG.IPathProvider
+  DailyFileLogger --> Log.ILogger : implements
+  DailyFileLogger ..> Log.LogEntry : uses
 }
 
-' ===================== ETR (Etat Temps Réel - fichier unique) =====================
-package "ETR (Etat Temps Réel)" as ETR {
-  class StateEntry {
-    + backupId : int
-    + backupName : String
-    + timestamp : DateTime
-    + status : ETR.BackupStatus
-    + totalFiles : int
-    + totalSizeBytes : long
-    + remainingFiles : int
-    + remainingSizeBytes : long
-    + progressPercent : int
-    + currentSourcePath : String
-    + currentDestinationPath : String
-  }
-
+' ===================== State (Temps Réel) =====================
+package "ETR" {
   enum BackupStatus {
     Inactive
     Active
@@ -253,45 +430,76 @@ package "ETR (Etat Temps Réel)" as ETR {
     Error
   }
 
+  class StateEntry {
+    + BackupId : int
+    + BackupName : string?
+    + Timestamp : DateTime
+    + Status : BackupStatus
+    + TotalFiles : int
+    + TotalSizeBytes : long
+    + RemainingFiles : int
+    + RemainingSizeBytes : long
+    + ProgressPercent : int
+    + CurrentSourcePath : string?
+    + CurrentDestinationPath : string?
+  }
+
   class GlobalState {
-    + updatedAt : DateTime
-    + entries : Dictionary<int, StateEntry>
+    + UpdatedAt : DateTime
+    + Entries : Dictionary<int, StateEntry>
   }
 
   interface IStateWriter {
-    + Update(entry : StateEntry) : void
-    + MarkInactive(backupId : int) : void
-  }
-
-  class StateSerializer {
-    + WritePrettyJson(path : String, state : GlobalState) : void
+    + Update(entry) : void
+    + MarkInactive(backupId) : void
   }
 
   class RealTimeStateWriter {
-    - serializer : StateSerializer
-    - pathProvider : CFG.IPathProvider
-    - state : GlobalState
-    + Update(entry : StateEntry) : void
-    + MarkInactive(backupId : int) : void
+    - _pathProvider : IPathProvider
+    - _globalState : GlobalState
+    --
+    + RealTimeStateWriter(pathProvider, globalState)
+    + Update(entry) : void
+    + MarkInactive(backupId) : void
+    - WriteStateFile() : void
+  }
+
+  class StateSerializer {
+    + {static} Serialize(state) : string
+    + {static} Deserialize(json) : GlobalState
   }
 
   IStateWriter <|.. RealTimeStateWriter
-  RealTimeStateWriter --> StateSerializer
-  RealTimeStateWriter --> CFG.IPathProvider
+  RealTimeStateWriter --> GlobalState
+  RealTimeStateWriter ..> StateSerializer
 }
 
-' ===================== Cross-package wiring =====================
-APP.BackupAppService --> Persistence.IBackupJobRepository
-APP.BackupAppService --> Backup.BackupEngine
-APP.BackupAppService --> UI.IUI
-APP.BackupAppService --> CLI.CommandLineParser
+' ===================== Relations cross-package =====================
+UI.ConsoleUI --> APP.BackupApplicationService
+UI.ConsoleUI --> Persistence.IUserPreferencesRepository
+UI.ConsoleUI --> Persistence.UserPreferences
+UI.ConsoleUI --> CFG.IPathProvider
+UI.ConsoleUI --> UI.MenuService
+UI.ConsoleUI --> UI.MenuFactory
+UI.ConsoleUI --> UI.CommandLineParser
+UI.ConsoleUI --> UI.ErrorManager
+UI.ConsoleUI --> LOC.ILocalizationService
+UI.MenuService --> LOC.ILocalizationService
+UI.MenuFactory --> UI.ConsoleUI
+UI.MenuFactory --> APP.BackupApplicationService
+UI.MenuFactory ..> UI.MenuConfig
+UI.ErrorManager --> LOC.LocalizationKey
+
+UI.Program ..> UI.ConsoleUI : creates
+UI.Program ..> UI.CommandLineParser : registers
 
 Backup.BackupEngine --> SystemAbstractions.IFileSystem
 Backup.BackupEngine --> SystemAbstractions.ITransferService
 Backup.BackupEngine --> ETR.IStateWriter
-Backup.BackupEngine --> EasyLog.ILogger
+Backup.BackupEngine --> Log.ILogger
 
 Persistence.JsonBackupJobRepository --> CFG.IPathProvider
+Persistence.JsonUserPreferencesRepository --> CFG.IPathProvider
 EasyLog.DailyFileLogger --> CFG.IPathProvider
 ETR.RealTimeStateWriter --> CFG.IPathProvider
 

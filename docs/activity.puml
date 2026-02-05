@@ -1,24 +1,37 @@
 @startuml
 title EasySave 1.0 - Diagramme d'activités : Exécution via ligne de commande
 
-skinparam direction left to right
-
 start
 
-:Utilisateur lance EasySave.exe\navec args (ex: "1-3" ou "1;3");
-:APP.BackupAppService.RunFromArgs(args);
+:Utilisateur lance EasySave.exe\navec args (ex: "1,3" ou "--all");
 
-:CLI.CommandLineParser.Parse(args);
-if (Syntaxe valide ?) then (Oui)
-  :ids = int[];
+if (args[] vide ?) then (Oui)
+  :UI.ConsoleUI.MainMenu();
+  note right
+    Mode interactif
+    avec menus
+  end note
+  stop
 else (Non)
-  :UI.ShowError("Syntaxe invalide / aide");
+  :UI.ConsoleUI.RunFromArgs(args);
+endif
+
+:UI.CommandLineParser.Parse(args);
+if (Syntaxe valide ?) then (Oui)
+  :CommandLineArgs (JobIds[], RunAll);
+else (Non)
+  :UI.ErrorManager.getMessage("error_parser_arg_invalid");
+  :UI.ShowError(LocalizationKey);
   stop
 endif
 
-:APP.BackupAppService.RunJobs(ids);
+if (RunAll ?) then (Oui)
+  :APP.BackupAppService.RunAllJobs();
+else (Non)
+  :APP.BackupAppService.RunJobsByIds(JobIds);
+endif
 
-:Charger les jobs demandés\n(Persistence.ISaveWorkRepository.GetById);
+:Charger les jobs demandés\n(Persistence.IBackupJobRepository.GetById);
 if (Au moins 1 job ?) then (Oui)
 else (Non)
   :UI.ShowMessage("Aucun travail");
@@ -31,25 +44,33 @@ repeat
   :Backup.BackupEngine.Execute(job);
 
   :ETR.IStateWriter.Update(entry)\nstatus=Active + init totaux;
-  :EasyLog.ILogger.Write(entry)\n(eventType start / action);
+  :EasyLog.ILogger.Write(entry)\n(eventType CreateDirectory);
 
-  :Lister fichiers + sous-dossiers\n(SystemAbstractions.IFileSystem.Enumerate*);
+  :Lister fichiers + sous-dossiers\n(SystemAbstractions.IFileSystem.EnumerateFilesRecursive);
   if (Fichiers à traiter ?) then (Oui)
     repeat
-      :Définir fichier courant\n(src, dst, remaining, progress);
+      :Calculer progrès\n(remaining, percent);
       :ETR.IStateWriter.Update(entry);
 
-      :Transférer fichier\n(SystemAbstractions.ITransferService.TransferFile);
+      if (BackupType = Differential ?) then (Oui)
+        :BackupEngine.CanCopyFile()\ncomparer dates de modification;
+        if (Fichier modifié ?) then (Oui)
+        else (Non)
+          :Passer au fichier suivant;
+        endif
+      endif
+
+      :SystemAbstractions.ITransferService.TransferFile(src, dst);
       if (Transfert OK ?) then (Oui)
-        :EasyLog.ILogger.Write(LogEntry)\nTransferFile (ms>=0);
+        :EasyLog.ILogger.Write(LogEntry)\nTransferFile (ms, size);
       else (Non)
-        :EasyLog.ILogger.Write(LogEntry)\nError (ms<0, code);
+        :EasyLog.ILogger.Write(LogEntry)\nError;
         :ETR.IStateWriter.Update(entry)\nstatus=Error;
       endif
 
     repeat while (Fichier suivant ?) is (Oui)
   else (Non)
-    :Aucun fichier trouvé;
+    :Aucun fichier à traiter;
   endif
 
   :ETR.IStateWriter.Update(entry)\nstatus=Done;
@@ -57,7 +78,6 @@ repeat
 
 repeat while (Job suivant ?) is (Oui)
 
-:UI.ShowMessage("Résumé exécution");
 stop
 
 @enduml
