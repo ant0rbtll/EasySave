@@ -72,7 +72,7 @@ public class BackupEngine(
                     if (!result.IsSuccess)
                     {
                         var e = new InvalidOperationException("error_file_transfer_failed");
-                        e.Data["0_rom"] = file;
+                        e.Data["0_from"] = file;
                         e.Data["1_destination"] = destinationFile;
                         e.Data["2_errorCode"] = result.ErrorCode;
                         throw e;
