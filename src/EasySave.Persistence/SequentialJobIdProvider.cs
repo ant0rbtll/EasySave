@@ -34,8 +34,8 @@ public class SequentialJobIdProvider : IJobIdProvider
         }
 
         // No gap, return the next ID after max
-        if (nextId == int.MaxValue)
-            throw new InvalidOperationException("Cannot generate a new job ID because the maximum allowed ID value has been reached.");
+        if (nextId == int.MaxValue) 
+            throw new InvalidOperationException("error_max_id");
         
         return nextId;
     }

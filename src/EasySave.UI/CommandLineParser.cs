@@ -16,7 +16,7 @@ namespace EasySave.UI
         {
             if (args == null || args.Length == 0)
             {
-                throw new ArgumentException("The argument array must not be null or empty.", nameof(args));
+                throw new ArgumentException("error_parser_arg_null");
             }
             string input = args[0];
             List<int> numbers = new List<int>();
@@ -27,7 +27,7 @@ namespace EasySave.UI
 
                 if (parts.Any(string.IsNullOrWhiteSpace))
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("error_parser_arg_invalid");
                 }
 
                 foreach (string part in parts)
@@ -40,7 +40,7 @@ namespace EasySave.UI
                 string[] parts = input.Split('-');
                 if (parts.Length != 2 || parts.Any(string.IsNullOrWhiteSpace))
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("error_parser_arg_invalid");
                 }
                 
                 int start = int.Parse(parts[0]);
@@ -48,7 +48,7 @@ namespace EasySave.UI
 
                 if (end < start)
                 {
-                    throw new ArgumentException();
+                    throw new ArgumentException("error_parser_arg_invalid");
                 }
 
                 for (int i = start; i <= end; i++)

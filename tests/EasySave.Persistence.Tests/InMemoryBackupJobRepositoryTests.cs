@@ -92,7 +92,7 @@ public class InMemoryBackupJobRepositoryTests
 
         // Act & Assert
         var ex = Assert.Throws<InvalidOperationException>(() => repo.Add(job2));
-        Assert.Contains("already exists", ex.Message);
+        Assert.Contains("error_add_exists", ex.Message);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public class InMemoryBackupJobRepositoryTests
         // Assert - Le 6eme doit echouer
         var ex = Assert.Throws<InvalidOperationException>(() =>
             repo.Add(new BackupJob { Name = "Job6", Source = "/src", Destination = "/dst" }));
-        Assert.Contains("Cannot add more than", ex.Message);
+        Assert.Contains("error_add_max", ex.Message);
     }
 
     #endregion
@@ -150,7 +150,7 @@ public class InMemoryBackupJobRepositoryTests
 
         // Act & Assert
         var ex = Assert.Throws<KeyNotFoundException>(() => repo.Remove(999));
-        Assert.Contains("not found", ex.Message);
+        Assert.Contains("error_job_not_found", ex.Message);
     }
 
     [Fact]
@@ -202,7 +202,7 @@ public class InMemoryBackupJobRepositoryTests
 
         // Act & Assert
         var ex = Assert.Throws<KeyNotFoundException>(() => repo.GetById(999));
-        Assert.Contains("not found", ex.Message);
+        Assert.Contains("error_job_not_found", ex.Message);
     }
 
     #endregion
@@ -310,7 +310,7 @@ public class InMemoryBackupJobRepositoryTests
 
         // Act & Assert
         var ex = Assert.Throws<KeyNotFoundException>(() => repo.Update(job));
-        Assert.Contains("not found", ex.Message);
+        Assert.Contains("error_job_not_found", ex.Message);
     }
 
     [Fact]

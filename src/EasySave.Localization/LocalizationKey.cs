@@ -54,5 +54,21 @@ public enum LocalizationKey
     backupjob_id_not_found,
     menu_delete,
     ask_backupjob_delete,
-    backupjob_deleted
+    backupjob_deleted,
+    error,
+    error_add_max,
+    error_add_exists,
+    error_parser_arg_null,
+    error_parser_arg_invalid,
+    error_file_null,
+    error_default,
+    error_job_not_found,
+    error_max_id,
+    error_file_transfer_failed,
+    error_backup_type_invalid,
+    error_file_not_found,
+    error_directory_not_found,
+    error_parts_empty,
+    error_parts_null
+
 }
