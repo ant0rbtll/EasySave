@@ -28,7 +28,6 @@
 		<ProjectReference Include="..\..\src\EasySave.Core\EasySave.Core.csproj" />
 		<ProjectReference Include="..\..\src\EasySave.Backup\EasySave.Backup.csproj" />
 		<ProjectReference Include="..\..\src\EasySave.Persistence\EasySave.Persistence.csproj" />
-		<ProjectReference Include="..\EasySave.Persistence.Tests\EasySave.Persistence.Tests.csproj" />
 	</ItemGroup>
 
 </Project>
