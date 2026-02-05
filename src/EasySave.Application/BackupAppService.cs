@@ -4,21 +4,15 @@ using EasySave.Core;
 
 namespace EasySave.Application;
 
-public class BackupAppService
+/// <summary>
+/// Initializes a new instance of the <see cref="BackupAppService"/> class.
+/// </summary>
+/// <param name="repo">The repository used for data persistence.</param>
+/// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
+public class BackupAppService(IBackupJobRepository repo, IBackupEngine backupEngine)
 {
-    private readonly IBackupJobRepository _repo;
-    private readonly BackupEngine _engine;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="BackupAppService"/> class.
-    /// </summary>
-    /// <param name="repo">The repository used for data persistence.</param>
-    /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
-    public BackupAppService(IBackupJobRepository repo, BackupEngine backupEngine)
-    {
-        _repo = repo;
-        _engine = backupEngine;
-    }
+    private readonly IBackupJobRepository _repo = repo;
+    private readonly IBackupEngine _engine = backupEngine;
 
     /// <summary>
     /// Creates and saves a new backup job.

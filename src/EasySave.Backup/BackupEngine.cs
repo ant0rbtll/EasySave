@@ -19,7 +19,7 @@ public class BackupEngine(
     IFileSystem fileSystem,
     ITransferService transferService,
     IStateWriter stateWriter,
-    ILogger logger)
+    ILogger logger) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
