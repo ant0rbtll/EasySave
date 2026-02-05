@@ -408,6 +408,14 @@ public class ConsoleUI
 
         if (!IsValidPath(directory))
         {
+            try
+            {
+                Console.Error.WriteLine($"Invalid log directory preference '{directory}'. Reverting to default log directory.");
+            }
+            catch
+            {
+                // Best-effort notification only.
+            }
             _pathProvider.SetLogDirectoryOverride(null);
             return;
         }
@@ -422,7 +430,44 @@ public class ConsoleUI
             return false;
         }
 
-        return path.IndexOfAny(Path.GetInvalidPathChars()) < 0;
+        if (path.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            string candidate = ResolveLogDirectoryCandidate(path);
+            Directory.CreateDirectory(candidate);
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    private static string ResolveLogDirectoryCandidate(string directory)
+    {
+        var trimmed = directory.Trim();
+        if (Path.IsPathRooted(trimmed))
+        {
+            return trimmed;
+        }
+
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, trimmed));
     }
 
     /// <summary>

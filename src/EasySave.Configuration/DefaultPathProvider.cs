@@ -17,21 +17,22 @@ namespace EasySave.Configuration
         public string GetDailyLogPath(DateTime date)
         {
             string logsDir = ResolveLogsDirectory();
-
-            if (!Directory.Exists(logsDir))
-            {
-                Directory.CreateDirectory(logsDir);
-            }
-
             string fileName = $"{date:yyyy-MM-dd}.json";
             string fullPath = Path.Combine(logsDir, fileName);
 
-            if (!File.Exists(fullPath))
+            try
             {
-                File.WriteAllText(fullPath, string.Empty);
+                EnsureLogFileExists(fullPath);
+                return fullPath;
             }
-
-            return fullPath;
+            catch (IOException)
+            {
+                return TryFallbackToDefault(logsDir, fileName);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return TryFallbackToDefault(logsDir, fileName);
+            }
         }
         #endregion
 
@@ -50,16 +51,64 @@ namespace EasySave.Configuration
         {
             if (string.IsNullOrWhiteSpace(_logDirectoryOverride))
             {
-                return Path.Combine(baseDirectory, "logs");
+                return GetDefaultLogsDirectory();
             }
 
-            var candidate = _logDirectoryOverride.Trim();
+            var candidate = _logDirectoryOverride!;
             if (Path.IsPathRooted(candidate))
             {
                 return candidate;
             }
 
             return Path.GetFullPath(Path.Combine(baseDirectory, candidate));
+        }
+
+        private string GetDefaultLogsDirectory()
+        {
+            return Path.Combine(baseDirectory, "logs");
+        }
+
+        private string TryFallbackToDefault(string attemptedLogsDir, string fileName)
+        {
+            string defaultLogsDir = GetDefaultLogsDirectory();
+
+            if (IsSameDirectory(attemptedLogsDir, defaultLogsDir))
+            {
+                throw new InvalidOperationException("Unable to create or access the default log directory.");
+            }
+
+            string fallbackPath = Path.Combine(defaultLogsDir, fileName);
+            EnsureLogFileExists(fallbackPath);
+            return fallbackPath;
+        }
+
+        private static bool IsSameDirectory(string first, string second)
+        {
+            string normalizedFirst = NormalizeDirectory(first);
+            string normalizedSecond = NormalizeDirectory(second);
+
+            return string.Equals(normalizedFirst, normalizedSecond, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeDirectory(string path)
+        {
+            string full = Path.GetFullPath(path);
+            return full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+
+        private static void EnsureLogFileExists(string fullPath)
+        {
+            string? dir = Path.GetDirectoryName(fullPath);
+
+            if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
+            if (!File.Exists(fullPath))
+            {
+                File.WriteAllText(fullPath, string.Empty);
+            }
         }
 
         /// <summary>

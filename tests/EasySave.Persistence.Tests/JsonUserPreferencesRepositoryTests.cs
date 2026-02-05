@@ -120,6 +120,41 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         Assert.Equal("es", loadedPreferences.Language);
     }
 
+    [Fact]
+    public void SaveAndLoad_PersistsLogDirectory()
+    {
+        // Arrange
+        var repo = new JsonUserPreferencesRepository(_pathProvider);
+        var preferences = new UserPreferences
+        {
+            Language = "en",
+            LogDirectory = "/tmp/easysave-logs"
+        };
+
+        // Act
+        repo.Save(preferences);
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Equal("/tmp/easysave-logs", loadedPreferences.LogDirectory);
+    }
+
+    [Fact]
+    public void Load_WhenLogDirectoryIsMissing_ReturnsNull()
+    {
+        // Arrange
+        var repo = new JsonUserPreferencesRepository(_pathProvider);
+        File.WriteAllText(_testFilePath, "{ \"language\": \"en\" }");
+
+        // Act
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Null(loadedPreferences.LogDirectory);
+    }
+
     // Helper class for tests
     private class TestPathProvider : IPathProvider
     {
