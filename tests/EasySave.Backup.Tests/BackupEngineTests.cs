@@ -446,8 +446,7 @@ public class BackupEngineTests
 
         // Act & Assert
         var ex = Assert.Throws<InvalidOperationException>(() => _backupEngine.Execute(job));
-        Assert.Contains("File transfer failed", ex.Message);
-        Assert.Contains("error code 1", ex.Message);
+        Assert.Contains("error_file_transfer_failed", ex.Message);
     }
 
     [Fact]
