@@ -54,8 +54,8 @@ public class RealTimeStateWriterTests : IDisposable
         writer.Update(entry);
 
         // Assert
-        Assert.True(_state.Entries.TryGetValue(1, out var entry));
-        Assert.Equal("TestBackup", entry.BackupName);
+        Assert.True(_state.Entries.TryGetValue(1, out var storedEntry));
+        Assert.Equal("TestBackup", storedEntry.BackupName);
     }
 
     [Fact]
