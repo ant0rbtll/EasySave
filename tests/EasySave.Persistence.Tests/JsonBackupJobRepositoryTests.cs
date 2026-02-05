@@ -389,47 +389,47 @@ public class JsonBackupJobRepositoryTests : IDisposable
                                                                                                                                                                                                                     
     [Fact]                                                                                                                                                                                                                    
     public void MaxJobs_Always_Returns5()                                                                                                                                                                                     
-    {                                                                                                                                                                                                                         
-        // Arrange                                                                                                                                                                                                            
-        var repo = CreateRepository();                                                                                                                                                                                        
-                                                                                                                                                                                                                        
-        // Act & Assert                                                                                                                                                                                                       
-        Assert.Equal(5, repo.MaxJobs());                                                                                                                                                                                      
-    }                                                                                                                                                                                                                         
-                                                                                                                                                                                                                    
-    #endregion                                                                                                                                                                                                                
-                                                                                                                                                                                                                    
-    #region Edge Cases Tests                                                                                                                                                                                                  
-                                                                                                                                                                                                                    
-    [Fact]                                                                                                                                                                                                                    
-    public void Load_CorruptedFile_ReturnsEmptyList()                                                                                                                                                                         
-    {                                                                                                                                                                                                                         
-        // Arrange                                                                                                                                                                                                            
-        File.WriteAllText(_testFilePath, "{ invalid json }");                                                                                                                                                                 
-        var repo = CreateRepository();                                                                                                                                                                                        
-                                                                                                                                                                                                                        
-        // Act                                                                                                                                                                                                                
-        var result = repo.GetAll();                                                                                                                                                                                           
-                                                                                                                                                                                                                        
-        // Assert                                                                                                                                                                                                             
-        Assert.Empty(result);                                                                                                                                                                                                 
-    }                                                                                                                                                                                                                         
-                                                                                                                                                                                                                    
-    [Fact]                                                                                                                                                                                                                    
-    public void PathProvider_GetJobsConfigPath_IsCalledOnEveryOperation()                                                                                                                                                     
-    {                                                                                                                                                                                                                         
-        // Arrange                                                                                                                                                                                                            
-        _idProviderMock.Setup(p => p.NextId(It.IsAny<List<BackupJob>>())).Returns(1);                                                                                                                                         
-        var repo = CreateRepository();                                                                                                                                                                                        
-                                                                                                                                                                                                                        
-        // Act                                                                                                                                                                                                                
-        repo.Add(new BackupJob { Name = "Test", Source = "/src", Destination = "/dst" });                                                                                                                                     
-        repo.GetAll();                                                                                                                                                                                                        
-        repo.GetById(1);                                                                                                                                                                                                      
-        repo.Count();                                                                                                                                                                                                         
-                                                                                                                                                                                                                        
-        // Assert                                                                                                                                                                                                             
-        _pathProviderMock.Verify(p => p.GetJobsConfigPath(), Times.AtLeast(4));                                                                                                                                               
+    {
+        // Arrange
+        var repo = CreateRepository();
+
+        // Act & Assert
+        Assert.Equal(5, repo.MaxJobs());
+    }
+
+    #endregion
+
+    #region Edge Cases Tests
+
+    [Fact]
+    public void Load_CorruptedFile_ReturnsEmptyList()
+    {
+        // Arrange
+        File.WriteAllText(_testFilePath, "{ invalid json }");
+        var repo = CreateRepository();
+
+        // Act
+        var result = repo.GetAll();
+
+        // Assert
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void PathProvider_GetJobsConfigPath_IsCalledOnEveryOperation()
+    {
+        // Arrange
+        _idProviderMock.Setup(p => p.NextId(It.IsAny<List<BackupJob>>())).Returns(1);
+        var repo = CreateRepository();
+
+        // Act
+        repo.Add(new BackupJob { Name = "Test", Source = "/src", Destination = "/dst" });
+        repo.GetAll();
+        repo.GetById(1);
+        repo.Count();
+
+        // Assert
+        _pathProviderMock.Verify(p => p.GetJobsConfigPath(), Times.AtLeast(4));
     }
 
     #endregion
