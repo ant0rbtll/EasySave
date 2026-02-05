@@ -47,6 +47,7 @@ public class LocalizationService : ILocalizationService
         return TranslateText(key.ToString());
     }
 
+    /// <inheritdoc />
     public string TranslateTextWithParams(LocalizationKey key, string[] parameters)
     {
         var message = TranslateText(key);
