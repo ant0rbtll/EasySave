@@ -32,13 +32,9 @@ namespace EasySave.UI
             };
         }
 
-        public LocalizationKey getMessage(string message)
+        public bool TryGetMessage(string message, out LocalizationKey key)
         {
-            try { return errors[message]; }
-            catch (Exception)
-            {
-                return errors["error_default"];
-            }
+            return errors.TryGetValue(message, out key);
         }
     }
 }

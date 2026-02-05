@@ -3,6 +3,7 @@ namespace EasySave.Configuration
     public class DefaultPathProvider : IPathProvider
     {
         private readonly string baseDirectory;
+        private string? _logDirectoryOverride;
 
         public DefaultPathProvider()
         {
@@ -15,24 +16,100 @@ namespace EasySave.Configuration
         #region GetDailyLogPath
         public string GetDailyLogPath(DateTime date)
         {
-            string logsDir = Path.Combine(baseDirectory, "logs");
-
-            if (!Directory.Exists(logsDir))
-            {
-                Directory.CreateDirectory(logsDir);
-            }
-
+            string logsDir = ResolveLogsDirectory();
             string fileName = $"{date:yyyy-MM-dd}.json";
             string fullPath = Path.Combine(logsDir, fileName);
+
+            try
+            {
+                EnsureLogFileExists(fullPath);
+                return fullPath;
+            }
+            catch (IOException)
+            {
+                return TryFallbackToDefault(logsDir, fileName);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return TryFallbackToDefault(logsDir, fileName);
+            }
+        }
+        #endregion
+
+        public void SetLogDirectoryOverride(string? directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                _logDirectoryOverride = null;
+                return;
+            }
+
+            _logDirectoryOverride = directory.Trim();
+        }
+
+        private string ResolveLogsDirectory()
+        {
+            if (string.IsNullOrWhiteSpace(_logDirectoryOverride))
+            {
+                return GetDefaultLogsDirectory();
+            }
+
+            var candidate = _logDirectoryOverride!;
+            if (Path.IsPathRooted(candidate))
+            {
+                return candidate;
+            }
+
+            return Path.GetFullPath(Path.Combine(baseDirectory, candidate));
+        }
+
+        private string GetDefaultLogsDirectory()
+        {
+            return Path.Combine(baseDirectory, "logs");
+        }
+
+        private string TryFallbackToDefault(string attemptedLogsDir, string fileName)
+        {
+            string defaultLogsDir = GetDefaultLogsDirectory();
+
+            if (IsSameDirectory(attemptedLogsDir, defaultLogsDir))
+            {
+                throw new InvalidOperationException("Unable to create or access the default log directory.");
+            }
+
+            string fallbackPath = Path.Combine(defaultLogsDir, fileName);
+            EnsureLogFileExists(fallbackPath);
+            return fallbackPath;
+        }
+
+        private static bool IsSameDirectory(string first, string second)
+        {
+            string normalizedFirst = NormalizeDirectory(first);
+            string normalizedSecond = NormalizeDirectory(second);
+
+            return string.Equals(normalizedFirst, normalizedSecond, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static string NormalizeDirectory(string path)
+        {
+            string full = Path.GetFullPath(path);
+            return full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        }
+
+        private static void EnsureLogFileExists(string fullPath)
+        {
+            string? dir = Path.GetDirectoryName(fullPath);
+
+            if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
 
             if (!File.Exists(fullPath))
             {
                 File.WriteAllText(fullPath, string.Empty);
             }
-
-            return fullPath;
         }
-        #endregion
 
         /// <summary>
         /// Creation ou recuperation du fichier d'etat

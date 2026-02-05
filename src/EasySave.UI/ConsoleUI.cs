@@ -2,6 +2,7 @@
 using EasySave.Core;
 using EasySave.Localization;
 using EasySave.Persistence;
+using EasySave.Configuration;
 using EasySave.UI.Menu;
 
 namespace EasySave.UI;
@@ -15,22 +16,30 @@ public class ConsoleUI
     private readonly BackupAppService _backupAppService;
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly UserPreferences _userPreferences;
+    private readonly IPathProvider _pathProvider;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
     private readonly CommandLineParser _parser;
     private readonly ErrorManager _errorManager;
 
-    public ConsoleUI(BackupAppService backupAppService, IUserPreferencesRepository preferencesRepository, CommandLineParser parser)
+    public ConsoleUI(
+        BackupAppService backupAppService,
+        IUserPreferencesRepository preferencesRepository,
+        IPathProvider pathProvider,
+        CommandLineParser parser)
     {
         _backupAppService = backupAppService;
         _preferencesRepository = preferencesRepository;
+        _pathProvider = pathProvider;
         LocalizationService = new LocalizationService();
         _parser = parser;
         _errorManager = new ErrorManager();
 
         _userPreferences = _preferencesRepository.Load();
         var language = _userPreferences.Language;
+
+        ApplyLogDirectoryPreference(_userPreferences.LogDirectory);
 
         if (string.IsNullOrWhiteSpace(language) || !LocalizationService.AllCultures.ContainsKey(language))
         {
@@ -66,14 +75,27 @@ public class ConsoleUI
         Console.WriteLine("");
         Console.ForegroundColor = ConsoleColor.Red;
         ShowMessage(LocalizationKey.error);
-        var key = _errorManager.getMessage(e.Message);
-        ShowMessageParam(key,
-            e.Data.Keys
-            .Cast<string>()
-            .OrderBy(k => k)
-            .Select(k => e.Data[k]?.ToString() ?? string.Empty)
-            .ToArray()
-        );
+        var messageKey = e.Message;
+        if (e.Data.Contains("errorKey") && e.Data["errorKey"] is string dataKey)
+        {
+            messageKey = dataKey;
+        }
+
+        if (_errorManager.TryGetMessage(messageKey, out var key))
+        {
+            ShowMessageParam(key,
+                e.Data.Keys
+                .Cast<string>()
+                .Where(k => !string.Equals(k, "errorKey", StringComparison.Ordinal))
+                .OrderBy(k => k)
+                .Select(k => e.Data[k]?.ToString() ?? string.Empty)
+                .ToArray()
+            );
+        }
+        else
+        {
+            Console.WriteLine(e.Message);
+        }
         Console.ResetColor();
     }
 
@@ -360,6 +382,38 @@ public class ConsoleUI
     }
 
     /// <summary>
+    /// The menu to change the log directory
+    /// </summary>
+    public void ShowChangeLogDirectory()
+    {
+        Console.Clear();
+        _menuService.DisplayLabel(LocalizationKey.menu_params_log_path);
+
+        string? input = AskString(LocalizationKey.ask_log_path);
+        if (input == null)
+        {
+            ConfigureParams();
+            return;
+        }
+
+        if (input.Equals("default", StringComparison.OrdinalIgnoreCase))
+        {
+            ChangeLogDirectory(null);
+            return;
+        }
+
+        if (!IsValidPath(input))
+        {
+            ShowMessage(LocalizationKey.log_path_invalid);
+            _menuService.WaitForUser();
+            ConfigureParams();
+            return;
+        }
+
+        ChangeLogDirectory(input);
+    }
+
+    /// <summary>
     /// The action of changing the language
     /// </summary>
     /// <param name="locale"></param>
@@ -377,6 +431,97 @@ public class ConsoleUI
         _preferencesRepository.Save(_userPreferences);
 
         MainMenu();
+    }
+
+    private void ChangeLogDirectory(string? directory)
+    {
+        ApplyLogDirectoryPreference(directory);
+        _userPreferences.LogDirectory = string.IsNullOrWhiteSpace(directory) ? null : directory;
+        _preferencesRepository.Save(_userPreferences);
+
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            ShowMessage(LocalizationKey.log_path_reset);
+        }
+        else
+        {
+            ShowMessage(LocalizationKey.log_path_updated);
+        }
+
+        _menuService.WaitForUser();
+        ConfigureParams();
+    }
+
+    private void ApplyLogDirectoryPreference(string? directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            _pathProvider.SetLogDirectoryOverride(null);
+            return;
+        }
+
+        if (!IsValidPath(directory))
+        {
+            try
+            {
+                Console.Error.WriteLine($"Invalid log directory preference '{directory}'. Reverting to default log directory.");
+            }
+            catch
+            {
+                // Best-effort notification only.
+            }
+            _pathProvider.SetLogDirectoryOverride(null);
+            return;
+        }
+
+        _pathProvider.SetLogDirectoryOverride(directory);
+    }
+
+    private static bool IsValidPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return false;
+        }
+
+        if (path.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
+        {
+            return false;
+        }
+
+        try
+        {
+            string candidate = ResolveLogDirectoryCandidate(path);
+            Directory.CreateDirectory(candidate);
+            return true;
+        }
+        catch (IOException)
+        {
+            return false;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return false;
+        }
+        catch (ArgumentException)
+        {
+            return false;
+        }
+        catch (NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    private static string ResolveLogDirectoryCandidate(string directory)
+    {
+        var trimmed = directory.Trim();
+        if (Path.IsPathRooted(trimmed))
+        {
+            return trimmed;
+        }
+
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, trimmed));
     }
 
     /// <summary>

@@ -67,11 +67,17 @@ namespace EasySave.UI.Menu
 
         public MenuConfig CreateParamsMenu()
         {
-            LocalizationKey[] items = { LocalizationKey.menu_params_locale, LocalizationKey.back };
+            LocalizationKey[] items =
+            {
+                LocalizationKey.menu_params_locale,
+                LocalizationKey.menu_params_log_path,
+                LocalizationKey.back
+            };
             Dictionary<int, Action> actions = new()
             {
                 { 0, _consoleUI.ShowChangeLocale },
-                { 1, _consoleUI.MainMenu }
+                { 1, _consoleUI.ShowChangeLogDirectory },
+                { 2, _consoleUI.MainMenu }
             };
 
             return new MenuConfig(items, actions, LocalizationKey.menu_params);

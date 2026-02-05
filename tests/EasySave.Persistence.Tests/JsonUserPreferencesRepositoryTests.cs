@@ -1,4 +1,5 @@
 using EasySave.Configuration;
+using EasySave.Persistence;
 using Moq;
 
 namespace EasySave.Persistence.Tests;
@@ -146,6 +147,21 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         Assert.Equal("fr", preferences.Language);
     }
 
+    [Fact]
+    public void Load_WhenLogDirectoryIsMissing_ReturnsNull()
+    {
+        // Arrange
+        File.WriteAllText(_testFilePath, "{\"language\": \"en\"}");
+        var repo = CreateRepository();
+
+        // Act
+        var preferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(preferences);
+        Assert.Null(preferences.LogDirectory);
+    }
+
     #endregion
 
     #region Save Tests
@@ -231,6 +247,26 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
     #endregion
 
     #region Integration Tests
+
+    [Fact]
+    public void SaveAndLoad_PersistsLogDirectory()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        var preferences = new UserPreferences
+        {
+            Language = "en",
+            LogDirectory = "/tmp/easysave-logs"
+        };
+
+        // Act
+        repo.Save(preferences);
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Equal("/tmp/easysave-logs", loadedPreferences.LogDirectory);
+    }
 
     [Fact]
     public void Load_AfterSave_ReturnsPersistedData()

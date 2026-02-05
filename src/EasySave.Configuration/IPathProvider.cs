@@ -6,5 +6,6 @@ namespace EasySave.Configuration
         string GetStatePath();
         string GetJobsConfigPath();
         string GetUserPreferencesPath();
+        void SetLogDirectoryOverride(string? directory);
     }
 }

@@ -29,7 +29,8 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     {
         if (Count() >= _maxJobs) 
         {
-            var e = new InvalidOperationException("error_add_max");
+            var e = new InvalidOperationException($"Cannot add more than {_maxJobs} jobs.");
+            e.Data["errorKey"] = "error_add_max";
             e.Data["max_jobs"] = _maxJobs;
             throw e;
         }
@@ -41,7 +42,8 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
 
         if (_jobs.ContainsKey(job.Id))
         {
-            var e = new InvalidOperationException("error_add_exists");
+            var e = new InvalidOperationException($"Job with ID {job.Id} already exists.");
+            e.Data["errorKey"] = "error_add_exists";
             e.Data["job_id"] = job.Id;
             throw e;
         }
@@ -54,7 +56,8 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     {
         if (!_jobs.Remove(id))
         {
-            var e = new KeyNotFoundException("error_job_not_found");
+            var e = new KeyNotFoundException($"Job with ID {id} not found");
+            e.Data["errorKey"] = "error_job_not_found";
             e.Data["job_id"] = id;
             throw e;
         }
@@ -66,7 +69,8 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     {
         if (!_jobs.TryGetValue(id, out var job))
         {
-            var e = new KeyNotFoundException("error_job_not_found");
+            var e = new KeyNotFoundException($"Job with ID {id} not found");
+            e.Data["errorKey"] = "error_job_not_found";
             e.Data["job_id"] = id;
             throw e;
         }
@@ -97,7 +101,8 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     {
         if (!_jobs.ContainsKey(job.Id))
         {
-            var e = new KeyNotFoundException("error_job_not_found");
+            var e = new KeyNotFoundException($"Job with ID {job.Id} not found");
+            e.Data["errorKey"] = "error_job_not_found";
             e.Data["job_id"] = job.Id;
             throw e;
         }
