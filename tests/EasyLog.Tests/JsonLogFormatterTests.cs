@@ -1,5 +1,6 @@
 using System.Text.Json;
-using EasySave.Log;
+using LogEntry = EasySave.Log.LogEntry;
+using LogEventType = EasySave.Log.LogEventType;
 
 namespace EasyLog.Tests;
 

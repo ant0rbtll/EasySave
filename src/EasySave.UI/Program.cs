@@ -1,4 +1,3 @@
-﻿using System.Reflection;
 using EasySave.Application;
 using EasySave.Persistence;
 using EasySave.Backup;
@@ -73,29 +72,15 @@ public class Program
 
     private static ILogger CreateLogger(IPathProvider pathProvider)
     {
-        // Optional plugin: if EasyLog.dll is present, load it; otherwise fall back to NoOpLogger.
-        var easyLogPath = Path.Combine(AppContext.BaseDirectory, "EasyLog.dll");
-        if (!File.Exists(easyLogPath))
-            return new NoOpLogger();
-
         try
         {
-            var assembly = Assembly.LoadFrom(easyLogPath);
-
-            // Expected EasyLog types (string-based reflection is brittle; keep names in sync).
-            var formatterType = assembly.GetType("EasyLog.JsonLogFormatter", throwOnError: false);
-            var loggerType = assembly.GetType("EasyLog.DailyFileLogger", throwOnError: false);
-            if (formatterType is null || loggerType is null)
-                return new NoOpLogger();
-
-            var formatter = Activator.CreateInstance(formatterType!);
-            var logger = Activator.CreateInstance(
-                loggerType!,
+            var formatter = new EasyLog.JsonLogFormatter();
+            var logger = new EasyLog.DailyFileLogger(
                 formatter,
                 pathProvider,
                 EasyLogDailyFileMutexName);
 
-            return logger as ILogger ?? new NoOpLogger();
+            return logger;
         }
         catch (Exception ex)
         {

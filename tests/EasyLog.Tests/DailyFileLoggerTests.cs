@@ -1,10 +1,11 @@
 using System.Text.Json;
-using EasySave.Log;
 using EasySave.Backup;
 using EasySave.Configuration;
 using EasySave.Core;
 using EasySave.State;
 using EasySave.System;
+using LogEntry = EasySave.Log.LogEntry;
+using LogEventType = EasySave.Log.LogEventType;
 
 namespace EasyLog.Tests;
 

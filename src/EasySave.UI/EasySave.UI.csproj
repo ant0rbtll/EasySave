@@ -5,7 +5,6 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <!-- Keep single-file publish off so optional EasyLog.dll can be loaded from disk at runtime. -->
     <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
 
@@ -25,19 +24,5 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
 
 	</ItemGroup>
-
-	<Target Name="CopyEasyLogToOutput" AfterTargets="Build">
-		<ItemGroup>
-			<_EasyLogDll Include="$(MSBuildProjectDirectory)\..\EasyLog\bin\$(Configuration)\$(TargetFramework)\EasyLog.dll" />
-		</ItemGroup>
-		<Copy SourceFiles="@(_EasyLogDll)" DestinationFolder="$(OutputPath)" SkipUnchangedFiles="true" />
-	</Target>
-
-	<Target Name="CopyEasyLogToPublish" AfterTargets="Publish">
-		<ItemGroup>
-			<_EasyLogDll Include="$(MSBuildProjectDirectory)\..\EasyLog\bin\$(Configuration)\$(TargetFramework)\EasyLog.dll" />
-		</ItemGroup>
-		<Copy SourceFiles="@(_EasyLogDll)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
-	</Target>
 
 </Project>
