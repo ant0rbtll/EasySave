@@ -32,6 +32,18 @@ public class DefaultPathProviderFallbackTests
             {
                 File.Delete(tempFile);
             }
+
+            var expectedDir = Path.Combine(AppContext.BaseDirectory, "logs");
+            var expectedPath = Path.Combine(expectedDir, $"{date:yyyy-MM-dd}.json");
+            if (File.Exists(expectedPath))
+            {
+                File.Delete(expectedPath);
+            }
+
+            if (Directory.Exists(expectedDir))
+            {
+                Directory.Delete(expectedDir, recursive: true);
+            }
         }
     }
 }

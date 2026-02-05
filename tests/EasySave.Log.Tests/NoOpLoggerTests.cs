@@ -62,6 +62,7 @@ public class NoOpLoggerTests
             }));
         }
 
+        // Test passes if no exception is thrown during concurrent writes.
         Task.WaitAll(tasks.ToArray());
     }
 }
