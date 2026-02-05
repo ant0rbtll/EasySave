@@ -86,6 +86,7 @@ public class ConsoleUI
             ShowMessageParam(key,
                 e.Data.Keys
                 .Cast<string>()
+                .Where(k => !string.Equals(k, "errorKey", StringComparison.Ordinal))
                 .OrderBy(k => k)
                 .Select(k => e.Data[k]?.ToString() ?? string.Empty)
                 .ToArray()
