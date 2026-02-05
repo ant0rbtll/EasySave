@@ -41,7 +41,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
         if (all.Count >= _maxJobs)
         {
             var e = new InvalidOperationException("error_add_max");
-            e.Data["maxJobs"] = _maxJobs;
+            e.Data["max_jobs"] = _maxJobs;
             throw e;
         }
 
@@ -71,7 +71,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
         if (job == null)
         {
             var e = new KeyNotFoundException("error_job_not_found");
-            e.Data["jobId"] = id;
+            e.Data["job_id"] = id;
             throw e;
         }
 
@@ -114,7 +114,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
         if (existing == null)
         {
             var e = new KeyNotFoundException("error_job_not_found");
-            e.Data["jobId"] = job.Id;
+            e.Data["job_id"] = job.Id;
             throw e;
         }
 

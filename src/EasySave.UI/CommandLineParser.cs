@@ -17,7 +17,6 @@ namespace EasySave.UI
             if (args == null || args.Length == 0)
             {
                 throw new ArgumentException("error_parser_arg_null");
-                
             }
             string input = args[0];
             List<int> numbers = new List<int>();

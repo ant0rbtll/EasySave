@@ -27,12 +27,12 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     /// </exception>
     public void Add(BackupJob job)
     {
-        if (Count() >= _maxJobs) {
+        if (Count() >= _maxJobs) 
+        {
             var e = new InvalidOperationException("error_add_max");
-            e.Data["maxJobs"] = _maxJobs;
+            e.Data["max_jobs"] = _maxJobs;
             throw e;
         }
-
 
         if (job.Id == 0)
         {
@@ -55,7 +55,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
         if (!_jobs.Remove(id))
         {
             var e = new KeyNotFoundException("error_job_not_found");
-            e.Data["jobId"] = id;
+            e.Data["job_id"] = id;
             throw e;
         }
     }
@@ -67,7 +67,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
         if (!_jobs.TryGetValue(id, out var job))
         {
             var e = new KeyNotFoundException("error_job_not_found");
-            e.Data["jobId"] = id;
+            e.Data["job_id"] = id;
             throw e;
         }
         return job;
@@ -98,7 +98,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
         if (!_jobs.ContainsKey(job.Id))
         {
             var e = new KeyNotFoundException("error_job_not_found");
-            e.Data["jobId"] = job.Id;
+            e.Data["job_id"] = job.Id;
             throw e;
         }
         _jobs[job.Id] = job;

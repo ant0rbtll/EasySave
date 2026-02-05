@@ -71,7 +71,7 @@ public class ConsoleUI
             e.Data.Keys
             .Cast<string>()
             .OrderBy(k => k)
-            .Select(k => e.Data[k]?.ToString())
+            .Select(k => e.Data[k]?.ToString() ?? string.Empty)
             .ToArray()
         );
         Console.ResetColor();

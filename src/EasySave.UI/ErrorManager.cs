@@ -9,7 +9,7 @@ namespace EasySave.UI
 {
     internal class ErrorManager
     {
-        private Dictionary<string, LocalizationKey> errors;
+        private readonly Dictionary<string, LocalizationKey> errors;
 
         public ErrorManager()
         {
@@ -35,7 +35,7 @@ namespace EasySave.UI
         public LocalizationKey getMessage(string message)
         {
             try { return errors[message]; }
-            catch
+            catch (Exception)
             {
                 return errors["error_default"];
             }
