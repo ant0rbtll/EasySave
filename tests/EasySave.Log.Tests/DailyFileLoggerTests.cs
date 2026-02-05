@@ -2,6 +2,7 @@ using System.Text.Json;
 using EasyLog;
 using EasySave.Configuration;
 using EasySave.Log;
+using Moq;
 
 namespace EasySave.Log.Tests;
 
@@ -11,13 +12,12 @@ public class DailyFileLoggerTests
     public void Write_CreatesLogFileAndAppendsEntries()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
-
         var timestamp = new DateTime(2026, 2, 5, 10, 11, 12, DateTimeKind.Unspecified);
+        var expectedDate = DateTime.SpecifyKind(timestamp, DateTimeKind.Utc).Date;
+        var logPath = GetLogPath(tempDir, expectedDate);
+
+        using var logger = CreateLogger(tempDir, logPath, out var pathProviderMock, out var formatterMock);
+
         var entry1 = new LogEntry(
             timestamp,
             "JobA",
@@ -31,10 +31,9 @@ public class DailyFileLoggerTests
         logger.Write(entry1);
         logger.Write(entry2);
 
-        var path = pathProvider.GetDailyLogPath(DateTime.SpecifyKind(timestamp, DateTimeKind.Utc).Date);
-        Assert.True(File.Exists(path));
+        Assert.True(File.Exists(logPath));
 
-        var entries = ReadLogEntries(path);
+        var entries = ReadLogEntries(logPath);
         Assert.Equal(2, entries.Count);
 
         var logged = entries.Single(e => e.BackupName == "JobA");
@@ -44,17 +43,21 @@ public class DailyFileLoggerTests
         Assert.Equal(DateTimeKind.Utc, logged.Timestamp.Kind);
         Assert.Equal("C:\\Source", logged.SourcePathUNC);
         Assert.Equal("D:\\Dest", logged.DestinationPathUNC);
+
+        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate), Times.Exactly(2));
+        formatterMock.Verify(f => f.Format(It.Is<LogEntry>(e =>
+            e.Timestamp == expectedTimestamp &&
+            e.SourcePathUNC == "C:\\Source" &&
+            e.DestinationPathUNC == "D:\\Dest")), Times.Once);
     }
 
     [Fact]
     public void Write_ThrowsOnNullEntry()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
+        var logPath = GetLogPath(tempDir, new DateTime(2026, 2, 5));
+
+        using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
         Assert.Throws<ArgumentNullException>(() => logger.Write(null!));
     }
@@ -63,16 +66,12 @@ public class DailyFileLoggerTests
     public void Write_AppendsToExistingEmptyArrayFile()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
-
         var date = new DateTime(2026, 2, 5);
-        var path = pathProvider.GetDailyLogPath(date);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, "[]");
+        var logPath = GetLogPath(tempDir, date);
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+        File.WriteAllText(logPath, "[]");
+
+        using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 10, 0, 0, DateTimeKind.Utc),
@@ -85,7 +84,7 @@ public class DailyFileLoggerTests
 
         logger.Write(entry);
 
-        var entries = ReadLogEntries(path);
+        var entries = ReadLogEntries(logPath);
         Assert.Single(entries);
         Assert.Equal("JobEmpty", entries[0].BackupName);
     }
@@ -94,16 +93,9 @@ public class DailyFileLoggerTests
     public void Write_AppendsToExistingArrayWithEntry()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        var formatter = new JsonLogFormatter();
-        using var logger = new DailyFileLogger(
-            formatter,
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
-
         var date = new DateTime(2026, 2, 5);
-        var path = pathProvider.GetDailyLogPath(date);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var logPath = GetLogPath(tempDir, date);
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
 
         var first = new LogEntry(
             new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
@@ -113,14 +105,16 @@ public class DailyFileLoggerTests
             "dst",
             1,
             1);
-        var firstJson = formatter.Format(first);
+        var firstJson = SerializeEntry(first);
 
-        File.WriteAllText(path, "[\n" + IndentBlock(firstJson, 2) + "\n]\n");
+        File.WriteAllText(logPath, "[\n" + IndentBlock(firstJson, 2) + "\n]\n");
+
+        using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
         var second = first with { BackupName = "JobSecond", FileSizeBytes = 42 };
         logger.Write(second);
 
-        var entries = ReadLogEntries(path);
+        var entries = ReadLogEntries(logPath);
         Assert.Equal(2, entries.Count);
         Assert.Contains(entries, e => e.BackupName == "JobFirst");
         Assert.Contains(entries, e => e.BackupName == "JobSecond");
@@ -130,16 +124,12 @@ public class DailyFileLoggerTests
     public void Write_CreatesValidArrayWhenFileIsEmpty()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
-
         var date = new DateTime(2026, 2, 5);
-        var path = pathProvider.GetDailyLogPath(date);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        File.WriteAllText(path, string.Empty);
+        var logPath = GetLogPath(tempDir, date);
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+        File.WriteAllText(logPath, string.Empty);
+
+        using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 11, 0, 0, DateTimeKind.Utc),
@@ -152,7 +142,7 @@ public class DailyFileLoggerTests
 
         logger.Write(entry);
 
-        var entries = ReadLogEntries(path);
+        var entries = ReadLogEntries(logPath);
         Assert.Single(entries);
         Assert.Equal("JobEmptyFile", entries[0].BackupName);
     }
@@ -161,16 +151,9 @@ public class DailyFileLoggerTests
     public void Write_ThrowsWhenFileIsCorrupted()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        var formatter = new JsonLogFormatter();
-        using var logger = new DailyFileLogger(
-            formatter,
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
-
         var date = new DateTime(2026, 2, 5);
-        var path = pathProvider.GetDailyLogPath(date);
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        var logPath = GetLogPath(tempDir, date);
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
@@ -180,9 +163,11 @@ public class DailyFileLoggerTests
             "dst",
             0,
             0);
-        var entryJson = formatter.Format(entry);
+        var entryJson = SerializeEntry(entry);
 
-        File.WriteAllText(path, "[\n" + IndentBlock(entryJson, 2) + "\n");
+        File.WriteAllText(logPath, "[\n" + IndentBlock(entryJson, 2) + "\n");
+
+        using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
         Assert.Throws<InvalidOperationException>(() => logger.Write(entry));
     }
@@ -191,11 +176,10 @@ public class DailyFileLoggerTests
     public void Write_NormalizesSlashesAndTrimsWhitespace()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
+        var date = new DateTime(2026, 2, 5);
+        var logPath = GetLogPath(tempDir, date);
+
+        using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 12, 0, 0, DateTimeKind.Utc),
@@ -208,8 +192,7 @@ public class DailyFileLoggerTests
 
         logger.Write(entry);
 
-        var path = pathProvider.GetDailyLogPath(entry.Timestamp.Date);
-        var logged = ReadLogEntries(path).Single();
+        var logged = ReadLogEntries(logPath).Single();
 
         Assert.Equal("\\a\\b", logged.SourcePathUNC);
         Assert.Equal("c:\\d\\e", logged.DestinationPathUNC);
@@ -219,13 +202,11 @@ public class DailyFileLoggerTests
     public void Write_ConvertsLocalTimeToUtc()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
-
         var local = DateTime.SpecifyKind(new DateTime(2026, 2, 5, 8, 0, 0), DateTimeKind.Local);
+        var logPath = GetLogPath(tempDir, local.ToUniversalTime().Date);
+
+        using var logger = CreateLogger(tempDir, logPath, out var pathProviderMock, out _);
+
         var entry = new LogEntry(
             local,
             "JobLocal",
@@ -237,18 +218,19 @@ public class DailyFileLoggerTests
 
         logger.Write(entry);
 
-        var path = pathProvider.GetDailyLogPath(local.ToUniversalTime().Date);
-        var logged = ReadLogEntries(path).Single();
+        var logged = ReadLogEntries(logPath).Single();
 
         Assert.Equal(local.ToUniversalTime(), logged.Timestamp);
         Assert.Equal(DateTimeKind.Utc, logged.Timestamp.Kind);
+        pathProviderMock.Verify(p => p.GetDailyLogPath(local.ToUniversalTime().Date), Times.Once);
     }
 
     [Fact]
     public void Write_ThrowsTimeoutWhenMutexIsHeld()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
+        var date = new DateTime(2026, 2, 5);
+        var logPath = GetLogPath(tempDir, date);
         var mutexName = $"EasySaveLogTests_{Guid.NewGuid():N}";
 
         using var acquired = new ManualResetEventSlim(false);
@@ -266,10 +248,7 @@ public class DailyFileLoggerTests
         holder.Start();
         Assert.True(acquired.Wait(TimeSpan.FromSeconds(2)));
 
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: mutexName);
+        using var logger = CreateLogger(tempDir, logPath, out _, out _, mutexName: mutexName);
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 12, 0, 0, DateTimeKind.Utc),
@@ -291,13 +270,12 @@ public class DailyFileLoggerTests
     public void Write_UsesUtcDateForDailyLogPath()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
-
         var local = DateTime.SpecifyKind(new DateTime(2026, 2, 5, 23, 30, 0), DateTimeKind.Local);
+        var expectedDate = local.ToUniversalTime().Date;
+        var logPath = GetLogPath(tempDir, expectedDate);
+
+        using var logger = CreateLogger(tempDir, logPath, out var pathProviderMock, out _);
+
         var entry = new LogEntry(
             local,
             "JobDate",
@@ -309,19 +287,18 @@ public class DailyFileLoggerTests
 
         logger.Write(entry);
 
-        var expectedPath = pathProvider.GetDailyLogPath(local.ToUniversalTime().Date);
-        Assert.True(File.Exists(expectedPath));
+        Assert.True(File.Exists(logPath));
+        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate), Times.Once);
     }
 
     [Fact]
     public void Write_DoesNotWriteUtf8Bom()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
+        var date = new DateTime(2026, 2, 5);
+        var logPath = GetLogPath(tempDir, date);
+
+        using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 12, 0, 0, DateTimeKind.Utc),
@@ -334,8 +311,7 @@ public class DailyFileLoggerTests
 
         logger.Write(entry);
 
-        var path = pathProvider.GetDailyLogPath(entry.Timestamp.Date);
-        var bytes = File.ReadAllBytes(path);
+        var bytes = File.ReadAllBytes(logPath);
         var hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
         Assert.False(hasBom);
     }
@@ -344,11 +320,10 @@ public class DailyFileLoggerTests
     public void Write_AppendsManyEntriesKeepsValidJsonArray()
     {
         using var tempDir = new TempDirectory();
-        var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(
-            new JsonLogFormatter(),
-            pathProvider,
-            mutexName: $"EasySaveLogTests_{Guid.NewGuid():N}");
+        var date = new DateTime(2026, 2, 5);
+        var logPath = GetLogPath(tempDir, date);
+
+        using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
         var ts = new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc);
         for (int i = 0; i < 50; i++)
@@ -364,16 +339,52 @@ public class DailyFileLoggerTests
             logger.Write(entry);
         }
 
-        var path = pathProvider.GetDailyLogPath(ts.Date);
-        var entries = ReadLogEntries(path);
+        var entries = ReadLogEntries(logPath);
         Assert.Equal(50, entries.Count);
     }
+
+    private static DailyFileLogger CreateLogger(
+        TempDirectory tempDir,
+        string logPath,
+        out Mock<IPathProvider> pathProviderMock,
+        out Mock<ILogFormatter> formatterMock,
+        string? mutexName = null)
+    {
+        pathProviderMock = new Mock<IPathProvider>();
+        pathProviderMock
+            .Setup(p => p.GetDailyLogPath(It.IsAny<DateTime>()))
+            .Returns(logPath);
+
+        formatterMock = new Mock<ILogFormatter>();
+        formatterMock
+            .Setup(f => f.Format(It.IsAny<LogEntry>()))
+            .Returns<LogEntry>(SerializeEntry);
+
+        return new DailyFileLogger(
+            formatterMock.Object,
+            pathProviderMock.Object,
+            mutexName: mutexName ?? $"EasySaveLogTests_{Guid.NewGuid():N}");
+    }
+
+    private static string GetLogPath(TempDirectory tempDir, DateTime date)
+        => Path.Combine(tempDir.Path, $"{date:yyyy-MM-dd}.json");
 
     private static List<LogEntry> ReadLogEntries(string path)
     {
         var json = File.ReadAllText(path);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         return JsonSerializer.Deserialize<List<LogEntry>>(json, options) ?? [];
+    }
+
+    private static string SerializeEntry(LogEntry entry)
+    {
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        return JsonSerializer.Serialize(entry, options);
     }
 
     private static string IndentBlock(string text, int spaces)
@@ -385,29 +396,6 @@ public class DailyFileLoggerTests
             lines[i] = indent + lines[i];
 
         return string.Join(Environment.NewLine, lines);
-    }
-
-    private sealed class TestPathProvider : IPathProvider
-    {
-        private readonly string _baseDir;
-
-        public TestPathProvider(string baseDir)
-        {
-            _baseDir = baseDir;
-        }
-
-        public string GetDailyLogPath(DateTime date)
-            => Path.Combine(_baseDir, $"{date:yyyy-MM-dd}.json");
-
-        public string GetStatePath() => Path.Combine(_baseDir, "state.json");
-
-        public string GetJobsConfigPath() => Path.Combine(_baseDir, "jobs.json");
-
-        public string GetUserPreferencesPath() => Path.Combine(_baseDir, "prefs.json");
-
-        public void SetLogDirectoryOverride(string? directory)
-        {
-        }
     }
 
     private sealed class TempDirectory : IDisposable
