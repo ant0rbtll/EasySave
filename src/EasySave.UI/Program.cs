@@ -62,7 +62,7 @@ public class Program
         services.AddSingleton<CommandLineParser>();
 
         // Setup application service
-        services.AddSingleton<BackupAppService>();
+        services.AddSingleton<BackupApplicationService>();
 
         // Setup and run UI
         services.AddSingleton<ConsoleUI>();

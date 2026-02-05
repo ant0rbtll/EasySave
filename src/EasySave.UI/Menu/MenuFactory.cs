@@ -6,21 +6,16 @@ using EasySave.Application;
 
 namespace EasySave.UI.Menu
 {
-    internal class MenuFactory
+    internal class MenuFactory(ConsoleUI consoleUI, BackupApplicationService backupApplicationService)
     {
-        private readonly ConsoleUI _consoleUI;
-        private readonly BackupAppService _backupAppService;
-
-        public MenuFactory(ConsoleUI consoleUI, BackupAppService backupAppService)
-        {
-            _consoleUI = consoleUI;
-            _backupAppService = backupAppService;
-        }
+        private readonly ConsoleUI _consoleUI = consoleUI;
+        private readonly BackupApplicationService _backupApplicationService = backupApplicationService;
+        //private readonly BackupApplicationService backupApplicationService;
 
         public MenuConfig CreateMainMenu()
         {
             const int maxJobs = 5;
-            int currentJobCount = _backupAppService.GetAllJobs().Count;
+            int currentJobCount = _backupApplicationService.GetAllJobs().Count;
             bool hasJobs = currentJobCount > 0;
             bool canCreateJob = currentJobCount < maxJobs;
 
@@ -85,7 +80,7 @@ namespace EasySave.UI.Menu
 
         public MenuConfig CreateJobsListMenu()
         {
-            var jobs = _backupAppService.GetAllJobs();
+            var jobs = _backupApplicationService.GetAllJobs();
             var items = new List<string>();
             var actions = new Dictionary<int, Action>();
 

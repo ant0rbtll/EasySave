@@ -5,17 +5,17 @@ using EasySave.Core;
 
 namespace EasySave.Application.Tests;
 
-public class BackupAppServiceTests
+public class BackupApplicationServiceTests
 {
     private readonly Mock<IBackupJobRepository> _repoMock;
     private readonly Mock<IBackupEngine> _engineMock;
-    private readonly BackupAppService _service;
+    private readonly BackupApplicationService _service;
 
-    public BackupAppServiceTests()
+    public BackupApplicationServiceTests()
     {
         _repoMock = new Mock<IBackupJobRepository>();
         _engineMock = new Mock<IBackupEngine>();
-        _service = new BackupAppService(_repoMock.Object, _engineMock.Object);
+        _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object);
     }
 
     /// <summary>
@@ -207,13 +207,14 @@ public class BackupAppServiceTests
     }
 
     /// <summary>
-    /// Verifies that the service does not throw an exception when updating a null object.
+    /// Verifies that the service forwards a null job to the repository without intercepting it.
     /// </summary>
     [Fact]
-    public void UpdateJob_WithNullJob_ShouldNotThrowException()
+    public void UpdateJob_WithNullJob_ShouldForwardToRepository()
     {
-        var exception = Record.Exception(() => _service.UpdateJob(null!));
-        Assert.Null(exception);
+        _service.UpdateJob(null!);
+
+        _repoMock.Verify(r => r.Update(null!), Times.Once);
     }
 
     /// <summary>

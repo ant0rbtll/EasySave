@@ -5,11 +5,11 @@ using EasySave.Core;
 namespace EasySave.Application;
 
 /// <summary>
-/// Initializes a new instance of the <see cref="BackupAppService"/> class.
+/// Initializes a new instance of the <see cref="BackupApplicationService"/> class.
 /// </summary>
 /// <param name="repo">The repository used for data persistence.</param>
 /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
-public class BackupAppService(IBackupJobRepository repo, IBackupEngine backupEngine)
+public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine backupEngine)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;

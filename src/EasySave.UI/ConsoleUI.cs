@@ -13,7 +13,7 @@ namespace EasySave.UI;
 public class ConsoleUI
 {
 
-    private readonly BackupAppService _backupAppService;
+    private readonly BackupApplicationService _backupApplicationService;
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly UserPreferences _userPreferences;
     private readonly IPathProvider _pathProvider;
@@ -23,13 +23,9 @@ public class ConsoleUI
     private readonly CommandLineParser _parser;
     private readonly ErrorManager _errorManager;
 
-    public ConsoleUI(
-        BackupAppService backupAppService,
-        IUserPreferencesRepository preferencesRepository,
-        IPathProvider pathProvider,
-        CommandLineParser parser)
+    public ConsoleUI(BackupApplicationService backupApplicationService, IUserPreferencesRepository preferencesRepository, IPathProvider pathProvider, CommandLineParser parser)
     {
-        _backupAppService = backupAppService;
+        _backupApplicationService = backupApplicationService;
         _preferencesRepository = preferencesRepository;
         _pathProvider = pathProvider;
         LocalizationService = new LocalizationService();
@@ -51,7 +47,7 @@ public class ConsoleUI
         LocalizationService.Culture = language;
 
         _menuService = new MenuService(LocalizationService);
-        _menuFactory = new MenuFactory(this, _backupAppService);
+        _menuFactory = new MenuFactory(this, _backupApplicationService);
     }
 
     /// <inheritdoc />
@@ -247,7 +243,7 @@ public class ConsoleUI
         // send to service
         try
         {
-            _backupAppService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
+            _backupApplicationService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
             ShowMessage(LocalizationKey.backupjob_created);
         }
         catch (Exception e)
@@ -265,7 +261,7 @@ public class ConsoleUI
     {
         try
         {
-            List<BackupJob> backupJobList = _backupAppService.GetAllJobs();
+            List<BackupJob> backupJobList = _backupApplicationService.GetAllJobs();
             foreach (BackupJob job in backupJobList)
             {
                 Console.WriteLine(job.Id + " - " + job.Name);
@@ -305,7 +301,7 @@ public class ConsoleUI
             if (backupIndex == null) { MainMenu(); return; }
             try
             {
-                BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+                BackupJob? job = _backupApplicationService.GetJobById(backupIndex.Value);
                 if (job == null)
                 {
                     ShowMessage(LocalizationKey.backupjob_id_not_found);
@@ -313,7 +309,7 @@ public class ConsoleUI
                 }
 
                 ShowMessage(LocalizationKey.backup_saving);
-                _backupAppService.RunJobById(backupIndex.Value);
+                _backupApplicationService.RunJobById(backupIndex.Value);
             }
             catch (Exception ex)
             {
@@ -342,13 +338,13 @@ public class ConsoleUI
 
             try
             {
-                BackupJob? job = _backupAppService.GetJobById(backupIndex.Value);
+                BackupJob? job = _backupApplicationService.GetJobById(backupIndex.Value);
                 if (job == null)
                 {
                     ShowMessage(LocalizationKey.backupjob_id_not_found);
                     continue;
                 }
-                _backupAppService.RemoveJob(backupIndex.Value);
+                _backupApplicationService.RemoveJob(backupIndex.Value);
                 ShowMessage(LocalizationKey.backupjob_deleted);
                 break;
             }
@@ -591,7 +587,7 @@ public class ConsoleUI
         ShowMessage(LocalizationKey.backupjob_running);
         try
         {
-            _backupAppService.RunJobById(job.Id);
+            _backupApplicationService.RunJobById(job.Id);
             ShowMessage(LocalizationKey.backupjob_completed);
         }
         catch (Exception ex)
@@ -651,7 +647,7 @@ public class ConsoleUI
     {
         try
         {
-            _backupAppService.UpdateJob(job);
+            _backupApplicationService.UpdateJob(job);
             ShowMessage(LocalizationKey.backupjob_updated);
         }
         catch (Exception e)
@@ -680,7 +676,7 @@ public class ConsoleUI
         {
             try
             {
-                _backupAppService.RemoveJob(job.Id);
+                _backupApplicationService.RemoveJob(job.Id);
             }
             catch (Exception ex)
             {
@@ -705,7 +701,7 @@ public class ConsoleUI
         try
         {
             var jobs = _parser.Parse(args);
-            _backupAppService.RunJobsByIds(jobs);
+            _backupApplicationService.RunJobsByIds(jobs);
         }
         catch (Exception e)
         {
