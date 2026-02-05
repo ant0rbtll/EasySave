@@ -6,7 +6,7 @@
 
 Logiciel professionnel de sauvegarde développé par ProSoft. Créez et gérez des sauvegardes complètes et différentielles avec une interface CLI multilingue.
 
-> Pour les détails techniques complets : [CHANGELOG.md](changeLog.md)
+> Historique technique et détails d'implémentation : [CHANGELOG.md](CHANGELOG.md)
 
 ---
 
@@ -77,21 +77,52 @@ dotnet run --project src/EasySave.UI
 ## Utilisation
 
 ### Mode Interactif
+Lancez l'application sans arguments pour accéder au menu interactif :
 ```bash
 ./EasySave
 ```
-Navigation au clavier pour créer, exécuter et gérer les travaux.
+
+**Navigation** : Utilisez les flèches haut/bas pour naviguer dans les menus, Entrée pour valider.
+
+**Actions disponibles** :
+- Créer un nouveau travail (nom, source, destination, type)
+- Lancer un ou plusieurs travaux
+- Consulter la liste des travaux
+- Modifier un travail existant
+- Supprimer un travail
+- Changer la langue (FR/EN)
 
 ### Mode Ligne de Commande
+Exécutez des travaux directement sans interaction :
 ```bash
-./EasySave 1        # Travail 1
-./EasySave 1;3;5    # Travaux 1, 3, 5
-./EasySave 1-3      # Travaux 1, 2, 3
+./EasySave 1        # Exécute le travail ID 1
+./EasySave 1;3;5    # Exécute les travaux 1, 3 et 5
+./EasySave 1-3      # Exécute les travaux 1, 2 et 3
 ```
 
-### Fichiers de Configuration
-- **Windows** : `%APPDATA%/ProSoft/EasySave/`
-- **Linux/macOS** : `~/.config/ProSoft/EasySave/`
+### Exemple Complet
+```bash
+# 1. Lancer en mode interactif
+./EasySave
+
+# 2. Créer un travail "Documents"
+#    - Source: C:\Users\John\Documents
+#    - Destination: D:\Backups\Documents
+#    - Type: Différentielle
+
+# 3. Exécuter via CLI
+./EasySave 1
+```
+
+### Fichiers Générés
+- **Travaux** : `jobs.json` - Configuration des travaux
+- **Logs** : `logs/log-2026-02-05.json` - Historique journalier
+- **État** : `state.json` - Progression en temps réel
+- **Préférences** : `preferences.json` - Langue et configuration
+
+**Emplacements** :
+- Windows : `%APPDATA%/ProSoft/EasySave/`
+- Linux/macOS : `~/.config/ProSoft/EasySave/`
 
 ---
 
@@ -105,7 +136,7 @@ Navigation au clavier pour créer, exécuter et gérer les travaux.
 - [Classes](docs/classes.puml) • [Séquence](docs/sequence.puml) • [Activité](docs/activity.puml) • [Cas d'utilisation](docs/usecase.puml)
 
 ### Changelog
-[CHANGELOG.md](changeLog.md) - Historique complet avec architecture et détails techniques
+[CHANGELOG.md](CHANGELOG.md) - Historique technique des versions
 
 ---
 
