@@ -134,5 +134,6 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         public string GetStatePath() => throw new NotImplementedException();
         public string GetJobsConfigPath() => throw new NotImplementedException();
         public string GetUserPreferencesPath() => _preferencesPath;
+        public void SetLogDirectoryOverride(string? directory) { }
     }
 }

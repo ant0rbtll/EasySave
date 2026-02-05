@@ -226,5 +226,6 @@ public class JsonBackupJobRepositoryTests : IDisposable
         public string GetStatePath() => throw new NotImplementedException();
         public string GetJobsConfigPath() => _jobsPath;
         public string GetUserPreferencesPath() => throw new NotImplementedException();
+        public void SetLogDirectoryOverride(string? directory) { }
     }
 }

@@ -35,5 +35,10 @@ public class FakePathProvider(string? statePath = null) : IPathProvider
     {
         return "unused_preferences.json";
     }
+
+    public void SetLogDirectoryOverride(string? directory)
+    {
+        // No-op for tests.
+    }
     #endregion
 }
