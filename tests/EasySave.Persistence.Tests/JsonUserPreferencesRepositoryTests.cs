@@ -211,7 +211,8 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         Assert.NotNull(loadedPreferences);
         Assert.Equal("es", loadedPreferences.Language);
     }
-    rivate class TestPathProvider : IPathProvider
+        // Helper class for tests
+    private class TestPathProvider : IPathProvider
     {
         private readonly string _preferencesPath;
 
@@ -224,8 +225,8 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         public string GetStatePath() => throw new NotImplementedException();
         public string GetJobsConfigPath() => throw new NotImplementedException();
         public string GetUserPreferencesPath() => _preferencesPath;
+        public void SetLogDirectoryOverride(string? directory) { }
     }
-
     [Fact]
     public void Save_UsesCorrectJsonFormat()
     {
