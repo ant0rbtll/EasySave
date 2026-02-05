@@ -78,11 +78,146 @@ public class DailyFileLoggerUnitTests
         Assert.Equal("JobAppend", entries[0].BackupName);
     }
 
+    [Fact]
+    public void Write_CreatesValidArrayWhenFileIsEmpty()
+    {
+        using var tempDir = new TempDirectory();
+        var date = new DateTime(2026, 2, 5);
+        var pathProvider = new TestPathProvider(tempDir.Path);
+        var logPath = pathProvider.GetDailyLogPath(date);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+        File.WriteAllText(logPath, string.Empty);
+
+        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+
+        var entry = new EasySave.Log.LogEntry(
+            new DateTime(2026, 2, 5, 11, 0, 0, DateTimeKind.Utc),
+            "JobEmptyFile",
+            LogEventType.TransferFile,
+            "src",
+            "dst",
+            2,
+            3);
+
+        logger.Write(entry);
+
+        var entries = ReadLogEntries(logPath);
+        Assert.Single(entries);
+        Assert.Equal("JobEmptyFile", entries[0].BackupName);
+    }
+
+    [Fact]
+    public void Write_AppendsToExistingArrayWithEntry()
+    {
+        using var tempDir = new TempDirectory();
+        var date = new DateTime(2026, 2, 5);
+        var pathProvider = new TestPathProvider(tempDir.Path);
+        var logPath = pathProvider.GetDailyLogPath(date);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+
+        var first = new EasySave.Log.LogEntry(
+            new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
+            "JobFirst",
+            LogEventType.TransferFile,
+            "src",
+            "dst",
+            1,
+            1);
+
+        File.WriteAllText(logPath, "[\n" + IndentBlock(SerializeEntry(first), 2) + "\n]\n");
+
+        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+
+        var second = first with { BackupName = "JobSecond", FileSizeBytes = 42 };
+        logger.Write(second);
+
+        var entries = ReadLogEntries(logPath);
+        Assert.Equal(2, entries.Count);
+        Assert.Contains(entries, e => e.BackupName == "JobFirst");
+        Assert.Contains(entries, e => e.BackupName == "JobSecond");
+    }
+
+    [Fact]
+    public void Write_ThrowsWhenFileIsCorrupted()
+    {
+        using var tempDir = new TempDirectory();
+        var date = new DateTime(2026, 2, 5);
+        var pathProvider = new TestPathProvider(tempDir.Path);
+        var logPath = pathProvider.GetDailyLogPath(date);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+
+        var entry = new EasySave.Log.LogEntry(
+            new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
+            "JobBroken",
+            LogEventType.Error,
+            "src",
+            "dst",
+            0,
+            0);
+
+        File.WriteAllText(logPath, "[\n" + IndentBlock(SerializeEntry(entry), 2) + "\n");
+
+        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+
+        Assert.Throws<InvalidOperationException>(() => logger.Write(entry));
+    }
+
+    [Fact]
+    public void Write_DoesNotWriteUtf8Bom()
+    {
+        using var tempDir = new TempDirectory();
+        var date = new DateTime(2026, 2, 5);
+        var pathProvider = new TestPathProvider(tempDir.Path);
+        var logPath = pathProvider.GetDailyLogPath(date);
+
+        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+
+        var entry = new EasySave.Log.LogEntry(
+            new DateTime(2026, 2, 5, 12, 0, 0, DateTimeKind.Utc),
+            "JobBom",
+            LogEventType.TransferFile,
+            "src",
+            "dst",
+            1,
+            1);
+
+        logger.Write(entry);
+
+        var bytes = File.ReadAllBytes(logPath);
+        var hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
+        Assert.False(hasBom);
+    }
+
     private static List<EasySave.Log.LogEntry> ReadLogEntries(string path)
     {
         var json = File.ReadAllText(path);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
         return JsonSerializer.Deserialize<List<EasySave.Log.LogEntry>>(json, options) ?? [];
+    }
+
+    private static string SerializeEntry(EasySave.Log.LogEntry entry)
+    {
+        var options = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        return JsonSerializer.Serialize(entry, options);
+    }
+
+    private static string IndentBlock(string text, int spaces)
+    {
+        var indent = new string(' ', spaces);
+        var lines = text.Replace("\r\n", "\n").Replace("\r", "\n").Split('\n');
+
+        for (int i = 0; i < lines.Length; i++)
+            lines[i] = indent + lines[i];
+
+        return string.Join(Environment.NewLine, lines);
     }
 
     private sealed class TestPathProvider : IPathProvider
