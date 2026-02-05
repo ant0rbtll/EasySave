@@ -13,6 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EasySave.Core\EasySave.Core.csproj" />
     <ProjectReference Include="..\EasySave.Configuration\EasySave.Configuration.csproj" />
+    <ProjectReference Include="..\EasySave.Log\EasySave.Log.csproj" />
   </ItemGroup>
 </Project>

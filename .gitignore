@@ -27,3 +27,6 @@ coverage-report/
 
 # Logs
 *.log
+!src/EasySave.Log/
+!src/EasySave.Log/**
+src/EasySave.Log/obj/

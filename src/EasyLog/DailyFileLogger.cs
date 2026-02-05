@@ -1,5 +1,6 @@
 using System.Text;
 using EasySave.Configuration;
+using EasySave.Log;
 
 namespace EasyLog;
 
@@ -23,7 +24,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         _mutex = new Mutex(false, mutexName);
     }
 
-    public void Write(LogEntry entry)
+    public void Write(EasySave.Log.LogEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
 
@@ -55,7 +56,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         _mutex.Dispose();
     }
 
-    private static LogEntry NormalizeEntry(LogEntry e)
+    private static EasySave.Log.LogEntry NormalizeEntry(EasySave.Log.LogEntry e)
     {
         var ts = e.Timestamp.Kind == DateTimeKind.Unspecified
             ? DateTime.SpecifyKind(e.Timestamp, DateTimeKind.Utc)

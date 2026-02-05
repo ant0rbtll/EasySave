@@ -2,9 +2,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\EasySave.Core\EasySave.Core.csproj" />
+    <ProjectReference Include="..\EasySave.Log\EasySave.Log.csproj" />
     <ProjectReference Include="..\EasySave.System\EasySave.System.csproj" />
     <ProjectReference Include="..\EasySave.State\EasySave.State.csproj" />
-    <ProjectReference Include="..\EasyLog\EasyLog.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
