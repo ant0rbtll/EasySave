@@ -58,11 +58,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     public void Remove(int id)
     {
         var all = Load();
-        var job = all.FirstOrDefault(j => j.Id == id);
-
-        if (job == null)
-            throw new KeyNotFoundException($"Job with ID {id} not found.");
-
+        var job = all.FirstOrDefault(j => j.Id == id) ?? throw new KeyNotFoundException($"Job with ID {id} not found.");
         all.Remove(job);
         Save(all);
     }
@@ -97,11 +93,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     public void Update(BackupJob job)
     {
         var all = Load();
-        var existing = all.FirstOrDefault(j => j.Id == job.Id);
-
-        if (existing == null)
-            throw new KeyNotFoundException($"Job with ID {job.Id} not found.");
-
+        var existing = all.FirstOrDefault(j => j.Id == job.Id) ?? throw new KeyNotFoundException($"Job with ID {job.Id} not found.");
         existing.Name = job.Name;
         existing.Source = job.Source;
         existing.Destination = job.Destination;
@@ -119,17 +111,17 @@ public class JsonBackupJobRepository : IBackupJobRepository
         var path = _pathProvider.GetJobsConfigPath();
 
         if (!File.Exists(path))
-            return new List<BackupJob>();
+            return [];
 
         try
         {
             var json = File.ReadAllText(path);
             return JsonSerializer.Deserialize<List<BackupJob>>(json, _jsonOptions)
-                   ?? new List<BackupJob>();
+                   ?? [];
         }
         catch (JsonException)
         {
-            return new List<BackupJob>();
+            return [];
         }
     }
 

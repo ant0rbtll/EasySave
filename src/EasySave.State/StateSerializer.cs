@@ -17,15 +17,6 @@ public class StateSerializer
     {
         ArgumentNullException.ThrowIfNull(state);
 
-        /*var entries = state.Entries.Values.Select(entry => new
-        {
-            Name = entry.BackupName,
-            Status = entry.Status.ToString(),
-            entry.Timestamp
-        }).ToList(); 
-
-        string json = JsonSerializer.Serialize(entries, s_jsonOptions);*/
-
         string json = JsonSerializer.Serialize(state.Entries, s_jsonOptions);
         
         return json;

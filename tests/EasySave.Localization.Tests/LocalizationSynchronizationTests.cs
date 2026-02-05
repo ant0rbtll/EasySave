@@ -1,7 +1,6 @@
 using System.Text;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
-using EasySave.Localization;
 
 namespace EasySave.Localization.Tests;
 

@@ -17,7 +17,7 @@ public class SequentialJobIdProvider : IJobIdProvider
             return 1;
 
         // Find the smallest available ID (gaps in the sequence)
-        var existingIds = existing.Select(j => j.Id).OrderBy(id => id).ToList();
+        var existingIds = existing.Select(j => j.Id).Distinct().OrderBy(id => id).ToList();
 
         int nextId = 1;
         foreach (var id in existingIds)
