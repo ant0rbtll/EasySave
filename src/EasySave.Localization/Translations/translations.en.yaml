@@ -58,7 +58,7 @@ translations:
   error_parser_arg_null: "The argument array must not be null or empty."
   error_parser_arg_invalid: "The argument is not valid"
   error_file_null: "{1} Path cannot be null or whitespace : \"{0}\""
-  error_default: "An error occured..."
+  error_default: "An error occurred..."
   error_job_not_found: "Job with ID {0} not found"
   error_max_id: "The maximum allowed Job has been reached"
   error_file_transfer_failed: "File transfer failed from {0} to {1} with error code {2}"
