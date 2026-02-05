@@ -48,7 +48,7 @@ public class DailyFileLoggerTests
         formatterMock.Verify(f => f.Format(It.Is<LogEntry>(e =>
             e.Timestamp == expectedTimestamp &&
             e.SourcePathUNC == "C:\\Source" &&
-            e.DestinationPathUNC == "D:\\Dest")), Times.Once);
+            e.DestinationPathUNC == "D:\\Dest")), Times.Exactly(2));
     }
 
     [Fact]
