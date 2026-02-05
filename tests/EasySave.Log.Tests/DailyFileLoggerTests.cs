@@ -251,8 +251,20 @@ public class DailyFileLoggerTests
         var pathProvider = new TestPathProvider(tempDir.Path);
         var mutexName = $"EasySaveLogTests_{Guid.NewGuid():N}";
 
-        using var mutex = new Mutex(false, mutexName);
-        Assert.True(mutex.WaitOne(TimeSpan.FromMilliseconds(100)));
+        using var acquired = new ManualResetEventSlim(false);
+        using var release = new ManualResetEventSlim(false);
+        var holder = new Thread(() =>
+        {
+            using var mutex = new Mutex(false, mutexName);
+            mutex.WaitOne();
+            acquired.Set();
+            release.Wait();
+            mutex.ReleaseMutex();
+        })
+        { IsBackground = true };
+
+        holder.Start();
+        Assert.True(acquired.Wait(TimeSpan.FromSeconds(2)));
 
         using var logger = new DailyFileLogger(
             new JsonLogFormatter(),
@@ -271,7 +283,8 @@ public class DailyFileLoggerTests
         var ex = Assert.Throws<TimeoutException>(() => logger.Write(entry));
         Assert.Contains("mutex", ex.Message, StringComparison.OrdinalIgnoreCase);
 
-        mutex.ReleaseMutex();
+        release.Set();
+        holder.Join(TimeSpan.FromSeconds(2));
     }
 
     [Fact]
