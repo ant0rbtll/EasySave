@@ -3,55 +3,55 @@ using EasySave.Core;
 namespace EasySave.Persistence;
 
 /// <summary>
-/// Dépôt pour la gestion des jobs de sauvegarde.
+/// Repository for managing backup jobs.
 /// </summary>
 public interface IBackupJobRepository
 {
     /// <summary>
-    /// Nombre maximum de jobs autorisés par défaut.
+    /// Default maximum number of allowed jobs.
     /// </summary>
     const int DefaultMaxJobs = 5;
 
     /// <summary>
-    /// Ajoute un job au dépôt.
+    /// Adds a job to the repository.
     /// </summary>
-    /// <param name="job">Le job à ajouter.</param>
+    /// <param name="job">The job to add.</param>
     void Add(BackupJob job);
 
     /// <summary>
-    /// Supprime un job par son identifiant.
+    /// Removes a job by its identifier.
     /// </summary>
-    /// <param name="id">L'identifiant du job à supprimer.</param>
+    /// <param name="id">The identifier of the job to remove.</param>
     void Remove(int id);
 
     /// <summary>
-    /// Récupère un job par son identifiant.
+    /// Retrieves a job by its identifier.
     /// </summary>
-    /// <param name="id">L'identifiant du job.</param>
-    /// <returns>Le job correspondant.</returns>
+    /// <param name="id">The job identifier.</param>
+    /// <returns>The matching job, or null if not found.</returns>
     BackupJob? GetById(int id);
 
     /// <summary>
-    /// Récupère tous les jobs.
+    /// Retrieves all jobs.
     /// </summary>
-    /// <returns>Liste de tous les jobs.</returns>
+    /// <returns>A list of all jobs.</returns>
     List<BackupJob> GetAll();
 
     /// <summary>
-    /// Retourne le nombre de jobs dans le dépôt.
+    /// Returns the number of jobs in the repository.
     /// </summary>
-    /// <returns>Le nombre de jobs.</returns>
+    /// <returns>The job count.</returns>
     int Count();
 
     /// <summary>
-    /// Retourne le nombre maximum de jobs autorisés.
+    /// Returns the maximum number of allowed jobs.
     /// </summary>
-    /// <returns>Le nombre maximum de jobs.</returns>
+    /// <returns>The maximum number of jobs.</returns>
     int MaxJobs();
 
     /// <summary>
-    /// Met à jour un job existant.
+    /// Updates an existing job.
     /// </summary>
-    /// <param name="job">Le job avec les nouvelles valeurs.</param>
+    /// <param name="job">The job with updated values.</param>
     void Update(BackupJob job);
 }

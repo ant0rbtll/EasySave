@@ -7,7 +7,7 @@ public class RealTimeStateWriter(
     GlobalState state) : IStateWriter
 {
     /// <summary>
-    /// Lancement de l'ecriture dans le fichier d'ETR
+    /// Writes the state entry to the real-time state file.
     /// </summary>
     #region Update
     public void Update(StateEntry entry)
@@ -21,7 +21,7 @@ public class RealTimeStateWriter(
     #endregion
 
     /// <summary>
-    /// Lancement de l'ecriture dans le fichier d'ETR en cas d'inactivité
+    /// Marks a backup entry as inactive in the real-time state file.
     /// </summary>
     #region MarkInactive
     public void MarkInactive(int backupId)

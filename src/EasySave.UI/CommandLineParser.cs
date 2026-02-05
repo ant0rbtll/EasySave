@@ -4,14 +4,17 @@ using System.Linq;
 
 namespace EasySave.UI
 {
+    /// <summary>
+    /// Parses command-line arguments to extract backup job identifiers.
+    /// </summary>
     public class CommandLineParser
     {
-
         /// <summary>
-        /// Parse the arguments for list the job's ids
+        /// Parses the command-line arguments to extract job identifiers.
+        /// Supports individual IDs (e.g., "1"), ranges (e.g., "1-3"), and semicolon-separated lists (e.g., "1;3;5").
         /// </summary>
-        /// <param name="args"> The args of the command</param>
-        /// <returns>The complete list of job's index</returns>
+        /// <param name="args">The command-line arguments.</param>
+        /// <returns>An array of parsed job identifiers.</returns>
         public int[] Parse(string[] args)
         {
             if (args == null || args.Length == 0)

@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace EasySave.UI
 {
+    /// <summary>
+    /// Maps error message keys to localization keys for user-facing error display.
+    /// </summary>
     internal class ErrorManager
     {
         private readonly Dictionary<string, LocalizationKey> errors;

@@ -2,6 +2,9 @@ using System.Diagnostics;
 
 namespace EasySave.System;
 
+/// <summary>
+/// Default implementation of <see cref="ITransferService"/> using the file system.
+/// </summary>
 public sealed class DefaultTransferService : ITransferService
 {
     private readonly IFileSystem _fileSystem;

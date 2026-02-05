@@ -105,7 +105,7 @@ public class InMemoryBackupJobRepositoryTests
             .Returns(() => ++callCount);
         var repo = CreateRepository();
 
-        // Act - Ajouter 5 jobs (limite)
+        // Act - Add 5 jobs (limit)
         for (int i = 0; i < 5; i++)
         {
             repo.Add(new BackupJob
@@ -117,7 +117,7 @@ public class InMemoryBackupJobRepositoryTests
             });
         }
 
-        // Assert - Le 6eme doit echouer
+        // Assert - 6th job should fail
         var ex = Assert.Throws<InvalidOperationException>(() =>
             repo.Add(new BackupJob { Name = "Job6", Source = "/src", Destination = "/dst" }));
         Assert.Contains("Cannot add more than", ex.Message);
@@ -254,7 +254,7 @@ public class InMemoryBackupJobRepositoryTests
         var result1 = repo.GetAll();
         var result2 = repo.GetAll();
 
-        // Assert - Les deux listes sont differentes instances
+        // Assert - The two lists are different instances
         Assert.NotSame(result1, result2);
     }
 

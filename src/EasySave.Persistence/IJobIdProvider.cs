@@ -3,14 +3,14 @@ using EasySave.Core;
 namespace EasySave.Persistence;
 
 /// <summary>
-/// Fournit des identifiants uniques pour les jobs de sauvegarde.
+/// Provides unique identifiers for backup jobs.
 /// </summary>
 public interface IJobIdProvider
 {
     /// <summary>
-    /// Génère le prochain identifiant disponible.
+    /// Generates the next available identifier.
     /// </summary>
-    /// <param name="existing">Liste des jobs existants.</param>
-    /// <returns>Le prochain identifiant unique.</returns>
+    /// <param name="existing">List of existing jobs.</param>
+    /// <returns>The next unique identifier.</returns>
     int NextId(List<BackupJob> existing);
 }

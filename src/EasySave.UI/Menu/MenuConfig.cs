@@ -2,6 +2,9 @@
 
 namespace EasySave.UI.Menu
 {
+    /// <summary>
+    /// Configuration for a console menu including items, actions, and display options.
+    /// </summary>
     internal class MenuConfig
     {
         public LocalizationKey[]? Items { get; }

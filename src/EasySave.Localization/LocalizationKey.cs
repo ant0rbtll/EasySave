@@ -1,5 +1,8 @@
 namespace EasySave.Localization;
 
+/// <summary>
+/// Defines all available localization keys used for translating UI text.
+/// </summary>
 public enum LocalizationKey
 {
     menu_create,

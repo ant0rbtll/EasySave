@@ -11,7 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace EasySave.UI;
 
 /// <summary>
-/// The main class that start the app
+/// Application entry point that configures dependency injection and starts the UI.
 /// </summary>
 public class Program
 {
@@ -19,7 +19,7 @@ public class Program
     private const string EasyLogDailyFileMutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile";
 
     /// <summary>
-    /// The main action that start the app
+    /// Application entry point.
     /// </summary>
     /// <param name="args">Command-line arguments passed to the application.</param>
     public static void Main(string[] args)
@@ -38,9 +38,9 @@ public class Program
     }
 
     /// <summary>
-    /// Initialisation of all the services of the app
+    /// Registers and configures all application services.
     /// </summary>
-    /// <returns>The provider to get any Service</returns>
+    /// <returns>The configured service provider.</returns>
     private static IServiceProvider InitServices()
     {
         var services = new ServiceCollection();
