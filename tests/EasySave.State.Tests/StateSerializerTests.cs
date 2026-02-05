@@ -164,11 +164,11 @@ public class StateSerializerTests
 
         // Assert
         Assert.NotNull(deserialized);
-        Assert.True(deserialized.ContainsKey(1));
-        Assert.Equal("TestBackup", deserialized[1].BackupName);
-        Assert.Equal(BackupStatus.Active, deserialized[1].Status);
-        Assert.Equal(100, deserialized[1].TotalFiles);
-        Assert.Equal(50, deserialized[1].ProgressPercent);
+        Assert.True(deserialized!.TryGetValue(1, out var entry));
+        Assert.Equal("TestBackup", entry.BackupName);
+        Assert.Equal(BackupStatus.Active, entry.Status);
+        Assert.Equal(100, entry.TotalFiles);
+        Assert.Equal(50, entry.ProgressPercent);
     }
 
     [Fact]
