@@ -385,8 +385,8 @@
 - **Romain TOUZE** (@RomainTouze) - UI, Localization, Error Management
 - **Alexandre RIVET** (@Gosyfrone) - Architecture, Core, Backup Engine, State Management, CI/CD
 - **Youcef AFANE** (@RezeGH) - EasyLog.dll, Tests, Documentation
-- **Lisa ACHOUR** - Application Service, Tests
-- **Thaïs VAINES** - ETR (État Temps Réel), State Writer
+- **Lisa ACHOUR** (@achourl14) - Application Service, UI, Tests
+- **Thaïs VIANES** (@thedarknessqueen) - ETR (État Temps Réel), State Writer
 
 ---
 
