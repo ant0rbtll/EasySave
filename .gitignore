@@ -4,6 +4,7 @@ obj/
 out/
 
 test-results/
+coverage-report/
 
 
 # Visual Studio / VS Code
