@@ -18,21 +18,15 @@ public class DefaultPathProviderTests : IDisposable
     public void Dispose()
     {
         // Clean up created files
-        foreach (var file in _createdFiles)
+        foreach (var file in _createdFiles.Where(File.Exists))
         {
-            if (File.Exists(file))
-            {
-                File.Delete(file);
-            }
+            File.Delete(file);
         }
 
         // Clean up created directories (only if empty)
-        foreach (var dir in _createdDirectories)
+        foreach (var dir in _createdDirectories.Where(d => Directory.Exists(d) && !Directory.EnumerateFileSystemEntries(d).Any()))
         {
-            if (Directory.Exists(dir) && !Directory.EnumerateFileSystemEntries(dir).Any())
-            {
-                Directory.Delete(dir);
-            }
+            Directory.Delete(dir);
         }
 
         GC.SuppressFinalize(this);

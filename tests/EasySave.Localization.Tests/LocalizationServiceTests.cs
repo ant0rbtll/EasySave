@@ -286,12 +286,12 @@ public class LocalizationServiceTests
         var allKeys = Enum.GetValues<LocalizationKey>();
 
         // Act & Assert
-        foreach (var key in allKeys)
+        Assert.All(allKeys, key =>
         {
             var result = service.TranslateText(key);
             Assert.NotNull(result);
             Assert.NotEmpty(result);
-        }
+        });
     }
 
     [Fact]

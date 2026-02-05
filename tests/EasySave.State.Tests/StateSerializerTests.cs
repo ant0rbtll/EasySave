@@ -234,7 +234,7 @@ public class StateSerializerTests
     public void ToPrettyJson_AllBackupStatuses_SerializeCorrectly()
     {
         // Arrange & Act & Assert
-        foreach (BackupStatus status in Enum.GetValues<BackupStatus>())
+        Assert.All(Enum.GetValues<BackupStatus>(), status =>
         {
             var state = new GlobalState
             {
@@ -247,7 +247,7 @@ public class StateSerializerTests
             var json = StateSerializer.ToPrettyJson(state);
             Assert.NotNull(json);
             Assert.Contains("Status", json);
-        }
+        });
     }
 
     #endregion

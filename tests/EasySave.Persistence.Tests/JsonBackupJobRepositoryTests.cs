@@ -156,22 +156,22 @@ public class JsonBackupJobRepositoryTests : IDisposable
         var job = new BackupJob { Name = "Test", Source = "/src", Destination = "/dst" };                                                                                                                                     
         repo.Add(job);                                                                                                                                                                                                        
                                                                                                                                                                                                                         
-        // Act                                                                                                                                                                                                                
-        repo.Remove(job.Id);                                                                                                                                                                                                  
-                                                                                                                                                                                                                        
-        // Assert                                                                                                                                                                                                             
-        Assert.Equal(0, repo.Count());                                                                                                                                                                                        
-                                                                                                                                                                                                                        
-        // Verifier la persistance                                                                                                                                                                                            
-        var repo2 = CreateRepository();                                                                                                                                                                                       
-        Assert.Equal(0, repo2.Count());                                                                                                                                                                                       
-    }                                                                                                                                                                                                                         
+        // Act
+        repo.Remove(job.Id);
+
+        // Assert
+        Assert.Equal(0, repo.Count());
+
+        // Verifier la persistance
+        var repo2 = CreateRepository();
+        Assert.Equal(0, repo2.Count());
+    }
                                                                                                                                                                                                                     
     [Fact]                                                                                                                                                                                                                    
-    public void Remove_NonExistentJob_ThrowsException()                                                                                                                                                                       
-    {                                                                                                                                                                                                                         
-        // Arrange                                                                                                                                                                                                            
-        var repo = CreateRepository();                                                                                                                                                                                        
+    public void Remove_NonExistentJob_ThrowsException()
+    {
+        // Arrange
+        var repo = CreateRepository();
                                                                                                                                                                                                                         
         // Act & Assert                                                                                                                                                                                                       
         var ex = Assert.Throws<KeyNotFoundException>(() => repo.Remove(999));                                                                                                                                                 

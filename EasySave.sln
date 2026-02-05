@@ -43,6 +43,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Localization.Tests
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Configuration.Tests", "tests\EasySave.Configuration.Tests\EasySave.Configuration.Tests.csproj", "{59561874-C3FA-49B0-A11C-40DDBD8BB89A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.System.Tests", "tests\EasySave.System.Tests\EasySave.System.Tests.csproj", "{C098A91A-C845-4F9B-B204-BB18411E38DC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +126,10 @@ Global
 		{59561874-C3FA-49B0-A11C-40DDBD8BB89A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59561874-C3FA-49B0-A11C-40DDBD8BB89A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59561874-C3FA-49B0-A11C-40DDBD8BB89A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C098A91A-C845-4F9B-B204-BB18411E38DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C098A91A-C845-4F9B-B204-BB18411E38DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C098A91A-C845-4F9B-B204-BB18411E38DC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C098A91A-C845-4F9B-B204-BB18411E38DC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D51E5DDC-9716-4E93-B1B5-CCA00D0695C5} = {F86F7A98-F514-4CE2-8811-D39077FF82E6}
@@ -144,5 +150,6 @@ Global
 		{D9957A78-70BA-49A5-8F2F-9AD984604DB5} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
 		{A78AC2C3-EF8A-4B4C-A443-9505FC4D905E} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
 		{59561874-C3FA-49B0-A11C-40DDBD8BB89A} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
+		{C098A91A-C845-4F9B-B204-BB18411E38DC} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
 	EndGlobalSection
 EndGlobal
