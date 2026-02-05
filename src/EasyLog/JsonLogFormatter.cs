@@ -4,6 +4,9 @@ using EasySave.Log;
 
 namespace EasyLog;
 
+/// <summary>
+/// Formats log entries as indented JSON strings.
+/// </summary>
 public sealed class JsonLogFormatter : ILogFormatter
 {
     private static readonly JsonSerializerOptions Options = new()

@@ -162,7 +162,7 @@ public class JsonBackupJobRepositoryTests : IDisposable
         // Assert
         Assert.Equal(0, repo.Count());
 
-        // Verifier la persistance
+        // Verify persistence
         var repo2 = CreateRepository();
         Assert.Equal(0, repo2.Count());
     }
@@ -240,7 +240,7 @@ public class JsonBackupJobRepositoryTests : IDisposable
         repo.Add(new BackupJob { Name = "Job1", Source = "/src", Destination = "/dst" });                                                                                                                                     
         repo.Add(new BackupJob { Name = "Job2", Source = "/src", Destination = "/dst" });                                                                                                                                     
                                                                                                                                                                                                                         
-        // Act - Nouvelle instance pour verifier la persistance                                                                                                                                                               
+        // Act - New instance to verify persistence                                                                                                                                                               
         var repo2 = CreateRepository();                                                                                                                                                                                       
         var result = repo2.GetAll();                                                                                                                                                                                          
                                                                                                                                                                                                                         
@@ -311,7 +311,7 @@ public class JsonBackupJobRepositoryTests : IDisposable
             Type = BackupType.Differential                                                                                                                                                                                    
         });                                                                                                                                                                                                                   
                                                                                                                                                                                                                     
-        // Assert - Nouvelle instance pour verifier la persistance                                                                                                                                                            
+        // Assert - New instance to verify persistence                                                                                                                                                            
         var repo2 = CreateRepository();                                                                                                                                                                                       
         var result = repo2.GetById(job.Id);                                                                                                                                                                                   
         Assert.NotNull(result);                                                                                                                                                                                               

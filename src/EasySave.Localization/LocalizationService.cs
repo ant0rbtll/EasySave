@@ -15,7 +15,7 @@ public class LocalizationService : ILocalizationService
     private Dictionary<string, Dictionary<string, string>>? _translationCache;
 
     /// <summary>
-    /// The initialisation of the service
+    /// Initializes a new instance of the localization service with default French culture.
     /// </summary>
     public LocalizationService()
     {

@@ -8,7 +8,7 @@ using EasySave.UI.Menu;
 namespace EasySave.UI;
 
 /// <summary>
-/// Actions and display of the application with the console
+/// Console-based user interface for the EasySave application.
 /// </summary>
 public class ConsoleUI
 {
@@ -222,7 +222,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Gather a save's informations and create a BackupJob
+    /// Collects backup job information from the user and creates a new job.
     /// </summary>
     public void CreateBackupJob()
     {
@@ -255,7 +255,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Display the list of BackupJobs
+    /// Displays the list of backup jobs in the console.
     /// </summary>
     private void DisplayJobsList()
     {
@@ -276,7 +276,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Display the informations of all BackupJob created
+    /// Displays all backup jobs and waits for user input.
     /// </summary>
     public void SeeSaveList()
     {
@@ -287,7 +287,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Start a save
+    /// Prompts the user to select and run a backup job.
     /// </summary>
     public void SaveJob()
     {
@@ -323,7 +323,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Delete a BackupJob
+    /// Prompts the user to select and delete a backup job.
     /// </summary>
     public void DeleteBackupJob()
     {
@@ -360,7 +360,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// The menu of the app's configuration
+    /// Displays the application settings menu.
     /// </summary>
     public void ConfigureParams()
     {
@@ -369,7 +369,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// The menu to change the app language
+    /// Displays the language selection menu.
     /// </summary>
     public void ShowChangeLocale()
     {
@@ -378,7 +378,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// The menu to change the log directory
+    /// Displays the log directory configuration menu.
     /// </summary>
     public void ShowChangeLogDirectory()
     {
@@ -410,9 +410,9 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// The action of changing the language
+    /// Changes the application language and persists the preference.
     /// </summary>
-    /// <param name="locale"></param>
+    /// <param name="locale">The culture code to set (e.g., "fr", "en").</param>
     public void ChangeLocale(string locale)
     {
         if (string.IsNullOrWhiteSpace(locale) || !LocalizationService.AllCultures.ContainsKey(locale))
@@ -521,7 +521,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// The main menu of the application
+    /// Displays the main menu of the application.
     /// </summary>
     public void MainMenu()
     {
@@ -531,7 +531,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Quit the application
+    /// Exits the application.
     /// </summary>
     public void Quit()
     {
@@ -693,7 +693,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Run the app through the arguments
+    /// Runs backup jobs from command-line arguments.
     /// </summary>
     /// <param name="args">The args of the command</param>
     internal void RunFromArgs(string[] args)

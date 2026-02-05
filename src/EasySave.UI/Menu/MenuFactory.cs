@@ -6,6 +6,9 @@ using EasySave.Application;
 
 namespace EasySave.UI.Menu
 {
+    /// <summary>
+    /// Creates menu configurations for the various application screens.
+    /// </summary>
     internal class MenuFactory(ConsoleUI consoleUI, BackupApplicationService backupApplicationService)
     {
         private readonly ConsoleUI _consoleUI = consoleUI;

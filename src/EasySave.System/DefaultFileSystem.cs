@@ -1,5 +1,8 @@
 namespace EasySave.System;
 
+/// <summary>
+/// Default implementation of <see cref="IFileSystem"/> using the standard .NET file system APIs.
+/// </summary>
 public sealed class DefaultFileSystem : IFileSystem
 {
     public bool DirectoryExists(string path)

@@ -1,5 +1,8 @@
 namespace EasySave.Configuration
 {
+    /// <summary>
+    /// Default implementation of <see cref="IPathProvider"/> using the application base directory.
+    /// </summary>
     public class DefaultPathProvider : IPathProvider
     {
         private readonly string baseDirectory;
@@ -11,7 +14,7 @@ namespace EasySave.Configuration
         }
 
         /// <summary>
-        /// Creation ou recuperation du dossier de log et du fichier journalier
+        /// Gets or creates the daily log file path for the given date.
         /// </summary>
         #region GetDailyLogPath
         public string GetDailyLogPath(DateTime date)
@@ -112,7 +115,7 @@ namespace EasySave.Configuration
         }
 
         /// <summary>
-        /// Creation ou recuperation du fichier d'etat
+        /// Gets or creates the state file path.
         /// </summary>
         #region GetStatePath
         public string GetStatePath()
@@ -129,7 +132,7 @@ namespace EasySave.Configuration
         #endregion
 
         /// <summary>
-        /// Creation ou recuperation du fichier de configuration des jobs
+        /// Gets or creates the jobs configuration file path.
         /// </summary>
         #region GetJobsConfigPath
         public string GetJobsConfigPath()
@@ -146,7 +149,7 @@ namespace EasySave.Configuration
         #endregion
 
         /// <summary>
-        /// Creation ou recuperation du fichier de preferences utilisateur
+        /// Gets or creates the user preferences file path.
         /// </summary>
         #region GetUserPreferencesPath
         public string GetUserPreferencesPath()

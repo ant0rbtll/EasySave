@@ -3,8 +3,8 @@ using EasySave.Core;
 namespace EasySave.Persistence;
 
 /// <summary>
-/// Implémentation en mémoire du dépôt de jobs de sauvegarde.
-/// Les données ne sont pas persistées entre les exécutions.
+/// In-memory implementation of the backup job repository.
+/// Data is not persisted between executions.
 /// </summary>
 public class InMemoryBackupJobRepository : IBackupJobRepository
 {
@@ -13,9 +13,9 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     private readonly IJobIdProvider _idProvider;
 
     /// <summary>
-    /// Initialise une nouvelle instance du dépôt en mémoire.
+    /// Initializes a new instance of the in-memory repository.
     /// </summary>
-    /// <param name="idProvider">Fournisseur d'identifiants pour les nouveaux jobs.</param>
+    /// <param name="idProvider">Identifier provider for new jobs.</param>
     public InMemoryBackupJobRepository(IJobIdProvider idProvider)
     {
         _idProvider = idProvider;
@@ -23,7 +23,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
 
     /// <inheritdoc />
     /// <exception cref="InvalidOperationException">
-    /// Levée si le nombre maximum de jobs est atteint ou si l'ID existe déjà.
+    /// Thrown if the maximum number of jobs is reached or if the ID already exists.
     /// </exception>
     public void Add(BackupJob job)
     {
@@ -51,7 +51,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Levée si le job n'existe pas.</exception>
+    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
     public void Remove(int id)
     {
         if (!_jobs.Remove(id))
@@ -64,7 +64,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Levée si le job n'existe pas.</exception>
+    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
     public BackupJob GetById(int id)
     {
         if (!_jobs.TryGetValue(id, out var job))
@@ -96,7 +96,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Levée si le job n'existe pas.</exception>
+    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
     public void Update(BackupJob job)
     {
         if (!_jobs.ContainsKey(job.Id))

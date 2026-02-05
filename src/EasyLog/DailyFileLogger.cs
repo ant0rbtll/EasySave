@@ -4,6 +4,9 @@ using EasySave.Log;
 
 namespace EasyLog;
 
+/// <summary>
+/// Logger that writes entries to a daily JSON log file with cross-process synchronization.
+/// </summary>
 public sealed class DailyFileLogger : ILogger, IDisposable
 {
     private readonly ILogFormatter _formatter;
