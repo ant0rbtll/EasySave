@@ -21,5 +21,13 @@ public sealed class JsonLogFormatter : ILogFormatter
         ArgumentNullException.ThrowIfNull(entry);
         return JsonSerializer.Serialize(entry, Options);
     }
+
+    public string GetFileHeader() => "[";
+
+    public string GetFileFooter() => "]";
+
+    public string GetEntrySeparator() => ",";
+
+    public int GetIndentSpaces() => 2;
 }
 

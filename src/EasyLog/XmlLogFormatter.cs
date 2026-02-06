@@ -38,4 +38,12 @@ public sealed class XmlLogFormatter : ILogFormatter
 
         return stringWriter.ToString();
     }
+
+    public string GetFileHeader() => "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Logs>";
+
+    public string GetFileFooter() => "</Logs>";
+
+    public string GetEntrySeparator() => string.Empty;
+
+    public int GetIndentSpaces() => 2;
 }

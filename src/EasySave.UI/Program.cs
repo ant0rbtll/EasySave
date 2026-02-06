@@ -78,17 +78,26 @@ public class Program
             var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
             var userPreferences = preferencesRepository.Load();
 
-            // Select formatter based on user preference
-            EasyLog.ILogFormatter formatter = userPreferences.LogFormat switch
+            // Select formatter and extension based on user preference
+            EasyLog.ILogFormatter formatter;
+            string fileExtension;
+
+            if (userPreferences.LogFormat == EasyLog.LogFormat.Xml)
             {
-                EasyLog.LogFormat.Xml => new EasyLog.XmlLogFormatter(),
-                _ => new EasyLog.JsonLogFormatter()
-            };
+                formatter = new EasyLog.XmlLogFormatter();
+                fileExtension = "xml";
+            }
+            else
+            {
+                formatter = new EasyLog.JsonLogFormatter();
+                fileExtension = "json";
+            }
 
             var logger = new EasyLog.DailyFileLogger(
                 formatter,
                 pathProvider,
-                EasyLogDailyFileMutexName);
+                EasyLogDailyFileMutexName,
+                fileExtension);
 
             return logger;
         }

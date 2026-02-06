@@ -43,6 +43,7 @@ translations:
   log_path_reset: "Le dossier des logs a été réinitialisé par défaut."
   log_path_invalid: "Chemin du dossier des logs invalide."
   log_format_updated: "Le format des logs a été mis à jour."
+  log_format_restart_required: "⚠️  Veuillez redémarrer l'application pour que le changement prenne effet."
   log_format_json: "JSON"
   log_format_xml: "XML"
   input_string_invalid: "Ce champ ne doit pas être vide. Veuillez réessayer"

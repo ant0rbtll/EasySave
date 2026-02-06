@@ -466,6 +466,7 @@ public class ConsoleUI
         _preferencesRepository.Save(_userPreferences);
 
         ShowMessage(LocalizationKey.log_format_updated);
+        ShowMessage(LocalizationKey.log_format_restart_required);
         _menuService.WaitForUser();
         ConfigureParams();
     }

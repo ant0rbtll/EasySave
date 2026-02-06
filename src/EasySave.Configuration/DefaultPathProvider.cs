@@ -17,10 +17,10 @@ namespace EasySave.Configuration
         /// Gets or creates the daily log file path for the given date.
         /// </summary>
         #region GetDailyLogPath
-        public string GetDailyLogPath(DateTime date)
+        public string GetDailyLogPath(DateTime date, string extension = "json")
         {
             string logsDir = ResolveLogsDirectory();
-            string fileName = $"{date:yyyy-MM-dd}.json";
+            string fileName = $"{date:yyyy-MM-dd}.{extension}";
             string fullPath = Path.Combine(logsDir, fileName);
 
             try

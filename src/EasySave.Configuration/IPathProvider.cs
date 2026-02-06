@@ -9,8 +9,9 @@ namespace EasySave.Configuration
         /// Gets the path to the daily log file for the specified date.
         /// </summary>
         /// <param name="date">The date for the log file.</param>
+        /// <param name="extension">Optional file extension (default: "json").</param>
         /// <returns>The full path to the daily log file.</returns>
-        string GetDailyLogPath(DateTime date);
+        string GetDailyLogPath(DateTime date, string extension = "json");
 
         /// <summary>
         /// Gets the path to the real-time state file.

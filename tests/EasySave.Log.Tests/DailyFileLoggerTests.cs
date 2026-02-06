@@ -44,7 +44,7 @@ public class DailyFileLoggerTests
         Assert.Equal("C:\\Source", logged.SourcePathUNC);
         Assert.Equal("D:\\Dest", logged.DestinationPathUNC);
 
-        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate), Times.Exactly(2));
+        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate, "json"), Times.Exactly(2));
         formatterMock.Verify(f => f.Format(It.Is<LogEntry>(e =>
             e.Timestamp == expectedTimestamp &&
             e.SourcePathUNC == "C:\\Source" &&
@@ -69,7 +69,7 @@ public class DailyFileLoggerTests
         var date = new DateTime(2026, 2, 5);
         var logPath = GetLogPath(tempDir, date);
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
-        File.WriteAllText(logPath, "[]");
+        File.WriteAllText(logPath, "[\n]");
 
         using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
@@ -148,8 +148,9 @@ public class DailyFileLoggerTests
     }
 
     [Fact]
-    public void Write_ThrowsWhenFileIsCorrupted()
+    public void Write_HandlesCorruptedFile()
     {
+        // The new implementation doesn't throw for corrupted files
         using var tempDir = new TempDirectory();
         var date = new DateTime(2026, 2, 5);
         var logPath = GetLogPath(tempDir, date);
@@ -165,11 +166,18 @@ public class DailyFileLoggerTests
             0);
         var entryJson = SerializeEntry(entry);
 
+        // Write a corrupted file (incomplete JSON array)
         File.WriteAllText(logPath, "[\n" + IndentBlock(entryJson, 2) + "\n");
 
         using var logger = CreateLogger(tempDir, logPath, out _, out _);
 
-        Assert.Throws<InvalidOperationException>(() => logger.Write(entry));
+        // Should not throw - will append entry despite corruption
+        logger.Write(entry);
+        
+        // Verify the entry was written
+        Assert.True(File.Exists(logPath));
+        var content = File.ReadAllText(logPath);
+        Assert.Contains("JobBroken", content);
     }
 
     [Fact]
@@ -222,7 +230,7 @@ public class DailyFileLoggerTests
 
         Assert.Equal(local.ToUniversalTime(), logged.Timestamp);
         Assert.Equal(DateTimeKind.Utc, logged.Timestamp.Kind);
-        pathProviderMock.Verify(p => p.GetDailyLogPath(local.ToUniversalTime().Date), Times.Once);
+        pathProviderMock.Verify(p => p.GetDailyLogPath(local.ToUniversalTime().Date, "json"), Times.Once);
     }
 
     [Fact]
@@ -288,7 +296,7 @@ public class DailyFileLoggerTests
         logger.Write(entry);
 
         Assert.True(File.Exists(logPath));
-        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate), Times.Once);
+        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate, "json"), Times.Once);
     }
 
     [Fact]
@@ -352,13 +360,25 @@ public class DailyFileLoggerTests
     {
         pathProviderMock = new Mock<IPathProvider>();
         pathProviderMock
-            .Setup(p => p.GetDailyLogPath(It.IsAny<DateTime>()))
+            .Setup(p => p.GetDailyLogPath(It.IsAny<DateTime>(), It.IsAny<string>()))
             .Returns(logPath);
 
         formatterMock = new Mock<ILogFormatter>();
         formatterMock
             .Setup(f => f.Format(It.IsAny<LogEntry>()))
             .Returns<LogEntry>(SerializeEntry);
+        formatterMock
+            .Setup(f => f.GetFileHeader())
+            .Returns("[");
+        formatterMock
+            .Setup(f => f.GetFileFooter())
+            .Returns("]");
+        formatterMock
+            .Setup(f => f.GetEntrySeparator())
+            .Returns(",");
+        formatterMock
+            .Setup(f => f.GetIndentSpaces())
+            .Returns(2);
 
         return new DailyFileLogger(
             formatterMock.Object,

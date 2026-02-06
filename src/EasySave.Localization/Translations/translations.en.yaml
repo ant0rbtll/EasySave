@@ -43,6 +43,7 @@ translations:
   log_path_reset: "Log directory reset to default."
   log_path_invalid: "Invalid log directory path."
   log_format_updated: "Log format updated."
+  log_format_restart_required: "⚠️  Please restart the application for the change to take effect."
   log_format_json: "JSON"
   log_format_xml: "XML"
   input_string_invalid: "This field cannot be empty. Please try again"

@@ -49,6 +49,7 @@ public enum LocalizationKey
     log_path_reset,
     log_path_invalid,
     log_format_updated,
+    log_format_restart_required,
     log_format_json,
     log_format_xml,
     input_string_invalid,

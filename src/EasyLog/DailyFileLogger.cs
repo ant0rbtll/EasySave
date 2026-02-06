@@ -11,6 +11,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 {
     private readonly ILogFormatter _formatter;
     private readonly IPathProvider _pathProvider;
+    private readonly string _fileExtension;
 
     private readonly object _sync = new();
 
@@ -20,10 +21,12 @@ public sealed class DailyFileLogger : ILogger, IDisposable
     public DailyFileLogger(
         ILogFormatter formatter,
         IPathProvider pathProvider,
-        string mutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile")
+        string mutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile",
+        string fileExtension = "json")
     {
         _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
+        _fileExtension = fileExtension;
         _mutex = new Mutex(false, mutexName);
     }
 
@@ -32,7 +35,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         ArgumentNullException.ThrowIfNull(entry);
 
         var normalized = NormalizeEntry(entry);
-        var path = _pathProvider.GetDailyLogPath(normalized.Timestamp.Date);
+        var path = _pathProvider.GetDailyLogPath(normalized.Timestamp.Date, _fileExtension);
 
         EnsureDirectoryExists(path);
 
@@ -45,7 +48,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
             try
             {
-                AppendJsonObjectToArrayFile(path, jsonObject);
+                AppendEntryToFile(path, jsonObject);
             }
             finally
             {
@@ -92,84 +95,101 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         Directory.CreateDirectory(dir);
     }
 
-    private static void AppendJsonObjectToArrayFile(string path, string jsonObject)
+    private void AppendEntryToFile(string path, string formattedEntry)
     {
+        var header = _formatter.GetFileHeader();
+        var footer = _formatter.GetFileFooter();
+        var separator = _formatter.GetEntrySeparator();
+        var indentSpaces = _formatter.GetIndentSpaces();
+        var indentedEntry = IndentBlock(formattedEntry, indentSpaces);
+
         if (!File.Exists(path))
         {
-            using var fsNew = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.Read);
-            using var writerNew = new StreamWriter(fsNew, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
-
-            writerNew.WriteLine("[");
-            writerNew.WriteLine(IndentBlock(jsonObject, 2));
-            writerNew.WriteLine("]");
-            writerNew.Flush();
+            // Create new file
+            var content = new StringBuilder();
+            if (!string.IsNullOrEmpty(header))
+                content.AppendLine(header);
+            content.AppendLine(indentedEntry);
+            if (!string.IsNullOrEmpty(footer))
+                content.AppendLine(footer);
+            
+            File.WriteAllText(path, content.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             return;
         }
 
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read);
-
-        if (stream.Length == 0)
+        // Read existing file
+        string existingContent = File.ReadAllText(path, Encoding.UTF8);
+        
+        if (string.IsNullOrWhiteSpace(existingContent))
         {
-            using var writerEmpty = new StreamWriter(stream, new UTF8Encoding(false), leaveOpen: true);
-            writerEmpty.WriteLine("[");
-            writerEmpty.WriteLine(IndentBlock(jsonObject, 2));
-            writerEmpty.WriteLine("]");
-            writerEmpty.Flush();
+            // File exists but empty
+            var content = new StringBuilder();
+            if (!string.IsNullOrEmpty(header))
+                content.AppendLine(header);
+            content.AppendLine(indentedEntry);
+            if (!string.IsNullOrEmpty(footer))
+                content.AppendLine(footer);
+            
+            File.WriteAllText(path, content.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
             return;
         }
 
-        long endPos = stream.Length - 1;
-        int lastByte;
-
-        while (true)
+        // Append to existing file
+        var newContent = new StringBuilder();
+        
+        if (!string.IsNullOrEmpty(footer))
         {
-            if (endPos < 0)
-                throw new InvalidOperationException("Daily log file is empty or corrupted.");
-
-            stream.Position = endPos;
-            lastByte = stream.ReadByte();
-            if (lastByte < 0)
-                throw new InvalidOperationException("Unable to read daily log file.");
-
-            if (!char.IsWhiteSpace((char)lastByte))
-                break;
-
-            endPos--;
+            // Remove footer, add entry, add footer back
+            int footerIndex = existingContent.LastIndexOf(footer);
+            if (footerIndex >= 0)
+            {
+                var beforeFooter = existingContent.Substring(0, footerIndex).TrimEnd();
+                newContent.Append(beforeFooter);
+                
+                // Check if there's content between header and footer (not just empty array/document)
+                bool hasExistingEntries = false;
+                if (!string.IsNullOrEmpty(header))
+                {
+                    var afterHeader = beforeFooter.Substring(header.TrimEnd().Length).Trim();
+                    hasExistingEntries = !string.IsNullOrEmpty(afterHeader);
+                }
+                else
+                {
+                    hasExistingEntries = !string.IsNullOrEmpty(beforeFooter.Trim());
+                }
+                
+                // Only add separator if there are existing entries
+                if (hasExistingEntries && !string.IsNullOrEmpty(separator))
+                    newContent.AppendLine(separator);
+                else
+                    newContent.AppendLine();
+                    
+                newContent.AppendLine(indentedEntry);
+                newContent.AppendLine(footer);
+            }
+            else
+            {
+                // Footer not found, just append
+                newContent.Append(existingContent.TrimEnd());
+                newContent.AppendLine();
+                if (!string.IsNullOrEmpty(separator))
+                    newContent.AppendLine(separator);
+                newContent.AppendLine(indentedEntry);
+                if (!string.IsNullOrEmpty(footer))
+                    newContent.AppendLine(footer);
+            }
         }
-
-        if (lastByte != ']')
-            throw new InvalidOperationException("Daily log file is not a JSON array (missing closing bracket).");
-
-        long prevPos = endPos - 1;
-        int prevByte = -1;
-
-        while (prevPos >= 0)
+        else
         {
-            stream.Position = prevPos;
-            prevByte = stream.ReadByte();
-            if (prevByte < 0)
-                break;
-
-            if (!char.IsWhiteSpace((char)prevByte))
-                break;
-
-            prevPos--;
+            // No footer, just append
+            newContent.Append(existingContent.TrimEnd());
+            newContent.AppendLine();
+            if (!string.IsNullOrEmpty(separator))
+                newContent.AppendLine(separator);
+            newContent.AppendLine(indentedEntry);
         }
-
-        bool isEmptyArray = prevByte == '[';
-
-        stream.Position = endPos;
-
-        using var writer = new StreamWriter(stream, new UTF8Encoding(false), leaveOpen: true);
-
-        if (!isEmptyArray)
-            writer.WriteLine(",");
-
-        writer.WriteLine(IndentBlock(jsonObject, 2));
-        writer.WriteLine("]");
-        writer.Flush();
-
-        stream.SetLength(stream.Position);
+        
+        File.WriteAllText(path, newContent.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
 
     private static string IndentBlock(string text, int spaces)
