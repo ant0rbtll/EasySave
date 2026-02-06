@@ -97,99 +97,114 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
     private void AppendEntryToFile(string path, string formattedEntry)
     {
-        var header = _formatter.GetFileHeader();
-        var footer = _formatter.GetFileFooter();
-        var separator = _formatter.GetEntrySeparator();
         var indentSpaces = _formatter.GetIndentSpaces();
         var indentedEntry = IndentBlock(formattedEntry, indentSpaces);
 
         if (!File.Exists(path))
         {
-            // Create new file
-            var content = new StringBuilder();
-            if (!string.IsNullOrEmpty(header))
-                content.AppendLine(header);
-            content.AppendLine(indentedEntry);
-            if (!string.IsNullOrEmpty(footer))
-                content.AppendLine(footer);
-            
-            File.WriteAllText(path, content.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            CreateNewLogFile(path, indentedEntry);
             return;
         }
 
-        // Read existing file
         string existingContent = File.ReadAllText(path, Encoding.UTF8);
-        
+
         if (string.IsNullOrWhiteSpace(existingContent))
         {
-            // File exists but empty
-            var content = new StringBuilder();
-            if (!string.IsNullOrEmpty(header))
-                content.AppendLine(header);
-            content.AppendLine(indentedEntry);
-            if (!string.IsNullOrEmpty(footer))
-                content.AppendLine(footer);
-            
-            File.WriteAllText(path, content.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            CreateNewLogFile(path, indentedEntry);
             return;
         }
 
-        // Append to existing file
+        AppendToExistingFile(path, existingContent, indentedEntry);
+    }
+
+    private void CreateNewLogFile(string path, string indentedEntry)
+    {
+        var header = _formatter.GetFileHeader();
+        var footer = _formatter.GetFileFooter();
+
+        var content = new StringBuilder();
+        if (!string.IsNullOrEmpty(header))
+            content.AppendLine(header);
+        content.AppendLine(indentedEntry);
+        if (!string.IsNullOrEmpty(footer))
+            content.AppendLine(footer);
+
+        File.WriteAllText(path, content.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    }
+
+    private void AppendToExistingFile(string path, string existingContent, string indentedEntry)
+    {
+        var footer = _formatter.GetFileFooter();
+        var separator = _formatter.GetEntrySeparator();
+
         var newContent = new StringBuilder();
-        
+
         if (!string.IsNullOrEmpty(footer))
         {
-            // Remove footer, add entry, add footer back
-            int footerIndex = existingContent.LastIndexOf(footer);
-            if (footerIndex >= 0)
-            {
-                var beforeFooter = existingContent.Substring(0, footerIndex).TrimEnd();
-                newContent.Append(beforeFooter);
-                
-                // Check if there's content between header and footer (not just empty array/document)
-                bool hasExistingEntries = false;
-                if (!string.IsNullOrEmpty(header))
-                {
-                    var afterHeader = beforeFooter.Substring(header.TrimEnd().Length).Trim();
-                    hasExistingEntries = !string.IsNullOrEmpty(afterHeader);
-                }
-                else
-                {
-                    hasExistingEntries = !string.IsNullOrEmpty(beforeFooter.Trim());
-                }
-                
-                // Only add separator if there are existing entries
-                if (hasExistingEntries && !string.IsNullOrEmpty(separator))
-                    newContent.AppendLine(separator);
-                else
-                    newContent.AppendLine();
-                    
-                newContent.AppendLine(indentedEntry);
-                newContent.AppendLine(footer);
-            }
-            else
-            {
-                // Footer not found, just append
-                newContent.Append(existingContent.TrimEnd());
-                newContent.AppendLine();
-                if (!string.IsNullOrEmpty(separator))
-                    newContent.AppendLine(separator);
-                newContent.AppendLine(indentedEntry);
-                if (!string.IsNullOrEmpty(footer))
-                    newContent.AppendLine(footer);
-            }
+            newContent.Append(RemoveFooterAndPrepareContent(existingContent, footer, separator, indentedEntry));
         }
         else
         {
-            // No footer, just append
+            AppendWithoutFooter(newContent, existingContent, separator, indentedEntry);
+        }
+
+        File.WriteAllText(path, newContent.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+    }
+
+    private string RemoveFooterAndPrepareContent(string existingContent, string footer, string separator, string indentedEntry)
+    {
+        var newContent = new StringBuilder();
+        int footerIndex = existingContent.LastIndexOf(footer);
+
+        if (footerIndex >= 0)
+        {
+            var beforeFooter = existingContent.Substring(0, footerIndex).TrimEnd();
+            newContent.Append(beforeFooter);
+
+            bool hasExistingEntries = CheckIfHasExistingEntries(beforeFooter);
+
+            if (hasExistingEntries && !string.IsNullOrEmpty(separator))
+                newContent.AppendLine(separator);
+            else
+                newContent.AppendLine();
+
+            newContent.AppendLine(indentedEntry);
+            newContent.AppendLine(footer);
+        }
+        else
+        {
+            // Footer not found, append normally
             newContent.Append(existingContent.TrimEnd());
             newContent.AppendLine();
             if (!string.IsNullOrEmpty(separator))
                 newContent.AppendLine(separator);
             newContent.AppendLine(indentedEntry);
+            newContent.AppendLine(footer);
         }
-        
-        File.WriteAllText(path, newContent.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+
+        return newContent.ToString();
+    }
+
+    private bool CheckIfHasExistingEntries(string beforeFooter)
+    {
+        var header = _formatter.GetFileHeader();
+
+        if (!string.IsNullOrEmpty(header))
+        {
+            var afterHeader = beforeFooter.Substring(header.TrimEnd().Length).Trim();
+            return !string.IsNullOrEmpty(afterHeader);
+        }
+
+        return !string.IsNullOrEmpty(beforeFooter.Trim());
+    }
+
+    private static void AppendWithoutFooter(StringBuilder newContent, string existingContent, string separator, string indentedEntry)
+    {
+        newContent.Append(existingContent.TrimEnd());
+        newContent.AppendLine();
+        if (!string.IsNullOrEmpty(separator))
+            newContent.AppendLine(separator);
+        newContent.AppendLine(indentedEntry);
     }
 
     private static string IndentBlock(string text, int spaces)
