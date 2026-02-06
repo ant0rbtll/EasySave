@@ -447,7 +447,28 @@ public class ConsoleUI
         _menuService.WaitForUser();
         ConfigureParams();
     }
+    /// <summary>
+    /// Displays the log format selection menu.
+    /// </summary>
+    public void ShowChangeLogFormat()
+    {
+        var menuConfig = _menuFactory.CreateLogFormatMenu();
+        _menuService.ShowMenuWithActions(menuConfig);
+    }
 
+    /// <summary>
+    /// Changes the log format and persists the preference.
+    /// </summary>
+    /// <param name="format">The log format to set.</param>
+    public void ChangeLogFormat(EasyLog.LogFormat format)
+    {
+        _userPreferences.LogFormat = format;
+        _preferencesRepository.Save(_userPreferences);
+
+        ShowMessage(LocalizationKey.log_format_updated);
+        _menuService.WaitForUser();
+        ConfigureParams();
+    }
     private void ApplyLogDirectoryPreference(string? directory)
     {
         if (string.IsNullOrWhiteSpace(directory))

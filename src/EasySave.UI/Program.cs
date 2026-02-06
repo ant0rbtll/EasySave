@@ -74,7 +74,17 @@ public class Program
     {
         try
         {
-            var formatter = new EasyLog.JsonLogFormatter();
+            // Load user preferences to get log format
+            var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
+            var userPreferences = preferencesRepository.Load();
+
+            // Select formatter based on user preference
+            EasyLog.ILogFormatter formatter = userPreferences.LogFormat switch
+            {
+                EasyLog.LogFormat.Xml => new EasyLog.XmlLogFormatter(),
+                _ => new EasyLog.JsonLogFormatter()
+            };
+
             var logger = new EasyLog.DailyFileLogger(
                 formatter,
                 pathProvider,

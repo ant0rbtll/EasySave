@@ -1,3 +1,5 @@
+using EasyLog;
+
 namespace EasySave.Persistence;
 
 /// <summary>
@@ -14,4 +16,9 @@ public class UserPreferences
     /// Gets or sets the custom log directory path (optional).
     /// </summary>
     public string? LogDirectory { get; set; }
+
+    /// <summary>
+    /// Gets or sets the log output format.
+    /// </summary>
+    public LogFormat LogFormat { get; set; } = LogFormat.Json;
 }
