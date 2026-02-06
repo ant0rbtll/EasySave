@@ -243,9 +243,9 @@ public partial class MyNewView : UserControl
 
 ### 3. Convention de nommage
 
-Le `ViewLocator` résout automatiquement les vues en remplacant `ViewModel` par `View` dans le nom :
+Le `ViewLocator` résout automatiquement les vues en remplaçant `ViewModel` par `View` dans le nom :
 
-- `MainWindowViewModel` -> `MainWindow` (View)
+- `MainWindowViewModel` -> `MainWindowView` (View)
 - `JobListViewModel` -> `JobListView`
 - `JobDetailViewModel` -> `JobDetailView`
 
