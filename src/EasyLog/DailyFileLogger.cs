@@ -22,12 +22,22 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         ILogFormatter formatter,
         IPathProvider pathProvider,
         string mutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile",
-        string fileExtension = "json")
+        LogFormat format = LogFormat.Json)
     {
         _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
-        _fileExtension = fileExtension;
+        _fileExtension = GetFileExtension(format);
         _mutex = new Mutex(false, mutexName);
+    }
+
+    private static string GetFileExtension(LogFormat format)
+    {
+        return format switch
+        {
+            LogFormat.Json => "json",
+            LogFormat.Xml => "xml",
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported log format.")
+        };
     }
 
     public void Write(EasySave.Log.LogEntry entry)
@@ -39,7 +49,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
         EnsureDirectoryExists(path);
 
-        var jsonObject = _formatter.Format(normalized);
+        var formattedEntry = _formatter.Format(normalized);
 
         lock (_sync)
         {
@@ -48,7 +58,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
             try
             {
-                AppendEntryToFile(path, jsonObject);
+                AppendEntryToFile(path, formattedEntry);
             }
             finally
             {

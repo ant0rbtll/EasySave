@@ -18,5 +18,15 @@ public enum LogEventType
     /// <summary>
     /// An error occurred during the backup operation.
     /// </summary>
-    Error = 2
+    Error = 2,
+
+    /// <summary>
+    ///  The backup operation was started.
+    /// </summary>
+    StartBackup = 3,
+
+    /// <summary>
+    /// The backup operation was completed successfully.
+    /// </summary>
+    EndBackup = 4
 }
