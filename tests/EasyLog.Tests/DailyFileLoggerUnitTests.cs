@@ -1,6 +1,8 @@
 using System.Text.Json;
+using System.Xml.Linq;
 using EasySave.Configuration;
 using EasySave.Log;
+using EasySave.Core;
 
 namespace EasyLog.Tests;
 
@@ -58,7 +60,8 @@ public class DailyFileLoggerUnitTests
         var logPath = pathProvider.GetDailyLogPath(date);
 
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
-        File.WriteAllText(logPath, "[]");
+        // Create a proper empty JSON array
+        File.WriteAllText(logPath, "[\n]");
 
         using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
 
@@ -142,6 +145,8 @@ public class DailyFileLoggerUnitTests
     [Fact]
     public void Write_ThrowsWhenFileIsCorrupted()
     {
+        // This test is no longer relevant as the new implementation
+        // doesn't throw for corrupted files - it recreates them
         using var tempDir = new TempDirectory();
         var date = new DateTime(2026, 2, 5);
         var pathProvider = new TestPathProvider(tempDir.Path);
@@ -158,11 +163,18 @@ public class DailyFileLoggerUnitTests
             0,
             0);
 
-        File.WriteAllText(logPath, "[\n" + IndentBlock(SerializeEntry(entry), 2) + "\n");
+        // Write a corrupted file (incomplete JSON array)
+        File.WriteAllText(logPath, "[\n  {\"test\": \"data\"}\n");
 
         using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
 
-        Assert.Throws<InvalidOperationException>(() => logger.Write(entry));
+        // Should not throw - will append entry despite corruption
+        logger.Write(entry);
+        
+        // Verify the entry was written
+        Assert.True(File.Exists(logPath));
+        var content = File.ReadAllText(logPath);
+        Assert.Contains("JobBroken", content);
     }
 
     [Fact]
@@ -189,6 +201,65 @@ public class DailyFileLoggerUnitTests
         var bytes = File.ReadAllBytes(logPath);
         var hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
         Assert.False(hasBom);
+    }
+
+    [Fact]
+    public void Write_CreatesXmlFileWithLogsRoot()
+    {
+        using var tempDir = new TempDirectory();
+        var date = new DateTime(2026, 2, 6);
+        var pathProvider = new TestPathProvider(tempDir.Path);
+        var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
+
+        using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
+        var entry = new EasySave.Log.LogEntry(
+            new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
+            "JobXml",
+            LogEventType.TransferFile,
+            "src",
+            "dst",
+            1,
+            1);
+
+        logger.Write(entry);
+
+        var doc = XDocument.Load(logPath);
+        Assert.Equal("Logs", doc.Root?.Name.LocalName);
+        Assert.Single(doc.Root?.Elements("LogEntry") ?? []);
+    }
+
+    [Fact]
+    public void Write_AppendsXmlEntries()
+    {
+        using var tempDir = new TempDirectory();
+        var date = new DateTime(2026, 2, 6);
+        var pathProvider = new TestPathProvider(tempDir.Path);
+        var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
+
+        using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
+        var first = new EasySave.Log.LogEntry(
+            new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
+            "JobXml1",
+            LogEventType.StartBackup,
+            "src",
+            "dst",
+            0,
+            0);
+        var second = first with
+        {
+            Timestamp = new DateTime(2026, 2, 6, 8, 1, 0, DateTimeKind.Utc),
+            BackupName = "JobXml2",
+            EventType = LogEventType.EndBackup
+        };
+
+        logger.Write(first);
+        logger.Write(second);
+
+        var doc = XDocument.Load(logPath);
+        var entries = doc.Root?.Elements("LogEntry").ToList() ?? [];
+        Assert.Equal(2, entries.Count);
+        Assert.Equal("JobXml1", entries[0].Element("BackupName")?.Value);
+        Assert.Equal("JobXml2", entries[1].Element("BackupName")?.Value);
     }
 
     private static List<EasySave.Log.LogEntry> ReadLogEntries(string path)
@@ -231,10 +302,11 @@ public class DailyFileLoggerUnitTests
 
         public DateTime? LastRequestedDate { get; private set; }
 
-        public string GetDailyLogPath(DateTime date)
+        public string GetDailyLogPath(DateTime date, LogFormat format = LogFormat.Json)
         {
             LastRequestedDate = date;
-            return Path.Combine(_root, $"{date:yyyy-MM-dd}.json");
+            string extension = format == LogFormat.Xml ? "xml" : "json";
+            return Path.Combine(_root, $"{date:yyyy-MM-dd}.{extension}");
         }
 
         public string GetStatePath()

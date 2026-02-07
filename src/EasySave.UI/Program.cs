@@ -5,6 +5,7 @@ using EasySave.State;
 using EasySave.Configuration;
 using EasySave.System;
 using EasySave.Log;
+using EasySave.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -74,11 +75,27 @@ public class Program
     {
         try
         {
-            var formatter = new EasyLog.JsonLogFormatter();
+            // Load user preferences to get log format
+            var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
+            var userPreferences = preferencesRepository.Load();
+
+            // Select formatter based on user preference
+            EasyLog.ILogFormatter formatter;
+
+            if (userPreferences.LogFormat == LogFormat.Xml)
+            {
+                formatter = new EasyLog.XmlLogFormatter();
+            }
+            else
+            {
+                formatter = new EasyLog.JsonLogFormatter();
+            }
+
             var logger = new EasyLog.DailyFileLogger(
                 formatter,
                 pathProvider,
-                EasyLogDailyFileMutexName);
+                EasyLogDailyFileMutexName,
+                userPreferences.LogFormat);
 
             return logger;
         }

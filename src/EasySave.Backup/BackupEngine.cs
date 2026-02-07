@@ -44,6 +44,7 @@ public class BackupEngine(
             long remainingSize = totalSize;
 
             UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
+            Log(job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
 
             foreach (var file in files)
             {
@@ -79,8 +80,7 @@ public class BackupEngine(
                         e.Data["2_errorCode"] = result.ErrorCode;
                         throw e;
                     }
-                    Log(
-                        job.Name,
+                    Log(job.Name,
                         LogEventType.TransferFile,
                         file,
                         destinationFile,
@@ -100,9 +100,10 @@ public class BackupEngine(
             }
 
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
+            Log(job.Name, LogEventType.EndBackup, "", "", totalSize, 0);
             _stateWriter.MarkInactive(job.Id);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
             Log(
@@ -113,7 +114,7 @@ public class BackupEngine(
                 0,
                 0
             );
-            throw e;
+            throw;
         }
     }
 
