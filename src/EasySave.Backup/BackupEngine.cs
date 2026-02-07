@@ -103,7 +103,7 @@ public class BackupEngine(
             Log(job.Name, LogEventType.EndBackup, "", "", totalSize, 0);
             _stateWriter.MarkInactive(job.Id);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
             Log(
@@ -114,7 +114,7 @@ public class BackupEngine(
                 0,
                 0
             );
-            throw e;
+            throw;
         }
     }
 
