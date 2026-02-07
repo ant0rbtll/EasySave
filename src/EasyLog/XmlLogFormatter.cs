@@ -15,7 +15,7 @@ public sealed class XmlLogFormatter : ILogFormatter, ILogFileLayout
     /// </summary>
     /// <param name="entry">Entry to format.</param>
     /// <returns>Formatted XML fragment string.</returns>
-    public string Format(EasySave.Log.LogEntry entry)
+    public string Format(LogEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
 

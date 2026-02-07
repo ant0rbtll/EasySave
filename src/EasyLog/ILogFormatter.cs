@@ -7,5 +7,5 @@ public interface ILogFormatter
     /// <summary>
     /// Formats a single log entry as a formatted log entry string (not the whole file).
     /// </summary>
-    string Format(EasySave.Log.LogEntry entry);
+    string Format(LogEntry entry);
 }

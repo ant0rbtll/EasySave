@@ -21,7 +21,7 @@ public sealed class JsonLogFormatter : ILogFormatter, ILogFileLayout
     /// </summary>
     /// <param name="entry">Entry to format.</param>
     /// <returns>Formatted JSON object string.</returns>
-    public string Format(EasySave.Log.LogEntry entry)
+    public string Format(LogEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
         return JsonSerializer.Serialize(entry, Options);

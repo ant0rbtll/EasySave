@@ -51,7 +51,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
     /// <param name="entry">Entry to write.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="entry"/> is null.</exception>
     /// <exception cref="TimeoutException">Thrown when the file mutex cannot be acquired in time.</exception>
-    public void Write(EasySave.Log.LogEntry entry)
+    public void Write(LogEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
 
@@ -91,7 +91,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
     /// </summary>
     /// <param name="e">Entry to normalize.</param>
     /// <returns>A normalized copy of the entry.</returns>
-    private static EasySave.Log.LogEntry NormalizeEntry(EasySave.Log.LogEntry e)
+    private static LogEntry NormalizeEntry(LogEntry e)
     {
         var ts = e.Timestamp.Kind == DateTimeKind.Unspecified
             ? DateTime.SpecifyKind(e.Timestamp, DateTimeKind.Utc)
