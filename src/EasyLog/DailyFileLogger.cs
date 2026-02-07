@@ -107,15 +107,16 @@ public sealed class DailyFileLogger : ILogger, IDisposable
             return;
         }
 
-        string existingContent = File.ReadAllText(path, Encoding.UTF8);
-
-        if (string.IsNullOrWhiteSpace(existingContent))
+        bool isEmptyFile;
+        using (var stream = new FileStream(path, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
         {
-            CreateNewLogFile(path, indentedEntry);
-            return;
+            isEmptyFile = stream.Length == 0;
+            if (!isEmptyFile)
+                AppendToExistingFile(stream, indentedEntry);
         }
 
-        AppendToExistingFile(path, existingContent, indentedEntry);
+        if (isEmptyFile)
+            CreateNewLogFile(path, indentedEntry);
     }
 
     private void CreateNewLogFile(string path, string indentedEntry)
@@ -133,57 +134,49 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         File.WriteAllText(path, content.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
     }
 
-    private void AppendToExistingFile(string path, string existingContent, string indentedEntry)
+    private void AppendToExistingFile(FileStream stream, string indentedEntry)
     {
         var footer = _formatter.GetFileFooter();
         var separator = _formatter.GetEntrySeparator();
 
-        var newContent = new StringBuilder();
-
-        if (!string.IsNullOrEmpty(footer))
+        if (string.IsNullOrEmpty(footer))
         {
-            newContent.Append(RemoveFooterAndPrepareContent(existingContent, footer, separator, indentedEntry));
-        }
-        else
-        {
-            AppendWithoutFooter(newContent, existingContent, separator, indentedEntry);
+            AppendWithoutFooter(stream, separator, indentedEntry);
+            return;
         }
 
-        File.WriteAllText(path, newContent.ToString(), new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        AppendBeforeFooter(stream, footer, separator, indentedEntry);
     }
 
-    private string RemoveFooterAndPrepareContent(string existingContent, string footer, string separator, string indentedEntry)
+    private void AppendBeforeFooter(FileStream stream, string footer, string separator, string indentedEntry)
     {
-        var newContent = new StringBuilder();
-        int footerIndex = existingContent.LastIndexOf(footer);
+        var footerBytes = Encoding.UTF8.GetBytes(footer);
+        var bytes = ReadAllBytes(stream);
+        int footerIndex = LastIndexOf(bytes, footerBytes);
 
-        if (footerIndex >= 0)
+        if (footerIndex < 0)
         {
-            var beforeFooter = existingContent.Substring(0, footerIndex).TrimEnd();
-            newContent.Append(beforeFooter);
-
-            bool hasExistingEntries = CheckIfHasExistingEntries(beforeFooter);
-
-            if (hasExistingEntries && !string.IsNullOrEmpty(separator))
-                newContent.AppendLine(separator);
-            else
-                newContent.AppendLine();
-
-            newContent.AppendLine(indentedEntry);
-            newContent.AppendLine(footer);
-        }
-        else
-        {
-            // Footer not found, append normally
-            newContent.Append(existingContent.TrimEnd());
-            newContent.AppendLine();
+            // Keep backward-compatible behavior for malformed files: append and close with footer.
+            stream.Seek(0, SeekOrigin.End);
+            WriteNewLineIfNeeded(stream, bytes);
             if (!string.IsNullOrEmpty(separator))
-                newContent.AppendLine(separator);
-            newContent.AppendLine(indentedEntry);
-            newContent.AppendLine(footer);
+                WriteUtf8(stream, separator + Environment.NewLine);
+            WriteUtf8(stream, indentedEntry + Environment.NewLine + footer + Environment.NewLine);
+            return;
         }
 
-        return newContent.ToString();
+        var beforeFooter = Encoding.UTF8.GetString(bytes, 0, footerIndex).TrimEnd();
+        bool hasExistingEntries = CheckIfHasExistingEntries(beforeFooter);
+
+        int truncateLength = Encoding.UTF8.GetByteCount(beforeFooter);
+        stream.SetLength(truncateLength);
+        stream.Seek(0, SeekOrigin.End);
+
+        WriteUtf8(stream, Environment.NewLine);
+        if (hasExistingEntries && !string.IsNullOrEmpty(separator))
+            WriteUtf8(stream, separator + Environment.NewLine);
+
+        WriteUtf8(stream, indentedEntry + Environment.NewLine + footer + Environment.NewLine);
     }
 
     private bool CheckIfHasExistingEntries(string beforeFooter)
@@ -199,13 +192,61 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         return !string.IsNullOrEmpty(beforeFooter.Trim());
     }
 
-    private static void AppendWithoutFooter(StringBuilder newContent, string existingContent, string separator, string indentedEntry)
+    private static void AppendWithoutFooter(FileStream stream, string separator, string indentedEntry)
     {
-        newContent.Append(existingContent.TrimEnd());
-        newContent.AppendLine();
+        stream.Seek(0, SeekOrigin.End);
+        WriteNewLineIfNeeded(stream, ReadAllBytes(stream));
         if (!string.IsNullOrEmpty(separator))
-            newContent.AppendLine(separator);
-        newContent.AppendLine(indentedEntry);
+            WriteUtf8(stream, separator + Environment.NewLine);
+        WriteUtf8(stream, indentedEntry + Environment.NewLine);
+    }
+
+    private static byte[] ReadAllBytes(FileStream stream)
+    {
+        stream.Seek(0, SeekOrigin.Begin);
+        var bytes = new byte[stream.Length];
+        _ = stream.Read(bytes, 0, bytes.Length);
+        return bytes;
+    }
+
+    private static int LastIndexOf(byte[] bytes, byte[] pattern)
+    {
+        if (pattern.Length == 0 || bytes.Length < pattern.Length)
+            return -1;
+
+        for (int i = bytes.Length - pattern.Length; i >= 0; i--)
+        {
+            bool match = true;
+            for (int j = 0; j < pattern.Length; j++)
+            {
+                if (bytes[i + j] != pattern[j])
+                {
+                    match = false;
+                    break;
+                }
+            }
+
+            if (match)
+                return i;
+        }
+
+        return -1;
+    }
+
+    private static void WriteNewLineIfNeeded(FileStream stream, byte[] currentBytes)
+    {
+        if (currentBytes.Length == 0)
+            return;
+
+        byte last = currentBytes[^1];
+        if (last != (byte)'\n' && last != (byte)'\r')
+            WriteUtf8(stream, Environment.NewLine);
+    }
+
+    private static void WriteUtf8(FileStream stream, string value)
+    {
+        var bytes = Encoding.UTF8.GetBytes(value);
+        stream.Write(bytes, 0, bytes.Length);
     }
 
     private static string IndentBlock(string text, int spaces)
