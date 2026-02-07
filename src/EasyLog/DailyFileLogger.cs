@@ -152,7 +152,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
     {
         var footerBytes = Encoding.UTF8.GetBytes(footer);
         var bytes = ReadAllBytes(stream);
-        int footerIndex = LastIndexOf(bytes, footerBytes);
+        int footerIndex = FindFooterAtEnd(bytes, footerBytes);
 
         if (footerIndex < 0)
         {
@@ -185,7 +185,12 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
         if (!string.IsNullOrEmpty(header))
         {
-            var afterHeader = beforeFooter.Substring(header.TrimEnd().Length).Trim();
+            var trimmedBeforeFooter = beforeFooter.TrimStart();
+            var normalizedHeader = header.Trim();
+            if (!trimmedBeforeFooter.StartsWith(normalizedHeader, StringComparison.Ordinal))
+                return !string.IsNullOrWhiteSpace(trimmedBeforeFooter);
+
+            var afterHeader = trimmedBeforeFooter.Substring(normalizedHeader.Length).Trim();
             return !string.IsNullOrEmpty(afterHeader);
         }
 
@@ -209,28 +214,26 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         return bytes;
     }
 
-    private static int LastIndexOf(byte[] bytes, byte[] pattern)
+    private static int FindFooterAtEnd(byte[] bytes, byte[] footer)
     {
-        if (pattern.Length == 0 || bytes.Length < pattern.Length)
+        if (footer.Length == 0 || bytes.Length < footer.Length)
             return -1;
 
-        for (int i = bytes.Length - pattern.Length; i >= 0; i--)
-        {
-            bool match = true;
-            for (int j = 0; j < pattern.Length; j++)
-            {
-                if (bytes[i + j] != pattern[j])
-                {
-                    match = false;
-                    break;
-                }
-            }
+        int end = bytes.Length - 1;
+        while (end >= 0 && IsAsciiWhitespace(bytes[end]))
+            end--;
 
-            if (match)
-                return i;
+        if (end < 0 || end + 1 < footer.Length)
+            return -1;
+
+        int start = end - footer.Length + 1;
+        for (int i = 0; i < footer.Length; i++)
+        {
+            if (bytes[start + i] != footer[i])
+                return -1;
         }
 
-        return -1;
+        return start;
     }
 
     private static void WriteNewLineIfNeeded(FileStream stream, byte[] currentBytes)
@@ -248,6 +251,9 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         var bytes = Encoding.UTF8.GetBytes(value);
         stream.Write(bytes, 0, bytes.Length);
     }
+
+    private static bool IsAsciiWhitespace(byte value)
+        => value is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r';
 
     private static string IndentBlock(string text, int spaces)
     {
