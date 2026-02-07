@@ -8,7 +8,7 @@ namespace EasyLog;
 /// <summary>
 /// Formats log entries as XML strings.
 /// </summary>
-public sealed class XmlLogFormatter : ILogFormatter
+public sealed class XmlLogFormatter : ILogFormatter, ILogFileLayout
 {
     public string Format(EasySave.Log.LogEntry entry)
     {

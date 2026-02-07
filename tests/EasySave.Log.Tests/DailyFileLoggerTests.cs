@@ -368,23 +368,26 @@ public class DailyFileLoggerTests
         formatterMock
             .Setup(f => f.Format(It.IsAny<LogEntry>()))
             .Returns<LogEntry>(SerializeEntry);
-        formatterMock
+
+        var layoutMock = new Mock<ILogFileLayout>();
+        layoutMock
             .Setup(f => f.GetFileHeader())
             .Returns("[");
-        formatterMock
+        layoutMock
             .Setup(f => f.GetFileFooter())
             .Returns("]");
-        formatterMock
+        layoutMock
             .Setup(f => f.GetEntrySeparator())
             .Returns(",");
-        formatterMock
+        layoutMock
             .Setup(f => f.GetIndentSpaces())
             .Returns(2);
 
         return new DailyFileLogger(
             formatterMock.Object,
             pathProviderMock.Object,
-            mutexName: mutexName ?? $"EasySaveLogTests_{Guid.NewGuid():N}");
+            mutexName: mutexName ?? $"EasySaveLogTests_{Guid.NewGuid():N}",
+            layout: layoutMock.Object);
     }
 
     private static string GetLogPath(TempDirectory tempDir, DateTime date)

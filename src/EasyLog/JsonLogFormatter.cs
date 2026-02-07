@@ -7,7 +7,7 @@ namespace EasyLog;
 /// <summary>
 /// Formats log entries as indented JSON strings.
 /// </summary>
-public sealed class JsonLogFormatter : ILogFormatter
+public sealed class JsonLogFormatter : ILogFormatter, ILogFileLayout
 {
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -30,4 +30,3 @@ public sealed class JsonLogFormatter : ILogFormatter
 
     public int GetIndentSpaces() => 2;
 }
-

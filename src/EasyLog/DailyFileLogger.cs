@@ -11,6 +11,7 @@ namespace EasyLog;
 public sealed class DailyFileLogger : ILogger, IDisposable
 {
     private readonly ILogFormatter _formatter;
+    private readonly ILogFileLayout _layout;
     private readonly IPathProvider _pathProvider;
     private readonly LogFormat _format;
 
@@ -23,9 +24,12 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         ILogFormatter formatter,
         IPathProvider pathProvider,
         string mutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile",
-        LogFormat format = LogFormat.Json)
+        LogFormat format = LogFormat.Json,
+        ILogFileLayout? layout = null)
     {
         _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
+        _layout = layout ?? formatter as ILogFileLayout
+            ?? throw new ArgumentException("A log file layout must be provided.", nameof(layout));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
         _format = format;
         _mutex = new Mutex(false, mutexName);
@@ -98,7 +102,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
     private void AppendEntryToFile(string path, string formattedEntry)
     {
-        var indentSpaces = _formatter.GetIndentSpaces();
+        var indentSpaces = _layout.GetIndentSpaces();
         var indentedEntry = IndentBlock(formattedEntry, indentSpaces);
 
         if (!File.Exists(path))
@@ -121,8 +125,8 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
     private void CreateNewLogFile(string path, string indentedEntry)
     {
-        var header = _formatter.GetFileHeader();
-        var footer = _formatter.GetFileFooter();
+        var header = _layout.GetFileHeader();
+        var footer = _layout.GetFileFooter();
 
         var content = new StringBuilder();
         if (!string.IsNullOrEmpty(header))
@@ -136,8 +140,8 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
     private void AppendToExistingFile(FileStream stream, string indentedEntry)
     {
-        var footer = _formatter.GetFileFooter();
-        var separator = _formatter.GetEntrySeparator();
+        var footer = _layout.GetFileFooter();
+        var separator = _layout.GetEntrySeparator();
 
         if (string.IsNullOrEmpty(footer))
         {
@@ -181,7 +185,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 
     private bool CheckIfHasExistingEntries(string beforeFooter)
     {
-        var header = _formatter.GetFileHeader();
+        var header = _layout.GetFileHeader();
 
         if (!string.IsNullOrEmpty(header))
         {
