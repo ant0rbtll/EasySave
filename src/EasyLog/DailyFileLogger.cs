@@ -1,5 +1,6 @@
 using System.Text;
 using EasySave.Configuration;
+using EasySave.Core;
 using EasySave.Log;
 
 namespace EasyLog;
@@ -11,7 +12,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
 {
     private readonly ILogFormatter _formatter;
     private readonly IPathProvider _pathProvider;
-    private readonly string _fileExtension;
+    private readonly LogFormat _format;
 
     private readonly object _sync = new();
 
@@ -26,18 +27,8 @@ public sealed class DailyFileLogger : ILogger, IDisposable
     {
         _formatter = formatter ?? throw new ArgumentNullException(nameof(formatter));
         _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
-        _fileExtension = GetFileExtension(format);
+        _format = format;
         _mutex = new Mutex(false, mutexName);
-    }
-
-    private static string GetFileExtension(LogFormat format)
-    {
-        return format switch
-        {
-            LogFormat.Json => "json",
-            LogFormat.Xml => "xml",
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported log format.")
-        };
     }
 
     public void Write(EasySave.Log.LogEntry entry)
@@ -45,7 +36,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         ArgumentNullException.ThrowIfNull(entry);
 
         var normalized = NormalizeEntry(entry);
-        var path = _pathProvider.GetDailyLogPath(normalized.Timestamp.Date, _fileExtension);
+        var path = _pathProvider.GetDailyLogPath(normalized.Timestamp.Date, _format);
 
         EnsureDirectoryExists(path);
 

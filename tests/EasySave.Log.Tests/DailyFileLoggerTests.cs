@@ -1,6 +1,7 @@
 using System.Text.Json;
 using EasyLog;
 using EasySave.Configuration;
+using EasySave.Core;
 using EasySave.Log;
 using Moq;
 
@@ -44,7 +45,7 @@ public class DailyFileLoggerTests
         Assert.Equal("C:\\Source", logged.SourcePathUNC);
         Assert.Equal("D:\\Dest", logged.DestinationPathUNC);
 
-        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate, "json"), Times.Exactly(2));
+        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate, LogFormat.Json), Times.Exactly(2));
         formatterMock.Verify(f => f.Format(It.Is<LogEntry>(e =>
             e.Timestamp == expectedTimestamp &&
             e.SourcePathUNC == "C:\\Source" &&
@@ -230,7 +231,7 @@ public class DailyFileLoggerTests
 
         Assert.Equal(local.ToUniversalTime(), logged.Timestamp);
         Assert.Equal(DateTimeKind.Utc, logged.Timestamp.Kind);
-        pathProviderMock.Verify(p => p.GetDailyLogPath(local.ToUniversalTime().Date, "json"), Times.Once);
+        pathProviderMock.Verify(p => p.GetDailyLogPath(local.ToUniversalTime().Date, LogFormat.Json), Times.Once);
     }
 
     [Fact]
@@ -296,7 +297,7 @@ public class DailyFileLoggerTests
         logger.Write(entry);
 
         Assert.True(File.Exists(logPath));
-        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate, "json"), Times.Once);
+        pathProviderMock.Verify(p => p.GetDailyLogPath(expectedDate, LogFormat.Json), Times.Once);
     }
 
     [Fact]
@@ -360,7 +361,7 @@ public class DailyFileLoggerTests
     {
         pathProviderMock = new Mock<IPathProvider>();
         pathProviderMock
-            .Setup(p => p.GetDailyLogPath(It.IsAny<DateTime>(), It.IsAny<string>()))
+            .Setup(p => p.GetDailyLogPath(It.IsAny<DateTime>(), It.IsAny<LogFormat>()))
             .Returns(logPath);
 
         formatterMock = new Mock<ILogFormatter>();

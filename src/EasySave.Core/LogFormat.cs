@@ -1,4 +1,4 @@
-namespace EasyLog;
+namespace EasySave.Core;
 
 /// <summary>
 /// Defines the available log output formats.

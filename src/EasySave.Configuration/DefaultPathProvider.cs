@@ -1,3 +1,5 @@
+using EasySave.Core;
+
 namespace EasySave.Configuration
 {
     /// <summary>
@@ -17,8 +19,15 @@ namespace EasySave.Configuration
         /// Gets or creates the daily log file path for the given date.
         /// </summary>
         #region GetDailyLogPath
-        public string GetDailyLogPath(DateTime date, string extension = "json")
+        public string GetDailyLogPath(DateTime date, LogFormat format = LogFormat.Json)
         {
+            string extension = format switch
+            {
+                LogFormat.Json => "json",
+                LogFormat.Xml => "xml",
+                _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported log format.")
+            };
+
             string logsDir = ResolveLogsDirectory();
             string fileName = $"{date:yyyy-MM-dd}.{extension}";
             string fullPath = Path.Combine(logsDir, fileName);

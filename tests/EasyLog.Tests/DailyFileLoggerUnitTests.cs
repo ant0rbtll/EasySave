@@ -1,6 +1,7 @@
 using System.Text.Json;
 using EasySave.Configuration;
 using EasySave.Log;
+using EasySave.Core;
 
 namespace EasyLog.Tests;
 
@@ -241,9 +242,10 @@ public class DailyFileLoggerUnitTests
 
         public DateTime? LastRequestedDate { get; private set; }
 
-        public string GetDailyLogPath(DateTime date, string extension = "json")
+        public string GetDailyLogPath(DateTime date, LogFormat format = LogFormat.Json)
         {
             LastRequestedDate = date;
+            string extension = format == LogFormat.Xml ? "xml" : "json";
             return Path.Combine(_root, $"{date:yyyy-MM-dd}.{extension}");
         }
 

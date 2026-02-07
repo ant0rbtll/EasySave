@@ -1,4 +1,4 @@
-using EasyLog;
+using EasySave.Core;
 
 namespace EasySave.Persistence;
 
