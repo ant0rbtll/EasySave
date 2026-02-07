@@ -10,6 +10,11 @@ namespace EasyLog;
 /// </summary>
 public sealed class XmlLogFormatter : ILogFormatter, ILogFileLayout
 {
+    /// <summary>
+    /// Formats a single log entry as an XML element.
+    /// </summary>
+    /// <param name="entry">Entry to format.</param>
+    /// <returns>Formatted XML fragment string.</returns>
     public string Format(EasySave.Log.LogEntry entry)
     {
         ArgumentNullException.ThrowIfNull(entry);
@@ -39,11 +44,27 @@ public sealed class XmlLogFormatter : ILogFormatter, ILogFileLayout
         return stringWriter.ToString();
     }
 
+    /// <summary>
+    /// Gets the XML declaration and root opening tag for log files.
+    /// </summary>
+    /// <returns>XML file header.</returns>
     public string GetFileHeader() => "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<Logs>";
 
+    /// <summary>
+    /// Gets the XML root closing tag for log files.
+    /// </summary>
+    /// <returns>XML file footer.</returns>
     public string GetFileFooter() => "</Logs>";
 
+    /// <summary>
+    /// Gets the separator token between entries.
+    /// </summary>
+    /// <returns>An empty string for XML layout.</returns>
     public string GetEntrySeparator() => string.Empty;
 
+    /// <summary>
+    /// Gets indentation width used by the logger file writer.
+    /// </summary>
+    /// <returns>Indentation width in spaces.</returns>
     public int GetIndentSpaces() => 2;
 }
