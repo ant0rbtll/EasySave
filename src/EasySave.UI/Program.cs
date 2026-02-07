@@ -5,6 +5,7 @@ using EasySave.State;
 using EasySave.Configuration;
 using EasySave.System;
 using EasySave.Log;
+using EasySave.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -81,7 +82,7 @@ public class Program
             // Select formatter based on user preference
             EasyLog.ILogFormatter formatter;
 
-            if (userPreferences.LogFormat == EasyLog.LogFormat.Xml)
+            if (userPreferences.LogFormat == LogFormat.Xml)
             {
                 formatter = new EasyLog.XmlLogFormatter();
             }

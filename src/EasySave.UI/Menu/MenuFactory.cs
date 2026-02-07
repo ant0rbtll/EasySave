@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EasySave.Localization;
 using EasySave.Application;
+using EasySave.Core;
 
 namespace EasySave.UI.Menu
 {
@@ -94,8 +95,8 @@ namespace EasySave.UI.Menu
 
             Dictionary<int, Action> actions = new()
             {
-                { 0, () => _consoleUI.ChangeLogFormat(EasyLog.LogFormat.Json) },
-                { 1, () => _consoleUI.ChangeLogFormat(EasyLog.LogFormat.Xml) },
+                { 0, () => _consoleUI.ChangeLogFormat(LogFormat.Json) },
+                { 1, () => _consoleUI.ChangeLogFormat(LogFormat.Xml) },
                 { 2, _consoleUI.ConfigureParams }
             };
 

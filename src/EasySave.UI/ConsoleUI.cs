@@ -460,7 +460,7 @@ public class ConsoleUI
     /// Changes the log format and persists the preference.
     /// </summary>
     /// <param name="format">The log format to set.</param>
-    public void ChangeLogFormat(EasyLog.LogFormat format)
+    public void ChangeLogFormat(LogFormat format)
     {
         _userPreferences.LogFormat = format;
         _preferencesRepository.Save(_userPreferences);
