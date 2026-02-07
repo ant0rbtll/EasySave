@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Xml.Linq;
 using EasySave.Configuration;
 using EasySave.Log;
 using EasySave.Core;
@@ -200,6 +201,65 @@ public class DailyFileLoggerUnitTests
         var bytes = File.ReadAllBytes(logPath);
         var hasBom = bytes.Length >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
         Assert.False(hasBom);
+    }
+
+    [Fact]
+    public void Write_CreatesXmlFileWithLogsRoot()
+    {
+        using var tempDir = new TempDirectory();
+        var date = new DateTime(2026, 2, 6);
+        var pathProvider = new TestPathProvider(tempDir.Path);
+        var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
+
+        using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
+        var entry = new EasySave.Log.LogEntry(
+            new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
+            "JobXml",
+            LogEventType.TransferFile,
+            "src",
+            "dst",
+            1,
+            1);
+
+        logger.Write(entry);
+
+        var doc = XDocument.Load(logPath);
+        Assert.Equal("Logs", doc.Root?.Name.LocalName);
+        Assert.Single(doc.Root?.Elements("LogEntry") ?? []);
+    }
+
+    [Fact]
+    public void Write_AppendsXmlEntries()
+    {
+        using var tempDir = new TempDirectory();
+        var date = new DateTime(2026, 2, 6);
+        var pathProvider = new TestPathProvider(tempDir.Path);
+        var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
+
+        using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
+        var first = new EasySave.Log.LogEntry(
+            new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
+            "JobXml1",
+            LogEventType.StartBackup,
+            "src",
+            "dst",
+            0,
+            0);
+        var second = first with
+        {
+            Timestamp = new DateTime(2026, 2, 6, 8, 1, 0, DateTimeKind.Utc),
+            BackupName = "JobXml2",
+            EventType = LogEventType.EndBackup
+        };
+
+        logger.Write(first);
+        logger.Write(second);
+
+        var doc = XDocument.Load(logPath);
+        var entries = doc.Root?.Elements("LogEntry").ToList() ?? [];
+        Assert.Equal(2, entries.Count);
+        Assert.Equal("JobXml1", entries[0].Element("BackupName")?.Value);
+        Assert.Equal("JobXml2", entries[1].Element("BackupName")?.Value);
     }
 
     private static List<EasySave.Log.LogEntry> ReadLogEntries(string path)
