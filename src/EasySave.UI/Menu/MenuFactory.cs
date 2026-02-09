@@ -161,7 +161,7 @@ namespace EasySave.UI.Menu
                 { 2, () => _consoleUI.UpdateJobField(job, "destination") },
                 { 3, () => _consoleUI.UpdateJobField(job, "type") },
                 { 4, () => _consoleUI.SaveJobUpdate(job) },
-                { 5, () => _consoleUI.ShowJobDetails(job) }
+                { 5, () => _consoleUI.ExitJobUpdate(job) }
             };
 
             return new MenuConfig(items, actions, LocalizationKey.menu_job_update);
