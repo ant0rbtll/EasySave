@@ -86,3 +86,4 @@ translations:
   gui_config_saved: "Settings saved."
   gui_config_browse: "Browse..."
   gui_config_path_invalid: "The path entered is not valid."
+  gui_home_description: "EasySave is a backup software that lets you create, manage and run your backup jobs with ease. Back up your files using complete or differential mode, track progress in real time and view the activity log."
