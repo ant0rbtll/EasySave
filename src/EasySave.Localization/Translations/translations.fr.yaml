@@ -58,6 +58,7 @@ translations:
   backup_saving: "BackupJob en cours de sauvegarde..."
   backup_error: "Erreur lors de la sauvegarde"
   input_escape_to_cancel: " (Echap pour annuler)"
+  input_enter_to_keep_current: " (Entrée pour garder : {0})"
   backupjob_id_not_found: "Aucun BackupJob trouvé avec cet ID. Veuillez réessayer."
   menu_delete: "Supprimer un BackupJob"
   ask_backupjob_delete: "Veuillez indiquer l'ID du BackupJob à supprimer"

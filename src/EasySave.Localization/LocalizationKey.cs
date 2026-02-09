@@ -64,6 +64,7 @@ public enum LocalizationKey
     backup_saving,
     backup_error,
     input_escape_to_cancel,
+    input_enter_to_keep_current,
     backupjob_id_not_found,
     menu_delete,
     ask_backupjob_delete,
