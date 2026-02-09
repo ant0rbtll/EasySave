@@ -114,5 +114,6 @@ public enum LocalizationKey
     gui_config_save,
     gui_config_saved,
     gui_config_browse,
-    gui_config_path_invalid
+    gui_config_path_invalid,
+    gui_home_description
 }
