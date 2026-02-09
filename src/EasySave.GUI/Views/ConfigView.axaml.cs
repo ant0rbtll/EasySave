@@ -16,10 +16,19 @@ public partial class ConfigView : UserControl
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
+        if (DataContext is ConfigViewModel newVm)
+        {
+            newVm.BrowseFolder = BrowseFolderAsync;
+        }
+    }
+
+    protected override void OnDetachedFromVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
         if (DataContext is ConfigViewModel vm)
         {
-            vm.BrowseFolder = BrowseFolderAsync;
+            vm.BrowseFolder = null;
         }
+        base.OnDetachedFromVisualTree(e);
     }
 
     private async Task<string?> BrowseFolderAsync()

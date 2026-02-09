@@ -53,7 +53,7 @@ public partial class ConfigViewModel : ViewModelBase
         _onLanguageChanged = onLanguageChanged;
 
         var preferences = preferencesRepository.Load();
-        selectedLanguage = preferences.Language;
+        selectedLanguage = NormalizeLanguage(preferences.Language);
         logDirectory = preferences.LogDirectory;
 
         RefreshTranslations();
@@ -125,14 +125,17 @@ public partial class ConfigViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanSave))]
     private void Save()
     {
+        var language = NormalizeLanguage(SelectedLanguage);
+        SelectedLanguage = language;
+
         var preferences = new UserPreferences
         {
-            Language = SelectedLanguage,
+            Language = language,
             LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory
         };
         _preferencesRepository.Save(preferences);
 
-        _localizationService.Culture = SelectedLanguage;
+        _localizationService.Culture = language;
         _pathProvider.SetLogDirectoryOverride(preferences.LogDirectory);
 
         _onLanguageChanged();
@@ -141,6 +144,15 @@ public partial class ConfigViewModel : ViewModelBase
     }
 
     private bool CanSave() => PathError is null;
+
+    private const string DefaultLanguage = "fr";
+
+    private string NormalizeLanguage(string? language)
+    {
+        if (language is not null && AvailableLanguages.Any(l => l.Code == language))
+            return language;
+        return DefaultLanguage;
+    }
 
     partial void OnPathErrorChanged(string? value)
     {

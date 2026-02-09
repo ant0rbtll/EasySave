@@ -32,7 +32,10 @@ public partial class App : Avalonia.Application
 
             // Chargement des préférences sauvegardées
             var preferences = preferencesRepository.Load();
-            localizationService.Culture = preferences.Language;
+            var language = localizationService.AllCultures.ContainsKey(preferences.Language)
+                ? preferences.Language
+                : "fr";
+            localizationService.Culture = language;
             pathProvider.SetLogDirectoryOverride(preferences.LogDirectory);
 
             desktop.MainWindow = new MainWindow

@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EasySave.GUI.ViewModels"
+             xmlns:conv="using:Avalonia.Data.Converters"
              x:Class="EasySave.GUI.Views.ConfigView"
              x:DataType="vm:ConfigViewModel">
     <ScrollViewer Padding="32">
@@ -33,7 +34,7 @@
                 <TextBlock Text="{Binding PathError}"
                            Foreground="#F44336"
                            FontSize="12"
-                           IsVisible="{Binding PathError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                           IsVisible="{Binding PathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
                 <Button Content="{Binding ResetText}"
                         Command="{Binding ResetLogDirectoryCommand}"
                         HorizontalAlignment="Left"/>
@@ -48,7 +49,7 @@
             <!-- Message de statut -->
             <TextBlock Text="{Binding StatusMessage}"
                        Foreground="#4CAF50"
-                       IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                       IsVisible="{Binding StatusMessage, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
 
         </StackPanel>
     </ScrollViewer>
