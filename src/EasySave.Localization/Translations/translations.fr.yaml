@@ -62,6 +62,13 @@ translations:
   menu_delete: "Supprimer un BackupJob"
   ask_backupjob_delete: "Veuillez indiquer l'ID du BackupJob à supprimer"
   backupjob_deleted: "Le BackupJob a été supprimé avec succès."
+  settings_current_language: "Langue active : {0}"
+  settings_log_format_active: "Format de log actif : {0}"
+  settings_log_format_pending: "Format de log en attente : {0} (redémarrage requis)"
+  settings_log_directory_active_custom: "Dossier de logs actif : {0}"
+  settings_log_directory_active_default: "Dossier de logs actif : défaut ({0})"
+  settings_status_active_now: "actif"
+  settings_status_pending_restart: "en attente (redémarrage)"
   error: "Erreur !"
   error_add_max: "Impossible d'ajouter plus de {0} backupJobs"
   error_add_exists: "BackupJob d'identifiant {0} existe déjà"
@@ -77,4 +84,3 @@ translations:
   error_directory_not_found: "Dossier non trouvé : \"{0}\""
   error_parts_empty: "Les parties ne peuvent pas être vide"
   error_parts_null: "Les parties du chemin ne peuvent être null"
-
