@@ -2,7 +2,7 @@
 
 namespace EasySave.UI.Menu
 {
-    internal class MenuService
+    internal class MenuService : IMenuService
     {
         private readonly ILocalizationService _localizationService;
 

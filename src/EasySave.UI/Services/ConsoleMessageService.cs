@@ -5,21 +5,25 @@ namespace EasySave.UI.Services;
 /// <summary>
 /// Handles localized console output and standardized error rendering.
 /// </summary>
-internal class ConsoleMessageService(ILocalizationService localizationService, ErrorManager errorManager)
+internal class ConsoleMessageService(
+    ILocalizationService localizationService,
+    ErrorManager errorManager,
+    IConsoleAdapter consoleAdapter) : IConsoleMessageService
 {
     private readonly ILocalizationService _localizationService = localizationService;
     private readonly ErrorManager _errorManager = errorManager;
+    private readonly IConsoleAdapter _consoleAdapter = consoleAdapter;
 
     public void Write(LocalizationKey key, bool writeLine = true)
     {
         var message = _localizationService.TranslateText(key);
         if (writeLine)
         {
-            Console.WriteLine(message);
+            _consoleAdapter.WriteLine(message);
             return;
         }
 
-        Console.Write(message);
+        _consoleAdapter.Write(message);
     }
 
     public void WriteWithParams(LocalizationKey key, string[] parameters, bool writeLine = true)
@@ -27,11 +31,11 @@ internal class ConsoleMessageService(ILocalizationService localizationService, E
         var message = _localizationService.TranslateTextWithParams(key, parameters);
         if (writeLine)
         {
-            Console.WriteLine(message);
+            _consoleAdapter.WriteLine(message);
             return;
         }
 
-        Console.Write(message);
+        _consoleAdapter.Write(message);
     }
 
     public string Translate(LocalizationKey key)
@@ -41,8 +45,8 @@ internal class ConsoleMessageService(ILocalizationService localizationService, E
 
     public void ShowError(Exception exception)
     {
-        Console.WriteLine();
-        Console.ForegroundColor = ConsoleColor.Red;
+        _consoleAdapter.WriteLine();
+        _consoleAdapter.SetForegroundColor(ConsoleColor.Red);
         Write(LocalizationKey.error);
 
         var messageKey = exception.Message;
@@ -64,9 +68,9 @@ internal class ConsoleMessageService(ILocalizationService localizationService, E
         }
         else
         {
-            Console.WriteLine(exception.Message);
+            _consoleAdapter.WriteLine(exception.Message);
         }
 
-        Console.ResetColor();
+        _consoleAdapter.ResetColor();
     }
 }

@@ -6,37 +6,40 @@ namespace EasySave.UI.Services;
 /// <summary>
 /// Handles interactive user prompts in the console.
 /// </summary>
-internal class ConsoleInputService(ConsoleMessageService messageService)
+internal class ConsoleInputService(
+    IConsoleMessageService messageService,
+    IConsoleAdapter consoleAdapter) : IConsoleInputService
 {
-    private readonly ConsoleMessageService _messageService = messageService;
+    private readonly IConsoleMessageService _messageService = messageService;
+    private readonly IConsoleAdapter _consoleAdapter = consoleAdapter;
 
     public string? AskString(LocalizationKey key)
     {
         _messageService.Write(key, false);
         _messageService.Write(LocalizationKey.input_escape_to_cancel, false);
-        Console.Write(" : ");
+        _consoleAdapter.Write(" : ");
 
         string input = string.Empty;
         ConsoleKeyInfo keyInfo;
 
         do
         {
-            keyInfo = Console.ReadKey(intercept: true);
+            keyInfo = _consoleAdapter.ReadKey(intercept: true);
 
             if (keyInfo.Key == ConsoleKey.Escape)
             {
-                Console.WriteLine();
+                _consoleAdapter.WriteLine();
                 return null;
             }
 
             if (keyInfo.Key == ConsoleKey.Enter)
             {
-                Console.WriteLine();
+                _consoleAdapter.WriteLine();
                 if (string.IsNullOrWhiteSpace(input))
                 {
                     _messageService.Write(LocalizationKey.input_string_invalid, false);
                     _messageService.Write(LocalizationKey.input_escape_to_cancel, false);
-                    Console.Write(" : ");
+                    _consoleAdapter.Write(" : ");
                     input = string.Empty;
                     continue;
                 }
@@ -47,14 +50,14 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
             if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
                 input = input[..^1];
-                Console.Write("\b \b");
+                _consoleAdapter.Write("\b \b");
                 continue;
             }
 
             if (!char.IsControl(keyInfo.KeyChar))
             {
                 input += keyInfo.KeyChar;
-                Console.Write(keyInfo.KeyChar);
+                _consoleAdapter.Write(keyInfo.KeyChar.ToString());
             }
         }
         while (true);
@@ -64,24 +67,24 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
     {
         _messageService.Write(key, false);
         _messageService.Write(LocalizationKey.input_escape_to_cancel, false);
-        Console.Write(" : ");
+        _consoleAdapter.Write(" : ");
 
         string input = string.Empty;
         ConsoleKeyInfo keyInfo;
 
         do
         {
-            keyInfo = Console.ReadKey(intercept: true);
+            keyInfo = _consoleAdapter.ReadKey(intercept: true);
 
             if (keyInfo.Key == ConsoleKey.Escape)
             {
-                Console.WriteLine();
+                _consoleAdapter.WriteLine();
                 return null;
             }
 
             if (keyInfo.Key == ConsoleKey.Enter)
             {
-                Console.WriteLine();
+                _consoleAdapter.WriteLine();
                 if (int.TryParse(input, out var numberInput))
                 {
                     return numberInput;
@@ -89,7 +92,7 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
 
                 _messageService.Write(LocalizationKey.input_number_invalid, false);
                 _messageService.Write(LocalizationKey.input_escape_to_cancel, false);
-                Console.Write(" : ");
+                _consoleAdapter.Write(" : ");
                 input = string.Empty;
                 continue;
             }
@@ -97,14 +100,14 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
             if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
                 input = input[..^1];
-                Console.Write("\b \b");
+                _consoleAdapter.Write("\b \b");
                 continue;
             }
 
             if (char.IsDigit(keyInfo.KeyChar) || (keyInfo.KeyChar == '-' && input.Length == 0))
             {
                 input += keyInfo.KeyChar;
-                Console.Write(keyInfo.KeyChar);
+                _consoleAdapter.Write(keyInfo.KeyChar.ToString());
             }
         }
         while (true);
@@ -115,24 +118,24 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
         _messageService.Write(key, false);
         _messageService.Write(LocalizationKey.input_escape_to_cancel, false);
         _messageService.WriteWithParams(LocalizationKey.input_enter_to_keep_current, [currentValue], false);
-        Console.Write(" : ");
+        _consoleAdapter.Write(" : ");
 
         string input = string.Empty;
         ConsoleKeyInfo keyInfo;
 
         do
         {
-            keyInfo = Console.ReadKey(intercept: true);
+            keyInfo = _consoleAdapter.ReadKey(intercept: true);
 
             if (keyInfo.Key == ConsoleKey.Escape)
             {
-                Console.WriteLine();
+                _consoleAdapter.WriteLine();
                 return null;
             }
 
             if (keyInfo.Key == ConsoleKey.Enter)
             {
-                Console.WriteLine();
+                _consoleAdapter.WriteLine();
                 if (input.Length == 0)
                 {
                     return currentValue;
@@ -143,7 +146,7 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
                     _messageService.Write(LocalizationKey.input_string_invalid, false);
                     _messageService.Write(LocalizationKey.input_escape_to_cancel, false);
                     _messageService.WriteWithParams(LocalizationKey.input_enter_to_keep_current, [currentValue], false);
-                    Console.Write(" : ");
+                    _consoleAdapter.Write(" : ");
                     input = string.Empty;
                     continue;
                 }
@@ -154,14 +157,14 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
             if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
                 input = input[..^1];
-                Console.Write("\b \b");
+                _consoleAdapter.Write("\b \b");
                 continue;
             }
 
             if (!char.IsControl(keyInfo.KeyChar))
             {
                 input += keyInfo.KeyChar;
-                Console.Write(keyInfo.KeyChar);
+                _consoleAdapter.Write(keyInfo.KeyChar.ToString());
             }
         }
         while (true);
@@ -172,24 +175,24 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
         _messageService.Write(key, false);
         _messageService.Write(LocalizationKey.input_escape_to_cancel, false);
         _messageService.WriteWithParams(LocalizationKey.input_enter_to_keep_current, [currentValue.ToString()], false);
-        Console.Write(" : ");
+        _consoleAdapter.Write(" : ");
 
         string input = string.Empty;
         ConsoleKeyInfo keyInfo;
 
         do
         {
-            keyInfo = Console.ReadKey(intercept: true);
+            keyInfo = _consoleAdapter.ReadKey(intercept: true);
 
             if (keyInfo.Key == ConsoleKey.Escape)
             {
-                Console.WriteLine();
+                _consoleAdapter.WriteLine();
                 return null;
             }
 
             if (keyInfo.Key == ConsoleKey.Enter)
             {
-                Console.WriteLine();
+                _consoleAdapter.WriteLine();
                 if (input.Length == 0)
                 {
                     return currentValue;
@@ -203,7 +206,7 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
                 _messageService.Write(LocalizationKey.input_number_invalid, false);
                 _messageService.Write(LocalizationKey.input_escape_to_cancel, false);
                 _messageService.WriteWithParams(LocalizationKey.input_enter_to_keep_current, [currentValue.ToString()], false);
-                Console.Write(" : ");
+                _consoleAdapter.Write(" : ");
                 input = string.Empty;
                 continue;
             }
@@ -211,14 +214,14 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
             if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
             {
                 input = input[..^1];
-                Console.Write("\b \b");
+                _consoleAdapter.Write("\b \b");
                 continue;
             }
 
             if (char.IsDigit(keyInfo.KeyChar) || (keyInfo.KeyChar == '-' && input.Length == 0))
             {
                 input += keyInfo.KeyChar;
-                Console.Write(keyInfo.KeyChar);
+                _consoleAdapter.Write(keyInfo.KeyChar.ToString());
             }
         }
         while (true);
@@ -231,7 +234,7 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
 
         for (var index = 0; index < values.Length; index++)
         {
-            Console.WriteLine($"{index + 1}. {values[index]}");
+            _consoleAdapter.WriteLine($"{index + 1}. {values[index]}");
         }
 
         _messageService.Write(key);
@@ -261,7 +264,7 @@ internal class ConsoleInputService(ConsoleMessageService messageService)
 
         for (var index = 0; index < values.Length; index++)
         {
-            Console.WriteLine($"{index + 1}. {values[index]}");
+            _consoleAdapter.WriteLine($"{index + 1}. {values[index]}");
         }
 
         _messageService.Write(key);

@@ -6,7 +6,7 @@ namespace EasySave.UI.Menu
     /// <summary>
     /// Creates menu configurations from provided data and callbacks.
     /// </summary>
-    internal class MenuFactory
+    internal class MenuFactory : IMenuFactory
     {
         public MenuConfig CreateMainMenu(int currentJobCount, Action onCreateJob, Action onManageJobs, Action onConfigureParams, Action onQuit)
         {
