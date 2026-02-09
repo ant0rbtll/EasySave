@@ -442,7 +442,7 @@ public class ConsoleUI
             if (backupIndex == null) { MainMenu(); return; }
             try
             {
-                BackupJob? job = _backupApplicationService.GetJobById(backupIndex.Value);
+                BackupJob? job = _backupApplicationService.GetJob(backupIndex.Value);
                 if (job == null)
                 {
                     ShowMessage(LocalizationKey.backupjob_id_not_found);
@@ -450,7 +450,7 @@ public class ConsoleUI
                 }
 
                 ShowMessage(LocalizationKey.backup_saving);
-                _backupApplicationService.RunJobById(backupIndex.Value);
+                _backupApplicationService.RunJob(backupIndex.Value);
             }
             catch (Exception ex)
             {
@@ -479,7 +479,7 @@ public class ConsoleUI
 
             try
             {
-                BackupJob? job = _backupApplicationService.GetJobById(backupIndex.Value);
+                BackupJob? job = _backupApplicationService.GetJob(backupIndex.Value);
                 if (job == null)
                 {
                     ShowMessage(LocalizationKey.backupjob_id_not_found);
@@ -830,7 +830,7 @@ public class ConsoleUI
         ShowMessage(LocalizationKey.backupjob_running);
         try
         {
-            _backupApplicationService.RunJobById(job.Id);
+            _backupApplicationService.RunJob(job.Id);
             ShowMessageParam(LocalizationKey.backupjob_completed_named, new[] { job.Name });
         }
         catch (Exception ex)
@@ -987,7 +987,7 @@ public class ConsoleUI
         try
         {
             var jobs = _parser.Parse(args);
-            _backupApplicationService.RunJobsByIds(jobs);
+            _backupApplicationService.RunJobs(jobs);
         }
         catch (Exception e)
         {

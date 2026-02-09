@@ -44,34 +44,24 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     }
 
     /// <summary>
-    /// Executes a specific backup job.
-    /// </summary>
-    /// <param name="job">The backup job to execute.</param>
-    public void RunJob(BackupJob job)
-    {
-        _engine.Execute(job);
-    }
-
-    /// <summary>
     /// Executes a specific backup job by its identifier.
     /// </summary>
     /// <param name="id">Identifier of the job to run.</param>
-    public void RunJobById(int id)
+    public void RunJob(int id)
     {
         var job = _repo.GetById(id);
-        if (job != null) RunJob(job);
+        if (job != null) ExecuteJob(job);
     }
 
     /// <summary>
     /// Executes a specific list of backup jobs.
     /// </summary>
     /// <param name="ids">Array of job identifiers to launch.</param>
-    public void RunJobsByIds(int[] ids)
+    public void RunJobs(int[] ids)
     {
         foreach (int id in ids)
         {
-            var job = _repo.GetById(id);
-            if (job != null) RunJob(job);
+            RunJob(id);
         }
     }
 
@@ -83,7 +73,7 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
         var jobs = _repo.GetAll();
         foreach (var job in jobs)
         {
-            RunJob(job);
+            ExecuteJob(job);
         }
     }
 
@@ -101,7 +91,7 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     /// </summary>
     /// <param name="id">The job identifier.</param>
     /// <returns>The BackupJob if found, null otherwise.</returns>
-    public BackupJob? GetJobById(int id)
+    public BackupJob? GetJob(int id)
     {
         return _repo.GetById(id);
     }
@@ -113,5 +103,10 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     public void UpdateJob(BackupJob job)
     {
         _repo.Update(job);
+    }
+
+    private void ExecuteJob(BackupJob job)
+    {
+        _engine.Execute(job);
     }
 }
