@@ -51,7 +51,7 @@ namespace EasySave.UI.Menu
             var actions = new Dictionary<int, Action>();
             int index = 0;
 
-            foreach (var culture in cultures)
+            foreach (var culture in cultures.OrderBy(entry => entry.Key, StringComparer.Ordinal))
             {
                 items.Add(culture.Value);
                 string locale = culture.Key;

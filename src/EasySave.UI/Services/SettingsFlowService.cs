@@ -17,7 +17,8 @@ internal class SettingsFlowService(
     IMenuService menuService,
     IMenuFactory menuFactory,
     IConsoleMessageService messageService,
-    IConsoleInputService inputService)
+    IConsoleInputService inputService,
+    IConsoleAdapter consoleAdapter)
 {
     private readonly IUserPreferencesRepository _preferencesRepository = preferencesRepository;
     private readonly UserPreferences _userPreferences = userPreferences;
@@ -27,6 +28,7 @@ internal class SettingsFlowService(
     private readonly IMenuFactory _menuFactory = menuFactory;
     private readonly IConsoleMessageService _messageService = messageService;
     private readonly IConsoleInputService _inputService = inputService;
+    private readonly IConsoleAdapter _consoleAdapter = consoleAdapter;
     private readonly LogFormat _activeLogFormat = userPreferences.LogFormat;
 
     private string _activeLogDirectory = string.Empty;
@@ -87,10 +89,10 @@ internal class SettingsFlowService(
     /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ShowChangeLogDirectory(Action onBackToMainMenu)
     {
-        Console.Clear();
+        _consoleAdapter.Clear();
         _menuService.DisplayLabel(LocalizationKey.menu_params_log_path);
         DisplayActiveLogDirectoryStatus();
-        Console.WriteLine();
+        _consoleAdapter.WriteLine();
 
         var input = _inputService.AskString(LocalizationKey.ask_log_path);
         if (input == null)
@@ -207,7 +209,7 @@ internal class SettingsFlowService(
         }
 
         DisplayActiveLogDirectoryStatus();
-        Console.WriteLine();
+        _consoleAdapter.WriteLine();
     }
 
     /// <summary>
@@ -216,7 +218,7 @@ internal class SettingsFlowService(
     private void RenderLocaleHeader()
     {
         _messageService.WriteWithParams(LocalizationKey.settings_current_language, [GetCurrentLanguageLabel()]);
-        Console.WriteLine();
+        _consoleAdapter.WriteLine();
     }
 
     /// <summary>
@@ -231,7 +233,7 @@ internal class SettingsFlowService(
             _messageService.WriteWithParams(LocalizationKey.settings_log_format_pending, [GetLogFormatLabel(_userPreferences.LogFormat)]);
         }
 
-        Console.WriteLine();
+        _consoleAdapter.WriteLine();
     }
 
     /// <summary>
@@ -254,8 +256,8 @@ internal class SettingsFlowService(
             return;
         }
 
-        _pathProvider.SetLogDirectoryOverride(directory);
         _activeLogDirectory = ResolveLogDirectoryCandidate(directory);
+        _pathProvider.SetLogDirectoryOverride(_activeLogDirectory);
         _isUsingDefaultLogDirectory = false;
     }
 

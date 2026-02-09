@@ -298,6 +298,7 @@ internal class JobsFlowService(
         else
         {
             ShowJobDetails(job, onBackToMainMenu);
+            return;
         }
 
         _menuService.WaitForUser();

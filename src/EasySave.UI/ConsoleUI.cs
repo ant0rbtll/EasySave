@@ -44,9 +44,9 @@ public class ConsoleUI
         _backupApplicationService = backupApplicationService;
 
         LocalizationService = new LocalizationService();
-        _menuService = new MenuService(LocalizationService);
-        _menuFactory = new MenuFactory();
         _consoleAdapter = new SystemConsoleAdapter();
+        _menuService = new MenuService(LocalizationService, _consoleAdapter);
+        _menuFactory = new MenuFactory();
 
         _messageService = new ConsoleMessageService(LocalizationService, new ErrorManager(), _consoleAdapter);
         _inputService = new ConsoleInputService(_messageService, _consoleAdapter);
@@ -69,7 +69,8 @@ public class ConsoleUI
             _menuService,
             _menuFactory,
             _messageService,
-            _inputService);
+            _inputService,
+            _consoleAdapter);
 
         _settingsFlowService.InitializeCulture();
     }

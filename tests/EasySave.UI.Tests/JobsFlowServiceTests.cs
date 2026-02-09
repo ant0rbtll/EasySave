@@ -55,6 +55,50 @@ public class JobsFlowServiceTests
         Assert.Equal(LocalizationKey.menu_job_details, menuService.ShownMenuConfigs[1].Label);
     }
 
+    [Fact]
+    public void DeleteJob_WhenConfirmed_RemovesJobAndReturnsToList()
+    {
+        var applicationService = CreateApplicationService();
+        applicationService.CreateJob("A", "S1", "D1", BackupType.Complete);
+
+        var service = CreateService(applicationService, out var menuService, out _, out _, out var consoleAdapter);
+        consoleAdapter.EnqueueKey(ConsoleKey.Y, 'y');
+
+        service.ShowJobsList(() => { });
+        var listMenu = menuService.ShownMenuConfigs[0];
+        listMenu.Actions[0]();
+
+        var detailsMenu = menuService.ShownMenuConfigs[1];
+        detailsMenu.Actions[2]();
+
+        Assert.Empty(applicationService.GetAllJobs());
+        Assert.Equal(1, menuService.WaitCalls);
+        Assert.Equal(3, menuService.ShownMenuConfigs.Count);
+        Assert.Equal(LocalizationKey.menu_manage_jobs, menuService.ShownMenuConfigs[2].Label);
+    }
+
+    [Fact]
+    public void DeleteJob_WhenCancelled_ReturnsToDetailsWithoutWaitOrListRefresh()
+    {
+        var applicationService = CreateApplicationService();
+        applicationService.CreateJob("A", "S1", "D1", BackupType.Complete);
+
+        var service = CreateService(applicationService, out var menuService, out _, out _, out var consoleAdapter);
+        consoleAdapter.EnqueueKey(ConsoleKey.N, 'n');
+
+        service.ShowJobsList(() => { });
+        var listMenu = menuService.ShownMenuConfigs[0];
+        listMenu.Actions[0]();
+
+        var detailsMenu = menuService.ShownMenuConfigs[1];
+        detailsMenu.Actions[2]();
+
+        Assert.Single(applicationService.GetAllJobs());
+        Assert.Equal(0, menuService.WaitCalls);
+        Assert.Equal(3, menuService.ShownMenuConfigs.Count);
+        Assert.Equal(LocalizationKey.menu_job_details, menuService.ShownMenuConfigs[2].Label);
+    }
+
     private static JobsFlowService CreateService(
         BackupApplicationService applicationService,
         out FakeMenuService menuService,

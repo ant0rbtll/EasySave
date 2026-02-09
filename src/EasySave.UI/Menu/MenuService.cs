@@ -1,14 +1,17 @@
 ﻿using EasySave.Localization;
+using EasySave.UI.Services;
 
 namespace EasySave.UI.Menu
 {
     internal class MenuService : IMenuService
     {
         private readonly ILocalizationService _localizationService;
+        private readonly IConsoleAdapter _consoleAdapter;
 
-        public MenuService(ILocalizationService localizationService)
+        public MenuService(ILocalizationService localizationService, IConsoleAdapter? consoleAdapter = null)
         {
             _localizationService = localizationService;
+            _consoleAdapter = consoleAdapter ?? new SystemConsoleAdapter();
         }
 
         /// <summary>
@@ -22,7 +25,7 @@ namespace EasySave.UI.Menu
 
             do
             {
-                Console.Clear();
+                _consoleAdapter.Clear();
                 DisplayLabel(menuLabel);
                 renderHeader?.Invoke();
 
@@ -31,29 +34,29 @@ namespace EasySave.UI.Menu
                     string shortcutPrefix = i < 9 ? $"{i + 1}. " : "   ";
                     if (i == index)
                     {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write($"> {shortcutPrefix}");
-                        Console.WriteLine(_localizationService.TranslateText(menuItems[i]));
-                        Console.ResetColor();
+                        _consoleAdapter.SetForegroundColor(ConsoleColor.Green);
+                        _consoleAdapter.Write($"> {shortcutPrefix}");
+                        _consoleAdapter.WriteLine(_localizationService.TranslateText(menuItems[i]));
+                        _consoleAdapter.ResetColor();
                     }
                     else
                     {
-                        Console.Write($"  {shortcutPrefix}");
-                        Console.WriteLine(_localizationService.TranslateText(menuItems[i]));
+                        _consoleAdapter.Write($"  {shortcutPrefix}");
+                        _consoleAdapter.WriteLine(_localizationService.TranslateText(menuItems[i]));
                     }
                 }
 
-                key = Console.ReadKey(true).Key;
+                key = _consoleAdapter.ReadKey(true).Key;
 
                 if (TryGetShortcutSelection(key, menuItems.Length, out int selectedIndex))
                 {
-                    Console.Clear();
+                    _consoleAdapter.Clear();
                     return selectedIndex;
                 }
 
                 if (key == ConsoleKey.Escape && backIndex >= 0)
                 {
-                    Console.Clear();
+                    _consoleAdapter.Clear();
                     return backIndex;
                 }
                 else if (key == ConsoleKey.UpArrow && index > 0)
@@ -67,7 +70,7 @@ namespace EasySave.UI.Menu
 
             } while (key != ConsoleKey.Enter);
 
-            Console.Clear();
+            _consoleAdapter.Clear();
             return index;
         }
 
@@ -84,7 +87,7 @@ namespace EasySave.UI.Menu
                 item => string.Equals(item, backLabel, StringComparison.OrdinalIgnoreCase));
             do
             {
-                Console.Clear();
+                _consoleAdapter.Clear();
                 DisplayLabel(menuLabel);
                 renderHeader?.Invoke();
 
@@ -93,29 +96,29 @@ namespace EasySave.UI.Menu
                     string shortcutPrefix = i < 9 ? $"{i + 1}. " : "   ";
                     if (i == index)
                     {
-                        Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write($"> {shortcutPrefix}");
-                        Console.WriteLine(menuItems[i]);
-                        Console.ResetColor();
+                        _consoleAdapter.SetForegroundColor(ConsoleColor.Green);
+                        _consoleAdapter.Write($"> {shortcutPrefix}");
+                        _consoleAdapter.WriteLine(menuItems[i]);
+                        _consoleAdapter.ResetColor();
                     }
                     else
                     {
-                        Console.Write($"  {shortcutPrefix}");
-                        Console.WriteLine(menuItems[i]);
+                        _consoleAdapter.Write($"  {shortcutPrefix}");
+                        _consoleAdapter.WriteLine(menuItems[i]);
                     }
                 }
 
-                key = Console.ReadKey(true).Key;
+                key = _consoleAdapter.ReadKey(true).Key;
 
                 if (TryGetShortcutSelection(key, menuItems.Length, out int selectedIndex))
                 {
-                    Console.Clear();
+                    _consoleAdapter.Clear();
                     return selectedIndex;
                 }
 
                 if (key == ConsoleKey.Escape && backIndex >= 0)
                 {
-                    Console.Clear();
+                    _consoleAdapter.Clear();
                     return backIndex;
                 }
                 else if (key == ConsoleKey.UpArrow && index > 0)
@@ -125,7 +128,7 @@ namespace EasySave.UI.Menu
 
             } while (key != ConsoleKey.Enter);
 
-            Console.Clear();
+            _consoleAdapter.Clear();
             return index;
         }
 
@@ -179,10 +182,10 @@ namespace EasySave.UI.Menu
         /// </summary>
         public void DisplayLabel(LocalizationKey key)
         {
-            Console.Write("====");
+            _consoleAdapter.Write("====");
             string message = _localizationService.TranslateText(key);
-            Console.Write(message);
-            Console.Write("====\n");
+            _consoleAdapter.Write(message);
+            _consoleAdapter.Write("====\n");
         }
 
         /// <summary>
@@ -190,8 +193,8 @@ namespace EasySave.UI.Menu
         /// </summary>
         public void WaitForUser(LocalizationKey messageKey = LocalizationKey.waiting_user)
         {
-            Console.WriteLine(_localizationService.TranslateText(messageKey));
-            Console.ReadKey(true);
+            _consoleAdapter.WriteLine(_localizationService.TranslateText(messageKey));
+            _consoleAdapter.ReadKey(true);
         }
 
         private static bool TryGetShortcutSelection(ConsoleKey key, int itemCount, out int selectedIndex)
