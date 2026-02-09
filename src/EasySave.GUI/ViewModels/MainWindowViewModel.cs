@@ -15,7 +15,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly HomeViewModel _homeViewModel;
     private readonly CreateViewModel _createViewModel;
     private readonly ManageViewModel _manageViewModel;
-    private readonly ProgressViewModel _progressViewModel;
     private readonly LogViewModel _logViewModel;
     private readonly ConfigViewModel _configViewModel;
 
@@ -27,7 +26,6 @@ public partial class MainWindowViewModel : ViewModelBase
         _homeViewModel = new HomeViewModel(localizationService);
         _createViewModel = new CreateViewModel();
         _manageViewModel = new ManageViewModel();
-        _progressViewModel = new ProgressViewModel();
         _logViewModel = new LogViewModel();
 
         Sidebar = new SidebarViewModel(Navigate, localizationService);
@@ -54,7 +52,6 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             "creation" => _createViewModel,
             "manage" => _manageViewModel,
-            "progress" => _progressViewModel,
             "log" => _logViewModel,
             "conf" => _configViewModel,
             _ => CurrentPage
