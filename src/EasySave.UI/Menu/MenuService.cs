@@ -28,21 +28,28 @@ namespace EasySave.UI.Menu
 
                 for (int i = 0; i < menuItems.Length; i++)
                 {
+                    string shortcutPrefix = i < 9 ? $"{i + 1}. " : "   ";
                     if (i == index)
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write("> ");
+                        Console.Write($"> {shortcutPrefix}");
                         Console.WriteLine(_localizationService.TranslateText(menuItems[i]));
                         Console.ResetColor();
                     }
                     else
                     {
-                        Console.Write("  ");
+                        Console.Write($"  {shortcutPrefix}");
                         Console.WriteLine(_localizationService.TranslateText(menuItems[i]));
                     }
                 }
 
                 key = Console.ReadKey(true).Key;
+
+                if (TryGetShortcutSelection(key, menuItems.Length, out int selectedIndex))
+                {
+                    Console.Clear();
+                    return selectedIndex;
+                }
 
                 if (key == ConsoleKey.Escape && backIndex >= 0)
                 {
@@ -83,21 +90,28 @@ namespace EasySave.UI.Menu
 
                 for (int i = 0; i < menuItems.Length; i++)
                 {
+                    string shortcutPrefix = i < 9 ? $"{i + 1}. " : "   ";
                     if (i == index)
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.Write("> ");
+                        Console.Write($"> {shortcutPrefix}");
                         Console.WriteLine(menuItems[i]);
                         Console.ResetColor();
                     }
                     else
                     {
-                        Console.Write("  ");
+                        Console.Write($"  {shortcutPrefix}");
                         Console.WriteLine(menuItems[i]);
                     }
                 }
 
                 key = Console.ReadKey(true).Key;
+
+                if (TryGetShortcutSelection(key, menuItems.Length, out int selectedIndex))
+                {
+                    Console.Clear();
+                    return selectedIndex;
+                }
 
                 if (key == ConsoleKey.Escape && backIndex >= 0)
                 {
@@ -178,6 +192,34 @@ namespace EasySave.UI.Menu
         {
             Console.WriteLine(_localizationService.TranslateText(messageKey));
             Console.ReadKey(true);
+        }
+
+        private static bool TryGetShortcutSelection(ConsoleKey key, int itemCount, out int selectedIndex)
+        {
+            selectedIndex = -1;
+            int maxShortcutIndex = Math.Min(itemCount, 9);
+
+            if (key >= ConsoleKey.D1 && key <= ConsoleKey.D9)
+            {
+                int numericIndex = (int)key - (int)ConsoleKey.D1;
+                if (numericIndex < maxShortcutIndex)
+                {
+                    selectedIndex = numericIndex;
+                    return true;
+                }
+            }
+
+            if (key >= ConsoleKey.NumPad1 && key <= ConsoleKey.NumPad9)
+            {
+                int numericIndex = (int)key - (int)ConsoleKey.NumPad1;
+                if (numericIndex < maxShortcutIndex)
+                {
+                    selectedIndex = numericIndex;
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
