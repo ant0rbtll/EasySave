@@ -4,8 +4,11 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using System.Linq;
 using Avalonia.Markup.Xaml;
+using EasySave.Configuration;
 using EasySave.GUI.ViewModels;
 using EasySave.GUI.Views;
+using EasySave.Localization;
+using EasySave.Persistence;
 
 namespace EasySave.GUI;
 
@@ -20,12 +23,24 @@ public partial class App : Avalonia.Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            // Avoid duplicate validations from both Avalonia and the CommunityToolkit. 
-            // More info: https://docs.avaloniaui.net/docs/guides/development-guides/data-validation#manage-validationplugins
             DisableAvaloniaDataAnnotationValidation();
+
+            // Création des services
+            var pathProvider = new DefaultPathProvider();
+            var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
+            var localizationService = new LocalizationService();
+
+            // Chargement des préférences sauvegardées
+            var preferences = preferencesRepository.Load();
+            localizationService.Culture = preferences.Language;
+            pathProvider.SetLogDirectoryOverride(preferences.LogDirectory);
+
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(),
+                DataContext = new MainWindowViewModel(
+                    preferencesRepository,
+                    localizationService,
+                    pathProvider),
             };
         }
 
@@ -34,11 +49,9 @@ public partial class App : Avalonia.Application
 
     private void DisableAvaloniaDataAnnotationValidation()
     {
-        // Get an array of plugins to remove
         var dataValidationPluginsToRemove =
             BindingPlugins.DataValidators.OfType<DataAnnotationsValidationPlugin>().ToArray();
 
-        // remove each entry found
         foreach (var plugin in dataValidationPluginsToRemove)
         {
             BindingPlugins.DataValidators.Remove(plugin);
