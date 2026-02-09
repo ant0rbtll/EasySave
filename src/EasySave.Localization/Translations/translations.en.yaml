@@ -95,7 +95,6 @@ translations:
   error_parts_null: "Path parts cannot be null or whitespace"
   gui_sidebar_create: "Create"
   gui_sidebar_manage: "Manage"
-  gui_sidebar_progress: "Progress"
   gui_sidebar_log: "Activity log"
   gui_sidebar_config: "Settings"
   gui_config_title: "Settings"

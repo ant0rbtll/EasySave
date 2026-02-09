@@ -95,7 +95,6 @@ translations:
   error_parts_null: "Les parties du chemin ne peuvent être null"
   gui_sidebar_create: "Créer"
   gui_sidebar_manage: "Gérer"
-  gui_sidebar_progress: "Progression"
   gui_sidebar_log: "Journal d'activité"
   gui_sidebar_config: "Configuration"
   gui_config_title: "Configuration"

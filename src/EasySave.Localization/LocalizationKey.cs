@@ -103,7 +103,6 @@ public enum LocalizationKey
     // GUI
     gui_sidebar_create,
     gui_sidebar_manage,
-    gui_sidebar_progress,
     gui_sidebar_log,
     gui_sidebar_config,
     gui_config_title,
