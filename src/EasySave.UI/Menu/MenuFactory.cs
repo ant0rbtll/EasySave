@@ -61,7 +61,7 @@ namespace EasySave.UI.Menu
                 { 1,  () => _consoleUI.ChangeLocale("en")  },
                 { 2, _consoleUI.ConfigureParams }
             };
-            return new MenuConfig(items, actions, LocalizationKey.menu_params_locale);
+            return new MenuConfig(items, actions, LocalizationKey.menu_params_locale, _consoleUI.RenderLocaleHeader);
         }
 
         public MenuConfig CreateParamsMenu()
@@ -81,16 +81,16 @@ namespace EasySave.UI.Menu
                 { 3, _consoleUI.MainMenu }
             };
 
-            return new MenuConfig(items, actions, LocalizationKey.menu_params);
+            return new MenuConfig(items, actions, LocalizationKey.menu_params, _consoleUI.RenderSettingsHeader);
         }
 
         public MenuConfig CreateLogFormatMenu()
         {
-            LocalizationKey[] items =
+            string[] items =
             {
-                LocalizationKey.log_format_json,
-                LocalizationKey.log_format_xml,
-                LocalizationKey.back
+                _consoleUI.BuildLogFormatMenuItem(LogFormat.Json),
+                _consoleUI.BuildLogFormatMenuItem(LogFormat.Xml),
+                _consoleUI.LocalizationService.TranslateText(LocalizationKey.back)
             };
 
             Dictionary<int, Action> actions = new()
@@ -100,7 +100,7 @@ namespace EasySave.UI.Menu
                 { 2, _consoleUI.ConfigureParams }
             };
 
-            return new MenuConfig(items, actions, LocalizationKey.menu_params_log_format);
+            return new MenuConfig(items, actions, LocalizationKey.menu_params_log_format, _consoleUI.RenderLogFormatHeader);
         }
 
         public MenuConfig CreateJobsListMenu()

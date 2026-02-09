@@ -12,11 +12,13 @@ namespace EasySave.UI;
 /// </summary>
 public class ConsoleUI
 {
-
     private readonly BackupApplicationService _backupApplicationService;
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly UserPreferences _userPreferences;
     private readonly IPathProvider _pathProvider;
+    private readonly LogFormat _activeLogFormat;
+    private string _activeLogDirectory = string.Empty;
+    private bool _isUsingDefaultLogDirectory;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
@@ -33,6 +35,7 @@ public class ConsoleUI
         _errorManager = new ErrorManager();
 
         _userPreferences = _preferencesRepository.Load();
+        _activeLogFormat = _userPreferences.LogFormat;
         var language = _userPreferences.Language;
 
         ApplyLogDirectoryPreference(_userPreferences.LogDirectory);
@@ -384,6 +387,8 @@ public class ConsoleUI
     {
         Console.Clear();
         _menuService.DisplayLabel(LocalizationKey.menu_params_log_path);
+        DisplayActiveLogDirectoryStatus();
+        Console.WriteLine();
 
         string? input = AskString(LocalizationKey.ask_log_path);
         if (input == null)
@@ -470,11 +475,50 @@ public class ConsoleUI
         _menuService.WaitForUser();
         ConfigureParams();
     }
+
+    public void RenderSettingsHeader()
+    {
+        ShowMessageParam(LocalizationKey.settings_current_language, new[] { GetCurrentLanguageLabel() });
+        ShowMessageParam(LocalizationKey.settings_log_format_active, new[] { GetLogFormatLabel(_activeLogFormat) });
+
+        if (_userPreferences.LogFormat != _activeLogFormat)
+        {
+            ShowMessageParam(LocalizationKey.settings_log_format_pending, new[] { GetLogFormatLabel(_userPreferences.LogFormat) });
+        }
+
+        DisplayActiveLogDirectoryStatus();
+        Console.WriteLine();
+    }
+
+    public void RenderLocaleHeader()
+    {
+        ShowMessageParam(LocalizationKey.settings_current_language, new[] { GetCurrentLanguageLabel() });
+        Console.WriteLine();
+    }
+
+    public void RenderLogFormatHeader()
+    {
+        ShowMessageParam(LocalizationKey.settings_log_format_active, new[] { GetLogFormatLabel(_activeLogFormat) });
+
+        if (_userPreferences.LogFormat != _activeLogFormat)
+        {
+            ShowMessageParam(LocalizationKey.settings_log_format_pending, new[] { GetLogFormatLabel(_userPreferences.LogFormat) });
+        }
+
+        Console.WriteLine();
+    }
+
+    public string BuildLogFormatMenuItem(LogFormat format)
+    {
+        return GetLogFormatLabel(format);
+    }
+
     private void ApplyLogDirectoryPreference(string? directory)
     {
         if (string.IsNullOrWhiteSpace(directory))
         {
             _pathProvider.SetLogDirectoryOverride(null);
+            SetDefaultLogDirectoryAsActive();
             return;
         }
 
@@ -489,10 +533,13 @@ public class ConsoleUI
                 // Best-effort notification only.
             }
             _pathProvider.SetLogDirectoryOverride(null);
+            SetDefaultLogDirectoryAsActive();
             return;
         }
 
         _pathProvider.SetLogDirectoryOverride(directory);
+        _activeLogDirectory = ResolveLogDirectoryCandidate(directory);
+        _isUsingDefaultLogDirectory = false;
     }
 
     private static bool IsValidPath(string path)
@@ -540,6 +587,42 @@ public class ConsoleUI
         }
 
         return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, trimmed));
+    }
+
+    private void SetDefaultLogDirectoryAsActive()
+    {
+        _activeLogDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
+        _isUsingDefaultLogDirectory = true;
+    }
+
+    private void DisplayActiveLogDirectoryStatus()
+    {
+        if (_isUsingDefaultLogDirectory)
+        {
+            ShowMessageParam(LocalizationKey.settings_log_directory_active_default, new[] { _activeLogDirectory });
+            return;
+        }
+
+        ShowMessageParam(LocalizationKey.settings_log_directory_active_custom, new[] { _activeLogDirectory });
+    }
+
+    private string GetCurrentLanguageLabel()
+    {
+        if (LocalizationService.AllCultures.TryGetValue(LocalizationService.Culture, out var cultureKey))
+        {
+            return LocalizationService.TranslateText(cultureKey);
+        }
+
+        return LocalizationService.Culture;
+    }
+
+    private string GetLogFormatLabel(LogFormat format)
+    {
+        return format switch
+        {
+            LogFormat.Xml => LocalizationService.TranslateText(LocalizationKey.log_format_xml),
+            _ => LocalizationService.TranslateText(LocalizationKey.log_format_json)
+        };
     }
 
     /// <summary>
