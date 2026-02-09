@@ -98,6 +98,21 @@ public enum LocalizationKey
     error_file_not_found,
     error_directory_not_found,
     error_parts_empty,
-    error_parts_null
+    error_parts_null,
 
+    // GUI
+    gui_sidebar_create,
+    gui_sidebar_manage,
+    gui_sidebar_progress,
+    gui_sidebar_log,
+    gui_sidebar_config,
+    gui_config_title,
+    gui_config_language,
+    gui_config_log_directory,
+    gui_config_log_directory_watermark,
+    gui_config_reset,
+    gui_config_save,
+    gui_config_saved,
+    gui_config_browse,
+    gui_config_path_invalid
 }
