@@ -8,10 +8,26 @@
         x:Class="EasySave.GUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="EasySave.GUI">
-    <Grid ColumnDefinitions="250,*">
-        <views:SidebarView Grid.Column="0" DataContext="{Binding Sidebar}"/>
+        Title="EasySave"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        ExtendClientAreaTitleBarHeightHint="40">
+    <Grid RowDefinitions="40,*">
+        <!-- Barre de titre custom -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*"
+              Background="#1E1E2E" IsHitTestVisible="False">
+            <Image Grid.Column="0" Source="/Assets/easysave-icon.png"
+                   Width="20" Height="20"
+                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+            <TextBlock Grid.Column="1" Text="EasySave"
+                       Foreground="White" FontWeight="SemiBold" FontSize="14"
+                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+        </Grid>
 
-        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}"/>
+        <!-- Contenu principal -->
+        <Grid Grid.Row="1" ColumnDefinitions="250,*">
+            <views:SidebarView Grid.Column="0" DataContext="{Binding Sidebar}"/>
+            <ContentControl Grid.Column="1" Content="{Binding CurrentPage}"/>
+        </Grid>
     </Grid>
 </Window>
