@@ -1,25 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using EasySave.Core;
 using EasySave.Localization;
-using EasySave.Application;
-using EasySave.Core;
 
 namespace EasySave.UI.Menu
 {
     /// <summary>
-    /// Creates menu configurations for the various application screens.
+    /// Creates menu configurations from provided data and callbacks.
     /// </summary>
-    internal class MenuFactory(ConsoleUI consoleUI, BackupApplicationService backupApplicationService)
+    internal class MenuFactory
     {
-        private readonly ConsoleUI _consoleUI = consoleUI;
-        private readonly BackupApplicationService _backupApplicationService = backupApplicationService;
-        //private readonly BackupApplicationService backupApplicationService;
-
-        public MenuConfig CreateMainMenu()
+        public MenuConfig CreateMainMenu(int currentJobCount, Action onCreateJob, Action onManageJobs, Action onConfigureParams, Action onQuit)
         {
             const int maxJobs = 5;
-            int currentJobCount = _backupApplicationService.GetAllJobs().Count;
             bool hasJobs = currentJobCount > 0;
             bool canCreateJob = currentJobCount < maxJobs;
 
@@ -30,41 +21,53 @@ namespace EasySave.UI.Menu
             if (canCreateJob)
             {
                 items.Add(LocalizationKey.menu_create);
-                actions[index++] = _consoleUI.CreateBackupJob;
+                actions[index++] = onCreateJob;
             }
 
             if (hasJobs)
             {
                 items.Add(LocalizationKey.menu_manage_jobs);
-                actions[index++] = _consoleUI.ShowJobsList;
+                actions[index++] = onManageJobs;
             }
 
             items.Add(LocalizationKey.menu_params);
-            actions[index++] = _consoleUI.ConfigureParams;
+            actions[index++] = onConfigureParams;
 
             items.Add(LocalizationKey.menu_quit);
-            actions[index] = _consoleUI.Quit;
+            actions[index] = onQuit;
 
             return new MenuConfig(items.ToArray(), actions, LocalizationKey.menu);
         }
 
-        public MenuConfig CreateLocaleMenu()
+        public MenuConfig CreateLocaleMenu(
+            IReadOnlyDictionary<string, LocalizationKey> cultures,
+            Action<string> onSelectLocale,
+            Action onBack,
+            Action? renderHeader = null)
         {
-            LocalizationKey[] items = _consoleUI.LocalizationService.AllCultures
-                .Values
-                .Append(LocalizationKey.back)
-                .ToArray();
+            var items = new List<LocalizationKey>();
+            var actions = new Dictionary<int, Action>();
+            int index = 0;
 
-            Dictionary<int, Action> actions = new()
+            foreach (var culture in cultures)
             {
-                { 0,  () => _consoleUI.ChangeLocale("fr")  },
-                { 1,  () => _consoleUI.ChangeLocale("en")  },
-                { 2, _consoleUI.ConfigureParams }
-            };
-            return new MenuConfig(items, actions, LocalizationKey.menu_params_locale, _consoleUI.RenderLocaleHeader);
+                items.Add(culture.Value);
+                string locale = culture.Key;
+                actions[index++] = () => onSelectLocale(locale);
+            }
+
+            items.Add(LocalizationKey.back);
+            actions[index] = onBack;
+
+            return new MenuConfig(items.ToArray(), actions, LocalizationKey.menu_params_locale, renderHeader);
         }
 
-        public MenuConfig CreateParamsMenu()
+        public MenuConfig CreateParamsMenu(
+            Action onShowChangeLocale,
+            Action onShowChangeLogDirectory,
+            Action onShowChangeLogFormat,
+            Action onBack,
+            Action? renderHeader = null)
         {
             LocalizationKey[] items =
             {
@@ -73,95 +76,114 @@ namespace EasySave.UI.Menu
                 LocalizationKey.menu_params_log_format,
                 LocalizationKey.back
             };
+
             Dictionary<int, Action> actions = new()
             {
-                { 0, _consoleUI.ShowChangeLocale },
-                { 1, _consoleUI.ShowChangeLogDirectory },
-                { 2, _consoleUI.ShowChangeLogFormat },
-                { 3, _consoleUI.MainMenu }
+                { 0, onShowChangeLocale },
+                { 1, onShowChangeLogDirectory },
+                { 2, onShowChangeLogFormat },
+                { 3, onBack }
             };
 
-            return new MenuConfig(items, actions, LocalizationKey.menu_params, _consoleUI.RenderSettingsHeader);
+            return new MenuConfig(items, actions, LocalizationKey.menu_params, renderHeader);
         }
 
-        public MenuConfig CreateLogFormatMenu()
+        public MenuConfig CreateLogFormatMenu(
+            string jsonLabel,
+            string xmlLabel,
+            string backLabel,
+            Action onJson,
+            Action onXml,
+            Action onBack,
+            Action? renderHeader = null)
         {
             string[] items =
             {
-                _consoleUI.BuildLogFormatMenuItem(LogFormat.Json),
-                _consoleUI.BuildLogFormatMenuItem(LogFormat.Xml),
-                _consoleUI.LocalizationService.TranslateText(LocalizationKey.back)
+                jsonLabel,
+                xmlLabel,
+                backLabel
             };
 
             Dictionary<int, Action> actions = new()
             {
-                { 0, () => _consoleUI.ChangeLogFormat(LogFormat.Json) },
-                { 1, () => _consoleUI.ChangeLogFormat(LogFormat.Xml) },
-                { 2, _consoleUI.ConfigureParams }
+                { 0, onJson },
+                { 1, onXml },
+                { 2, onBack }
             };
 
-            return new MenuConfig(items, actions, LocalizationKey.menu_params_log_format, _consoleUI.RenderLogFormatHeader);
+            return new MenuConfig(items, actions, LocalizationKey.menu_params_log_format, renderHeader);
         }
 
-        public MenuConfig CreateJobsListMenu()
+        public MenuConfig CreateJobsListMenu(IEnumerable<BackupJob> jobs, string backLabel, Action<BackupJob> onSelectJob, Action onBack)
         {
-            var jobs = _backupApplicationService.GetAllJobs();
             var items = new List<string>();
             var actions = new Dictionary<int, Action>();
-
             int index = 0;
+
             foreach (var job in jobs)
             {
                 items.Add($"{job.Id} - {job.Name}");
                 var capturedJob = job;
-                actions[index++] = () => _consoleUI.ShowJobDetails(capturedJob);
+                actions[index++] = () => onSelectJob(capturedJob);
             }
 
-            items.Add(_consoleUI.LocalizationService.TranslateText(LocalizationKey.back));
-            actions[index] = _consoleUI.MainMenu;
+            items.Add(backLabel);
+            actions[index] = onBack;
 
             return new MenuConfig(items.ToArray(), actions, LocalizationKey.menu_manage_jobs);
         }
 
-        public MenuConfig CreateJobDetailsMenu(Core.BackupJob job, Action? renderHeader = null)
+        public MenuConfig CreateJobDetailsMenu(
+            BackupJob job,
+            Action<BackupJob> onRunJob,
+            Action<BackupJob> onUpdateJob,
+            Action<BackupJob> onDeleteJob,
+            Action onBack,
+            Action? renderHeader = null)
         {
-            LocalizationKey[] items = { 
+            LocalizationKey[] items =
+            {
                 LocalizationKey.menu_job_run,
-                LocalizationKey.menu_job_update, 
-                LocalizationKey.menu_job_delete, 
-                LocalizationKey.back 
+                LocalizationKey.menu_job_update,
+                LocalizationKey.menu_job_delete,
+                LocalizationKey.back
             };
-            
+
             Dictionary<int, Action> actions = new()
             {
-                { 0, () => _consoleUI.RunJob(job) },
-                { 1, () => _consoleUI.UpdateJob(job) },
-                { 2, () => _consoleUI.DeleteJob(job) },
-                { 3, () => _consoleUI.ShowJobsList() }
+                { 0, () => onRunJob(job) },
+                { 1, () => onUpdateJob(job) },
+                { 2, () => onDeleteJob(job) },
+                { 3, onBack }
             };
 
             return new MenuConfig(items, actions, LocalizationKey.menu_job_details, renderHeader);
         }
 
-        public MenuConfig CreateJobUpdateMenu(Core.BackupJob job)
+        public MenuConfig CreateJobUpdateMenu(
+            BackupJob job,
+            Action<BackupJob, string> onUpdateField,
+            Action<BackupJob> onSave,
+            Action<BackupJob> onBack)
         {
-            LocalizationKey[] items = { 
+            LocalizationKey[] items =
+            {
                 LocalizationKey.menu_job_update_name,
-                LocalizationKey.menu_job_update_source, 
-                LocalizationKey.menu_job_update_destination, 
+                LocalizationKey.menu_job_update_source,
+                LocalizationKey.menu_job_update_destination,
                 LocalizationKey.menu_job_update_type,
                 LocalizationKey.menu_job_update_save,
-                LocalizationKey.back 
+                LocalizationKey.back
             };
-            
+
             Dictionary<int, Action> actions = new()
             {
-                { 0, () => _consoleUI.UpdateJobField(job, "name") },
-                { 1, () => _consoleUI.UpdateJobField(job, "source") },
-                { 2, () => _consoleUI.UpdateJobField(job, "destination") },
-                { 3, () => _consoleUI.UpdateJobField(job, "type") },
-                { 4, () => _consoleUI.SaveJobUpdate(job) },
-                { 5, () => _consoleUI.ExitJobUpdate(job) }
+                { 0, () => onUpdateField(job, "name") },
+                { 1, () => onUpdateField(job, "source") },
+                { 2, () => onUpdateField(job, "destination") },
+                { 3, () => onUpdateField(job, "type") },
+                { 4, () => onSave(job) },
+                { 5, () => onBack(job) }
             };
 
             return new MenuConfig(items, actions, LocalizationKey.menu_job_update);
