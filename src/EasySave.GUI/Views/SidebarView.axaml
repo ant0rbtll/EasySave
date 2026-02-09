@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:EasySave.GUI.ViewModels"
+             x:Class="EasySave.GUI.Views.SidebarView"
+             x:DataType="vm:SidebarViewModel">
+    <StackPanel>
+        <Button Content="Créer" Command="{Binding GoToCreateCommand}" Margin="5"/>
+        <Button Content="Gérer" Command="{Binding GoToManageCommand}" Margin="5"/>
+        <Button Content="Progression" Command="{Binding GoToProgressCommand}" Margin="5"/>
+        <Button Content="Journal d'activité" Command="{Binding GoToLogCommand}" Margin="5"/>
+        <Button Content="Configuration" Command="{Binding GoToConfigCommand}" Margin="5"/>
+    </StackPanel>
+</UserControl>
