@@ -185,7 +185,7 @@ namespace EasySave.UI.Menu
             _consoleAdapter.Write("====");
             string message = _localizationService.TranslateText(key);
             _consoleAdapter.Write(message);
-            _consoleAdapter.Write("====\n");
+            _consoleAdapter.WriteLine("====");
         }
 
         /// <summary>

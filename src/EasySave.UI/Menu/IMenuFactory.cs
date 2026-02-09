@@ -107,7 +107,7 @@ internal interface IMenuFactory
     /// <returns>The configured job update menu.</returns>
     MenuConfig CreateJobUpdateMenu(
         BackupJob job,
-        Action<BackupJob, string> onUpdateField,
+        Action<BackupJob, JobEditableField> onUpdateField,
         Action<BackupJob> onSave,
         Action<BackupJob> onBack);
 }

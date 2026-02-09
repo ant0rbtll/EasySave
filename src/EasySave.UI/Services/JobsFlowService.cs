@@ -169,28 +169,28 @@ internal class JobsFlowService(
     /// Updates one editable field of the selected job.
     /// </summary>
     /// <param name="job">Job being updated.</param>
-    /// <param name="field">Field name to edit.</param>
+    /// <param name="field">Field to edit.</param>
     /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
-    private void UpdateJobField(BackupJob job, string field, Action onBackToMainMenu)
+    private void UpdateJobField(BackupJob job, JobEditableField field, Action onBackToMainMenu)
     {
         _consoleAdapter.Clear();
         _menuService.DisplayLabel(LocalizationKey.menu_job_update);
 
         switch (field)
         {
-            case "name":
+            case JobEditableField.Name:
                 string? newName = _inputService.AskStringWithCurrentValue(LocalizationKey.menu_job_update_name, job.Name);
                 if (newName != null) job.Name = newName;
                 break;
-            case "source":
+            case JobEditableField.Source:
                 string? newSource = _inputService.AskStringWithCurrentValue(LocalizationKey.menu_job_update_source, job.Source);
                 if (newSource != null) job.Source = newSource;
                 break;
-            case "destination":
+            case JobEditableField.Destination:
                 string? newDestination = _inputService.AskStringWithCurrentValue(LocalizationKey.menu_job_update_destination, job.Destination);
                 if (newDestination != null) job.Destination = newDestination;
                 break;
-            case "type":
+            case JobEditableField.Type:
                 BackupType? newType = _inputService.AskBackupTypeWithCurrentValue(LocalizationKey.menu_job_update_type, job.Type);
                 if (newType != null) job.Type = newType.Value;
                 break;

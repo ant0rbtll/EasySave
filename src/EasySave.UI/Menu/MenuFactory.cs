@@ -1,5 +1,6 @@
 ﻿using EasySave.Core;
 using EasySave.Localization;
+using EasySave.Persistence;
 
 namespace EasySave.UI.Menu
 {
@@ -11,9 +12,8 @@ namespace EasySave.UI.Menu
         /// <inheritdoc />
         public MenuConfig CreateMainMenu(int currentJobCount, Action onCreateJob, Action onManageJobs, Action onConfigureParams, Action onQuit)
         {
-            const int maxJobs = 5;
             bool hasJobs = currentJobCount > 0;
-            bool canCreateJob = currentJobCount < maxJobs;
+            bool canCreateJob = currentJobCount < IBackupJobRepository.DefaultMaxJobs;
 
             var items = new List<LocalizationKey>();
             var actions = new Dictionary<int, Action>();
@@ -169,7 +169,7 @@ namespace EasySave.UI.Menu
         /// <inheritdoc />
         public MenuConfig CreateJobUpdateMenu(
             BackupJob job,
-            Action<BackupJob, string> onUpdateField,
+            Action<BackupJob, JobEditableField> onUpdateField,
             Action<BackupJob> onSave,
             Action<BackupJob> onBack)
         {
@@ -185,10 +185,10 @@ namespace EasySave.UI.Menu
 
             Dictionary<int, Action> actions = new()
             {
-                { 0, () => onUpdateField(job, "name") },
-                { 1, () => onUpdateField(job, "source") },
-                { 2, () => onUpdateField(job, "destination") },
-                { 3, () => onUpdateField(job, "type") },
+                { 0, () => onUpdateField(job, JobEditableField.Name) },
+                { 1, () => onUpdateField(job, JobEditableField.Source) },
+                { 2, () => onUpdateField(job, JobEditableField.Destination) },
+                { 3, () => onUpdateField(job, JobEditableField.Type) },
                 { 4, () => onSave(job) },
                 { 5, () => onBack(job) }
             };

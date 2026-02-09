@@ -144,11 +144,13 @@ internal class SettingsFlowService(
     /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ChangeLogDirectory(string? directory, Action onBackToMainMenu)
     {
-        ApplyLogDirectoryPreference(directory);
-        _userPreferences.LogDirectory = string.IsNullOrWhiteSpace(directory) ? null : directory;
+        string? normalizedDirectory = string.IsNullOrWhiteSpace(directory) ? null : directory.Trim();
+
+        ApplyLogDirectoryPreference(normalizedDirectory);
+        _userPreferences.LogDirectory = normalizedDirectory;
         _preferencesRepository.Save(_userPreferences);
 
-        if (string.IsNullOrWhiteSpace(directory))
+        if (normalizedDirectory == null)
         {
             _messageService.Write(LocalizationKey.log_path_reset);
         }
