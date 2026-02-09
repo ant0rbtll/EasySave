@@ -1,7 +1,56 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EasySave.GUI.ViewModels"
+             xmlns:conv="using:Avalonia.Data.Converters"
              x:Class="EasySave.GUI.Views.ConfigView"
              x:DataType="vm:ConfigViewModel">
-    <TextBlock Text="Page Configuration" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+    <ScrollViewer Padding="32">
+        <StackPanel Spacing="24" MaxWidth="500" HorizontalAlignment="Left">
+
+            <TextBlock Text="{Binding TitleText}" FontSize="24" FontWeight="Bold"/>
+
+            <!-- Langue -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="{Binding LanguageText}" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                          SelectedValueBinding="{Binding Code}"
+                          SelectedValue="{Binding SelectedLanguage}"
+                          HorizontalAlignment="Stretch"/>
+            </StackPanel>
+
+            <!-- Dossier de logs -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="{Binding LogDirectoryText}" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,Auto" HorizontalAlignment="Stretch">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding LogDirectory}"
+                             Watermark="{Binding LogDirectoryWatermark}"/>
+                    <Button Grid.Column="1"
+                            Content="{Binding BrowseText}"
+                            Command="{Binding BrowseLogDirectoryCommand}"
+                            Margin="8,0,0,0"/>
+                </Grid>
+                <!-- Erreur de validation -->
+                <TextBlock Text="{Binding PathError}"
+                           Foreground="#F44336"
+                           FontSize="12"
+                           IsVisible="{Binding PathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+                <Button Content="{Binding ResetText}"
+                        Command="{Binding ResetLogDirectoryCommand}"
+                        HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <!-- Sauvegarder -->
+            <Button Content="{Binding SaveText}"
+                    Command="{Binding SaveCommand}"
+                    HorizontalAlignment="Left"
+                    Classes="accent"/>
+
+            <!-- Message de statut -->
+            <TextBlock Text="{Binding StatusMessage}"
+                       Foreground="#4CAF50"
+                       IsVisible="{Binding StatusMessage, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+
+        </StackPanel>
+    </ScrollViewer>
 </UserControl>
