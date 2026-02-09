@@ -18,6 +18,7 @@ namespace EasySave.UI.Menu
         {
             int index = 0;
             ConsoleKey key;
+            int backIndex = Array.IndexOf(menuItems, LocalizationKey.back);
 
             do
             {
@@ -43,7 +44,12 @@ namespace EasySave.UI.Menu
 
                 key = Console.ReadKey(true).Key;
 
-                if (key == ConsoleKey.UpArrow && index > 0)
+                if (key == ConsoleKey.Escape && backIndex >= 0)
+                {
+                    Console.Clear();
+                    return backIndex;
+                }
+                else if (key == ConsoleKey.UpArrow && index > 0)
                 {
                     index--;
                 }
@@ -65,6 +71,10 @@ namespace EasySave.UI.Menu
         {
             int index = 0;
             ConsoleKey key;
+            string backLabel = _localizationService.TranslateText(LocalizationKey.back);
+            int backIndex = Array.FindIndex(
+                menuItems,
+                item => string.Equals(item, backLabel, StringComparison.OrdinalIgnoreCase));
             do
             {
                 Console.Clear();
@@ -89,7 +99,12 @@ namespace EasySave.UI.Menu
 
                 key = Console.ReadKey(true).Key;
 
-                if (key == ConsoleKey.UpArrow && index > 0)
+                if (key == ConsoleKey.Escape && backIndex >= 0)
+                {
+                    Console.Clear();
+                    return backIndex;
+                }
+                else if (key == ConsoleKey.UpArrow && index > 0)
                     index--;
                 else if (key == ConsoleKey.DownArrow && index < menuItems.Length - 1)
                     index++;
