@@ -28,6 +28,17 @@ public partial class ManageViewModel : ViewModelBase
 
     public List<Models.BackupJob> Convert(List<Core.BackupJob> jobs)
     {
-        return new List<Models.BackupJob>();
+        List < Models.BackupJob > list = new();
+        foreach (var job in jobs)
+        {
+            var modelJob = new Models.BackupJob();
+            modelJob.Name = job.Name;
+            modelJob.Source = job.Source;
+            modelJob.Destination = job.Destination;
+            modelJob.Type = job.Type;
+            modelJob.Id = job.Id;
+            list.Add(modelJob);
+        }
+        return list;
     }
 }
