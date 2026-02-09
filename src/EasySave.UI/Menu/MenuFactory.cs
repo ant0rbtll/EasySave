@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using EasySave.Localization;
 using EasySave.Application;
+using EasySave.Core;
 
 namespace EasySave.UI.Menu
 {
@@ -69,16 +70,37 @@ namespace EasySave.UI.Menu
             {
                 LocalizationKey.menu_params_locale,
                 LocalizationKey.menu_params_log_path,
+                LocalizationKey.menu_params_log_format,
                 LocalizationKey.back
             };
             Dictionary<int, Action> actions = new()
             {
                 { 0, _consoleUI.ShowChangeLocale },
                 { 1, _consoleUI.ShowChangeLogDirectory },
-                { 2, _consoleUI.MainMenu }
+                { 2, _consoleUI.ShowChangeLogFormat },
+                { 3, _consoleUI.MainMenu }
             };
 
             return new MenuConfig(items, actions, LocalizationKey.menu_params);
+        }
+
+        public MenuConfig CreateLogFormatMenu()
+        {
+            LocalizationKey[] items =
+            {
+                LocalizationKey.log_format_json,
+                LocalizationKey.log_format_xml,
+                LocalizationKey.back
+            };
+
+            Dictionary<int, Action> actions = new()
+            {
+                { 0, () => _consoleUI.ChangeLogFormat(LogFormat.Json) },
+                { 1, () => _consoleUI.ChangeLogFormat(LogFormat.Xml) },
+                { 2, _consoleUI.ConfigureParams }
+            };
+
+            return new MenuConfig(items, actions, LocalizationKey.menu_params_log_format);
         }
 
         public MenuConfig CreateJobsListMenu()
