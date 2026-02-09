@@ -19,6 +19,8 @@ public class ConsoleUI
     private readonly LogFormat _activeLogFormat;
     private string _activeLogDirectory = string.Empty;
     private bool _isUsingDefaultLogDirectory;
+    private int? _editingJobId;
+    private BackupJob? _editingJobSnapshot;
     public ILocalizationService LocalizationService { get; }
     private readonly MenuService _menuService;
     private readonly MenuFactory _menuFactory;
@@ -846,6 +848,7 @@ public class ConsoleUI
     public void UpdateJob(BackupJob job)
     {
         Console.Clear();
+        BeginOrRefreshEditSession(job);
         var menuConfig = _menuFactory.CreateJobUpdateMenu(job);
         _menuService.ShowMenuWithActions(menuConfig);
     }
@@ -890,6 +893,7 @@ public class ConsoleUI
         {
             _backupApplicationService.UpdateJob(job);
             ShowMessage(LocalizationKey.backupjob_updated);
+            ClearEditSession();
         }
         catch (Exception e)
         {
@@ -897,6 +901,47 @@ public class ConsoleUI
         }
         _menuService.WaitForUser();
         ShowJobsList();
+    }
+
+    public void ExitJobUpdate(BackupJob job)
+    {
+        if (HasPendingJobChanges(job))
+        {
+            int selectedOption = ShowUnsavedChangesMenu();
+            if (selectedOption == 0)
+            {
+                try
+                {
+                    _backupApplicationService.UpdateJob(job);
+                    ShowMessage(LocalizationKey.backupjob_updated);
+                    ClearEditSession();
+                    _menuService.WaitForUser();
+                    ShowJobDetails(job);
+                }
+                catch (Exception e)
+                {
+                    ShowError(e);
+                    _menuService.WaitForUser();
+                    UpdateJob(job);
+                }
+
+                return;
+            }
+
+            if (selectedOption == 1)
+            {
+                RestoreJobFromSnapshot(job);
+                ClearEditSession();
+                ShowJobDetails(job);
+                return;
+            }
+
+            UpdateJob(job);
+            return;
+        }
+
+        ClearEditSession();
+        ShowJobDetails(job);
     }
 
     /// <summary>
@@ -949,5 +994,84 @@ public class ConsoleUI
             ShowError(e);
         }
         _menuService.WaitForUser();
+    }
+
+    private void BeginOrRefreshEditSession(BackupJob job)
+    {
+        if (_editingJobId == job.Id && _editingJobSnapshot != null)
+        {
+            return;
+        }
+
+        _editingJobId = job.Id;
+        _editingJobSnapshot = CloneJob(job);
+    }
+
+    private bool HasPendingJobChanges(BackupJob job)
+    {
+        if (_editingJobId != job.Id || _editingJobSnapshot == null)
+        {
+            return false;
+        }
+
+        return !AreJobsEqual(job, _editingJobSnapshot);
+    }
+
+    private void ClearEditSession()
+    {
+        _editingJobId = null;
+        _editingJobSnapshot = null;
+    }
+
+    private void RestoreJobFromSnapshot(BackupJob job)
+    {
+        if (_editingJobId != job.Id || _editingJobSnapshot == null)
+        {
+            return;
+        }
+
+        job.Name = _editingJobSnapshot.Name;
+        job.Source = _editingJobSnapshot.Source;
+        job.Destination = _editingJobSnapshot.Destination;
+        job.Type = _editingJobSnapshot.Type;
+    }
+
+    private static BackupJob CloneJob(BackupJob job)
+    {
+        return new BackupJob
+        {
+            Id = job.Id,
+            Name = job.Name,
+            Source = job.Source,
+            Destination = job.Destination,
+            Type = job.Type
+        };
+    }
+
+    private static bool AreJobsEqual(BackupJob first, BackupJob second)
+    {
+        return first.Id == second.Id
+            && string.Equals(first.Name, second.Name, StringComparison.Ordinal)
+            && string.Equals(first.Source, second.Source, StringComparison.Ordinal)
+            && string.Equals(first.Destination, second.Destination, StringComparison.Ordinal)
+            && first.Type == second.Type;
+    }
+
+    private int ShowUnsavedChangesMenu()
+    {
+        LocalizationKey[] options =
+        {
+            LocalizationKey.job_update_unsaved_save_and_quit,
+            LocalizationKey.job_update_unsaved_discard_and_quit,
+            LocalizationKey.back
+        };
+
+        Action renderHeader = () =>
+        {
+            ShowMessage(LocalizationKey.job_update_unsaved_question);
+            Console.WriteLine();
+        };
+
+        return _menuService.ShowMenu(options, LocalizationKey.job_update_unsaved_title, renderHeader);
     }
 }
