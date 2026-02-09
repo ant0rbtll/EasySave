@@ -385,7 +385,7 @@ public class ConsoleUI
         try
         {
             _backupApplicationService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
-            ShowMessage(LocalizationKey.backupjob_created);
+            ShowMessageParam(LocalizationKey.backupjob_created_named, [nameJob]);
         }
         catch (Exception e)
         {
@@ -486,7 +486,7 @@ public class ConsoleUI
                     continue;
                 }
                 _backupApplicationService.RemoveJob(backupIndex.Value);
-                ShowMessage(LocalizationKey.backupjob_deleted);
+                ShowMessageParam(LocalizationKey.backupjob_deleted_named, new[] { job.Name });
                 break;
             }
             catch (Exception ex)
@@ -831,7 +831,7 @@ public class ConsoleUI
         try
         {
             _backupApplicationService.RunJobById(job.Id);
-            ShowMessage(LocalizationKey.backupjob_completed);
+            ShowMessageParam(LocalizationKey.backupjob_completed_named, new[] { job.Name });
         }
         catch (Exception ex)
         {
@@ -892,7 +892,7 @@ public class ConsoleUI
         try
         {
             _backupApplicationService.UpdateJob(job);
-            ShowMessage(LocalizationKey.backupjob_updated);
+            ShowMessageParam(LocalizationKey.backupjob_updated_named, new[] { job.Name });
             ClearEditSession();
         }
         catch (Exception e)
@@ -913,7 +913,7 @@ public class ConsoleUI
                 try
                 {
                     _backupApplicationService.UpdateJob(job);
-                    ShowMessage(LocalizationKey.backupjob_updated);
+                    ShowMessageParam(LocalizationKey.backupjob_updated_named, new[] { job.Name });
                     ClearEditSession();
                     _menuService.WaitForUser();
                     ShowJobDetails(job);
@@ -968,7 +968,7 @@ public class ConsoleUI
             {
                 ShowError(ex);
             }
-            ShowMessage(LocalizationKey.backupjob_deleted);
+            ShowMessageParam(LocalizationKey.backupjob_deleted_named, new[] { job.Name });
         }
         else
         {
