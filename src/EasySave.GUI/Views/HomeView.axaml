@@ -1,0 +1,18 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:EasySave.GUI.ViewModels"
+             x:Class="EasySave.GUI.Views.HomeView"
+             x:DataType="vm:HomeViewModel">
+    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                Spacing="24" MaxWidth="450">
+        <Image Source="/Assets/easysave.png"
+               Width="400"
+               HorizontalAlignment="Center"/>
+        <TextBlock Text="{Binding DescriptionText}"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   FontSize="14"
+                   Opacity="0.8"
+                   HorizontalAlignment="Center"/>
+    </StackPanel>
+</UserControl>
