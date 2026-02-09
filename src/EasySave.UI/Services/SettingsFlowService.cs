@@ -32,6 +32,9 @@ internal class SettingsFlowService(
     private string _activeLogDirectory = string.Empty;
     private bool _isUsingDefaultLogDirectory;
 
+    /// <summary>
+    /// Initializes culture and log directory settings from persisted preferences.
+    /// </summary>
     public void InitializeCulture()
     {
         ApplyLogDirectoryPreference(_userPreferences.LogDirectory);
@@ -47,6 +50,10 @@ internal class SettingsFlowService(
         _localizationService.Culture = language;
     }
 
+    /// <summary>
+    /// Displays the settings root menu.
+    /// </summary>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     public void ConfigureParams(Action onBackToMainMenu)
     {
         var menuConfig = _menuFactory.CreateParamsMenu(
@@ -59,6 +66,10 @@ internal class SettingsFlowService(
         _menuService.ShowMenuWithActions(menuConfig);
     }
 
+    /// <summary>
+    /// Displays the locale change menu.
+    /// </summary>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ShowChangeLocale(Action onBackToMainMenu)
     {
         var menuConfig = _menuFactory.CreateLocaleMenu(
@@ -70,6 +81,10 @@ internal class SettingsFlowService(
         _menuService.ShowMenuWithActions(menuConfig);
     }
 
+    /// <summary>
+    /// Displays and processes the log directory prompt.
+    /// </summary>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ShowChangeLogDirectory(Action onBackToMainMenu)
     {
         Console.Clear();
@@ -101,6 +116,11 @@ internal class SettingsFlowService(
         ChangeLogDirectory(input, onBackToMainMenu);
     }
 
+    /// <summary>
+    /// Changes the active locale and persists the preference.
+    /// </summary>
+    /// <param name="locale">Requested locale code.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     public void ChangeLocale(string locale, Action onBackToMainMenu)
     {
         if (string.IsNullOrWhiteSpace(locale) || !_localizationService.AllCultures.ContainsKey(locale))
@@ -115,6 +135,11 @@ internal class SettingsFlowService(
         onBackToMainMenu();
     }
 
+    /// <summary>
+    /// Persists a new log directory and returns to settings.
+    /// </summary>
+    /// <param name="directory">Requested directory, or <see langword="null"/> for default.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ChangeLogDirectory(string? directory, Action onBackToMainMenu)
     {
         ApplyLogDirectoryPreference(directory);
@@ -134,6 +159,10 @@ internal class SettingsFlowService(
         ConfigureParams(onBackToMainMenu);
     }
 
+    /// <summary>
+    /// Displays the log format change menu.
+    /// </summary>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ShowChangeLogFormat(Action onBackToMainMenu)
     {
         var menuConfig = _menuFactory.CreateLogFormatMenu(
@@ -148,6 +177,11 @@ internal class SettingsFlowService(
         _menuService.ShowMenuWithActions(menuConfig);
     }
 
+    /// <summary>
+    /// Changes the persisted log format preference.
+    /// </summary>
+    /// <param name="format">New log format.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     public void ChangeLogFormat(LogFormat format, Action onBackToMainMenu)
     {
         _userPreferences.LogFormat = format;
@@ -159,6 +193,9 @@ internal class SettingsFlowService(
         ConfigureParams(onBackToMainMenu);
     }
 
+    /// <summary>
+    /// Renders settings context above the settings menu.
+    /// </summary>
     private void RenderSettingsHeader()
     {
         _messageService.WriteWithParams(LocalizationKey.settings_current_language, [GetCurrentLanguageLabel()]);
@@ -173,12 +210,18 @@ internal class SettingsFlowService(
         Console.WriteLine();
     }
 
+    /// <summary>
+    /// Renders locale context above the locale menu.
+    /// </summary>
     private void RenderLocaleHeader()
     {
         _messageService.WriteWithParams(LocalizationKey.settings_current_language, [GetCurrentLanguageLabel()]);
         Console.WriteLine();
     }
 
+    /// <summary>
+    /// Renders log format context above the log format menu.
+    /// </summary>
     private void RenderLogFormatHeader()
     {
         _messageService.WriteWithParams(LocalizationKey.settings_log_format_active, [GetLogFormatLabel(_activeLogFormat)]);
@@ -191,6 +234,10 @@ internal class SettingsFlowService(
         Console.WriteLine();
     }
 
+    /// <summary>
+    /// Applies a log directory preference to runtime state.
+    /// </summary>
+    /// <param name="directory">Directory preference, or <see langword="null"/> for default.</param>
     private void ApplyLogDirectoryPreference(string? directory)
     {
         if (string.IsNullOrWhiteSpace(directory))
@@ -212,6 +259,11 @@ internal class SettingsFlowService(
         _isUsingDefaultLogDirectory = false;
     }
 
+    /// <summary>
+    /// Validates whether a directory path can be used for logs.
+    /// </summary>
+    /// <param name="path">Path to validate.</param>
+    /// <returns><see langword="true"/> when the path is usable; otherwise <see langword="false"/>.</returns>
     private static bool IsValidPath(string path)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -248,6 +300,11 @@ internal class SettingsFlowService(
         }
     }
 
+    /// <summary>
+    /// Resolves relative log paths against the application base directory.
+    /// </summary>
+    /// <param name="directory">Raw directory value.</param>
+    /// <returns>Absolute candidate directory path.</returns>
     private static string ResolveLogDirectoryCandidate(string directory)
     {
         var trimmed = directory.Trim();
@@ -259,12 +316,18 @@ internal class SettingsFlowService(
         return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, trimmed));
     }
 
+    /// <summary>
+    /// Marks the default log directory as active.
+    /// </summary>
     private void SetDefaultLogDirectoryAsActive()
     {
         _activeLogDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
         _isUsingDefaultLogDirectory = true;
     }
 
+    /// <summary>
+    /// Displays the active log directory status message.
+    /// </summary>
     private void DisplayActiveLogDirectoryStatus()
     {
         if (_isUsingDefaultLogDirectory)
@@ -276,6 +339,10 @@ internal class SettingsFlowService(
         _messageService.WriteWithParams(LocalizationKey.settings_log_directory_active_custom, [_activeLogDirectory]);
     }
 
+    /// <summary>
+    /// Returns the localized label for the current language.
+    /// </summary>
+    /// <returns>Localized language label or raw culture code.</returns>
     private string GetCurrentLanguageLabel()
     {
         if (_localizationService.AllCultures.TryGetValue(_localizationService.Culture, out var cultureKey))
@@ -286,6 +353,11 @@ internal class SettingsFlowService(
         return _localizationService.Culture;
     }
 
+    /// <summary>
+    /// Returns the localized label for a log format.
+    /// </summary>
+    /// <param name="format">Format to label.</param>
+    /// <returns>Localized format label.</returns>
     private string GetLogFormatLabel(LogFormat format)
     {
         return format switch

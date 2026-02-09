@@ -14,6 +14,7 @@ internal class ConsoleMessageService(
     private readonly ErrorManager _errorManager = errorManager;
     private readonly IConsoleAdapter _consoleAdapter = consoleAdapter;
 
+    /// <inheritdoc />
     public void Write(LocalizationKey key, bool writeLine = true)
     {
         var message = _localizationService.TranslateText(key);
@@ -26,6 +27,7 @@ internal class ConsoleMessageService(
         _consoleAdapter.Write(message);
     }
 
+    /// <inheritdoc />
     public void WriteWithParams(LocalizationKey key, string[] parameters, bool writeLine = true)
     {
         var message = _localizationService.TranslateTextWithParams(key, parameters);
@@ -38,11 +40,13 @@ internal class ConsoleMessageService(
         _consoleAdapter.Write(message);
     }
 
+    /// <inheritdoc />
     public string Translate(LocalizationKey key)
     {
         return _localizationService.TranslateText(key);
     }
 
+    /// <inheritdoc />
     public void ShowError(Exception exception)
     {
         _consoleAdapter.WriteLine();

@@ -13,6 +13,7 @@ internal class ConsoleInputService(
     private readonly IConsoleMessageService _messageService = messageService;
     private readonly IConsoleAdapter _consoleAdapter = consoleAdapter;
 
+    /// <inheritdoc />
     public string? AskString(LocalizationKey key)
     {
         _messageService.Write(key, false);
@@ -63,6 +64,7 @@ internal class ConsoleInputService(
         while (true);
     }
 
+    /// <inheritdoc />
     public int? AskInt(LocalizationKey key)
     {
         _messageService.Write(key, false);
@@ -113,6 +115,7 @@ internal class ConsoleInputService(
         while (true);
     }
 
+    /// <inheritdoc />
     public string? AskStringWithCurrentValue(LocalizationKey key, string currentValue)
     {
         _messageService.Write(key, false);
@@ -170,6 +173,7 @@ internal class ConsoleInputService(
         while (true);
     }
 
+    /// <inheritdoc />
     public int? AskIntWithCurrentValue(LocalizationKey key, int currentValue)
     {
         _messageService.Write(key, false);
@@ -227,6 +231,7 @@ internal class ConsoleInputService(
         while (true);
     }
 
+    /// <inheritdoc />
     public BackupType? AskBackupType(LocalizationKey key)
     {
         _messageService.Write(LocalizationKey.backupjob_type_list);
@@ -257,6 +262,7 @@ internal class ConsoleInputService(
         }
     }
 
+    /// <inheritdoc />
     public BackupType? AskBackupTypeWithCurrentValue(LocalizationKey key, BackupType currentType)
     {
         _messageService.Write(LocalizationKey.backupjob_type_list);

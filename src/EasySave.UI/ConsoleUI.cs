@@ -22,8 +22,18 @@ public class ConsoleUI
     private readonly JobsFlowService _jobsFlowService;
     private readonly SettingsFlowService _settingsFlowService;
 
+    /// <summary>
+    /// Gets the localization service used by the console UI.
+    /// </summary>
     public ILocalizationService LocalizationService { get; }
 
+    /// <summary>
+    /// Initializes the console UI and wires all flow services.
+    /// </summary>
+    /// <param name="backupApplicationService">Application service exposing backup use cases.</param>
+    /// <param name="preferencesRepository">Repository used to load and persist user preferences.</param>
+    /// <param name="pathProvider">Path provider used by settings flows.</param>
+    /// <param name="parser">Command-line parser for non-interactive execution.</param>
     public ConsoleUI(
         BackupApplicationService backupApplicationService,
         IUserPreferencesRepository preferencesRepository,
@@ -90,6 +100,7 @@ public class ConsoleUI
     /// <summary>
     /// Runs backup jobs from command-line arguments.
     /// </summary>
+    /// <param name="args">Raw command-line arguments representing target jobs.</param>
     internal void RunFromArgs(string[] args)
     {
         try

@@ -25,11 +25,19 @@ internal class JobsFlowService(
     private readonly IConsoleAdapter _consoleAdapter = consoleAdapter;
     private readonly JobEditSessionService _editSessionService = editSessionService;
 
+    /// <summary>
+    /// Returns the number of configured backup jobs.
+    /// </summary>
+    /// <returns>Current backup jobs count.</returns>
     public int GetJobCount()
     {
         return _backupApplicationService.GetAllJobs().Count;
     }
 
+    /// <summary>
+    /// Runs the interactive workflow to create a new backup job.
+    /// </summary>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     public void CreateBackupJob(Action onBackToMainMenu)
     {
         _menuService.DisplayLabel(LocalizationKey.menu_create);
@@ -60,6 +68,10 @@ internal class JobsFlowService(
         onBackToMainMenu();
     }
 
+    /// <summary>
+    /// Displays the jobs list menu.
+    /// </summary>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     public void ShowJobsList(Action onBackToMainMenu)
     {
         var jobs = _backupApplicationService.GetAllJobs();
@@ -72,6 +84,11 @@ internal class JobsFlowService(
         _menuService.ShowMenuWithActions(menuConfig);
     }
 
+    /// <summary>
+    /// Displays details and actions for a single backup job.
+    /// </summary>
+    /// <param name="job">Job to display.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ShowJobDetails(BackupJob job, Action onBackToMainMenu)
     {
         Action renderJobDetails = () =>
@@ -105,6 +122,11 @@ internal class JobsFlowService(
         _menuService.ShowMenuWithActions(menuConfig);
     }
 
+    /// <summary>
+    /// Executes one backup job and returns to the jobs list.
+    /// </summary>
+    /// <param name="job">Job to execute.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void RunJob(BackupJob job, Action onBackToMainMenu)
     {
         _consoleAdapter.Clear();
@@ -125,6 +147,11 @@ internal class JobsFlowService(
         ShowJobsList(onBackToMainMenu);
     }
 
+    /// <summary>
+    /// Opens the job update menu for the selected job.
+    /// </summary>
+    /// <param name="job">Job to update.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void UpdateJob(BackupJob job, Action onBackToMainMenu)
     {
         _consoleAdapter.Clear();
@@ -138,6 +165,12 @@ internal class JobsFlowService(
         _menuService.ShowMenuWithActions(menuConfig);
     }
 
+    /// <summary>
+    /// Updates one editable field of the selected job.
+    /// </summary>
+    /// <param name="job">Job being updated.</param>
+    /// <param name="field">Field name to edit.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void UpdateJobField(BackupJob job, string field, Action onBackToMainMenu)
     {
         _consoleAdapter.Clear();
@@ -166,6 +199,11 @@ internal class JobsFlowService(
         UpdateJob(job, onBackToMainMenu);
     }
 
+    /// <summary>
+    /// Persists the current job updates.
+    /// </summary>
+    /// <param name="job">Job to save.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void SaveJobUpdate(BackupJob job, Action onBackToMainMenu)
     {
         try
@@ -183,6 +221,11 @@ internal class JobsFlowService(
         ShowJobsList(onBackToMainMenu);
     }
 
+    /// <summary>
+    /// Exits update mode, handling unsaved changes if needed.
+    /// </summary>
+    /// <param name="job">Job currently being edited.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ExitJobUpdate(BackupJob job, Action onBackToMainMenu)
     {
         if (_editSessionService.HasPendingChanges(job))
@@ -224,6 +267,11 @@ internal class JobsFlowService(
         ShowJobDetails(job, onBackToMainMenu);
     }
 
+    /// <summary>
+    /// Deletes the selected job after confirmation.
+    /// </summary>
+    /// <param name="job">Job to delete.</param>
+    /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void DeleteJob(BackupJob job, Action onBackToMainMenu)
     {
         _consoleAdapter.Clear();
@@ -256,6 +304,10 @@ internal class JobsFlowService(
         ShowJobsList(onBackToMainMenu);
     }
 
+    /// <summary>
+    /// Displays the unsaved changes decision menu.
+    /// </summary>
+    /// <returns>Selected option index.</returns>
     private int ShowUnsavedChangesMenu()
     {
         LocalizationKey[] options =

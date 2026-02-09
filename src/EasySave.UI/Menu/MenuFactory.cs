@@ -8,6 +8,7 @@ namespace EasySave.UI.Menu
     /// </summary>
     internal class MenuFactory : IMenuFactory
     {
+        /// <inheritdoc />
         public MenuConfig CreateMainMenu(int currentJobCount, Action onCreateJob, Action onManageJobs, Action onConfigureParams, Action onQuit)
         {
             const int maxJobs = 5;
@@ -39,6 +40,7 @@ namespace EasySave.UI.Menu
             return new MenuConfig(items.ToArray(), actions, LocalizationKey.menu);
         }
 
+        /// <inheritdoc />
         public MenuConfig CreateLocaleMenu(
             IReadOnlyDictionary<string, LocalizationKey> cultures,
             Action<string> onSelectLocale,
@@ -62,6 +64,7 @@ namespace EasySave.UI.Menu
             return new MenuConfig(items.ToArray(), actions, LocalizationKey.menu_params_locale, renderHeader);
         }
 
+        /// <inheritdoc />
         public MenuConfig CreateParamsMenu(
             Action onShowChangeLocale,
             Action onShowChangeLogDirectory,
@@ -88,6 +91,7 @@ namespace EasySave.UI.Menu
             return new MenuConfig(items, actions, LocalizationKey.menu_params, renderHeader);
         }
 
+        /// <inheritdoc />
         public MenuConfig CreateLogFormatMenu(
             string jsonLabel,
             string xmlLabel,
@@ -114,6 +118,7 @@ namespace EasySave.UI.Menu
             return new MenuConfig(items, actions, LocalizationKey.menu_params_log_format, renderHeader);
         }
 
+        /// <inheritdoc />
         public MenuConfig CreateJobsListMenu(IEnumerable<BackupJob> jobs, string backLabel, Action<BackupJob> onSelectJob, Action onBack)
         {
             var items = new List<string>();
@@ -133,6 +138,7 @@ namespace EasySave.UI.Menu
             return new MenuConfig(items.ToArray(), actions, LocalizationKey.menu_manage_jobs);
         }
 
+        /// <inheritdoc />
         public MenuConfig CreateJobDetailsMenu(
             BackupJob job,
             Action<BackupJob> onRunJob,
@@ -160,6 +166,7 @@ namespace EasySave.UI.Menu
             return new MenuConfig(items, actions, LocalizationKey.menu_job_details, renderHeader);
         }
 
+        /// <inheritdoc />
         public MenuConfig CreateJobUpdateMenu(
             BackupJob job,
             Action<BackupJob, string> onUpdateField,
