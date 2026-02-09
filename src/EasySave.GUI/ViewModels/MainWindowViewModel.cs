@@ -12,6 +12,7 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase currentPage;
 
+    private readonly HomeViewModel _homeViewModel;
     private readonly CreateViewModel _createViewModel;
     private readonly ManageViewModel _manageViewModel;
     private readonly ProgressViewModel _progressViewModel;
@@ -23,6 +24,7 @@ public partial class MainWindowViewModel : ViewModelBase
         ILocalizationService localizationService,
         IPathProvider pathProvider)
     {
+        _homeViewModel = new HomeViewModel(localizationService);
         _createViewModel = new CreateViewModel();
         _manageViewModel = new ManageViewModel();
         _progressViewModel = new ProgressViewModel();
@@ -36,13 +38,14 @@ public partial class MainWindowViewModel : ViewModelBase
             pathProvider,
             OnLanguageChanged);
 
-        currentPage = _createViewModel;
+        currentPage = _homeViewModel;
     }
 
     private void OnLanguageChanged()
     {
         Sidebar.RefreshTranslations();
         _configViewModel.RefreshTranslations();
+        _homeViewModel.RefreshTranslations();
     }
 
     public void Navigate(string page)

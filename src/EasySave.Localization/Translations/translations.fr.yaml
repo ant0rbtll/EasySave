@@ -86,4 +86,5 @@ translations:
   gui_config_saved: "Configuration sauvegardée."
   gui_config_browse: "Parcourir..."
   gui_config_path_invalid: "Le chemin saisi n'est pas valide."
+  gui_home_description: "EasySave est un logiciel de sauvegarde qui vous permet de créer, gérer et exécuter vos travaux de sauvegarde en toute simplicité. Sauvegardez vos fichiers en mode complet ou différentiel, suivez la progression en temps réel et consultez le journal d'activité."
 
