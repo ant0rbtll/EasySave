@@ -195,6 +195,112 @@ public class ConsoleUI
         while (true);
     }
 
+    private string? AskStringWithCurrentValue(LocalizationKey key, string currentValue)
+    {
+        ShowMessage(key, false);
+        ShowMessage(LocalizationKey.input_escape_to_cancel, false);
+        ShowMessageParam(LocalizationKey.input_enter_to_keep_current, new[] { currentValue }, false);
+        Console.Write(" : ");
+
+        string input = "";
+        ConsoleKeyInfo keyInfo;
+
+        do
+        {
+            keyInfo = Console.ReadKey(intercept: true);
+
+            if (keyInfo.Key == ConsoleKey.Escape)
+            {
+                Console.WriteLine();
+                return null;
+            }
+            else if (keyInfo.Key == ConsoleKey.Enter)
+            {
+                Console.WriteLine();
+                if (input.Length == 0)
+                {
+                    return currentValue;
+                }
+
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    ShowMessage(LocalizationKey.input_string_invalid, false);
+                    ShowMessage(LocalizationKey.input_escape_to_cancel, false);
+                    ShowMessageParam(LocalizationKey.input_enter_to_keep_current, new[] { currentValue }, false);
+                    Console.Write(" : ");
+                    input = "";
+                }
+                else
+                {
+                    return input;
+                }
+            }
+            else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
+            {
+                input = input.Substring(0, input.Length - 1);
+                Console.Write("\b \b");
+            }
+            else if (!char.IsControl(keyInfo.KeyChar))
+            {
+                input += keyInfo.KeyChar;
+                Console.Write(keyInfo.KeyChar);
+            }
+        }
+        while (true);
+    }
+
+    private int? AskIntWithCurrentValue(LocalizationKey key, int currentValue)
+    {
+        ShowMessage(key, false);
+        ShowMessage(LocalizationKey.input_escape_to_cancel, false);
+        ShowMessageParam(LocalizationKey.input_enter_to_keep_current, new[] { currentValue.ToString() }, false);
+        Console.Write(" : ");
+
+        string input = "";
+        ConsoleKeyInfo keyInfo;
+
+        do
+        {
+            keyInfo = Console.ReadKey(intercept: true);
+
+            if (keyInfo.Key == ConsoleKey.Escape)
+            {
+                Console.WriteLine();
+                return null;
+            }
+            else if (keyInfo.Key == ConsoleKey.Enter)
+            {
+                Console.WriteLine();
+                if (input.Length == 0)
+                {
+                    return currentValue;
+                }
+
+                if (int.TryParse(input, out int numberInput))
+                {
+                    return numberInput;
+                }
+
+                ShowMessage(LocalizationKey.input_number_invalid, false);
+                ShowMessage(LocalizationKey.input_escape_to_cancel, false);
+                ShowMessageParam(LocalizationKey.input_enter_to_keep_current, new[] { currentValue.ToString() }, false);
+                Console.Write(" : ");
+                input = "";
+            }
+            else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
+            {
+                input = input.Substring(0, input.Length - 1);
+                Console.Write("\b \b");
+            }
+            else if (char.IsDigit(keyInfo.KeyChar) || (keyInfo.KeyChar == '-' && input.Length == 0))
+            {
+                input += keyInfo.KeyChar;
+                Console.Write(keyInfo.KeyChar);
+            }
+        }
+        while (true);
+    }
+
     /// <inheritdoc />
     public BackupType? AskBackupType(LocalizationKey key)
     {
@@ -209,6 +315,36 @@ public class ConsoleUI
         while (true)
         {
             int? backupTypeInput = AskInt(LocalizationKey.user_choice);
+            if (backupTypeInput == null)
+            {
+                return null;
+            }
+
+            int choice = backupTypeInput.Value;
+            if (choice >= 1 && choice <= values.Length)
+            {
+                return values[choice - 1];
+            }
+
+            ShowMessage(LocalizationKey.input_backuptype_invalid);
+        }
+    }
+
+    private BackupType? AskBackupTypeWithCurrentValue(LocalizationKey key, BackupType currentType)
+    {
+        ShowMessage(LocalizationKey.backupjob_type_list);
+        var values = Enum.GetValues(typeof(BackupType)).Cast<BackupType>().ToArray();
+        for (int i = 0; i < values.Length; i++)
+        {
+            Console.WriteLine($"{i + 1}. {values[i]}");
+        }
+
+        ShowMessage(key);
+        int currentChoice = Array.IndexOf(values, currentType) + 1;
+
+        while (true)
+        {
+            int? backupTypeInput = AskIntWithCurrentValue(LocalizationKey.user_choice, currentChoice);
             if (backupTypeInput == null)
             {
                 return null;
@@ -725,19 +861,19 @@ public class ConsoleUI
         switch (field)
         {
             case "name":
-                string? newName = AskString(LocalizationKey.menu_job_update_name);
+                string? newName = AskStringWithCurrentValue(LocalizationKey.menu_job_update_name, job.Name);
                 if (newName != null) job.Name = newName;
                 break;
             case "source":
-                string? newSource = AskString(LocalizationKey.menu_job_update_source);
+                string? newSource = AskStringWithCurrentValue(LocalizationKey.menu_job_update_source, job.Source);
                 if (newSource != null) job.Source = newSource;
                 break;
             case "destination":
-                string? newDestination = AskString(LocalizationKey.menu_job_update_destination);
+                string? newDestination = AskStringWithCurrentValue(LocalizationKey.menu_job_update_destination, job.Destination);
                 if (newDestination != null) job.Destination = newDestination;
                 break;
             case "type":
-                BackupType? newType = AskBackupType(LocalizationKey.menu_job_update_type);
+                BackupType? newType = AskBackupTypeWithCurrentValue(LocalizationKey.menu_job_update_type, job.Type);
                 if (newType != null) job.Type = newType.Value;
                 break;
         }
