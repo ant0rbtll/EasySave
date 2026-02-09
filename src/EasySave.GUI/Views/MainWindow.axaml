@@ -1,20 +1,33 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:EasySave.GUI.ViewModels"
+        xmlns:views="using:EasySave.GUI.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="EasySave.GUI.Views.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/avalonia-logo.ico"
-        Title="EasySave.GUI">
+        Title="EasySave"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="PreferSystemChrome"
+        ExtendClientAreaTitleBarHeightHint="40">
+    <Grid RowDefinitions="40,*">
+        <!-- Barre de titre custom -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*"
+              Background="#1E1E2E" IsHitTestVisible="False">
+            <Image Grid.Column="0" Source="/Assets/easysave-icon.png"
+                   Width="20" Height="20"
+                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+            <TextBlock Grid.Column="1" Text="EasySave"
+                       Foreground="White" FontWeight="SemiBold" FontSize="14"
+                       VerticalAlignment="Center" Margin="8,0,0,0"/>
+        </Grid>
 
-    <Design.DataContext>
-        <!-- This only sets the DataContext for the previewer in an IDE,
-             to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-        <vm:MainWindowViewModel/>
-    </Design.DataContext>
-
-    <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-
+        <!-- Contenu principal -->
+        <Grid Grid.Row="1" ColumnDefinitions="250,*">
+            <views:SidebarView Grid.Column="0" DataContext="{Binding Sidebar}"/>
+            <ContentControl Grid.Column="1" Content="{Binding CurrentPage}"/>
+        </Grid>
+    </Grid>
 </Window>
