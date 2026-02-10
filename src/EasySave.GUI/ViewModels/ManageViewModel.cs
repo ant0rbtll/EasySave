@@ -261,11 +261,7 @@ public partial class ManageViewModel : ViewModelBase
 
         try
         {
-            await Task.Run(() =>
-            {
-                var coreJob = _applicationService.GetJobById(job.Id) ?? throw new KeyNotFoundException();
-                _applicationService.RunJob(coreJob);
-            });
+            await Task.Run(() => _applicationService.RunJob(job.Id));
             success = true;
         }
         catch (Exception ex)
