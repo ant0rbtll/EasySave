@@ -1,16 +1,19 @@
 using System.Collections.ObjectModel;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
-using EasySave.Core;
+using EasySave.Localization;
 
 namespace EasySave.GUI.ViewModels;
 
 public partial class ManageViewModel : ViewModelBase
 {
-    public ObservableCollection<Models.BackupJob> Jobs { get; } = new();
-    private readonly List<Models.BackupJob> _allJobs = new();
+    public ObservableCollection<Models.BackupJob> Jobs { get; } = [];
+    private readonly List<Models.BackupJob> _allJobs = [];
     private readonly BackupApplicationService _applicationService;
+    private readonly ILocalizationService _localizationService;
+    private CancellationTokenSource? _dismissCts;
 
     [ObservableProperty]
     private string searchText = string.Empty;
@@ -31,21 +34,146 @@ public partial class ManageViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(TypeHeader))]
     private bool sortAscending = true;
 
-    public string IdHeader => "ID" + GetSortIndicator("Id");
-    public string NameHeader => "Nom" + GetSortIndicator("Name");
-    public string SourceHeader => "Source" + GetSortIndicator("Source");
-    public string DestinationHeader => "Destination" + GetSortIndicator("Destination");
-    public string TypeHeader => "Type" + GetSortIndicator("Type");
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RunJobCommand))]
+    private bool isRunning;
 
-    public ManageViewModel(BackupApplicationService backupApplicationService)
+    [ObservableProperty]
+    private string runningJobName = string.Empty;
+
+    [ObservableProperty]
+    private bool isConfirmDialogOpen;
+
+    [ObservableProperty]
+    private Models.BackupJob? pendingJob;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSuccessBannerVisible))]
+    [NotifyPropertyChangedFor(nameof(IsErrorBannerVisible))]
+    private bool isStatusBannerVisible;
+
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSuccessBannerVisible))]
+    [NotifyPropertyChangedFor(nameof(IsErrorBannerVisible))]
+    private bool isStatusError;
+
+    public bool IsSuccessBannerVisible => IsStatusBannerVisible && !IsStatusError;
+    public bool IsErrorBannerVisible => IsStatusBannerVisible && IsStatusError;
+
+    [ObservableProperty]
+    private bool isDeleteDialogOpen;
+
+    [ObservableProperty]
+    private Models.BackupJob? pendingDeleteJob;
+
+    // Localized text properties
+    [ObservableProperty]
+    private string titleText = string.Empty;
+
+    [ObservableProperty]
+    private string subtitleText = string.Empty;
+
+    [ObservableProperty]
+    private string searchWatermark = string.Empty;
+
+    [ObservableProperty]
+    private string actionsHeader = string.Empty;
+
+    [ObservableProperty]
+    private string runningLabel = string.Empty;
+
+    [ObservableProperty]
+    private string confirmRunTitle = string.Empty;
+
+    [ObservableProperty]
+    private string confirmRunMessage = string.Empty;
+
+    [ObservableProperty]
+    private string confirmDeleteTitle = string.Empty;
+
+    [ObservableProperty]
+    private string confirmDeleteMessage = string.Empty;
+
+    [ObservableProperty]
+    private string btnConfirmText = string.Empty;
+
+    [ObservableProperty]
+    private string btnCancelText = string.Empty;
+
+    [ObservableProperty]
+    private string btnDeleteText = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipRun = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipModify = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipDelete = string.Empty;
+
+    private string _idLabel = "ID";
+    private string _nameLabel = string.Empty;
+    private string _sourceLabel = string.Empty;
+    private string _destinationLabel = string.Empty;
+    private string _typeLabel = string.Empty;
+
+    public string IdHeader => _idLabel + GetSortIndicator("Id");
+    public string NameHeader => _nameLabel + GetSortIndicator("Name");
+    public string SourceHeader => _sourceLabel + GetSortIndicator("Source");
+    public string DestinationHeader => _destinationLabel + GetSortIndicator("Destination");
+    public string TypeHeader => _typeLabel + GetSortIndicator("Type");
+
+    public ManageViewModel(BackupApplicationService backupApplicationService, ILocalizationService localizationService)
     {
         _applicationService = backupApplicationService;
+        _localizationService = localizationService;
+        RefreshTranslations();
         LoadJobs();
+    }
+
+    public void RefreshTranslations()
+    {
+        TitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_title);
+        SubtitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_subtitle);
+        SearchWatermark = _localizationService.TranslateText(LocalizationKey.gui_manage_search);
+        ActionsHeader = _localizationService.TranslateText(LocalizationKey.gui_manage_actions);
+        RunningLabel = _localizationService.TranslateText(LocalizationKey.gui_manage_running);
+        ConfirmRunTitle = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_run_title);
+        ConfirmRunMessage = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_run_message);
+        ConfirmDeleteTitle = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_delete_title);
+        ConfirmDeleteMessage = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_delete_message);
+        BtnConfirmText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_confirm);
+        BtnCancelText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_cancel);
+        BtnDeleteText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_delete);
+        TooltipRun = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_run);
+        TooltipModify = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_modify);
+        TooltipDelete = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_delete);
+
+        _idLabel = _localizationService.TranslateText(LocalizationKey.backupjob_id);
+        _nameLabel = _localizationService.TranslateText(LocalizationKey.backupjob_name);
+        _sourceLabel = _localizationService.TranslateText(LocalizationKey.backupjob_source);
+        _destinationLabel = _localizationService.TranslateText(LocalizationKey.backupjob_destination);
+        _typeLabel = _localizationService.TranslateText(LocalizationKey.backupjob_type);
+        OnPropertyChanged(nameof(IdHeader));
+        OnPropertyChanged(nameof(NameHeader));
+        OnPropertyChanged(nameof(SourceHeader));
+        OnPropertyChanged(nameof(DestinationHeader));
+        OnPropertyChanged(nameof(TypeHeader));
     }
 
     partial void OnSearchTextChanged(string value)
     {
         Refresh();
+    }
+
+    [RelayCommand]
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
     }
 
     [RelayCommand]
@@ -107,12 +235,105 @@ public partial class ManageViewModel : ViewModelBase
             || job.Type.ToString().Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanRunJob))]
     private void RunJob(Models.BackupJob job)
     {
-        //TODO ask confirmation via popup
-        //_applicationService.RunJobById(job.Id);
-        //job.IsActive = true;
+        PendingJob = job;
+        IsConfirmDialogOpen = true;
+    }
+
+    private bool CanRunJob(Models.BackupJob job) => !IsRunning;
+
+    [RelayCommand]
+    private async Task ConfirmRun()
+    {
+        if (PendingJob is not { } job)
+            return;
+
+        IsConfirmDialogOpen = false;
+        IsRunning = true;
+        RunningJobName = job.Name;
+        IsStatusBannerVisible = false;
+
+        bool success = false;
+
+        try
+        {
+            await Task.Run(() =>
+            {
+                var coreJob = _applicationService.GetJobById(job.Id) ?? throw new KeyNotFoundException();
+                _applicationService.RunJob(coreJob);
+            });
+            success = true;
+        }
+        catch (Exception)
+        {
+            // BackupEngine already logs errors and updates state
+        }
+        finally
+        {
+            var jobs = await Task.Run(FetchJobs);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsRunning = false;
+                RunningJobName = string.Empty;
+                PendingJob = null;
+                ApplyJobs(jobs);
+
+                if (success)
+                {
+                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_run_success, new[] { job.Name });
+                    IsStatusError = false;
+                }
+                else
+                {
+                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_run_error, new[] { job.Name });
+                    IsStatusError = true;
+                }
+                IsStatusBannerVisible = true;
+            });
+        }
+
+        if (success)
+        {
+            _ = AutoDismissBannerAsync();
+        }
+    }
+
+    private async Task AutoDismissBannerAsync()
+    {
+        var old = _dismissCts;
+        old?.Cancel();
+        old?.Dispose();
+        var cts = _dismissCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(4000, cts.Token);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (!IsStatusError)
+                    IsStatusBannerVisible = false;
+            });
+        }
+        catch (TaskCanceledException)
+        {
+            // A newer auto-dismiss replaced this one
+        }
+    }
+
+    [RelayCommand]
+    private void DismissStatusBanner()
+    {
+        IsStatusBannerVisible = false;
+    }
+
+    [RelayCommand]
+    private void CancelRun()
+    {
+        IsConfirmDialogOpen = false;
+        PendingJob = null;
     }
 
     [RelayCommand]
@@ -124,39 +345,97 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private void DeleteJob(Models.BackupJob job)
     {
-        //TODO ask confirmation via popup
-        //_applicationService.RemoveJob(job.Id);
-        //_allJobs.Remove(job);
-        //Refresh();
+        PendingDeleteJob = job;
+        IsDeleteDialogOpen = true;
+    }
 
-        // TODO: implement delete confirmation dialog
+    [RelayCommand]
+    private async Task ConfirmDelete()
+    {
+        if (PendingDeleteJob is not { } job)
+            return;
 
-        // TODO: try catch
+        IsDeleteDialogOpen = false;
+        IsStatusBannerVisible = false;
+
+        bool success = false;
+
+        try
+        {
+            await Task.Run(() => _applicationService.RemoveJob(job.Id));
+            success = true;
+        }
+        catch (Exception)
+        {
+            // Repository throws KeyNotFoundException if job not found
+        }
+        finally
+        {
+            var jobs = await Task.Run(FetchJobs);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                PendingDeleteJob = null;
+                ApplyJobs(jobs);
+
+                if (success)
+                {
+                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_delete_success, new[] { job.Name });
+                    IsStatusError = false;
+                }
+                else
+                {
+                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_delete_error, new[] { job.Name });
+                    IsStatusError = true;
+                }
+                IsStatusBannerVisible = true;
+            });
+        }
+
+        if (success)
+        {
+            _ = AutoDismissBannerAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void CancelDelete()
+    {
+        IsDeleteDialogOpen = false;
+        PendingDeleteJob = null;
     }
 
     [RelayCommand]
     private void LoadJobs()
     {
-        _allJobs.Clear();
+        ApplyJobs(FetchJobs());
+    }
+
+    private List<Models.BackupJob> FetchJobs()
+    {
         try
         {
-            var coreJobs = _applicationService.GetAllJobs();
-            foreach (var job in coreJobs)
-            {
-                _allJobs.Add(new Models.BackupJob
+            return [.. _applicationService.GetAllJobs()
+                .Select(job => new Models.BackupJob
                 {
                     Id = job.Id,
                     Name = job.Name,
                     Source = job.Source,
                     Destination = job.Destination,
                     Type = job.Type
-                });
-            }
+                })];
         }
         catch (Exception)
         {
             // Repository may not be initialized yet
+            return [];
         }
+    }
+
+    private void ApplyJobs(List<Models.BackupJob> jobs)
+    {
+        _allJobs.Clear();
+        _allJobs.AddRange(jobs);
         Refresh();
     }
 }

@@ -83,29 +83,117 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*" Margin="24">
+    <Panel>
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24">
+
+        <!-- Running banner -->
+        <Border Grid.Row="0"
+                Background="#1A42A5F5"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,12"
+                IsVisible="{Binding IsRunning}">
+            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+                <TextBlock Text="{Binding RunningLabel}"
+                           Foreground="#42A5F5"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding RunningJobName}"
+                           Foreground="#42A5F5"
+                           FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Status banner (success) -->
+        <Border Grid.Row="1"
+                Background="#1A66BB6A"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,12"
+                IsVisible="{Binding IsSuccessBannerVisible}">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           Foreground="#66BB6A"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"/>
+                <Button Grid.Column="1"
+                        Content="✕"
+                        Command="{Binding DismissStatusBannerCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="#66BB6A"
+                        FontSize="14"
+                        Padding="4"
+                        Cursor="Hand"
+                        VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <!-- Status banner (error) -->
+        <Border Grid.Row="1"
+                Background="#1AEF5350"
+                CornerRadius="6"
+                Padding="12,8"
+                Margin="0,0,0,12"
+                IsVisible="{Binding IsErrorBannerVisible}">
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding StatusMessage}"
+                           Foreground="#EF5350"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"/>
+                <Button Grid.Column="1"
+                        Content="✕"
+                        Command="{Binding DismissStatusBannerCommand}"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        Foreground="#EF5350"
+                        FontSize="14"
+                        Padding="4"
+                        Cursor="Hand"
+                        VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
 
         <!-- Header -->
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
             <StackPanel Grid.Column="0">
-                <TextBlock Text="Travaux de Sauvegarde"
+                <TextBlock Text="{Binding TitleText}"
                            FontSize="22"
                            FontWeight="Bold"
                            Margin="0,0,0,4"/>
-                <TextBlock Text="Gérez vos sauvegardes"
+                <TextBlock Text="{Binding SubtitleText}"
                            FontSize="13"
                            Foreground="#888"/>
             </StackPanel>
 
             <TextBox Grid.Column="1"
                      Text="{Binding SearchText}"
-                     Watermark="Rechercher..."
+                     Watermark="{Binding SearchWatermark}"
                      Width="250"
-                     VerticalAlignment="Center"/>
+                     VerticalAlignment="Center">
+                <TextBox.InnerRightContent>
+                    <Button Command="{Binding ClearSearchCommand}"
+                            IsVisible="{Binding SearchText.Length}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Padding="4"
+                            Cursor="Hand"
+                            VerticalAlignment="Center">
+                        <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                                  Width="12" Height="12"
+                                  Foreground="#888"/>
+                    </Button>
+                </TextBox.InnerRightContent>
+            </TextBox>
         </Grid>
 
         <!-- Column headers + list -->
-        <Border Grid.Row="1"
+        <Border Grid.Row="3"
                 BorderBrush="#22FFFFFF"
                 BorderThickness="1"
                 CornerRadius="8"
@@ -145,7 +233,7 @@
                         <Button Grid.Column="5" Classes="col-header"
                                 HorizontalAlignment="Center"
                                 IsHitTestVisible="False">
-                            <TextBlock Text="Actions"/>
+                            <TextBlock Text="{Binding ActionsHeader}"/>
                         </Button>
                     </Grid>
                 </Border>
@@ -214,19 +302,19 @@
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
                                             <Button Classes="action-btn"
-                                                    ToolTip.Tip="Exécuter"
+                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipRun}"
                                                     Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).RunJobCommand}"
                                                     CommandParameter="{Binding}">
                                                 <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A"/>
                                             </Button>
                                             <Button Classes="action-btn"
-                                                    ToolTip.Tip="Modifier"
+                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipModify}"
                                                     Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ModifyJobCommand}"
                                                     CommandParameter="{Binding}">
                                                 <PathIcon Data="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" Foreground="#42A5F5"/>
                                             </Button>
                                             <Button Classes="action-btn"
-                                                    ToolTip.Tip="Supprimer"
+                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipDelete}"
                                                     Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).DeleteJobCommand}"
                                                     CommandParameter="{Binding}">
                                                 <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350"/>
@@ -241,4 +329,101 @@
             </Grid>
         </Border>
     </Grid>
+
+    <!-- Confirmation overlay -->
+    <Border Background="#AA000000"
+            IsVisible="{Binding IsConfirmDialogOpen}">
+        <Border Background="#2D2D3D"
+                CornerRadius="10"
+                Padding="32,24"
+                MaxWidth="420"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BoxShadow="0 8 24 0 #60000000">
+            <StackPanel Spacing="20">
+                <TextBlock Text="{Binding ConfirmRunTitle}"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="{Binding ConfirmRunMessage}"
+                               FontSize="14"
+                               Foreground="#BBBBBB"/>
+                    <TextBlock Text="{Binding PendingJob.Name}"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                    <TextBlock Text="?"
+                               FontSize="14"
+                               Foreground="#BBBBBB"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                            Spacing="12"
+                            HorizontalAlignment="Center">
+                    <Button Content="{Binding BtnCancelText}"
+                            Command="{Binding CancelRunCommand}"
+                            Padding="20,8"
+                            Background="#44FFFFFF"
+                            Foreground="White"
+                            CornerRadius="6"/>
+                    <Button Content="{Binding BtnConfirmText}"
+                            Command="{Binding ConfirmRunCommand}"
+                            Padding="20,8"
+                            Background="#66BB6A"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            CornerRadius="6"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Border>
+
+    <!-- Delete confirmation overlay -->
+    <Border Background="#AA000000"
+            IsVisible="{Binding IsDeleteDialogOpen}">
+        <Border Background="#2D2D3D"
+                CornerRadius="10"
+                Padding="32,24"
+                MaxWidth="420"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BoxShadow="0 8 24 0 #60000000">
+            <StackPanel Spacing="20">
+                <TextBlock Text="{Binding ConfirmDeleteTitle}"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+                    <TextBlock Text="{Binding ConfirmDeleteMessage}"
+                               FontSize="14"
+                               Foreground="#BBBBBB"/>
+                    <TextBlock Text="{Binding PendingDeleteJob.Name}"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               Foreground="White"/>
+                    <TextBlock Text="?"
+                               FontSize="14"
+                               Foreground="#BBBBBB"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal"
+                            Spacing="12"
+                            HorizontalAlignment="Center">
+                    <Button Content="{Binding BtnCancelText}"
+                            Command="{Binding CancelDeleteCommand}"
+                            Padding="20,8"
+                            Background="#44FFFFFF"
+                            Foreground="White"
+                            CornerRadius="6"/>
+                    <Button Content="{Binding BtnDeleteText}"
+                            Command="{Binding ConfirmDeleteCommand}"
+                            Padding="20,8"
+                            Background="#EF5350"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            CornerRadius="6"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Border>
+    </Panel>
 </UserControl>
