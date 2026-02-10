@@ -48,6 +48,38 @@ public class ConsoleUI
             _menuService.WaitForUser();
             MainMenu();
         }
+    /// <param name="backupApplicationService">Application service exposing backup use cases.</param>
+    /// <param name="parser">Command-line parser for non-interactive execution.</param>
+    /// <param name="localizationService">Localization service used by the UI.</param>
+    /// <param name="consoleAdapter">Console adapter abstraction.</param>
+    /// <param name="menuService">Menu rendering service.</param>
+    /// <param name="menuFactory">Menu config factory.</param>
+    /// <param name="messageService">Console message service.</param>
+    /// <param name="inputService">Console input service.</param>
+    /// <param name="jobsFlowService">Jobs workflow service.</param>
+    /// <param name="settingsFlowService">Settings workflow service.</param>
+    internal ConsoleUI(
+        BackupApplicationService backupApplicationService,
+        CommandLineParser parser,
+        ILocalizationService localizationService,
+        IConsoleAdapter consoleAdapter,
+        IMenuService menuService,
+        IMenuFactory menuFactory,
+        IConsoleMessageService messageService,
+        IConsoleInputService inputService,
+        JobsFlowService jobsFlowService,
+        SettingsFlowService settingsFlowService)
+    {
+        _parser = parser;
+        _backupApplicationService = backupApplicationService;
+        LocalizationService = localizationService;
+        _consoleAdapter = consoleAdapter;
+        _menuService = menuService;
+        _menuFactory = menuFactory;
+        _messageService = messageService;
+        _inputService = inputService;
+        _jobsFlowService = jobsFlowService;
+        _settingsFlowService = settingsFlowService;
     }
 
     /// <summary>
@@ -118,6 +150,165 @@ public class ConsoleUI
     /// </summary>
     public void Quit()
     {
+        Console.Clear();
+    }
+
+    /// <summary>
+    /// Shows interactive list of backup jobs
+    /// </summary>
+    public void ShowJobsList()
+    {
+        var menuConfig = _menuFactory.CreateJobsListMenu();
+        _menuService.ShowMenuWithActions(menuConfig);
+    }
+
+    /// <summary>
+    /// Shows details of a specific backup job with action options
+    /// </summary>
+    public void ShowJobDetails(BackupJob job)
+    {
+        var refreshedJob = _backupApplicationService.GetJobById(job.Id) ?? job;
+        Action renderJobDetails = () =>
+        {
+            ShowMessage(LocalizationKey.backupjob_id, false);
+            Console.WriteLine($": {refreshedJob.Id}");
+
+            ShowMessage(LocalizationKey.backupjob_name, false);
+            Console.WriteLine($": {refreshedJob.Name}");
+
+            ShowMessage(LocalizationKey.backupjob_source, false);
+            Console.WriteLine($": {refreshedJob.Source}");
+
+            ShowMessage(LocalizationKey.backupjob_destination, false);
+            Console.WriteLine($": {refreshedJob.Destination}");
+
+            ShowMessage(LocalizationKey.backupjob_type, false);
+            Console.WriteLine($": {refreshedJob.Type}");
+
+            Console.WriteLine($": LastExecution {(refreshedJob.LastExecutionDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "never")}");
+            Console.WriteLine($": Active {refreshedJob.IsActive}");
+
+            Console.WriteLine();
+        };
+
+        var menuConfig = _menuFactory.CreateJobDetailsMenu(refreshedJob, renderJobDetails);
+        _menuService.ShowMenuWithActions(menuConfig);
+    }
+
+    /// <summary>
+    /// Runs a backup job
+    /// </summary>
+    public void RunJob(BackupJob job)
+    {
+        Console.Clear();
+        _menuService.DisplayLabel(LocalizationKey.menu_job_run);
+
+        ShowMessage(LocalizationKey.backupjob_running);
+        try
+        {
+            _backupApplicationService.RunJobById(job.Id);
+            ShowMessage(LocalizationKey.backupjob_completed);
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+        }
+
+        _menuService.WaitForUser();
+        ShowJobsList();
+    }
+
+    /// <summary>
+    /// Updates a backup job
+    /// </summary>
+    public void UpdateJob(BackupJob job)
+    {
+        Console.Clear();
+        var menuConfig = _menuFactory.CreateJobUpdateMenu(job);
+        _menuService.ShowMenuWithActions(menuConfig);
+    }
+
+    /// <summary>
+    /// Updates a specific field of a backup job
+    /// </summary>
+    public void UpdateJobField(BackupJob job, string field)
+    {
+        Console.Clear();
+        _menuService.DisplayLabel(LocalizationKey.menu_job_update);
+
+        switch (field)
+        {
+            case "name":
+                string? newName = AskString(LocalizationKey.menu_job_update_name);
+                if (newName != null) job.Name = newName;
+                break;
+            case "source":
+                string? newSource = AskString(LocalizationKey.menu_job_update_source);
+                if (newSource != null) job.Source = newSource;
+                break;
+            case "destination":
+                string? newDestination = AskString(LocalizationKey.menu_job_update_destination);
+                if (newDestination != null) job.Destination = newDestination;
+                break;
+            case "type":
+                BackupType? newType = AskBackupType(LocalizationKey.menu_job_update_type);
+                if (newType != null) job.Type = newType.Value;
+                break;
+        }
+
+        UpdateJob(job);
+    }
+
+    /// <summary>
+    /// Saves the updated backup job
+    /// </summary>
+    public void SaveJobUpdate(BackupJob job)
+    {
+        try
+        {
+            _backupApplicationService.UpdateJob(job);
+            ShowMessage(LocalizationKey.backupjob_updated);
+        }
+        catch (Exception e)
+        {
+            ShowError(e);
+        }
+        _menuService.WaitForUser();
+        ShowJobsList();
+    }
+
+    /// <summary>
+    /// Deletes a backup job with confirmation
+    /// </summary>
+    public void DeleteJob(BackupJob job)
+    {
+        Console.Clear();
+        _menuService.DisplayLabel(LocalizationKey.menu_job_delete);
+
+        ShowMessage(LocalizationKey.backupjob_name, false);
+        Console.WriteLine($": {job.Name}");
+        Console.WriteLine();
+
+        ShowMessage(LocalizationKey.backupjob_delete_confirm);
+        var key = Console.ReadKey(intercept: true);
+        if (key.Key == ConsoleKey.Y || key.Key == ConsoleKey.Enter)
+        {
+            try
+            {
+                _backupApplicationService.RemoveJob(job.Id);
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
+            ShowMessage(LocalizationKey.backupjob_deleted);
+        }
+        else
+        {
+            ShowJobDetails(job);
+        }
+        _menuService.WaitForUser();
+        ShowJobsList();
         Console.Clear();
     }
 
