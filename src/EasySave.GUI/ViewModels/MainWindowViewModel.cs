@@ -14,7 +14,6 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ManageViewModel _manageViewModel;
     private readonly LogViewModel _logViewModel;
     private readonly ConfigViewModel _configViewModel;
-    private readonly IBackupJobRepository _backupJobRepository;
 
     public MainWindowViewModel(
         CreateViewModel createViewModel,
@@ -43,6 +42,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _configViewModel.RefreshTranslations();
         _homeViewModel.RefreshTranslations();
         _manageViewModel.RefreshTranslations();
+        _createViewModel.RefreshTranslations();
     }
     public void Navigate(string page)
     {

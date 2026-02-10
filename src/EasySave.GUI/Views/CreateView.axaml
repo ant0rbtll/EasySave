@@ -10,13 +10,8 @@
 		
 		<Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
 			<StackPanel Grid.Column="0">
-				<TextBlock Text="Création d'un travail"
-                           FontSize="22"
-                           FontWeight="Bold"
-                           Margin="0,0,0,4"/>
-				<TextBlock Text="Créez votre travail de sauvegarde"
-                           FontSize="13"
-                           Foreground="#888"/>
+				<TextBlock Text="{Binding Title}" FontSize="22" FontWeight="Bold" Margin="0,0,0,4"/>
+				<TextBlock Text="{Binding Subtitle}" FontSize="13" Foreground="#888"/>
 			</StackPanel>
 		</Grid>
 
@@ -38,15 +33,15 @@
 					FontWeight="Bold"
 					TextAlignment="Center"/>
 			</Border>
-				<TextBlock Text="Nom du backup" />
+				<TextBlock Text="{Binding BackupNameLabel}" />
 				<TextBox Text="{Binding Name}" LostFocus="Name_LostFocus"/>
 			<DockPanel>
 				<TextBlock Text="{Binding JobNameError}" Foreground="#51A2F2" FontSize="12"/>
 			</DockPanel>
-				<TextBlock Text="Source" />
+			<TextBlock Text="{Binding SourceLabel}" />
 				<DockPanel>
 					<TextBox Text="{Binding SourcePath}" Width="600" LostFocus="Source_LostFocus"/>
-					<Button Content="Parcourir..."
+					<Button Content="{Binding BrowseSourceButtonLabel}"
 							Click="BrowseSource_Click"
 							Margin="5,0,5,0"/>
 			</DockPanel>
@@ -54,10 +49,10 @@
 				<TextBlock Text="{Binding SourcePathError}" Foreground="#51A2F2" FontSize="12"/>
 			</DockPanel>
 
-			<TextBlock Text="Destination" />
+			<TextBlock Text="{Binding DestinationLabel}" />
 			<DockPanel>
 				<TextBox Text="{Binding DestinationPath}" Width="600" LostFocus="Destination_LostFocus"/>
-				<Button Content="Parcourir..."
+				<Button Content="{Binding BrowseSourceButtonLabel}"
                         Click="BrowseDestination_Click"
                         Margin="5,0,5,0"/>
 			</DockPanel>
@@ -65,7 +60,7 @@
 				<TextBlock Text="{Binding DestinationPathError}" Foreground="#51A2F2" FontSize="12"/>
 			</DockPanel>
 
-			<TextBlock Text="Type de sauvegarde" />
+			<TextBlock Text="{Binding BackupTypeLabel}" />
 			<ComboBox ItemsSource="{Binding BackupTypes}"
                       SelectedItem="{Binding SelectedBackupType}"
                       IsEditable="False" />
@@ -77,10 +72,10 @@
 						HorizontalAlignment="Right"
 						Spacing="10"
 						Margin="0,20,0,0">
-				<Button Content="Annuler"
+				<Button Content="{Binding CancelButtonLabel}"
 						Command="{Binding CancelCommand}" />
 
-				<Button Content="Créer le travail"
+				<Button Content="{Binding CreateJobButtonLabel}"
 						Command="{Binding CreateJobCommand}" />
 			</StackPanel>
 		</StackPanel>

@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using EasySave.GUI.ViewModels;
+using EasySave.GUI.Helpers;
 
 namespace EasySave.GUI.Views;
 
@@ -21,7 +22,7 @@ public partial class CreateView : UserControl
 
         var dialog = new OpenFolderDialog
         {
-            Title = "Choisir le dossier source"
+            Title = "Source..."
         };
 
         var result = await dialog.ShowAsync((Window)this.VisualRoot!);
@@ -45,7 +46,7 @@ public partial class CreateView : UserControl
 
         var dialog = new OpenFolderDialog
         {
-            Title = "Choisir le dossier de destination"
+            Title = "Destination..."
         };
 
         var result = await dialog.ShowAsync((Window)this.VisualRoot!);
