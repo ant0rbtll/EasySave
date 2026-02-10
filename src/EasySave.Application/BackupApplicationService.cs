@@ -186,15 +186,17 @@ public class BackupApplicationService(
     /// <returns>a list of dates</returns>
     public List<string> GetLogsDate()
     {
-        List<string> dates = new();
         var logsPath = _pathProvider.ResolveLogsDirectory();
 
-        string[] files = Directory.GetFiles(logsPath);
-        foreach (string file in files)
+        if (!Directory.Exists(logsPath))
         {
-            dates.Add(Path.GetFileNameWithoutExtension(file));
+            return new List<string>();
         }
-        return dates;
+
+        return Directory.GetFiles(logsPath, "*.json")
+            .Select(Path.GetFileNameWithoutExtension)
+            .OrderByDescending(static d => d)
+            .ToList();
     }
 
     ///// <summary>
@@ -206,19 +208,22 @@ public class BackupApplicationService(
     public List<Dictionary<string, object>> GetLogsByDate(string date)
     {
         var logsPath = _pathProvider.ResolveLogsDirectory();
-        var file = Path.Combine(logsPath, date) + ".json";
-        List<Dictionary<string, object>> data = new();
+        var filePath = Path.Combine(logsPath, $"{date}.json");
 
-        if (Path.Exists(file))
+        if (!File.Exists(filePath))
         {
-            if (Path.GetExtension(file) == ".json")
-            {
-                string jsonString = File.ReadAllText(file);
-                data = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonString);
-
-            }
+            return new List<Dictionary<string, object>>();
         }
 
-        return data;
+        try
+        {
+            var jsonString = File.ReadAllText(filePath);
+            return JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonString)
+                   ?? new List<Dictionary<string, object>>();
+        }
+        catch (JsonException)
+        {
+            return new List<Dictionary<string, object>>();
+        }
     }
 }
