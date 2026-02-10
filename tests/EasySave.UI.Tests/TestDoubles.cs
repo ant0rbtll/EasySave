@@ -101,6 +101,7 @@ internal sealed class FakeMenuService : IMenuService
     public void ShowMenuWithActions(MenuConfig menuConfig)
     {
         ShownMenuConfigs.Add(menuConfig);
+        menuConfig.RenderHeader?.Invoke();
     }
 
     public void DisplayLabel(LocalizationKey key)
