@@ -4,19 +4,28 @@ using EasySave.Localization;
 
 namespace EasySave.GUI.ViewModels;
 
-public partial class SidebarViewModel : ViewModelBase
+public partial class SidebarViewModel: ViewModelBase
 {
-    private readonly Action<string> _navigate;
+    private Action<string> _navigate;
     private readonly ILocalizationService _localizationService;
+
+    public void SetNavigateAction(Action<string> navigate)
+    {
+        _navigate = navigate;
+    }
+
+    public void Navigate(string page)
+    {
+        _navigate?.Invoke(page);
+    }
 
     [ObservableProperty] private string createLabel = "";
     [ObservableProperty] private string manageLabel = "";
     [ObservableProperty] private string logLabel = "";
     [ObservableProperty] private string configLabel = "";
 
-    public SidebarViewModel(Action<string> navigate, ILocalizationService localizationService)
+    public SidebarViewModel(ILocalizationService localizationService)
     {
-        _navigate = navigate;
         _localizationService = localizationService;
         RefreshTranslations();
     }

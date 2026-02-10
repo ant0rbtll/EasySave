@@ -14,24 +14,25 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly ConfigViewModel _configViewModel;
 
     public MainWindowViewModel(
-        IUserPreferencesRepository preferencesRepository,
-        ILocalizationService localizationService,
-        IPathProvider pathProvider)
+        CreateViewModel createViewModel,
+        ManageViewModel manageViewModel,
+        ProgressViewModel progressViewModel,
+        LogViewModel logViewModel,
+        ConfigViewModel configViewModel,
+        SidebarViewModel sidebarViewModel,
+        HomeViewModel homeViewModel
+        )
     {
-        _homeViewModel = new HomeViewModel(localizationService);
-        _createViewModel = new CreateViewModel();
-        _manageViewModel = new ManageViewModel();
-        _logViewModel = new LogViewModel();
+        _createViewModel = createViewModel;
+        _manageViewModel = manageViewModel;
+        _progressViewModel = progressViewModel;
+        _logViewModel = logViewModel;
+        _configViewModel = configViewModel;
+        _homeViewModel = homeViewModel;
 
-        Sidebar = new SidebarViewModel(Navigate, localizationService);
-
-        _configViewModel = new ConfigViewModel(
-            preferencesRepository,
-            localizationService,
-            pathProvider,
-            OnLanguageChanged);
-
-        currentPage = _homeViewModel;
+        Sidebar = sidebarViewModel;
+        Sidebar.SetNavigateAction(Navigate);
+        CurrentPage = _createViewModel;
     }
 
     private void OnLanguageChanged()
@@ -40,7 +41,6 @@ public partial class MainWindowViewModel : ViewModelBase
         _configViewModel.RefreshTranslations();
         _homeViewModel.RefreshTranslations();
     }
-
     public void Navigate(string page)
     {
         CurrentPage = page switch

@@ -3,5 +3,119 @@
              xmlns:vm="using:EasySave.GUI.ViewModels"
              x:Class="EasySave.GUI.Views.ManageView"
              x:DataType="vm:ManageViewModel">
-    <TextBlock Text="Page Gérer" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+	<Grid RowDefinitions="Auto,*,Auto" Margin="20">
+
+		<!-- En-tête -->
+		<StackPanel Grid.Row="0" Margin="0,0,0,20">
+			<TextBlock Text="Travaux de Sauvegarde"
+					   FontSize="24"
+					   FontWeight="Bold"
+					   Margin="0,0,0,10"/>
+			<TextBlock Text="Gérez et surveillez vos sauvegardes"
+					   FontSize="14"
+					   Foreground="#666"
+					   Margin="0,0,0,10"/>
+
+			<!-- Barre d'actions -->
+			<StackPanel Orientation="Horizontal" Spacing="10">
+				<Button Content="Nouvelle Sauvegarde"
+						Classes="accent"
+						Padding="15,8"/>
+				<Button Content="Rafraîchir"
+						Padding="15,8"/>
+				<Button Content="Exporter"
+						Padding="15,8"/>
+			</StackPanel>
+		</StackPanel>
+
+		<!-- Liste des travaux de sauvegarde -->
+		<Border Grid.Row="1"
+				BorderBrush="#E0E0E0"
+				BorderThickness="1"
+				CornerRadius="8"
+				Background="White">
+
+			<ListBox ItemsSource="{Binding jobs}"
+					 Background="Transparent"
+					 BorderThickness="0">
+
+				<ListBox.ItemTemplate>
+					<DataTemplate>
+						<Border BorderBrush="#F0F0F0"
+								BorderThickness="0,0,0,1"
+								Padding="15"
+								Margin="0">
+
+							<Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+
+
+								<!-- Informations principales -->
+								<StackPanel Grid.Column="1" Spacing="5">
+									<TextBlock Text="{Binding Name}"
+											   FontSize="16"
+											   FontWeight="SemiBold"/>
+									<TextBlock Text="{Binding Source}"
+											   FontSize="12"
+											   Foreground="#666"/>
+									<TextBlock Text="{Binding Destination}"
+											   FontSize="12"
+											   Foreground="#666"/>
+									<StackPanel Orientation="Horizontal" Spacing="15">
+										<TextBlock FontSize="12" Foreground="#888">
+											<Run Text="Type:"/>
+											<Run Text="{Binding Type}" FontWeight="Medium"/>
+										</TextBlock>
+									</StackPanel>
+								</StackPanel>
+
+								<!-- Date -->
+								<StackPanel Grid.Column="3"
+											Margin="15,0"
+											VerticalAlignment="Center">
+									<TextBlock Text="{Binding LastExecutionDate, StringFormat='{}{0:dd/MM/yyyy}'}"
+											   FontSize="14"
+											   FontWeight="SemiBold"
+											   HorizontalAlignment="Center"/>
+									<TextBlock Text="{Binding LastExecutionDate, StringFormat='{}{0:HH:mm}'}"
+											   FontSize="11"
+											   Foreground="#888"
+											   HorizontalAlignment="Center"/>
+									<TextBlock Text="Dernière sauvegarde"
+											   FontSize="10"
+											   Foreground="#888"
+											   HorizontalAlignment="Center"/>
+								</StackPanel>
+
+								<!-- Actions -->
+								<StackPanel Grid.Column="4"
+											Orientation="Horizontal"
+											Spacing="8"
+											VerticalAlignment="Center"
+											Margin="15,0,0,0">
+									<Button Content="▶"
+											ToolTip.Tip="Lancer"
+											Width="36"
+											Height="36"
+											FontSize="12"/>
+									<Button Content="⚙"
+											ToolTip.Tip="Paramètres"
+											Width="36"
+											Height="36"
+											FontSize="14"/>
+									<Button Content="🗑"
+											ToolTip.Tip="Supprimer"
+											Width="36"
+											Height="36"
+											FontSize="12"/>
+								</StackPanel>
+
+							</Grid>
+						</Border>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+
+			</ListBox>
+		</Border>
+
+	</Grid>
 </UserControl>
