@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
+using EasySave.GUI.Helpers;
 using EasySave.Localization;
 
 namespace EasySave.GUI.ViewModels;
@@ -256,6 +257,7 @@ public partial class ManageViewModel : ViewModelBase
         IsStatusBannerVisible = false;
 
         bool success = false;
+        string? errorMessage = null;
 
         try
         {
@@ -266,9 +268,9 @@ public partial class ManageViewModel : ViewModelBase
             });
             success = true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // BackupEngine already logs errors and updates state
+            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
         }
         finally
         {
@@ -288,7 +290,7 @@ public partial class ManageViewModel : ViewModelBase
                 }
                 else
                 {
-                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_run_error, new[] { job.Name });
+                    StatusMessage = errorMessage ?? _localizationService.TranslateText(LocalizationKey.error_default);
                     IsStatusError = true;
                 }
                 IsStatusBannerVisible = true;
@@ -359,15 +361,16 @@ public partial class ManageViewModel : ViewModelBase
         IsStatusBannerVisible = false;
 
         bool success = false;
+        string? errorMessage = null;
 
         try
         {
             await Task.Run(() => _applicationService.RemoveJob(job.Id));
             success = true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Repository throws KeyNotFoundException if job not found
+            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
         }
         finally
         {
@@ -385,7 +388,7 @@ public partial class ManageViewModel : ViewModelBase
                 }
                 else
                 {
-                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_delete_error, new[] { job.Name });
+                    StatusMessage = errorMessage ?? _localizationService.TranslateText(LocalizationKey.error_default);
                     IsStatusError = true;
                 }
                 IsStatusBannerVisible = true;
