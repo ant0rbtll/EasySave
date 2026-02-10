@@ -3,8 +3,12 @@ bin/
 obj/
 out/
 
+# Test results and coverage reports
 test-results/
 coverage-report/
+
+# build publish output
+publish/
 
 
 # Visual Studio / VS Code

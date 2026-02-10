@@ -6,6 +6,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.0] - 2026-02-09
+
+Evolution majeure de l'architecture UI/Logs et des preferences utilisateur.
+
+### Added
+
+#### UI / Navigation
+- Introduction de `JobsFlowService` et `SettingsFlowService` pour separer les workflows metier de `ConsoleUI`
+- Ajout de `JobEditSessionService` pour gerer un snapshot d'edition et detecter les changements non sauvegardes
+- Ajout d'un menu de resolution des changements non sauvegardes (sauvegarder, annuler, retour)
+- Ajout de l'enum `JobEditableField` pour typer les champs modifiables des travaux
+
+#### Preferences / Parametres
+- Ajout de la preference `LogFormat` dans `UserPreferences` avec support `Json` et `Xml`
+- Ajout de la configuration du dossier de logs via `IPathProvider.SetLogDirectoryOverride(...)`
+- Ajout du menu de changement du format de logs (JSON/XML) dans les parametres
+- Ajout d'affichages de contexte dans les menus de parametres (langue active, format actif/pending, dossier actif)
+
+#### Logging
+- Ajout de `EasyLog.XmlLogFormatter` en plus de `JsonLogFormatter`
+- Ajout de `ILogFileLayout` pour separer le format d'entree et la structure du fichier journal
+- Renforcement de `DailyFileLogger` (mutex inter-process, insertion robuste avant footer, normalisation des chemins)
+- Ajout des evenements `StartBackup` et `EndBackup` dans `LogEventType`
+
+#### Execution / Transfert
+- Ajout de `TransferResult.ErrorCode` et de codes standards (`InvalidSourcePath`, `InvalidDestinationPath`, `SourceNotFound`)
+- Gestion explicite des echecs de transfert dans `BackupEngine` avec erreur metier localisable (`error_file_transfer_failed`)
+
+### Changed
+
+#### Architecture
+- `ConsoleUI` devient un orchestrateur leger (composition des services UI au lieu d'embarquer toute la logique)
+- `Program.CreateLogger(...)` selectionne dynamiquement le formatter en fonction des preferences utilisateur
+- `DefaultPathProvider.GetDailyLogPath(...)` prend en compte le format de log et la creation/fallback des fichiers
+
+#### Coherence fonctionnelle
+- Le menu principal n'utilise plus une limite hardcodee pour la creation de jobs, mais `IBackupJobRepository.DefaultMaxJobs`
+- Le menu d'edition de job n'utilise plus de chaines magiques (`"name"`, `"source"`, etc.), mais des identifiants types
+
+### Fixed
+
+- Normalisation (`Trim`) du dossier de logs avant persistence pour eviter les valeurs incoherentes en preferences
+- Nettoyage de plusieurs divergences UI/persistence sur les contraintes et identifiants de champs d'edition
+
+### Documentation
+
+- Mise a jour complete des diagrammes UML en version 1.1 (`docs/classes.puml`, `docs/sequence.puml`, `docs/activity.puml`, `docs/usecase.puml`)
+
 ## [1.0.0] - 2026-02-05
 
 Version initiale de production d'EasySave.
@@ -192,3 +240,4 @@ Version initiale de production d'EasySave.
 - **Thaïs VIANES** (@thedarknessqueen) - ETR (État Temps Réel), State Writer
 
 [1.0.0]: https://github.com/ant0rbtll/easysave/releases/tag/v1.0.0
+[1.1.0]: https://github.com/ant0rbtll/easysave/compare/v1.0.0...HEAD
