@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using EasySave.Configuration;
 using EasySave.GUI.ViewModels;
 using EasySave.GUI.Views;
+using EasySave.Localization;
 using EasySave.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
@@ -44,6 +45,8 @@ public partial class App : Avalonia.Application
             var pathProvider = _services.GetRequiredService<IPathProvider>();
             var preferencesRepository = _services.GetRequiredService<IUserPreferencesRepository>();
             var localizationService = _services.GetRequiredService<ILocalizationService>();
+            var idProvider = _services.GetRequiredService<IJobIdProvider>(); //TODO: revoir utilité
+            var backupJobRepository = _services.GetRequiredService<IBackupJobRepository>(); //TODO: revoir utilité
 
             // Chargement des préférences sauvegardées
             var preferences = preferencesRepository.Load();
