@@ -1,8 +1,3 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using EasySave.Configuration;
-using EasySave.Localization;
-using EasySave.Persistence;
-
 namespace EasySave.GUI.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
