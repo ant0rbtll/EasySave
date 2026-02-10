@@ -5,6 +5,7 @@ using EasySave.State;
 using EasySave.Configuration;
 using EasySave.System;
 using EasySave.Log;
+using EasySave.Core;
 using Microsoft.Extensions.DependencyInjection;
 
 
@@ -17,6 +18,7 @@ public class Program
 {
     // EasyLog expects this global mutex name; keep in sync with EasyLog.DailyFileLogger.
     private const string EasyLogDailyFileMutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile";
+    internal static Func<IServiceProvider> ServiceProviderFactory { get; set; } = InitServices;
 
     /// <summary>
     /// Application entry point.
@@ -24,7 +26,7 @@ public class Program
     /// <param name="args">Command-line arguments passed to the application.</param>
     public static void Main(string[] args)
     {
-        var provider = InitServices();
+        var provider = ServiceProviderFactory();
         var console = provider.GetRequiredService<ConsoleUI>();
 
         if (args.Length == 0)
@@ -74,11 +76,27 @@ public class Program
     {
         try
         {
-            var formatter = new EasyLog.JsonLogFormatter();
+            // Load user preferences to get log format
+            var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
+            var userPreferences = preferencesRepository.Load();
+
+            // Select formatter based on user preference
+            EasyLog.ILogFormatter formatter;
+
+            if (userPreferences.LogFormat == LogFormat.Xml)
+            {
+                formatter = new EasyLog.XmlLogFormatter();
+            }
+            else
+            {
+                formatter = new EasyLog.JsonLogFormatter();
+            }
+
             var logger = new EasyLog.DailyFileLogger(
                 formatter,
                 pathProvider,
-                EasyLogDailyFileMutexName);
+                EasyLogDailyFileMutexName,
+                userPreferences.LogFormat);
 
             return logger;
         }

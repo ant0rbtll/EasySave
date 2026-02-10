@@ -1,9 +1,9 @@
-﻿using EasySave.Application;
-using EasySave.Core;
+using EasySave.Application;
+using EasySave.Configuration;
 using EasySave.Localization;
 using EasySave.Persistence;
-using EasySave.Configuration;
 using EasySave.UI.Menu;
+using EasySave.UI.Services;
 
 namespace EasySave.UI;
 
@@ -12,250 +12,23 @@ namespace EasySave.UI;
 /// </summary>
 public class ConsoleUI
 {
-
-    private readonly BackupApplicationService _backupApplicationService;
-    private readonly IUserPreferencesRepository _preferencesRepository;
-    private readonly UserPreferences _userPreferences;
-    private readonly IPathProvider _pathProvider;
-    public ILocalizationService LocalizationService { get; }
-    private readonly MenuService _menuService;
-    private readonly MenuFactory _menuFactory;
     private readonly CommandLineParser _parser;
-    private readonly ErrorManager _errorManager;
-
-    public ConsoleUI(BackupApplicationService backupApplicationService, IUserPreferencesRepository preferencesRepository, IPathProvider pathProvider, CommandLineParser parser)
-    {
-        _backupApplicationService = backupApplicationService;
-        _preferencesRepository = preferencesRepository;
-        _pathProvider = pathProvider;
-        LocalizationService = new LocalizationService();
-        _parser = parser;
-        _errorManager = new ErrorManager();
-
-        _userPreferences = _preferencesRepository.Load();
-        var language = _userPreferences.Language;
-
-        ApplyLogDirectoryPreference(_userPreferences.LogDirectory);
-
-        if (string.IsNullOrWhiteSpace(language) || !LocalizationService.AllCultures.ContainsKey(language))
-        {
-            language = "fr";
-            _userPreferences.Language = language;
-            _preferencesRepository.Save(_userPreferences);
-        }
-
-        LocalizationService.Culture = language;
-
-        _menuService = new MenuService(LocalizationService);
-        _menuFactory = new MenuFactory(this, _backupApplicationService);
-    }
-
-    /// <inheritdoc />
-    private void ShowMessage(LocalizationKey key, bool writeLine = true)
-    {
-        string message = LocalizationService.TranslateText(key);
-        if (writeLine) Console.WriteLine(message);
-        else Console.Write(message);
-    }
-
-    private void ShowMessageParam(LocalizationKey key, string[] parameters, bool writeLine = true)
-    {
-        string message = LocalizationService.TranslateTextWithParams(key, parameters);
-        if (writeLine) Console.WriteLine(message);
-        else Console.Write(message);
-    }
-
-    /// <inheritdoc />
-    public void ShowError(Exception e)
-    {
-        Console.WriteLine("");
-        Console.ForegroundColor = ConsoleColor.Red;
-        ShowMessage(LocalizationKey.error);
-        var messageKey = e.Message;
-        if (e.Data.Contains("errorKey") && e.Data["errorKey"] is string dataKey)
-        {
-            messageKey = dataKey;
-        }
-
-        if (_errorManager.TryGetMessage(messageKey, out var key))
-        {
-            ShowMessageParam(key,
-                e.Data.Keys
-                .Cast<string>()
-                .Where(k => !string.Equals(k, "errorKey", StringComparison.Ordinal))
-                .OrderBy(k => k)
-                .Select(k => e.Data[k]?.ToString() ?? string.Empty)
-                .ToArray()
-            );
-        }
-        else
-        {
-            Console.WriteLine(e.Message);
-        }
-        Console.ResetColor();
-    }
-
-    /// <inheritdoc />
-    public string? AskString(LocalizationKey key)
-    {
-        ShowMessage(key, false);
-        ShowMessage(LocalizationKey.input_escape_to_cancel, false);
-        Console.Write(" : ");
-
-        string input = "";
-        ConsoleKeyInfo keyInfo;
-
-        do
-        {
-            keyInfo = Console.ReadKey(intercept: true);
-
-            if (keyInfo.Key == ConsoleKey.Escape)
-            {
-                Console.WriteLine();
-                return null;
-            }
-            else if (keyInfo.Key == ConsoleKey.Enter)
-            {
-                Console.WriteLine();
-                if (string.IsNullOrWhiteSpace(input))
-                {
-                    ShowMessage(LocalizationKey.input_string_invalid, false);
-                    ShowMessage(LocalizationKey.input_escape_to_cancel, false);
-                    Console.Write(" : ");
-                    input = "";
-                }
-                else
-                {
-                    break;
-                }
-            }
-            else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
-            {
-                input = input.Substring(0, input.Length - 1);
-                Console.Write("\b \b"); // Erase the character on screen
-            }
-            else if (!char.IsControl(keyInfo.KeyChar))
-            {
-                input += keyInfo.KeyChar;
-                Console.Write(keyInfo.KeyChar);
-            }
-        }
-        while (true);
-
-        return input;
-    }
-
-    /// <inheritdoc />
-    public int? AskInt(LocalizationKey key)
-    {
-        ShowMessage(key, false);
-        ShowMessage(LocalizationKey.input_escape_to_cancel, false);
-        Console.Write(" : ");
-        string input = "";
-        ConsoleKeyInfo keyInfo;
-
-        do
-        {
-            keyInfo = Console.ReadKey(intercept: true);
-
-            if (keyInfo.Key == ConsoleKey.Escape)
-            {
-                Console.WriteLine();
-                return null;
-            }
-            else if (keyInfo.Key == ConsoleKey.Enter)
-            {
-                Console.WriteLine();
-                if (int.TryParse(input, out int numberInput))
-                {
-                    return numberInput;
-                }
-                else
-                {
-                    ShowMessage(LocalizationKey.input_number_invalid, false);
-                    ShowMessage(LocalizationKey.input_escape_to_cancel, false);
-                    Console.Write(" : ");
-                    input = "";
-                }
-            }
-            else if (keyInfo.Key == ConsoleKey.Backspace && input.Length > 0)
-            {
-                input = input.Substring(0, input.Length - 1);
-                Console.Write("\b \b");
-            }
-            else if (char.IsDigit(keyInfo.KeyChar) || (keyInfo.KeyChar == '-' && input.Length == 0))
-            {
-                input += keyInfo.KeyChar;
-                Console.Write(keyInfo.KeyChar);
-            }
-        }
-        while (true);
-    }
-
-    /// <inheritdoc />
-    public BackupType? AskBackupType(LocalizationKey key)
-    {
-        ShowMessage(LocalizationKey.backupjob_type_list);
-        var values = Enum.GetValues(typeof(BackupType)).Cast<BackupType>().ToArray();
-        for (int i = 0; i < values.Length; i++)
-        {
-            Console.WriteLine($"{i + 1}. {values[i]}");
-        }
-
-        ShowMessage(key);
-        while (true)
-        {
-            int? backupTypeInput = AskInt(LocalizationKey.user_choice);
-            if (backupTypeInput == null)
-            {
-                return null;
-            }
-
-            int choice = backupTypeInput.Value;
-            if (choice >= 1 && choice <= values.Length)
-            {
-                return values[choice - 1];
-            }
-
-            ShowMessage(LocalizationKey.input_backuptype_invalid);
-        }
-    }
+    private readonly BackupApplicationService _backupApplicationService;
+    private readonly IMenuService _menuService;
+    private readonly IMenuFactory _menuFactory;
+    private readonly IConsoleAdapter _consoleAdapter;
+    private readonly IConsoleMessageService _messageService;
+    private readonly IConsoleInputService _inputService;
+    private readonly JobsFlowService _jobsFlowService;
+    private readonly SettingsFlowService _settingsFlowService;
 
     /// <summary>
-    /// Collects backup job information from the user and creates a new job.
+    /// Gets the localization service used by the console UI.
     /// </summary>
-    public void CreateBackupJob()
-    {
-        _menuService.DisplayLabel(LocalizationKey.menu_create);
-
-        string? nameJob = AskString(LocalizationKey.backupjob_create_name);
-        if (nameJob == null) { MainMenu(); return; }
-
-        string? sourceJob = AskString(LocalizationKey.backupjob_create_source);
-        if (sourceJob == null) { MainMenu(); return; }
-
-        string? destinationJob = AskString(LocalizationKey.backupjob_create_destination);
-        if (destinationJob == null) { MainMenu(); return; }
-
-        BackupType? backupTypeJob = AskBackupType(LocalizationKey.backupjob_create_type);
-        if (backupTypeJob == null) { MainMenu(); return; }
-
-        // send to service
-        try
-        {
-            _backupApplicationService.CreateJob(nameJob, sourceJob, destinationJob, backupTypeJob.Value);
-            ShowMessage(LocalizationKey.backupjob_created);
-        }
-        catch (Exception e)
-        {
-            ShowError(e);
-        }
-        _menuService.WaitForUser();
-        MainMenu();
-    }
+    public ILocalizationService LocalizationService { get; }
 
     /// <summary>
-    /// Displays the list of backup jobs in the console.
+    /// Initializes a test-friendly console UI using prebuilt collaborators.
     /// </summary>
     private void DisplayJobsList()
     {
@@ -278,248 +51,51 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Displays all backup jobs and waits for user input.
+    /// Initializes the console UI and wires all flow services.
     /// </summary>
-    public void SeeSaveList()
+    /// <param name="backupApplicationService">Application service exposing backup use cases.</param>
+    /// <param name="preferencesRepository">Repository used to load and persist user preferences.</param>
+    /// <param name="pathProvider">Path provider used by settings flows.</param>
+    /// <param name="parser">Command-line parser for non-interactive execution.</param>
+    public ConsoleUI(
+        BackupApplicationService backupApplicationService,
+        IUserPreferencesRepository preferencesRepository,
+        IPathProvider pathProvider,
+        CommandLineParser parser)
     {
-        _menuService.DisplayLabel(LocalizationKey.menu_list);
-        DisplayJobsList();
-        _menuService.WaitForUser();
-        MainMenu();
-    }
+        _parser = parser;
+        _backupApplicationService = backupApplicationService;
 
-    /// <summary>
-    /// Prompts the user to select and run a backup job.
-    /// </summary>
-    public void SaveJob()
-    {
-        _menuService.DisplayLabel(LocalizationKey.menu_save);
-        DisplayJobsList();
-        Console.WriteLine();
+        LocalizationService = new LocalizationService();
+        _consoleAdapter = new SystemConsoleAdapter();
+        _menuService = new MenuService(LocalizationService, _consoleAdapter);
+        _menuFactory = new MenuFactory();
 
-        while (true)
-        {
-            int? backupIndex = AskInt(LocalizationKey.ask_backupjob_save);
-            if (backupIndex == null) { MainMenu(); return; }
-            try
-            {
-                BackupJob? job = _backupApplicationService.GetJobById(backupIndex.Value);
-                if (job == null)
-                {
-                    ShowMessage(LocalizationKey.backupjob_id_not_found);
-                    continue;
-                }
+        _messageService = new ConsoleMessageService(LocalizationService, new ErrorManager(), _consoleAdapter);
+        _inputService = new ConsoleInputService(_messageService, _consoleAdapter);
 
-                ShowMessage(LocalizationKey.backup_saving);
-                _backupApplicationService.RunJobById(backupIndex.Value);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-            break;
-        }
+        var userPreferences = preferencesRepository.Load();
+        _jobsFlowService = new JobsFlowService(
+            _backupApplicationService,
+            _menuService,
+            _menuFactory,
+            _messageService,
+            _inputService,
+            _consoleAdapter,
+            new JobEditSessionService());
 
-        _menuService.WaitForUser();
-        MainMenu();
-    }
+        _settingsFlowService = new SettingsFlowService(
+            preferencesRepository,
+            userPreferences,
+            pathProvider,
+            LocalizationService,
+            _menuService,
+            _menuFactory,
+            _messageService,
+            _inputService,
+            _consoleAdapter);
 
-    /// <summary>
-    /// Prompts the user to select and delete a backup job.
-    /// </summary>
-    public void DeleteBackupJob()
-    {
-        _menuService.DisplayLabel(LocalizationKey.menu_delete);
-        DisplayJobsList();
-        Console.WriteLine();
-
-        while (true)
-        {
-            int? backupIndex = AskInt(LocalizationKey.ask_backupjob_delete);
-            if (backupIndex == null) { MainMenu(); return; }
-
-            try
-            {
-                BackupJob? job = _backupApplicationService.GetJobById(backupIndex.Value);
-                if (job == null)
-                {
-                    ShowMessage(LocalizationKey.backupjob_id_not_found);
-                    continue;
-                }
-                _backupApplicationService.RemoveJob(backupIndex.Value);
-                ShowMessage(LocalizationKey.backupjob_deleted);
-                break;
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-
-        }
-
-        _menuService.WaitForUser();
-        MainMenu();
-    }
-
-    /// <summary>
-    /// Displays the application settings menu.
-    /// </summary>
-    public void ConfigureParams()
-    {
-        var menuConfig = _menuFactory.CreateParamsMenu();
-        _menuService.ShowMenuWithActions(menuConfig);
-    }
-
-    /// <summary>
-    /// Displays the language selection menu.
-    /// </summary>
-    public void ShowChangeLocale()
-    {
-        var menuConfig = _menuFactory.CreateLocaleMenu();
-        _menuService.ShowMenuWithActions(menuConfig);
-    }
-
-    /// <summary>
-    /// Displays the log directory configuration menu.
-    /// </summary>
-    public void ShowChangeLogDirectory()
-    {
-        Console.Clear();
-        _menuService.DisplayLabel(LocalizationKey.menu_params_log_path);
-
-        string? input = AskString(LocalizationKey.ask_log_path);
-        if (input == null)
-        {
-            ConfigureParams();
-            return;
-        }
-
-        if (input.Equals("default", StringComparison.OrdinalIgnoreCase))
-        {
-            ChangeLogDirectory(null);
-            return;
-        }
-
-        if (!IsValidPath(input))
-        {
-            ShowMessage(LocalizationKey.log_path_invalid);
-            _menuService.WaitForUser();
-            ConfigureParams();
-            return;
-        }
-
-        ChangeLogDirectory(input);
-    }
-
-    /// <summary>
-    /// Changes the application language and persists the preference.
-    /// </summary>
-    /// <param name="locale">The culture code to set (e.g., "fr", "en").</param>
-    public void ChangeLocale(string locale)
-    {
-        if (string.IsNullOrWhiteSpace(locale) || !LocalizationService.AllCultures.ContainsKey(locale))
-        {
-            locale = "fr";
-        }
-
-        LocalizationService.Culture = locale;
-
-        // Update cached preferences and save
-        _userPreferences.Language = locale;
-        _preferencesRepository.Save(_userPreferences);
-
-        MainMenu();
-    }
-
-    private void ChangeLogDirectory(string? directory)
-    {
-        ApplyLogDirectoryPreference(directory);
-        _userPreferences.LogDirectory = string.IsNullOrWhiteSpace(directory) ? null : directory;
-        _preferencesRepository.Save(_userPreferences);
-
-        if (string.IsNullOrWhiteSpace(directory))
-        {
-            ShowMessage(LocalizationKey.log_path_reset);
-        }
-        else
-        {
-            ShowMessage(LocalizationKey.log_path_updated);
-        }
-
-        _menuService.WaitForUser();
-        ConfigureParams();
-    }
-
-    private void ApplyLogDirectoryPreference(string? directory)
-    {
-        if (string.IsNullOrWhiteSpace(directory))
-        {
-            _pathProvider.SetLogDirectoryOverride(null);
-            return;
-        }
-
-        if (!IsValidPath(directory))
-        {
-            try
-            {
-                Console.Error.WriteLine($"Invalid log directory preference '{directory}'. Reverting to default log directory.");
-            }
-            catch
-            {
-                // Best-effort notification only.
-            }
-            _pathProvider.SetLogDirectoryOverride(null);
-            return;
-        }
-
-        _pathProvider.SetLogDirectoryOverride(directory);
-    }
-
-    private static bool IsValidPath(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return false;
-        }
-
-        if (path.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
-        {
-            return false;
-        }
-
-        try
-        {
-            string candidate = ResolveLogDirectoryCandidate(path);
-            Directory.CreateDirectory(candidate);
-            return true;
-        }
-        catch (IOException)
-        {
-            return false;
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return false;
-        }
-        catch (ArgumentException)
-        {
-            return false;
-        }
-        catch (NotSupportedException)
-        {
-            return false;
-        }
-    }
-
-    private static string ResolveLogDirectoryCandidate(string directory)
-    {
-        var trimmed = directory.Trim();
-        if (Path.IsPathRooted(trimmed))
-        {
-            return trimmed;
-        }
-
-        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, trimmed));
+        _settingsFlowService.InitializeCulture();
     }
 
     /// <summary>
@@ -527,9 +103,14 @@ public class ConsoleUI
     /// </summary>
     public void MainMenu()
     {
-        var menuConfig = _menuFactory.CreateMainMenu();
-        _menuService.ShowMenuWithActions(menuConfig);
+        var menuConfig = _menuFactory.CreateMainMenu(
+            _jobsFlowService.GetJobCount(),
+            () => _jobsFlowService.CreateBackupJob(MainMenu),
+            () => _jobsFlowService.ShowJobsList(MainMenu),
+            () => _settingsFlowService.ConfigureParams(MainMenu),
+            Quit);
 
+        _menuService.ShowMenuWithActions(menuConfig);
     }
 
     /// <summary>
@@ -701,18 +282,19 @@ public class ConsoleUI
     /// <summary>
     /// Runs backup jobs from command-line arguments.
     /// </summary>
-    /// <param name="args">The args of the command</param>
+    /// <param name="args">Raw command-line arguments representing target jobs.</param>
     internal void RunFromArgs(string[] args)
     {
         try
         {
             var jobs = _parser.Parse(args);
-            _backupApplicationService.RunJobsByIds(jobs);
+            _backupApplicationService.RunJobs(jobs);
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
-            ShowError(e);
+            _messageService.ShowError(exception);
         }
+
         _menuService.WaitForUser();
     }
 }
