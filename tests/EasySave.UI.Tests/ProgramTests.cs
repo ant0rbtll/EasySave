@@ -5,6 +5,108 @@ namespace EasySave.UI.Tests;
 public class ProgramTests
 {
     [Fact]
+    public void Main_WithNoArgs_CallsConsoleMainMenu()
+    {
+        var app = CreateApplicationService(out _);
+        var console = new FakeConsoleAdapter();
+        var menuService = new FakeMenuService();
+        var inputService = new FakeConsoleInputService();
+        var messageService = new FakeConsoleMessageService();
+        var localization = new FakeLocalizationService();
+        var prefsRepo = new FakeUserPreferencesRepository { Preferences = new UserPreferences() };
+        var menuFactory = new MenuFactory();
+        var jobsFlow = new JobsFlowService(app, menuService, menuFactory, messageService, inputService, console, new JobEditSessionService());
+        var settingsFlow = new SettingsFlowService(
+            prefsRepo,
+            prefsRepo.Preferences,
+            new FakePathProvider(),
+            localization,
+            menuService,
+            menuFactory,
+            messageService,
+            inputService,
+            console);
+
+        var ui = new ConsoleUI(
+            app,
+            new CommandLineParser(),
+            localization,
+            console,
+            menuService,
+            menuFactory,
+            messageService,
+            inputService,
+            jobsFlow,
+            settingsFlow);
+
+        var previousFactory = Program.ServiceProviderFactory;
+        Program.ServiceProviderFactory = () => new FakeServiceProvider(ui);
+        try
+        {
+            Program.Main([]);
+        }
+        finally
+        {
+            Program.ServiceProviderFactory = previousFactory;
+        }
+
+        Assert.Single(menuService.ShownMenuConfigs);
+        Assert.Equal(LocalizationKey.menu, menuService.ShownMenuConfigs[0].Label);
+    }
+
+    [Fact]
+    public void Main_WithArgs_CallsConsoleRunFromArgs()
+    {
+        var app = CreateApplicationService(out var engine);
+        app.CreateJob("A", "S", "D", BackupType.Complete);
+
+        var console = new FakeConsoleAdapter();
+        var menuService = new FakeMenuService();
+        var inputService = new FakeConsoleInputService();
+        var messageService = new FakeConsoleMessageService();
+        var localization = new FakeLocalizationService();
+        var prefsRepo = new FakeUserPreferencesRepository { Preferences = new UserPreferences() };
+        var menuFactory = new MenuFactory();
+        var jobsFlow = new JobsFlowService(app, menuService, menuFactory, messageService, inputService, console, new JobEditSessionService());
+        var settingsFlow = new SettingsFlowService(
+            prefsRepo,
+            prefsRepo.Preferences,
+            new FakePathProvider(),
+            localization,
+            menuService,
+            menuFactory,
+            messageService,
+            inputService,
+            console);
+
+        var ui = new ConsoleUI(
+            app,
+            new CommandLineParser(),
+            localization,
+            console,
+            menuService,
+            menuFactory,
+            messageService,
+            inputService,
+            jobsFlow,
+            settingsFlow);
+
+        var previousFactory = Program.ServiceProviderFactory;
+        Program.ServiceProviderFactory = () => new FakeServiceProvider(ui);
+        try
+        {
+            Program.Main(["1"]);
+        }
+        finally
+        {
+            Program.ServiceProviderFactory = previousFactory;
+        }
+
+        Assert.Single(engine.ExecutedJobs);
+        Assert.Equal(1, menuService.WaitCalls);
+    }
+
+    [Fact]
     public void InitServices_ResolvesExpectedCoreServices()
     {
         var initServices = typeof(Program).GetMethod("InitServices", BindingFlags.NonPublic | BindingFlags.Static);
@@ -61,6 +163,27 @@ public class ProgramTests
         Assert.Equal(LogFormat.Xml, pathProvider.LastRequestedFormat);
     }
 
+    [Fact]
+    public void CreateLogger_WithJsonPreferences_UsesJsonFormatOnWrite()
+    {
+        var createLogger = typeof(Program).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
+        Assert.NotNull(createLogger);
+
+        var pathProvider = new RecordingPathProvider(LogFormat.Json);
+        var logger = (ILogger)createLogger!.Invoke(null, [pathProvider])!;
+
+        logger.Write(new LogEntry(
+            DateTime.UtcNow,
+            "job",
+            LogEventType.TransferFile,
+            "src",
+            "dst",
+            12,
+            34));
+
+        Assert.Equal(LogFormat.Json, pathProvider.LastRequestedFormat);
+    }
+
     private sealed class ThrowingPathProvider : IPathProvider
     {
         public string GetDailyLogPath(DateTime date, LogFormat format = LogFormat.Json) => throw new InvalidOperationException("boom");
@@ -115,6 +238,26 @@ public class ProgramTests
 
         public void SetLogDirectoryOverride(string? directory)
         {
+        }
+    }
+
+    private static BackupApplicationService CreateApplicationService(out FakeBackupEngine engine)
+    {
+        var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
+        engine = new FakeBackupEngine();
+        return new BackupApplicationService(repository, engine);
+    }
+
+    private sealed class FakeServiceProvider(ConsoleUI ui) : IServiceProvider
+    {
+        public object? GetService(Type serviceType)
+        {
+            if (serviceType == typeof(ConsoleUI))
+            {
+                return ui;
+            }
+
+            return null;
         }
     }
 }

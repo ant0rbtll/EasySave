@@ -19,6 +19,60 @@ public class JobsFlowServiceAdditionalTests
     }
 
     [Fact]
+    public void CreateBackupJob_WhenUserCancelsAtSource_ReturnsToMainWithoutCreatingJob()
+    {
+        var app = CreateApplicationService(out _);
+        var service = CreateService(app, out var menuService, out var inputService, out _, out _);
+        var callbackCalled = false;
+
+        inputService.StringAnswers.Enqueue("Job");
+        inputService.StringAnswers.Enqueue(null);
+
+        service.CreateBackupJob(() => callbackCalled = true);
+
+        Assert.True(callbackCalled);
+        Assert.Empty(app.GetAllJobs());
+        Assert.Equal(0, menuService.WaitCalls);
+    }
+
+    [Fact]
+    public void CreateBackupJob_WhenUserCancelsAtDestination_ReturnsToMainWithoutCreatingJob()
+    {
+        var app = CreateApplicationService(out _);
+        var service = CreateService(app, out var menuService, out var inputService, out _, out _);
+        var callbackCalled = false;
+
+        inputService.StringAnswers.Enqueue("Job");
+        inputService.StringAnswers.Enqueue("S");
+        inputService.StringAnswers.Enqueue(null);
+
+        service.CreateBackupJob(() => callbackCalled = true);
+
+        Assert.True(callbackCalled);
+        Assert.Empty(app.GetAllJobs());
+        Assert.Equal(0, menuService.WaitCalls);
+    }
+
+    [Fact]
+    public void CreateBackupJob_WhenUserCancelsAtType_ReturnsToMainWithoutCreatingJob()
+    {
+        var app = CreateApplicationService(out _);
+        var service = CreateService(app, out var menuService, out var inputService, out _, out _);
+        var callbackCalled = false;
+
+        inputService.StringAnswers.Enqueue("Job");
+        inputService.StringAnswers.Enqueue("S");
+        inputService.StringAnswers.Enqueue("D");
+        inputService.BackupTypeAnswers.Enqueue(null);
+
+        service.CreateBackupJob(() => callbackCalled = true);
+
+        Assert.True(callbackCalled);
+        Assert.Empty(app.GetAllJobs());
+        Assert.Equal(0, menuService.WaitCalls);
+    }
+
+    [Fact]
     public void CreateBackupJob_WhenRepositoryRejectsCreate_ShowsErrorAndWaits()
     {
         var app = CreateApplicationService(out _);
@@ -94,6 +148,23 @@ public class JobsFlowServiceAdditionalTests
         var job = app.GetAllJobs().Single();
         Assert.Equal("S2", job.Source);
         Assert.Equal("D2", job.Destination);
+    }
+
+    [Fact]
+    public void UpdateJobField_WhenInputIsNull_KeepsOriginalValue()
+    {
+        var app = CreateApplicationService(out _);
+        app.CreateJob("A", "S", "D", BackupType.Complete);
+        var service = CreateService(app, out var menuService, out var inputService, out _, out _);
+
+        service.ShowJobsList(() => { });
+        menuService.ShownMenuConfigs[0].Actions[0]();
+        menuService.ShownMenuConfigs[1].Actions[1]();
+
+        inputService.StringWithCurrentAnswers.Enqueue(null);
+        menuService.ShownMenuConfigs.Last().Actions[0]();
+
+        Assert.Equal("A", app.GetAllJobs().Single().Name);
     }
 
     [Fact]
@@ -178,6 +249,22 @@ public class JobsFlowServiceAdditionalTests
     }
 
     [Fact]
+    public void ExitJobUpdate_WhenNoPendingChanges_ReturnsToDetails()
+    {
+        var app = CreateApplicationService(out _);
+        app.CreateJob("A", "S", "D", BackupType.Complete);
+        var service = CreateService(app, out var menuService, out _, out _, out _);
+
+        service.ShowJobsList(() => { });
+        menuService.ShownMenuConfigs[0].Actions[0]();
+        menuService.ShownMenuConfigs[1].Actions[1]();
+
+        menuService.ShownMenuConfigs.Last().Actions[5]();
+
+        Assert.Equal(LocalizationKey.menu_job_details, menuService.ShownMenuConfigs.Last().Label);
+    }
+
+    [Fact]
     public void ExitJobUpdate_WhenSaveOnExitFails_ShowsErrorAndReturnsToUpdateMenu()
     {
         var app = CreateApplicationService(out _);
@@ -247,6 +334,21 @@ public class JobsFlowServiceAdditionalTests
         menuService.ShownMenuConfigs[1].Actions[2]();
 
         Assert.Single(messageService.Errors);
+    }
+
+    [Fact]
+    public void DeleteJob_WhenConfirmedWithEnter_RemovesJob()
+    {
+        var app = CreateApplicationService(out _);
+        app.CreateJob("A", "S", "D", BackupType.Complete);
+        var service = CreateService(app, out var menuService, out _, out _, out var console);
+
+        service.ShowJobsList(() => { });
+        menuService.ShownMenuConfigs[0].Actions[0]();
+        console.EnqueueKey(ConsoleKey.Enter, '\n');
+        menuService.ShownMenuConfigs[1].Actions[2]();
+
+        Assert.Empty(app.GetAllJobs());
     }
 
     [Fact]

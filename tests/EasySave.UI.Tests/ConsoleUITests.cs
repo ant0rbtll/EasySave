@@ -89,6 +89,36 @@ public class ConsoleUITests
         Assert.Equal("en", ui.LocalizationService.Culture);
     }
 
+    [Fact]
+    public void PublicConstructor_WithInvalidLanguage_FallsBackToFrenchAndPersists()
+    {
+        var app = CreateApplicationService(out _);
+        var repo = new FakeUserPreferencesRepository
+        {
+            Preferences = new UserPreferences { Language = "zz", LogFormat = LogFormat.Json }
+        };
+
+        var ui = new ConsoleUI(app, repo, new FakePathProvider(), new CommandLineParser());
+
+        Assert.Equal("fr", ui.LocalizationService.Culture);
+        Assert.Equal(1, repo.SaveCalls);
+    }
+
+    [Fact]
+    public void RunFromArgs_WhenRunJobThrows_ShowsErrorAndWaits()
+    {
+        var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
+        var app = new BackupApplicationService(repository, new ThrowingBackupEngine());
+        app.CreateJob("A", "S", "D", BackupType.Complete);
+
+        var ui = CreateConsoleUiForRun(app, out var menuService, out var messageService);
+
+        ui.RunFromArgs(["1"]);
+
+        Assert.Single(messageService.Errors);
+        Assert.Equal(1, menuService.WaitCalls);
+    }
+
     private static ConsoleUI CreateConsoleUiForRun(
         BackupApplicationService app,
         out FakeMenuService menuService,
@@ -166,5 +196,13 @@ public class ConsoleUITests
 
         public MenuConfig CreateJobUpdateMenu(BackupJob job, Action<BackupJob, JobEditableField> onUpdateField, Action<BackupJob> onSave, Action<BackupJob> onBack)
             => throw new NotSupportedException();
+    }
+
+    private sealed class ThrowingBackupEngine : IBackupEngine
+    {
+        public void Execute(BackupJob job)
+        {
+            throw new InvalidOperationException("boom");
+        }
     }
 }

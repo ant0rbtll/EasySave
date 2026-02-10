@@ -37,6 +37,22 @@ public class SettingsFlowServiceAdditionalTests
     }
 
     [Fact]
+    public void ChangeLocale_WithWhitespace_FallsBackToFrench()
+    {
+        var repo = new FakeUserPreferencesRepository
+        {
+            Preferences = new UserPreferences { Language = "en", LogFormat = LogFormat.Json }
+        };
+        var localization = new FakeLocalizationService();
+        var service = CreateService(repo, localization, out _, out _, out _, out _, out _);
+
+        service.ChangeLocale("   ", () => { });
+
+        Assert.Equal("fr", localization.Culture);
+        Assert.Equal("fr", repo.Preferences.Language);
+    }
+
+    [Fact]
     public void ConfigureParams_LocaleAction_ShowsLocaleMenuAndCanSelectCulture()
     {
         var repo = new FakeUserPreferencesRepository
@@ -54,6 +70,22 @@ public class SettingsFlowServiceAdditionalTests
 
         Assert.True(callbackCalled);
         Assert.Equal("en", repo.Preferences.Language);
+    }
+
+    [Fact]
+    public void ConfigureParams_LocaleAction_BackReturnsToSettings()
+    {
+        var repo = new FakeUserPreferencesRepository
+        {
+            Preferences = new UserPreferences { Language = "fr", LogFormat = LogFormat.Json }
+        };
+        var service = CreateService(repo, new FakeLocalizationService(), out _, out var menuService, out _, out _, out _);
+
+        service.ConfigureParams(() => { });
+        menuService.ShownMenuConfigs[0].Actions[0]();
+        menuService.ShownMenuConfigs[1].Actions[2]();
+
+        Assert.Equal(LocalizationKey.menu_params, menuService.ShownMenuConfigs.Last().Label);
     }
 
     [Fact]
@@ -106,6 +138,38 @@ public class SettingsFlowServiceAdditionalTests
         formatMenu.Actions[1]();
 
         Assert.Equal(LogFormat.Xml, repo.Preferences.LogFormat);
+    }
+
+    [Fact]
+    public void ConfigureParams_LogFormatAction_BackReturnsToSettings()
+    {
+        var repo = new FakeUserPreferencesRepository
+        {
+            Preferences = new UserPreferences { Language = "fr", LogFormat = LogFormat.Json }
+        };
+        var service = CreateService(repo, new FakeLocalizationService(), out _, out var menuService, out _, out _, out _);
+
+        service.ConfigureParams(() => { });
+        menuService.ShownMenuConfigs[0].Actions[2]();
+        menuService.ShownMenuConfigs[1].Actions[2]();
+
+        Assert.Equal(LocalizationKey.menu_params, menuService.ShownMenuConfigs.Last().Label);
+    }
+
+    [Fact]
+    public void RenderSettingsHeader_WhenPendingLogFormat_WritesPendingMessage()
+    {
+        var repo = new FakeUserPreferencesRepository
+        {
+            Preferences = new UserPreferences { Language = "fr", LogFormat = LogFormat.Json }
+        };
+        var service = CreateService(repo, new FakeLocalizationService(), out _, out _, out var messageService, out _, out _);
+
+        service.ChangeLogFormat(LogFormat.Xml, () => { });
+
+        Assert.Contains(
+            messageService.WritesWithParams,
+            call => call.Key == LocalizationKey.settings_log_format_pending);
     }
 
     private static SettingsFlowService CreateService(
