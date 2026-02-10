@@ -123,7 +123,5 @@ translations:
   gui_manage_tooltip_modify: "Modifier"
   gui_manage_tooltip_delete: "Supprimer"
   gui_manage_run_success: "Job {0} terminé avec succès"
-  gui_manage_run_error: "Erreur lors de l'exécution du job {0}"
   gui_manage_delete_success: "Job {0} supprimé avec succès"
-  gui_manage_delete_error: "Erreur lors de la suppression du job {0}"
 

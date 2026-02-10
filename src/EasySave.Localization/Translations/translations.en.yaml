@@ -123,6 +123,4 @@ translations:
   gui_manage_tooltip_modify: "Edit"
   gui_manage_tooltip_delete: "Delete"
   gui_manage_run_success: "Job {0} completed successfully"
-  gui_manage_run_error: "Error running job {0}"
   gui_manage_delete_success: "Job {0} deleted successfully"
-  gui_manage_delete_error: "Error deleting job {0}"

@@ -3,6 +3,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
+using EasySave.GUI.Helpers;
 using EasySave.Localization;
 
 namespace EasySave.GUI.ViewModels;
@@ -256,19 +257,26 @@ public partial class ManageViewModel : ViewModelBase
         IsStatusBannerVisible = false;
 
         bool success = false;
+        string errorMessage = string.Empty;
 
         try
         {
-            await Task.Run(() =>
+            // Ensure the job still exists before attempting to run it so we don't report success for a no-op.
+            var existingJob = await Task.Run(() => _applicationService.GetJob(job.Id));
+            if (existingJob is null)
             {
-                var coreJob = _applicationService.GetJobById(job.Id) ?? throw new KeyNotFoundException();
-                _applicationService.RunJob(coreJob);
-            });
-            success = true;
+                // Use a specific, localized error when the job cannot be found.
+                errorMessage = _localizationService.TranslateText(LocalizationKey.error_job_not_found);
+            }
+            else
+            {
+                await Task.Run(() => _applicationService.RunJob(job.Id));
+                success = true;
+            }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // BackupEngine already logs errors and updates state
+            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
         }
         finally
         {
@@ -288,7 +296,7 @@ public partial class ManageViewModel : ViewModelBase
                 }
                 else
                 {
-                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_run_error, new[] { job.Name });
+                    StatusMessage = errorMessage;
                     IsStatusError = true;
                 }
                 IsStatusBannerVisible = true;
@@ -359,15 +367,16 @@ public partial class ManageViewModel : ViewModelBase
         IsStatusBannerVisible = false;
 
         bool success = false;
+        string errorMessage = string.Empty;
 
         try
         {
             await Task.Run(() => _applicationService.RemoveJob(job.Id));
             success = true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Repository throws KeyNotFoundException if job not found
+            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
         }
         finally
         {
@@ -385,7 +394,7 @@ public partial class ManageViewModel : ViewModelBase
                 }
                 else
                 {
-                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_delete_error, new[] { job.Name });
+                    StatusMessage = errorMessage;
                     IsStatusError = true;
                 }
                 IsStatusBannerVisible = true;
