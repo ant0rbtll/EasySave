@@ -68,6 +68,7 @@ public class BackupEngine(
                     {
                         _fileSystem.CreateDirectory(destinationDir);
                         Log(
+                            job.Id,
                             job.Name,
                             LogEventType.CreateDirectory,
                             destinationDir,
@@ -91,7 +92,9 @@ public class BackupEngine(
                     }
 
                     long encryptionTimeMs = EncryptTransferredFileIfRequired(destinationFile, encryptionPolicy);
+                        
                     Log(job.Name,
+                        job.Id,
                         LogEventType.TransferFile,
                         file,
                         destinationFile,
@@ -124,6 +127,7 @@ public class BackupEngine(
                 ? LogEventType.BusinessSoftwareDetected
                 : LogEventType.Error;
             Log(
+                job.Id,
                 job.Name,
                 eventType,
                 sourceContext,
@@ -224,6 +228,7 @@ public class BackupEngine(
     /// <param name="transferTimeMs">Transfer time in milliseconds.</param>
     /// <param name="encryptionTimeMs">Encryption time in milliseconds.</param>
     private void Log(
+        int backupId,
         string backupName,
         LogEventType eventType,
         string sourcePath,
@@ -236,6 +241,7 @@ public class BackupEngine(
         {
             _logger.Write(new LogEntry(
                 DateTime.Now,
+                backupId,
                 backupName,
                 eventType,
                 sourcePath,

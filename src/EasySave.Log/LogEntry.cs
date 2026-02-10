@@ -6,6 +6,7 @@ namespace EasySave.Log;
 /// </summary>
 public record LogEntry(
     DateTime Timestamp,
+    int BackupId,
     string BackupName,
     LogEventType EventType,
     string SourcePathUNC,
