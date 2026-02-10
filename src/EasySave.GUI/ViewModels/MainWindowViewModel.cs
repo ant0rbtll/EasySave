@@ -28,11 +28,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _manageViewModel = manageViewModel;
         _logViewModel = logViewModel;
         _configViewModel = configViewModel;
+        _configViewModel.SetOnLanguageChanged(OnLanguageChanged);
         _homeViewModel = homeViewModel;
 
         Sidebar = sidebarViewModel;
         Sidebar.SetNavigateAction(Navigate);
-        CurrentPage = _createViewModel;
+        CurrentPage = _homeViewModel;
     }
 
     private void OnLanguageChanged()

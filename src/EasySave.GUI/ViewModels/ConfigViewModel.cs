@@ -13,7 +13,7 @@ public partial class ConfigViewModel : ViewModelBase
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly ILocalizationService _localizationService;
     private readonly IPathProvider _pathProvider;
-    private readonly Action _onLanguageChanged;
+    private Action _onLanguageChanged;
 
     /// <summary>
     /// Fonction fournie par la couche UI pour ouvrir le sélecteur de dossier natif.
@@ -44,19 +44,23 @@ public partial class ConfigViewModel : ViewModelBase
     public ConfigViewModel(
         IUserPreferencesRepository preferencesRepository,
         ILocalizationService localizationService,
-        IPathProvider pathProvider,
-        Action onLanguageChanged)
+        IPathProvider pathProvider
+        )
     {
         _preferencesRepository = preferencesRepository;
         _localizationService = localizationService;
         _pathProvider = pathProvider;
-        _onLanguageChanged = onLanguageChanged;
 
         var preferences = preferencesRepository.Load();
         selectedLanguage = NormalizeLanguage(preferences.Language);
         logDirectory = preferences.LogDirectory;
 
         RefreshTranslations();
+    }
+
+    public void SetOnLanguageChanged(Action onLanguageChanged)
+    {
+        _onLanguageChanged = onLanguageChanged;
     }
 
     partial void OnLogDirectoryChanged(string? value)

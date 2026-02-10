@@ -3,6 +3,7 @@ using EasySave.Application;
 using EasySave.Backup;
 using EasySave.Configuration;
 using EasySave.GUI.ViewModels;
+using EasySave.Localization;
 using EasySave.Log;
 using EasySave.Persistence;
 using EasySave.State;
@@ -59,6 +60,7 @@ sealed class Program
         services.AddSingleton<IFileSystem, DefaultFileSystem>();
         services.AddSingleton<ITransferService, DefaultTransferService>();
         services.AddSingleton<IBackupEngine, BackupEngine>();
+        services.AddSingleton<ILocalizationService, LocalizationService>();
 
         // Setup application service
         services.AddSingleton<BackupApplicationService>();
@@ -66,6 +68,7 @@ sealed class Program
         // Setup ViewModels pour Avalonia
         services.AddSingleton<MainWindowViewModel>();
 
+        services.AddSingleton<HomeViewModel>();
         services.AddSingleton<CreateViewModel>();
         services.AddSingleton<ManageViewModel>();
         services.AddSingleton<LogViewModel>();
