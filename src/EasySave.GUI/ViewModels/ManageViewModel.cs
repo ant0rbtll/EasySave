@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
@@ -30,6 +31,34 @@ public partial class ManageViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(DestinationHeader))]
     [NotifyPropertyChangedFor(nameof(TypeHeader))]
     private bool sortAscending = true;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RunJobCommand))]
+    private bool isRunning;
+
+    [ObservableProperty]
+    private string runningJobName = string.Empty;
+
+    [ObservableProperty]
+    private bool isConfirmDialogOpen;
+
+    [ObservableProperty]
+    private Models.BackupJob? pendingJob;
+
+    [ObservableProperty]
+    private bool isStatusBannerVisible;
+
+    [ObservableProperty]
+    private string statusMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool isStatusError;
+
+    [ObservableProperty]
+    private bool isDeleteDialogOpen;
+
+    [ObservableProperty]
+    private Models.BackupJob? pendingDeleteJob;
 
     public string IdHeader => "ID" + GetSortIndicator("Id");
     public string NameHeader => "Nom" + GetSortIndicator("Name");
@@ -107,12 +136,87 @@ public partial class ManageViewModel : ViewModelBase
             || job.Type.ToString().Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanRunJob))]
     private void RunJob(Models.BackupJob job)
     {
-        //TODO ask confirmation via popup
-        //_applicationService.RunJobById(job.Id);
-        //job.IsActive = true;
+        PendingJob = job;
+        IsConfirmDialogOpen = true;
+    }
+
+    private bool CanRunJob(Models.BackupJob job) => !IsRunning;
+
+    [RelayCommand]
+    private async Task ConfirmRun()
+    {
+        if (PendingJob is not { } job)
+            return;
+
+        IsConfirmDialogOpen = false;
+        IsRunning = true;
+        RunningJobName = job.Name;
+        IsStatusBannerVisible = false;
+
+        bool success = false;
+
+        try
+        {
+            await Task.Run(() => _applicationService.RunJobById(job.Id));
+            success = true;
+        }
+        catch (Exception)
+        {
+            // BackupEngine already logs errors and updates state
+        }
+        finally
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                IsRunning = false;
+                RunningJobName = string.Empty;
+                PendingJob = null;
+                LoadJobs();
+
+                if (success)
+                {
+                    StatusMessage = $"Job {job.Name} terminé avec succès";
+                    IsStatusError = false;
+                }
+                else
+                {
+                    StatusMessage = $"Erreur lors de l'exécution du job {job.Name}";
+                    IsStatusError = true;
+                }
+                IsStatusBannerVisible = true;
+            });
+        }
+
+        if (success)
+        {
+            _ = AutoDismissBannerAsync();
+        }
+    }
+
+    private async Task AutoDismissBannerAsync()
+    {
+        await Task.Delay(4000);
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (!IsStatusError)
+                IsStatusBannerVisible = false;
+        });
+    }
+
+    [RelayCommand]
+    private void DismissStatusBanner()
+    {
+        IsStatusBannerVisible = false;
+    }
+
+    [RelayCommand]
+    private void CancelRun()
+    {
+        IsConfirmDialogOpen = false;
+        PendingJob = null;
     }
 
     [RelayCommand]
@@ -124,14 +228,59 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private void DeleteJob(Models.BackupJob job)
     {
-        //TODO ask confirmation via popup
-        //_applicationService.RemoveJob(job.Id);
-        //_allJobs.Remove(job);
-        //Refresh();
+        PendingDeleteJob = job;
+        IsDeleteDialogOpen = true;
+    }
 
-        // TODO: implement delete confirmation dialog
+    [RelayCommand]
+    private void ConfirmDelete()
+    {
+        if (PendingDeleteJob is not { } job)
+            return;
 
-        // TODO: try catch
+        IsDeleteDialogOpen = false;
+        IsStatusBannerVisible = false;
+
+        bool success = false;
+
+        try
+        {
+            _applicationService.RemoveJob(job.Id);
+            success = true;
+        }
+        catch (Exception)
+        {
+            // Repository throws KeyNotFoundException if job not found
+        }
+        finally
+        {
+            PendingDeleteJob = null;
+            LoadJobs();
+
+            if (success)
+            {
+                StatusMessage = $"Job {job.Name} supprimé avec succès";
+                IsStatusError = false;
+            }
+            else
+            {
+                StatusMessage = $"Erreur lors de la suppression du job {job.Name}";
+                IsStatusError = true;
+            }
+            IsStatusBannerVisible = true;
+        }
+
+        if (success)
+        {
+            _ = AutoDismissBannerAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void CancelDelete()
+    {
+        IsDeleteDialogOpen = false;
+        PendingDeleteJob = null;
     }
 
     [RelayCommand]
