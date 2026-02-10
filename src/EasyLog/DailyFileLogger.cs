@@ -297,7 +297,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
         {
             int bytesRead = stream.Read(bytes, offset, length - offset);
             if (bytesRead == 0)
-                break;
+                throw new IOException("Unexpected end of stream while reading log file.");
             offset += bytesRead;
         }
 
