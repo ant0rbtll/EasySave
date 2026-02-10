@@ -94,7 +94,7 @@
                 Margin="0,0,0,12"
                 IsVisible="{Binding IsRunning}">
             <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                <TextBlock Text="Sauvegarde en cours :"
+                <TextBlock Text="{Binding RunningLabel}"
                            Foreground="#42A5F5"
                            FontWeight="SemiBold"
                            VerticalAlignment="Center"/>
@@ -111,7 +111,7 @@
                 CornerRadius="6"
                 Padding="12,8"
                 Margin="0,0,0,12"
-                IsVisible="{Binding !IsStatusError}">
+                IsVisible="{Binding IsStatusBannerVisible}">
             <Border.IsVisible>
                 <MultiBinding Converter="{x:Static BoolConverters.And}">
                     <Binding Path="IsStatusBannerVisible"/>
@@ -173,18 +173,18 @@
         <!-- Header -->
         <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
             <StackPanel Grid.Column="0">
-                <TextBlock Text="Travaux de Sauvegarde"
+                <TextBlock Text="{Binding TitleText}"
                            FontSize="22"
                            FontWeight="Bold"
                            Margin="0,0,0,4"/>
-                <TextBlock Text="Gérez vos sauvegardes"
+                <TextBlock Text="{Binding SubtitleText}"
                            FontSize="13"
                            Foreground="#888"/>
             </StackPanel>
 
             <TextBox Grid.Column="1"
                      Text="{Binding SearchText}"
-                     Watermark="Rechercher..."
+                     Watermark="{Binding SearchWatermark}"
                      Width="250"
                      VerticalAlignment="Center"/>
         </Grid>
@@ -230,7 +230,7 @@
                         <Button Grid.Column="5" Classes="col-header"
                                 HorizontalAlignment="Center"
                                 IsHitTestVisible="False">
-                            <TextBlock Text="Actions"/>
+                            <TextBlock Text="{Binding ActionsHeader}"/>
                         </Button>
                     </Grid>
                 </Border>
@@ -299,19 +299,19 @@
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center">
                                             <Button Classes="action-btn"
-                                                    ToolTip.Tip="Exécuter"
+                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipRun}"
                                                     Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).RunJobCommand}"
                                                     CommandParameter="{Binding}">
                                                 <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A"/>
                                             </Button>
                                             <Button Classes="action-btn"
-                                                    ToolTip.Tip="Modifier"
+                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipModify}"
                                                     Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ModifyJobCommand}"
                                                     CommandParameter="{Binding}">
                                                 <PathIcon Data="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" Foreground="#42A5F5"/>
                                             </Button>
                                             <Button Classes="action-btn"
-                                                    ToolTip.Tip="Supprimer"
+                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipDelete}"
                                                     Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).DeleteJobCommand}"
                                                     CommandParameter="{Binding}">
                                                 <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350"/>
@@ -338,12 +338,12 @@
                 VerticalAlignment="Center"
                 BoxShadow="0 8 24 0 #60000000">
             <StackPanel Spacing="20">
-                <TextBlock Text="Confirmer l'exécution"
+                <TextBlock Text="{Binding ConfirmRunTitle}"
                            FontSize="18"
                            FontWeight="Bold"
                            HorizontalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Text="Voulez-vous exécuter le job"
+                    <TextBlock Text="{Binding ConfirmRunMessage}"
                                FontSize="14"
                                Foreground="#BBBBBB"/>
                     <TextBlock Text="{Binding PendingJob.Name}"
@@ -357,13 +357,13 @@
                 <StackPanel Orientation="Horizontal"
                             Spacing="12"
                             HorizontalAlignment="Center">
-                    <Button Content="Annuler"
+                    <Button Content="{Binding BtnCancelText}"
                             Command="{Binding CancelRunCommand}"
                             Padding="20,8"
                             Background="#44FFFFFF"
                             Foreground="White"
                             CornerRadius="6"/>
-                    <Button Content="Confirmer"
+                    <Button Content="{Binding BtnConfirmText}"
                             Command="{Binding ConfirmRunCommand}"
                             Padding="20,8"
                             Background="#66BB6A"
@@ -386,12 +386,12 @@
                 VerticalAlignment="Center"
                 BoxShadow="0 8 24 0 #60000000">
             <StackPanel Spacing="20">
-                <TextBlock Text="Confirmer la suppression"
+                <TextBlock Text="{Binding ConfirmDeleteTitle}"
                            FontSize="18"
                            FontWeight="Bold"
                            HorizontalAlignment="Center"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Text="Voulez-vous supprimer le job"
+                    <TextBlock Text="{Binding ConfirmDeleteMessage}"
                                FontSize="14"
                                Foreground="#BBBBBB"/>
                     <TextBlock Text="{Binding PendingDeleteJob.Name}"
@@ -405,13 +405,13 @@
                 <StackPanel Orientation="Horizontal"
                             Spacing="12"
                             HorizontalAlignment="Center">
-                    <Button Content="Annuler"
+                    <Button Content="{Binding BtnCancelText}"
                             Command="{Binding CancelDeleteCommand}"
                             Padding="20,8"
                             Background="#44FFFFFF"
                             Foreground="White"
                             CornerRadius="6"/>
-                    <Button Content="Supprimer"
+                    <Button Content="{Binding BtnDeleteText}"
                             Command="{Binding ConfirmDeleteCommand}"
                             Padding="20,8"
                             Background="#EF5350"

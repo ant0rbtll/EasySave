@@ -3,15 +3,17 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
-using EasySave.Core;
+using EasySave.Localization;
 
 namespace EasySave.GUI.ViewModels;
 
 public partial class ManageViewModel : ViewModelBase
 {
-    public ObservableCollection<Models.BackupJob> Jobs { get; } = new();
-    private readonly List<Models.BackupJob> _allJobs = new();
+    public ObservableCollection<Models.BackupJob> Jobs { get; } = [];
+    private readonly List<Models.BackupJob> _allJobs = [];
     private readonly BackupApplicationService _applicationService;
+    private readonly ILocalizationService _localizationService;
+    private CancellationTokenSource? _dismissCts;
 
     [ObservableProperty]
     private string searchText = string.Empty;
@@ -60,16 +62,100 @@ public partial class ManageViewModel : ViewModelBase
     [ObservableProperty]
     private Models.BackupJob? pendingDeleteJob;
 
-    public string IdHeader => "ID" + GetSortIndicator("Id");
-    public string NameHeader => "Nom" + GetSortIndicator("Name");
-    public string SourceHeader => "Source" + GetSortIndicator("Source");
-    public string DestinationHeader => "Destination" + GetSortIndicator("Destination");
-    public string TypeHeader => "Type" + GetSortIndicator("Type");
+    // Localized text properties
+    [ObservableProperty]
+    private string titleText = string.Empty;
 
-    public ManageViewModel(BackupApplicationService backupApplicationService)
+    [ObservableProperty]
+    private string subtitleText = string.Empty;
+
+    [ObservableProperty]
+    private string searchWatermark = string.Empty;
+
+    [ObservableProperty]
+    private string actionsHeader = string.Empty;
+
+    [ObservableProperty]
+    private string runningLabel = string.Empty;
+
+    [ObservableProperty]
+    private string confirmRunTitle = string.Empty;
+
+    [ObservableProperty]
+    private string confirmRunMessage = string.Empty;
+
+    [ObservableProperty]
+    private string confirmDeleteTitle = string.Empty;
+
+    [ObservableProperty]
+    private string confirmDeleteMessage = string.Empty;
+
+    [ObservableProperty]
+    private string btnConfirmText = string.Empty;
+
+    [ObservableProperty]
+    private string btnCancelText = string.Empty;
+
+    [ObservableProperty]
+    private string btnDeleteText = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipRun = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipModify = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipDelete = string.Empty;
+
+    private string _idLabel = "ID";
+    private string _nameLabel = string.Empty;
+    private string _sourceLabel = string.Empty;
+    private string _destinationLabel = string.Empty;
+    private string _typeLabel = string.Empty;
+
+    public string IdHeader => _idLabel + GetSortIndicator("Id");
+    public string NameHeader => _nameLabel + GetSortIndicator("Name");
+    public string SourceHeader => _sourceLabel + GetSortIndicator("Source");
+    public string DestinationHeader => _destinationLabel + GetSortIndicator("Destination");
+    public string TypeHeader => _typeLabel + GetSortIndicator("Type");
+
+    public ManageViewModel(BackupApplicationService backupApplicationService, ILocalizationService localizationService)
     {
         _applicationService = backupApplicationService;
+        _localizationService = localizationService;
+        RefreshTranslations();
         LoadJobs();
+    }
+
+    public void RefreshTranslations()
+    {
+        TitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_title);
+        SubtitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_subtitle);
+        SearchWatermark = _localizationService.TranslateText(LocalizationKey.gui_manage_search);
+        ActionsHeader = _localizationService.TranslateText(LocalizationKey.gui_manage_actions);
+        RunningLabel = _localizationService.TranslateText(LocalizationKey.gui_manage_running);
+        ConfirmRunTitle = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_run_title);
+        ConfirmRunMessage = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_run_message);
+        ConfirmDeleteTitle = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_delete_title);
+        ConfirmDeleteMessage = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_delete_message);
+        BtnConfirmText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_confirm);
+        BtnCancelText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_cancel);
+        BtnDeleteText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_delete);
+        TooltipRun = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_run);
+        TooltipModify = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_modify);
+        TooltipDelete = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_delete);
+
+        _idLabel = _localizationService.TranslateText(LocalizationKey.backupjob_id);
+        _nameLabel = _localizationService.TranslateText(LocalizationKey.backupjob_name);
+        _sourceLabel = _localizationService.TranslateText(LocalizationKey.backupjob_source);
+        _destinationLabel = _localizationService.TranslateText(LocalizationKey.backupjob_destination);
+        _typeLabel = _localizationService.TranslateText(LocalizationKey.backupjob_type);
+        OnPropertyChanged(nameof(IdHeader));
+        OnPropertyChanged(nameof(NameHeader));
+        OnPropertyChanged(nameof(SourceHeader));
+        OnPropertyChanged(nameof(DestinationHeader));
+        OnPropertyChanged(nameof(TypeHeader));
     }
 
     partial void OnSearchTextChanged(string value)
@@ -160,7 +246,13 @@ public partial class ManageViewModel : ViewModelBase
 
         try
         {
-            await Task.Run(() => _applicationService.RunJobById(job.Id));
+            await Task.Run(() =>
+            {
+                var coreJob = _applicationService.GetJobById(job.Id);
+                if (coreJob is null)
+                    throw new KeyNotFoundException();
+                _applicationService.RunJob(coreJob);
+            });
             success = true;
         }
         catch (Exception)
@@ -178,12 +270,12 @@ public partial class ManageViewModel : ViewModelBase
 
                 if (success)
                 {
-                    StatusMessage = $"Job {job.Name} terminé avec succès";
+                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_run_success, new[] { job.Name });
                     IsStatusError = false;
                 }
                 else
                 {
-                    StatusMessage = $"Erreur lors de l'exécution du job {job.Name}";
+                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_run_error, new[] { job.Name });
                     IsStatusError = true;
                 }
                 IsStatusBannerVisible = true;
@@ -198,12 +290,22 @@ public partial class ManageViewModel : ViewModelBase
 
     private async Task AutoDismissBannerAsync()
     {
-        await Task.Delay(4000);
-        await Dispatcher.UIThread.InvokeAsync(() =>
+        _dismissCts?.Cancel();
+        var cts = _dismissCts = new CancellationTokenSource();
+
+        try
         {
-            if (!IsStatusError)
-                IsStatusBannerVisible = false;
-        });
+            await Task.Delay(4000, cts.Token);
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                if (!IsStatusError)
+                    IsStatusBannerVisible = false;
+            });
+        }
+        catch (TaskCanceledException)
+        {
+            // A newer auto-dismiss replaced this one
+        }
     }
 
     [RelayCommand]
@@ -233,7 +335,7 @@ public partial class ManageViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void ConfirmDelete()
+    private async Task ConfirmDelete()
     {
         if (PendingDeleteJob is not { } job)
             return;
@@ -245,7 +347,7 @@ public partial class ManageViewModel : ViewModelBase
 
         try
         {
-            _applicationService.RemoveJob(job.Id);
+            await Task.Run(() => _applicationService.RemoveJob(job.Id));
             success = true;
         }
         catch (Exception)
@@ -254,20 +356,23 @@ public partial class ManageViewModel : ViewModelBase
         }
         finally
         {
-            PendingDeleteJob = null;
-            LoadJobs();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                PendingDeleteJob = null;
+                LoadJobs();
 
-            if (success)
-            {
-                StatusMessage = $"Job {job.Name} supprimé avec succès";
-                IsStatusError = false;
-            }
-            else
-            {
-                StatusMessage = $"Erreur lors de la suppression du job {job.Name}";
-                IsStatusError = true;
-            }
-            IsStatusBannerVisible = true;
+                if (success)
+                {
+                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_delete_success, new[] { job.Name });
+                    IsStatusError = false;
+                }
+                else
+                {
+                    StatusMessage = _localizationService.TranslateTextWithParams(LocalizationKey.gui_manage_delete_error, new[] { job.Name });
+                    IsStatusError = true;
+                }
+                IsStatusBannerVisible = true;
+            });
         }
 
         if (success)
