@@ -281,11 +281,26 @@ public sealed class DailyFileLogger : ILogger, IDisposable
     /// </summary>
     /// <param name="stream">Opened file stream.</param>
     /// <returns>File bytes.</returns>
+    /// <exception cref="IOException">Thrown when the log file exceeds 2 GB.</exception>
     private static byte[] ReadAllBytes(FileStream stream)
     {
         stream.Seek(0, SeekOrigin.Begin);
-        var bytes = new byte[stream.Length];
-        _ = stream.Read(bytes, 0, bytes.Length);
+
+        if (stream.Length > int.MaxValue)
+            throw new IOException("Log file is too large to read into memory.");
+
+        int length = checked((int)stream.Length);
+        var bytes = new byte[length];
+
+        int offset = 0;
+        while (offset < length)
+        {
+            int bytesRead = stream.Read(bytes, offset, length - offset);
+            if (bytesRead == 0)
+                break;
+            offset += bytesRead;
+        }
+
         return bytes;
     }
 
