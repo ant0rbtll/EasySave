@@ -1,4 +1,4 @@
-﻿@startuml
+@startuml
 title EasySave 1.1 - Sequence : mode interactif, configuration et execution
 
 actor Utilisateur as User
@@ -14,6 +14,7 @@ participant "Backup.BackupEngine" as Engine
 participant "System.ITransferService" as Transfer
 participant "State.IStateWriter" as State
 participant "Log.ILogger" as Logger
+participant "UI.IConsoleMessageService" as Msg
 
 == Demarrage ==
 User -> Program : Main(args = [])
@@ -23,7 +24,9 @@ Program -> ConsoleUI : MainMenu()
 User -> ConsoleUI : Ouvre menu Parametres
 ConsoleUI -> SettingsFlow : ConfigureParams(MainMenu)
 
-alt Changer dossier de logs
+alt Changer langue
+  SettingsFlow -> PrefRepo : Save(UserPreferences.Language)
+else Changer dossier de logs
   SettingsFlow -> PathProvider : SetLogDirectoryOverride(directory)
   SettingsFlow -> PrefRepo : Save(UserPreferences.LogDirectory)
 else Changer format de logs (Json/Xml)
@@ -61,7 +64,7 @@ alt Travail trouve
       Engine -> State : Update(status=Error)
       Engine --> App : exception
       App --> JobsFlow : exception
-      JobsFlow -> ConsoleUI : Afficher erreur localisee
+      JobsFlow -> Msg : ShowError(exception)
     end
   end
 

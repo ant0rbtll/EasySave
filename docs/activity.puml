@@ -1,4 +1,4 @@
-﻿@startuml
+@startuml
 title EasySave 1.1 - Activite : edition de travail avec gestion des modifications non sauvegardees
 
 start
@@ -27,8 +27,7 @@ repeat
   :Afficher menu de mise a jour;
 
   if (Choix champ editable ?) then (Oui)
-    :MenuFactory envoie JobEditableField
-(Name/Source/Destination/Type);
+    :MenuFactory envoie JobEditableField\n(Name/Source/Destination/Type);
     :UpdateJobField(...);
     :Saisie via ConsoleInputService;
   else (Non)
@@ -38,6 +37,7 @@ repeat
     :BackupApplicationService.UpdateJob(job);
     :JobEditSessionService.Clear();
     :Message succes;
+    :Retour liste des travaux;
     stop
   else (Non)
   endif
@@ -51,13 +51,13 @@ if (Retour depuis edition) then (Oui)
     if (Save and quit) then (Oui)
       :BackupApplicationService.UpdateJob(job);
       :JobEditSessionService.Clear();
-      :Retour details;
+      :Retour details travail;
       stop
     else (Non)
       if (Discard and quit) then (Oui)
         :JobEditSessionService.Restore(job);
         :JobEditSessionService.Clear();
-        :Retour details;
+        :Retour details travail;
         stop
       else (Back)
         :Retour menu edition;
@@ -65,7 +65,7 @@ if (Retour depuis edition) then (Oui)
     endif
   else (Non)
     :JobEditSessionService.Clear();
-    :Retour details;
+    :Retour details travail;
     stop
   endif
 endif

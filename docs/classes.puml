@@ -1,4 +1,4 @@
-﻿@startuml
+@startuml
 title EasySave 1.1 - Diagramme de classes (architecture actuelle)
 
 skinparam packageStyle rectangle
@@ -29,34 +29,34 @@ package "Core" {
 
 package "Application" {
   class BackupApplicationService {
-    +CreateJob(name, source, destination, type) : void
-    +RemoveJob(id) : void
-    +UpdateJob(job) : void
-    +RunJob(id) : void
-    +RunJobs(ids[]) : void
+    +CreateJob(name : string, source : string, destination : string, type : BackupType) : void
+    +RemoveJob(id : int) : void
+    +UpdateJob(job : BackupJob) : void
+    +RunJob(id : int) : void
+    +RunJobs(ids : int[]) : void
     +RunAllJobs() : void
     +GetAllJobs() : List<BackupJob>
-    +GetJob(id) : BackupJob?
+    +GetJob(id : int) : BackupJob?
   }
 }
 
 package "Persistence" {
   interface IBackupJobRepository {
     +{static} DefaultMaxJobs : int = 5
-    +Add(job) : void
-    +Remove(id) : void
-    +GetById(id) : BackupJob?
+    +Add(job : BackupJob) : void
+    +Remove(id : int) : void
+    +GetById(id : int) : BackupJob?
     +GetAll() : List<BackupJob>
     +Count() : int
     +MaxJobs() : int
-    +Update(job) : void
+    +Update(job : BackupJob) : void
   }
 
   class JsonBackupJobRepository
   class InMemoryBackupJobRepository
 
   interface IJobIdProvider {
-    +NextId(existing) : int
+    +NextId(existing : IEnumerable<BackupJob>) : int
   }
 
   class SequentialJobIdProvider
@@ -69,7 +69,7 @@ package "Persistence" {
 
   interface IUserPreferencesRepository {
     +Load() : UserPreferences
-    +Save(preferences) : void
+    +Save(preferences : UserPreferences) : void
   }
 
   class JsonUserPreferencesRepository
@@ -86,11 +86,11 @@ package "Persistence" {
 
 package "Backup" {
   interface IBackupEngine {
-    +Execute(job) : void
+    +Execute(job : BackupJob) : void
   }
 
   class BackupEngine {
-    +Execute(job) : void
+    +Execute(job : BackupJob) : void
   }
 
   IBackupEngine <|.. BackupEngine
@@ -101,7 +101,7 @@ package "System" {
   class DefaultFileSystem
 
   interface ITransferService {
-    +TransferFile(sourcePath, destinationPath, overwrite) : TransferResult
+    +TransferFile(sourcePath : string, destinationPath : string, overwrite : bool) : TransferResult
   }
 
   class DefaultTransferService
@@ -130,7 +130,12 @@ package "State" {
   class StateEntry {
     +BackupId : int
     +BackupName : string?
+    +Timestamp : DateTime
     +Status : BackupStatus
+    +TotalFiles : int
+    +TotalSizeBytes : long
+    +RemainingFiles : int
+    +RemainingSizeBytes : long
     +ProgressPercent : int
     +CurrentSourcePath : string?
     +CurrentDestinationPath : string?
@@ -142,14 +147,14 @@ package "State" {
   }
 
   interface IStateWriter {
-    +Update(entry) : void
-    +MarkInactive(backupId) : void
+    +Update(entry : StateEntry) : void
+    +MarkInactive(backupId : int) : void
   }
 
   class RealTimeStateWriter
 
   class StateSerializer {
-    +{static} ToPrettyJson(state) : string
+    +{static} ToPrettyJson(state : GlobalState) : string
   }
 
   IStateWriter <|.. RealTimeStateWriter
@@ -160,11 +165,11 @@ package "State" {
 
 package "Configuration" {
   interface IPathProvider {
-    +GetDailyLogPath(date, format) : string
+    +GetDailyLogPath(date : DateTime, format : LogFormat) : string
     +GetStatePath() : string
     +GetJobsConfigPath() : string
     +GetUserPreferencesPath() : string
-    +SetLogDirectoryOverride(directory) : void
+    +SetLogDirectoryOverride(directory : string?) : void
   }
 
   class DefaultPathProvider
@@ -178,8 +183,9 @@ package "Localization" {
   interface ILocalizationService {
     +Culture : string
     +AllCultures : Dictionary<string, LocalizationKey>
-    +TranslateText(key) : string
-    +TranslateTextWithParams(key, parameters[]) : string
+    +TranslateText(key : string) : string
+    +TranslateText(key : LocalizationKey) : string
+    +TranslateTextWithParams(key : LocalizationKey, parameters : string[]) : string
   }
 
   class LocalizationService
@@ -207,7 +213,7 @@ package "Log" {
   }
 
   interface ILogger {
-    +Write(entry) : void
+    +Write(entry : LogEntry) : void
   }
 
   class NoOpLogger
@@ -218,7 +224,7 @@ package "Log" {
 
 package "EasyLog" {
   interface ILogFormatter {
-    +Format(entry) : string
+    +Format(entry : Log.LogEntry) : string
   }
 
   interface ILogFileLayout {
@@ -232,7 +238,7 @@ package "EasyLog" {
   class XmlLogFormatter
 
   class DailyFileLogger {
-    +Write(entry) : void
+    +Write(entry : Log.LogEntry) : void
     +Dispose() : void
   }
 
@@ -259,7 +265,7 @@ package "UI" {
   class ConsoleUI {
     +LocalizationService : ILocalizationService
     +MainMenu() : void
-    +RunFromArgs(args[]) : void
+    ~RunFromArgs(args[]) : void
     +Quit() : void
   }
 
@@ -268,29 +274,130 @@ package "UI" {
   }
 
   class ErrorManager {
-    +TryGetMessage(message, key) : bool
+    +TryGetMessage(message : string, key : LocalizationKey) : bool
   }
 
-  interface IMenuService
-  class MenuService
+  interface IMenuService {
+    +ShowMenu(menuItems : LocalizationKey[], menuLabel : LocalizationKey, renderHeader : Action?) : int
+    +ShowMenu(menuItems : string[], menuLabel : LocalizationKey, renderHeader : Action?) : int
+    +ShowMenuWithActions(menuItems : LocalizationKey[], menuActions : Dictionary<int, Action>, menuLabel : LocalizationKey, renderHeader : Action?) : void
+    +ShowMenuWithActions(menuItems : string[], menuActions : Dictionary<int, Action>, menuLabel : LocalizationKey, renderHeader : Action?) : void
+    +ShowMenuWithActions(menuConfig : MenuConfig) : void
+    +DisplayLabel(key : LocalizationKey) : void
+    +WaitForUser(messageKey : LocalizationKey) : void
+  }
 
-  interface IMenuFactory
-  class MenuFactory
+  class MenuService {
+    +ShowMenu(menuItems : LocalizationKey[], menuLabel : LocalizationKey, renderHeader : Action?) : int
+    +ShowMenu(menuItems : string[], menuLabel : LocalizationKey, renderHeader : Action?) : int
+    +ShowMenuWithActions(menuItems : LocalizationKey[], menuActions : Dictionary<int, Action>, menuLabel : LocalizationKey, renderHeader : Action?) : void
+    +ShowMenuWithActions(menuItems : string[], menuActions : Dictionary<int, Action>, menuLabel : LocalizationKey, renderHeader : Action?) : void
+    +ShowMenuWithActions(menuConfig : MenuConfig) : void
+    +DisplayLabel(key : LocalizationKey) : void
+    +WaitForUser(messageKey : LocalizationKey) : void
+  }
 
-  class MenuConfig
+  interface IMenuFactory {
+    +CreateMainMenu(currentJobCount : int, onCreateJob : Action, onManageJobs : Action, onConfigureParams : Action, onQuit : Action) : MenuConfig
+    +CreateLocaleMenu(cultures : IReadOnlyDictionary<string, LocalizationKey>, onSelectLocale : Action<string>, onBack : Action, renderHeader : Action?) : MenuConfig
+    +CreateParamsMenu(onShowChangeLocale : Action, onShowChangeLogDirectory : Action, onShowChangeLogFormat : Action, onBack : Action, renderHeader : Action?) : MenuConfig
+    +CreateLogFormatMenu(jsonLabel : string, xmlLabel : string, backLabel : string, onJson : Action, onXml : Action, onBack : Action, renderHeader : Action?) : MenuConfig
+    +CreateJobsListMenu(jobs : IEnumerable<BackupJob>, backLabel : string, onSelectJob : Action<BackupJob>, onBack : Action) : MenuConfig
+    +CreateJobDetailsMenu(job : BackupJob, onRunJob : Action<BackupJob>, onUpdateJob : Action<BackupJob>, onDeleteJob : Action<BackupJob>, onBack : Action, renderHeader : Action?) : MenuConfig
+    +CreateJobUpdateMenu(job : BackupJob, onUpdateField : Action<BackupJob, JobEditableField>, onSave : Action<BackupJob>, onBack : Action<BackupJob>) : MenuConfig
+  }
 
-  interface IConsoleAdapter
-  class SystemConsoleAdapter
+  class MenuFactory {
+    +CreateMainMenu(currentJobCount : int, onCreateJob : Action, onManageJobs : Action, onConfigureParams : Action, onQuit : Action) : MenuConfig
+    +CreateLocaleMenu(cultures : IReadOnlyDictionary<string, LocalizationKey>, onSelectLocale : Action<string>, onBack : Action, renderHeader : Action?) : MenuConfig
+    +CreateParamsMenu(onShowChangeLocale : Action, onShowChangeLogDirectory : Action, onShowChangeLogFormat : Action, onBack : Action, renderHeader : Action?) : MenuConfig
+    +CreateLogFormatMenu(jsonLabel : string, xmlLabel : string, backLabel : string, onJson : Action, onXml : Action, onBack : Action, renderHeader : Action?) : MenuConfig
+    +CreateJobsListMenu(jobs : IEnumerable<BackupJob>, backLabel : string, onSelectJob : Action<BackupJob>, onBack : Action) : MenuConfig
+    +CreateJobDetailsMenu(job : BackupJob, onRunJob : Action<BackupJob>, onUpdateJob : Action<BackupJob>, onDeleteJob : Action<BackupJob>, onBack : Action, renderHeader : Action?) : MenuConfig
+    +CreateJobUpdateMenu(job : BackupJob, onUpdateField : Action<BackupJob, JobEditableField>, onSave : Action<BackupJob>, onBack : Action<BackupJob>) : MenuConfig
+  }
 
-  interface IConsoleMessageService
-  class ConsoleMessageService
+  class MenuConfig {
+    +Items : LocalizationKey[]?
+    +ItemsAsStrings : string[]?
+    +Actions : Dictionary<int, Action>
+    +Label : LocalizationKey
+    +RenderHeader : Action?
+  }
 
-  interface IConsoleInputService
-  class ConsoleInputService
+  interface IConsoleAdapter {
+    +Clear() : void
+    +Write(value : string) : void
+    +WriteLine() : void
+    +WriteLine(value : string) : void
+    +ReadKey(intercept : bool) : ConsoleKeyInfo
+    +SetForegroundColor(color : ConsoleColor) : void
+    +ResetColor() : void
+    +WriteErrorLine(value : string) : void
+  }
 
-  class JobsFlowService
-  class SettingsFlowService
-  class JobEditSessionService
+  class SystemConsoleAdapter {
+    +Clear() : void
+    +Write(value : string) : void
+    +WriteLine() : void
+    +WriteLine(value : string) : void
+    +ReadKey(intercept : bool) : ConsoleKeyInfo
+    +SetForegroundColor(color : ConsoleColor) : void
+    +ResetColor() : void
+    +WriteErrorLine(value : string) : void
+  }
+
+  interface IConsoleMessageService {
+    +Write(key : LocalizationKey, writeLine : bool) : void
+    +WriteWithParams(key : LocalizationKey, parameters : string[], writeLine : bool) : void
+    +Translate(key : LocalizationKey) : string
+    +ShowError(exception : Exception) : void
+  }
+
+  class ConsoleMessageService {
+    +Write(key : LocalizationKey, writeLine : bool) : void
+    +WriteWithParams(key : LocalizationKey, parameters : string[], writeLine : bool) : void
+    +Translate(key : LocalizationKey) : string
+    +ShowError(exception : Exception) : void
+  }
+
+  interface IConsoleInputService {
+    +AskString(key : LocalizationKey) : string?
+    +AskInt(key : LocalizationKey) : int?
+    +AskStringWithCurrentValue(key : LocalizationKey, currentValue : string) : string?
+    +AskIntWithCurrentValue(key : LocalizationKey, currentValue : int) : int?
+    +AskBackupType(key : LocalizationKey) : BackupType?
+    +AskBackupTypeWithCurrentValue(key : LocalizationKey, currentType : BackupType) : BackupType?
+  }
+
+  class ConsoleInputService {
+    +AskString(key : LocalizationKey) : string?
+    +AskInt(key : LocalizationKey) : int?
+    +AskStringWithCurrentValue(key : LocalizationKey, currentValue : string) : string?
+    +AskIntWithCurrentValue(key : LocalizationKey, currentValue : int) : int?
+    +AskBackupType(key : LocalizationKey) : BackupType?
+    +AskBackupTypeWithCurrentValue(key : LocalizationKey, currentType : BackupType) : BackupType?
+  }
+
+  class JobsFlowService {
+    +GetJobCount() : int
+    +CreateBackupJob(onBackToMainMenu : Action) : void
+    +ShowJobsList(onBackToMainMenu : Action) : void
+  }
+
+  class SettingsFlowService {
+    +InitializeCulture() : void
+    +ConfigureParams(onBackToMainMenu : Action) : void
+    +ChangeLocale(locale : string, onBackToMainMenu : Action) : void
+    +ChangeLogFormat(format : LogFormat, onBackToMainMenu : Action) : void
+  }
+
+  class JobEditSessionService {
+    +BeginOrRefresh(job : BackupJob) : void
+    +HasPendingChanges(job : BackupJob) : bool
+    +Clear() : void
+    +Restore(job : BackupJob) : void
+  }
 
   IMenuService <|.. MenuService
   IMenuFactory <|.. MenuFactory
@@ -358,9 +465,11 @@ UI.SettingsFlowService --> UI.IMenuFactory
 UI.SettingsFlowService --> UI.IConsoleMessageService
 UI.SettingsFlowService --> UI.IConsoleInputService
 UI.SettingsFlowService --> UI.IConsoleAdapter
+UI.SettingsFlowService ..> Core.LogFormat
 
 UI.MenuService --> Localization.ILocalizationService
 UI.MenuService --> UI.IConsoleAdapter
+UI.MenuService --> UI.SystemConsoleAdapter
 UI.MenuFactory ..> Persistence.IBackupJobRepository : DefaultMaxJobs
 UI.MenuFactory ..> UI.MenuConfig
 
@@ -370,5 +479,7 @@ UI.ConsoleMessageService --> UI.IConsoleAdapter
 
 UI.ConsoleInputService --> UI.IConsoleMessageService
 UI.ConsoleInputService --> UI.IConsoleAdapter
+
+UI.JobEditSessionService ..> Core.BackupJob
 
 @enduml
