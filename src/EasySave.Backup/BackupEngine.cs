@@ -50,6 +50,7 @@ public class BackupEngine(
 
             UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
             Log(job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
+            Log(job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
 
             foreach (var file in files)
             {
