@@ -212,16 +212,23 @@ public class BackupEngine(
         long fileSizeBytes,
         long transferTimeMs)
     {
-        _logger.Write(new LogEntry(
-            DateTime.Now,
-            backupName,
-            eventType,
-            sourcePath,
-            destinationPath,
-            fileSizeBytes,
-            transferTimeMs
-        )
-        );
+        try
+        {
+            _logger.Write(new LogEntry(
+                DateTime.Now,
+                backupName,
+                eventType,
+                sourcePath,
+                destinationPath,
+                fileSizeBytes,
+                transferTimeMs
+            )
+            );
+        }
+        catch (Exception)
+        {
+            // Logging failures must not interrupt backup execution.
+        }
     }
 
 
