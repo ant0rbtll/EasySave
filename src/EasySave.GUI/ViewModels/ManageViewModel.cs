@@ -164,6 +164,12 @@ public partial class ManageViewModel : ViewModelBase
     }
 
     [RelayCommand]
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
+    }
+
+    [RelayCommand]
     private void SortBy(string column)
     {
         if (SortColumn == column)
