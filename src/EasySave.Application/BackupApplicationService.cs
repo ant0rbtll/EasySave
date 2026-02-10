@@ -3,6 +3,7 @@ using EasySave.Backup;
 using EasySave.Core;
 using EasySave.Log;
 using EasySave.Configuration;
+using System.Text.Json;
 
 namespace EasySave.Application;
 
@@ -132,7 +133,7 @@ public class BackupApplicationService(
             dates.Add(Path.GetFileNameWithoutExtension(file));
         }
         return dates;
-    } 
+    }
 
     ///// <summary>
     ///// YYYY-MM-DD
@@ -140,8 +141,22 @@ public class BackupApplicationService(
     ///// </summary>
     ///// <param name="date">The date of the searching logs</param>
     ///// <returns> The logs of the date given</returns>
-    //public List<LogEntry> GetLogsByDate(string date)
-    //{
+    public List<Dictionary<string, object>> GetLogsByDate(string date)
+    {
+        var logsPath = _pathProvider.ResolveLogsDirectory();
+        var file = Path.Combine(logsPath, date) + ".json";
+        List<Dictionary<string, object>> data = new();
 
-    //}
+        if (Path.Exists(file))
+        {
+            if (Path.GetExtension(file) == ".json")
+            {
+                string jsonString = File.ReadAllText(file);
+                data = JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonString);
+
+            }
+        }
+
+        return data;
+    }
 }
