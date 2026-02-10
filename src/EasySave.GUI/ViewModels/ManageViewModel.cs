@@ -110,8 +110,9 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private void RunJob(Models.BackupJob job)
     {
+        //TODO ask confirmation via popup
         //_applicationService.RunJobById(job.Id);
-        // TODO: navigate to progress page
+        //job.IsActive = true;
     }
 
     [RelayCommand]
@@ -123,9 +124,17 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private void DeleteJob(Models.BackupJob job)
     {
-        //_applicationService.RemoveJob(job.Id);
-        //_allJobs.Remove(job);
-        //Refresh();
+        try
+        {
+            //TODO ask confirmation via popup
+            //_applicationService.RemoveJob(job.Id);
+            //_allJobs.Remove(job);
+            //Refresh();
+        }
+        catch (Exception ex)
+        {
+
+        }
 
         // TODO: implement delete confirmation dialog
     }

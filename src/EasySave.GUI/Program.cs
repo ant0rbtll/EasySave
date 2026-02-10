@@ -66,11 +66,11 @@ sealed class Program
         // Setup ViewModels pour Avalonia
         services.AddSingleton<MainWindowViewModel>();
 
-        services.AddTransient<CreateViewModel>();
-        services.AddTransient<ManageViewModel>();
-        services.AddTransient<LogViewModel>();
-        services.AddTransient<ConfigViewModel>();
-        services.AddTransient<SidebarViewModel>();
+        services.AddSingleton<CreateViewModel>();
+        services.AddSingleton<ManageViewModel>();
+        services.AddSingleton<LogViewModel>();
+        services.AddSingleton<ConfigViewModel>();
+        services.AddSingleton<SidebarViewModel>();
 
         return services.BuildServiceProvider();
     }
