@@ -31,6 +31,7 @@ public class JsonLogFormatterTests
         Assert.True(root.TryGetProperty("destinationPathUNC", out _));
         Assert.True(root.TryGetProperty("fileSizeBytes", out _));
         Assert.True(root.TryGetProperty("transferTimeMs", out _));
+        Assert.True(root.TryGetProperty("encryptionTimeMs", out _));
     }
 
     [Fact]

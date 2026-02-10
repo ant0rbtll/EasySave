@@ -78,6 +78,10 @@ sealed class Program
         services.AddSingleton<IUserPreferencesRepository, JsonUserPreferencesRepository>();
         services.AddSingleton<IFileSystem, DefaultFileSystem>();
         services.AddSingleton<ITransferService, DefaultTransferService>();
+        services.AddSingleton<IEncryptionPolicyProvider, UserPreferencesEncryptionPolicyProvider>();
+        services.AddSingleton<IEncryptionProvider, DotNetAesEncryptionProvider>();
+        services.AddSingleton<IEncryptionProvider, ExternalEncryptionProvider>();
+        services.AddSingleton<IEncryptionProviderResolver, EncryptionProviderResolver>();
         services.AddSingleton<IBackupEngine, BackupEngine>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
 

@@ -132,11 +132,9 @@ public partial class ConfigViewModel : ViewModelBase
         var language = NormalizeLanguage(SelectedLanguage);
         SelectedLanguage = language;
 
-        var preferences = new UserPreferences
-        {
-            Language = language,
-            LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory
-        };
+        var preferences = _preferencesRepository.Load();
+        preferences.Language = language;
+        preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
         _preferencesRepository.Save(preferences);
 
         _localizationService.Culture = language;

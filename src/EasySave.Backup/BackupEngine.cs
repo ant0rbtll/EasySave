@@ -19,12 +19,16 @@ public class BackupEngine(
     IFileSystem fileSystem,
     ITransferService transferService,
     IStateWriter stateWriter,
-    ILogger logger) : IBackupEngine
+    ILogger logger,
+    IEncryptionPolicyProvider? encryptionPolicyProvider = null,
+    IEncryptionProviderResolver? encryptionProviderResolver = null) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
     private readonly IStateWriter _stateWriter = stateWriter;
     private readonly ILogger _logger = logger;
+    private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
+    private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
 
     /// <summary>
     /// Executes a complete or differential backup.
@@ -36,6 +40,7 @@ public class BackupEngine(
         try
         {
             var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
+            var encryptionPolicy = _encryptionPolicyProvider.GetPolicy();
 
             int totalFiles = files.Count;
             long totalSize = files.Sum(f => _fileSystem.GetFileSize(f));
@@ -80,12 +85,15 @@ public class BackupEngine(
                         e.Data["2_errorCode"] = result.ErrorCode;
                         throw e;
                     }
+
+                    long encryptionTimeMs = EncryptTransferredFileIfRequired(destinationFile, encryptionPolicy);
                     Log(job.Name,
                         LogEventType.TransferFile,
                         file,
                         destinationFile,
                         result.FileSizeBytes,
-                        result.TransferTimeMs
+                        result.TransferTimeMs,
+                        encryptionTimeMs
                     );
 
                     remainingFiles--;
@@ -170,30 +178,31 @@ public class BackupEngine(
     /// <param name="src">Current source file path.</param>
     /// <param name="dst">Current destination file path.</param>
     private void UpdateState(
-    BackupJob job,
-    BackupStatus status,
-    int totalFiles,
-    long totalSize,
-    int remainingFiles,
-    long remainingSize,
-    int progress,
-    string src,
-    string dst)
-{
-    _stateWriter.Update(new StateEntry {
-        BackupId = job.Id,
-        BackupName = job.Name,
-        Timestamp = DateTime.Now,
-        Status = status,
-        TotalFiles = totalFiles,
-        TotalSizeBytes = totalSize,
-        RemainingFiles = remainingFiles,
-        RemainingSizeBytes = remainingSize,
-        ProgressPercent = progress,
-        CurrentSourcePath = src,
-        CurrentDestinationPath = dst
-    });
-}
+        BackupJob job,
+        BackupStatus status,
+        int totalFiles,
+        long totalSize,
+        int remainingFiles,
+        long remainingSize,
+        int progress,
+        string src,
+        string dst)
+    {
+        _stateWriter.Update(new StateEntry
+        {
+            BackupId = job.Id,
+            BackupName = job.Name,
+            Timestamp = DateTime.Now,
+            Status = status,
+            TotalFiles = totalFiles,
+            TotalSizeBytes = totalSize,
+            RemainingFiles = remainingFiles,
+            RemainingSizeBytes = remainingSize,
+            ProgressPercent = progress,
+            CurrentSourcePath = src,
+            CurrentDestinationPath = dst
+        });
+    }
 
     /// <summary>
     /// Logs a backup operation entry.
@@ -204,13 +213,15 @@ public class BackupEngine(
     /// <param name="destinationPath">Destination file path.</param>
     /// <param name="fileSizeBytes">File size in bytes.</param>
     /// <param name="transferTimeMs">Transfer time in milliseconds.</param>
+    /// <param name="encryptionTimeMs">Encryption time in milliseconds.</param>
     private void Log(
         string backupName,
         LogEventType eventType,
         string sourcePath,
         string destinationPath,
         long fileSizeBytes,
-        long transferTimeMs)
+        long transferTimeMs,
+        long encryptionTimeMs = 0)
     {
         try
         {
@@ -221,7 +232,8 @@ public class BackupEngine(
                 sourcePath,
                 destinationPath,
                 fileSizeBytes,
-                transferTimeMs
+                transferTimeMs,
+                encryptionTimeMs
             )
             );
         }
@@ -231,5 +243,36 @@ public class BackupEngine(
         }
     }
 
+    private long EncryptTransferredFileIfRequired(string destinationFile, EncryptionPolicy policy)
+    {
+        if (!policy.ShouldEncrypt(destinationFile))
+        {
+            return 0;
+        }
+
+        var provider = _encryptionProviderResolver.Resolve(policy.ProviderName);
+        if (provider is null)
+        {
+            return -1;
+        }
+
+        try
+        {
+            var result = provider.EncryptAsync(destinationFile, policy).GetAwaiter().GetResult();
+            if (result.IsSuccess)
+            {
+                return Math.Max(0, result.EncryptionTimeMs);
+            }
+
+            return result.EncryptionTimeMs < 0
+                ? result.EncryptionTimeMs
+                : -Math.Max(1, result.EncryptionTimeMs);
+        }
+        catch (Exception)
+        {
+            // Encryption failures must not interrupt backup execution.
+            return -1;
+        }
+    }
 
 }

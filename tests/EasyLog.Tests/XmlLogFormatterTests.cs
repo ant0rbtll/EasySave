@@ -34,6 +34,7 @@ public class XmlLogFormatterTests
         Assert.NotNull(root.Element("DestinationPathUNC"));
         Assert.NotNull(root.Element("FileSizeBytes"));
         Assert.NotNull(root.Element("TransferTimeMs"));
+        Assert.NotNull(root.Element("EncryptionTimeMs"));
     }
 
     [Fact]
@@ -99,11 +100,14 @@ public class XmlLogFormatterTests
         var doc = XDocument.Parse(xml);
         var fileSizeElement = doc.Root?.Element("FileSizeBytes");
         var transferTimeElement = doc.Root?.Element("TransferTimeMs");
+        var encryptionTimeElement = doc.Root?.Element("EncryptionTimeMs");
 
         Assert.NotNull(fileSizeElement);
         Assert.NotNull(transferTimeElement);
+        Assert.NotNull(encryptionTimeElement);
         Assert.Equal("1024", fileSizeElement.Value);
         Assert.Equal("250", transferTimeElement.Value);
+        Assert.Equal("0", encryptionTimeElement.Value);
     }
 
     [Fact]
