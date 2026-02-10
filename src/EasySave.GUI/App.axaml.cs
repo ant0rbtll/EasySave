@@ -2,18 +2,34 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
-using System.Linq;
 using Avalonia.Markup.Xaml;
 using EasySave.Configuration;
 using EasySave.GUI.ViewModels;
 using EasySave.GUI.Views;
 using EasySave.Localization;
 using EasySave.Persistence;
+using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
 
 namespace EasySave.GUI;
 
 public partial class App : Avalonia.Application
 {
+
+    private readonly IServiceProvider? _services;
+
+    // Constructeur par défaut pour le designer
+    public App()
+    {
+    }
+
+    // Constructeur avec injection de dépendances
+    public App(IServiceProvider services)
+    {
+        _services = services;
+    }
+
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -21,14 +37,14 @@ public partial class App : Avalonia.Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && _services is not null)
         {
             DisableAvaloniaDataAnnotationValidation();
 
             // Création des services
-            var pathProvider = new DefaultPathProvider();
-            var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
-            var localizationService = new LocalizationService();
+            var pathProvider = _services.GetRequiredService<IPathProvider>();
+            var preferencesRepository = _services.GetRequiredService<IUserPreferencesRepository>();
+            var localizationService = _services.GetRequiredService<ILocalizationService>();
 
             // Chargement des préférences sauvegardées
             var preferences = preferencesRepository.Load();
@@ -40,10 +56,7 @@ public partial class App : Avalonia.Application
 
             desktop.MainWindow = new MainWindow
             {
-                DataContext = new MainWindowViewModel(
-                    preferencesRepository,
-                    localizationService,
-                    pathProvider),
+                DataContext = _services.GetRequiredService<MainWindowViewModel>(),
             };
         }
 

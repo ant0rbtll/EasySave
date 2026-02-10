@@ -1,7 +1,244 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EasySave.GUI.ViewModels"
+             xmlns:models="using:EasySave.GUI.Models"
              x:Class="EasySave.GUI.Views.ManageView"
              x:DataType="vm:ManageViewModel">
-    <TextBlock Text="Page Gérer" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+    <UserControl.Styles>
+        <!-- Style for the type badge -->
+        <Style Selector="Border.type-badge">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,3"/>
+        </Style>
+        <Style Selector="Border.type-badge TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="#BBBBBB"/>
+        </Style>
+
+        <!-- Style for the ID badge -->
+        <Style Selector="Border.id-badge">
+            <Setter Property="Background" Value="#2200AAFF"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8,3"/>
+            <Setter Property="MinWidth" Value="36"/>
+        </Style>
+        <Style Selector="Border.id-badge TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#66BBFF"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <!-- Row hover effect -->
+        <Style Selector="Border.job-row">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Border.job-row:pointerover">
+            <Setter Property="Background" Value="#11FFFFFF"/>
+        </Style>
+
+        <!-- Path text style -->
+        <Style Selector="TextBlock.path-text">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#888888"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <!-- Column header button style -->
+        <Style Selector="Button.col-header">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.col-header:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="Transparent"/>
+        </Style>
+        <Style Selector="Button.col-header TextBlock">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="#999"/>
+        </Style>
+        <Style Selector="Button.col-header:pointerover TextBlock">
+            <Setter Property="Foreground" Value="#CCC"/>
+        </Style>
+
+        <!-- Action button style -->
+        <Style Selector="Button.action-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.action-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+        </Style>
+        <Style Selector="Button.action-btn PathIcon">
+            <Setter Property="Width" Value="14"/>
+            <Setter Property="Height" Value="14"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*" Margin="24">
+
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="Travaux de Sauvegarde"
+                           FontSize="22"
+                           FontWeight="Bold"
+                           Margin="0,0,0,4"/>
+                <TextBlock Text="Gérez vos sauvegardes"
+                           FontSize="13"
+                           Foreground="#888"/>
+            </StackPanel>
+
+            <TextBox Grid.Column="1"
+                     Text="{Binding SearchText}"
+                     Watermark="Rechercher..."
+                     Width="250"
+                     VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- Column headers + list -->
+        <Border Grid.Row="1"
+                BorderBrush="#22FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8"
+                ClipToBounds="True">
+            <Grid RowDefinitions="Auto,*">
+
+                <!-- Column headers -->
+                <Border Grid.Row="0"
+                        Background="#11FFFFFF"
+                        Padding="16,10">
+                    <Grid ColumnDefinitions="50,*,1.5*,1.5*,100,130">
+                        <Button Grid.Column="0" Classes="col-header"
+                                Command="{Binding SortByCommand}" CommandParameter="Id"
+                                HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding IdHeader}"/>
+                        </Button>
+                        <Button Grid.Column="1" Classes="col-header"
+                                Command="{Binding SortByCommand}" CommandParameter="Name"
+                                HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding NameHeader}"/>
+                        </Button>
+                        <Button Grid.Column="2" Classes="col-header"
+                                Command="{Binding SortByCommand}" CommandParameter="Source"
+                                HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding SourceHeader}"/>
+                        </Button>
+                        <Button Grid.Column="3" Classes="col-header"
+                                Command="{Binding SortByCommand}" CommandParameter="Destination"
+                                HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding DestinationHeader}"/>
+                        </Button>
+                        <Button Grid.Column="4" Classes="col-header"
+                                Command="{Binding SortByCommand}" CommandParameter="Type"
+                                HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding TypeHeader}"/>
+                        </Button>
+                        <Button Grid.Column="5" Classes="col-header"
+                                HorizontalAlignment="Center"
+                                IsHitTestVisible="False">
+                            <TextBlock Text="Actions"/>
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Job list -->
+                <ScrollViewer Grid.Row="1"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding Jobs}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="models:BackupJob">
+                                <Border Classes="job-row"
+                                        BorderBrush="#11FFFFFF"
+                                        BorderThickness="0,0,0,1"
+                                        Padding="16,10">
+                                    <Grid ColumnDefinitions="50,*,1.5*,1.5*,100,130"
+                                          VerticalAlignment="Center">
+
+                                        <!-- ID -->
+                                        <Border Grid.Column="0" Classes="id-badge"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Id}"/>
+                                        </Border>
+
+                                        <!-- Name -->
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Name}"
+                                                   ToolTip.Tip="{Binding Name}"
+                                                   FontSize="13"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="250"/>
+
+                                        <!-- Source -->
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding Source}"
+                                                   ToolTip.Tip="{Binding Source}"
+                                                   Classes="path-text"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   MaxWidth="250"/>
+
+                                        <!-- Destination -->
+                                        <TextBlock Grid.Column="3"
+                                                   Text="{Binding Destination}"
+                                                   ToolTip.Tip="{Binding Destination}"
+                                                   Classes="path-text"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   MaxWidth="250"/>
+
+                                        <!-- Type -->
+                                        <Border Grid.Column="4" Classes="type-badge"
+                                                HorizontalAlignment="Center"
+                                                VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Type}"/>
+                                        </Border>
+
+                                        <!-- Actions -->
+                                        <StackPanel Grid.Column="5"
+                                                    Orientation="Horizontal"
+                                                    Spacing="4"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center">
+                                            <Button Classes="action-btn"
+                                                    ToolTip.Tip="Exécuter"
+                                                    Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).RunJobCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A"/>
+                                            </Button>
+                                            <Button Classes="action-btn"
+                                                    ToolTip.Tip="Modifier"
+                                                    Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ModifyJobCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <PathIcon Data="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" Foreground="#42A5F5"/>
+                                            </Button>
+                                            <Button Classes="action-btn"
+                                                    ToolTip.Tip="Supprimer"
+                                                    Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).DeleteJobCommand}"
+                                                    CommandParameter="{Binding}">
+                                                <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350"/>
+                                            </Button>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>
