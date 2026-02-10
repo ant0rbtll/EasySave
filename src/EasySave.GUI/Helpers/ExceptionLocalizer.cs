@@ -16,7 +16,7 @@ public static class ExceptionLocalizer
         if (Enum.TryParse<LocalizationKey>(errorKey, out var key))
         {
             var parameters = ex.Data.Keys
-                .Cast<string>()
+                .OfType<string>()
                 .Where(k => !string.Equals(k, "errorKey", StringComparison.Ordinal))
                 .OrderBy(k => k)
                 .Select(k => ex.Data[k]?.ToString() ?? string.Empty)
