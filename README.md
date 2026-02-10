@@ -1,4 +1,4 @@
-# EasySave v1.0
+# EasySave v1.1
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
 ![C#](https://img.shields.io/badge/C%23-12-239120?logo=csharp)
@@ -39,7 +39,7 @@ docker compose up dev
 
 - Sauvegardes Complètes et Différentielles
 - Interface CLI multilingue (Français/Anglais)
-- Logs journaliers JSON avec état temps réel
+- Logs journaliers JSON/XML avec état temps réel
 - Gestion jusqu'à 5 travaux de sauvegarde
 - Multi-plateforme : Windows, Linux, macOS
 - Clean Architecture avec injection de dépendances
@@ -116,9 +116,9 @@ Exécutez des travaux directement sans interaction :
 
 ### Fichiers Générés
 - **Travaux** : `jobs.json` - Configuration des travaux
-- **Logs** : `logs/log-2026-02-05.json` - Historique journalier
+- **Logs** : `logs/2026-02-05.json` ou `logs/2026-02-05.xml` - Historique journalier
 - **État** : `state.json` - Progression en temps réel
-- **Préférences** : `preferences.json` - Langue et configuration
+- **Préférences** : `user-preferences.json` - Langue, format de logs et configuration
 
 **Emplacements** :
 - Windows : `%APPDATA%/ProSoft/EasySave/`

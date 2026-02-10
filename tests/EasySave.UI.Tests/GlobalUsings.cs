@@ -1,0 +1,12 @@
+global using EasySave.Application;
+global using EasySave.Backup;
+global using EasySave.Configuration;
+global using EasySave.Core;
+global using EasySave.Localization;
+global using EasySave.Log;
+global using EasySave.Persistence;
+global using EasySave.State;
+global using EasySave.UI;
+global using EasySave.UI.Menu;
+global using EasySave.UI.Services;
+global using Xunit;
