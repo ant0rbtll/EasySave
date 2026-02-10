@@ -41,6 +41,7 @@ public partial class MainWindowViewModel : ViewModelBase
         Sidebar.RefreshTranslations();
         _configViewModel.RefreshTranslations();
         _homeViewModel.RefreshTranslations();
+        _manageViewModel.RefreshTranslations();
     }
     public void Navigate(string page)
     {
