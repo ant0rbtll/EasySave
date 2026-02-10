@@ -18,6 +18,7 @@ public class Program
 {
     // EasyLog expects this global mutex name; keep in sync with EasyLog.DailyFileLogger.
     private const string EasyLogDailyFileMutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile";
+    internal static Func<IServiceProvider> ServiceProviderFactory { get; set; } = InitServices;
 
     /// <summary>
     /// Application entry point.
@@ -25,7 +26,7 @@ public class Program
     /// <param name="args">Command-line arguments passed to the application.</param>
     public static void Main(string[] args)
     {
-        var provider = InitServices();
+        var provider = ServiceProviderFactory();
         var console = provider.GetRequiredService<ConsoleUI>();
 
         if (args.Length == 0)

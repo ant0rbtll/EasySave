@@ -1,7 +1,8 @@
 using System.Text.Json;
 using System.Xml.Linq;
 using EasySave.Configuration;
-using EasySave.Log;
+using LogEntry = EasySave.Log.LogEntry;
+using LogEventType = EasySave.Log.LogEventType;
 using EasySave.Core;
 
 namespace EasyLog.Tests;
@@ -19,7 +20,7 @@ public class DailyFileLoggerUnitTests
         var pathProvider = new TestPathProvider(tempDir.Path);
         using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
 
-        var entry = new EasySave.Log.LogEntry(
+        var entry = new LogEntry(
             local,
             "JobPaths",
             LogEventType.TransferFile,
@@ -65,7 +66,7 @@ public class DailyFileLoggerUnitTests
 
         using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
 
-        var entry = new EasySave.Log.LogEntry(
+        var entry = new LogEntry(
             new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
             "JobAppend",
             LogEventType.TransferFile,
@@ -94,7 +95,7 @@ public class DailyFileLoggerUnitTests
 
         using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
 
-        var entry = new EasySave.Log.LogEntry(
+        var entry = new LogEntry(
             new DateTime(2026, 2, 5, 11, 0, 0, DateTimeKind.Utc),
             "JobEmptyFile",
             LogEventType.TransferFile,
@@ -120,7 +121,7 @@ public class DailyFileLoggerUnitTests
 
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
 
-        var first = new EasySave.Log.LogEntry(
+        var first = new LogEntry(
             new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
             "JobFirst",
             LogEventType.TransferFile,
@@ -154,7 +155,7 @@ public class DailyFileLoggerUnitTests
 
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
 
-        var entry = new EasySave.Log.LogEntry(
+        var entry = new LogEntry(
             new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
             "JobBroken",
             LogEventType.Error,
@@ -187,7 +188,7 @@ public class DailyFileLoggerUnitTests
 
         using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
 
-        var entry = new EasySave.Log.LogEntry(
+        var entry = new LogEntry(
             new DateTime(2026, 2, 5, 12, 0, 0, DateTimeKind.Utc),
             "JobBom",
             LogEventType.TransferFile,
@@ -212,7 +213,7 @@ public class DailyFileLoggerUnitTests
         var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
 
         using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
-        var entry = new EasySave.Log.LogEntry(
+        var entry = new LogEntry(
             new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
             "JobXml",
             LogEventType.TransferFile,
@@ -237,7 +238,7 @@ public class DailyFileLoggerUnitTests
         var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
 
         using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
-        var first = new EasySave.Log.LogEntry(
+        var first = new LogEntry(
             new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
             "JobXml1",
             LogEventType.StartBackup,
@@ -262,14 +263,14 @@ public class DailyFileLoggerUnitTests
         Assert.Equal("JobXml2", entries[1].Element("BackupName")?.Value);
     }
 
-    private static List<EasySave.Log.LogEntry> ReadLogEntries(string path)
+    private static List<LogEntry> ReadLogEntries(string path)
     {
         var json = File.ReadAllText(path);
         var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-        return JsonSerializer.Deserialize<List<EasySave.Log.LogEntry>>(json, options) ?? [];
+        return JsonSerializer.Deserialize<List<LogEntry>>(json, options) ?? [];
     }
 
-    private static string SerializeEntry(EasySave.Log.LogEntry entry)
+    private static string SerializeEntry(LogEntry entry)
     {
         var options = new JsonSerializerOptions
         {

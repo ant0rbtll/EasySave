@@ -73,16 +73,16 @@ public class BackupApplicationServiceTests
     }
 
     /// <summary>
-    /// Verifies that GetJobById retrieves the expected job when a valid ID is provided.
+    /// Verifies that GetJob retrieves the expected job when a valid ID is provided.
     /// </summary>
     [Fact]
-    public void GetJobById_ShouldReturnCorrectJob()
+    public void GetJob_ShouldReturnCorrectJob()
     {
         int jobId = 10;
         var expectedJob = new BackupJob { Name = "SpecificJob" };
         _repoMock.Setup(r => r.GetById(jobId)).Returns(expectedJob);
 
-        var result = _service.GetJobById(jobId);
+        var result = _service.GetJob(jobId);
 
         Assert.NotNull(result);
         Assert.Equal("SpecificJob", result.Name);
@@ -103,14 +103,14 @@ public class BackupApplicationServiceTests
     }
 
     /// <summary>
-    /// Verifies that GetJobById returns null when the repository cannot find the requested job.
+    /// Verifies that GetJob returns null when the repository cannot find the requested job.
     /// </summary>
     [Fact]
-    public void GetJobById_WhenJobDoesNotExist_ShouldReturnNull()
+    public void GetJob_WhenJobDoesNotExist_ShouldReturnNull()
     {
         _repoMock.Setup(r => r.GetById(999)).Returns((BackupJob?)null);
 
-        var result = _service.GetJobById(999);
+        var result = _service.GetJob(999);
 
         Assert.Null(result);
     }
@@ -132,11 +132,11 @@ public class BackupApplicationServiceTests
     /// Verifies that attempting to run a non-existent job by ID does not cause an application crash.
     /// </summary>
     [Fact]
-    public void RunJobById_WhenJobDoesNotExist_ShouldNotCallEngine()
+    public void RunJob_WhenJobDoesNotExist_ShouldNotCallEngine()
     {
         _repoMock.Setup(r => r.GetById(888)).Returns((BackupJob?)null);
 
-        _service.RunJobById(888);
+        _service.RunJob(888);
 
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>()), Times.Never);
     }
@@ -156,24 +156,24 @@ public class BackupApplicationServiceTests
     /// Ensures that providing an empty array of IDs results in no interactions with the repository.
     /// </summary>
     [Fact]
-    public void RunJobsByIds_WithEmptyArray_ShouldNotCallRepository()
+    public void RunJobs_WithEmptyArray_ShouldNotCallRepository()
     {
-        _service.RunJobsByIds(new int[] { });
+        _service.RunJobs(new int[] { });
 
         _repoMock.Verify(r => r.GetById(It.IsAny<int>()), Times.Never);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>()), Times.Never);
     }
 
     /// <summary>
-    /// Verifies that RunJobsByIds calls the repository for each ID provided in the array.
+    /// Verifies that RunJobs calls the repository for each ID provided in the array.
     /// </summary>
     [Fact]
-    public void RunJobsByIds_ShouldCallRepositoryForEachId()
+    public void RunJobs_ShouldCallRepositoryForEachId()
     {
         int[] ids = { 1, 2, 3 };
         _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((BackupJob?)null);
 
-        _service.RunJobsByIds(ids);
+        _service.RunJobs(ids);
 
         _repoMock.Verify(r => r.GetById(1), Times.Once);
         _repoMock.Verify(r => r.GetById(2), Times.Once);
@@ -218,14 +218,14 @@ public class BackupApplicationServiceTests
     }
 
     /// <summary>
-    /// Ensures that RunJobsByIds gracefully ignores IDs that are not found in the repository.
+    /// Ensures that RunJobs gracefully ignores IDs that are not found in the repository.
     /// </summary>
     [Fact]
-    public void RunJobsByIds_WithMixedValidAndInvalidIds_ShouldContinueProcessing()
+    public void RunJobs_WithMixedValidAndInvalidIds_ShouldContinueProcessing()
     {
         _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((BackupJob?)null);
 
-        var exception = Record.Exception(() => _service.RunJobsByIds(new int[] { 1, 99 }));
+        var exception = Record.Exception(() => _service.RunJobs(new int[] { 1, 99 }));
 
         Assert.Null(exception);
         _repoMock.Verify(r => r.GetById(1), Times.Once);
@@ -259,14 +259,14 @@ public class BackupApplicationServiceTests
     }
 
     /// <summary>
-    /// Ensures that RunJobById does not call any engine logic if the job returned by repository is null.
+    /// Ensures that RunJob does not call any engine logic if the job returned by repository is null.
     /// </summary>
     [Fact]
-    public void RunJobById_WithNullResultFromRepo_ShouldNotCallEngine()
+    public void RunJob_WithNullResultFromRepo_ShouldNotCallEngine()
     {
         _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((BackupJob?)null);
 
-        _service.RunJobById(99);
+        _service.RunJob(99);
 
         _repoMock.Verify(r => r.GetById(99), Times.Once);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>()), Times.Never);
@@ -294,38 +294,38 @@ public class BackupApplicationServiceTests
         _repoMock.Verify(r => r.Add(It.Is<BackupJob>(j => j.Type == BackupType.Differential)), Times.Once);
     }
 
-    #region RunJob / RunJobById / RunJobsByIds / RunAllJobs with engine execution
+    #region RunJob / RunJobs / RunAllJobs with engine execution
 
     [Fact]
-    public void RunJob_WithValidJob_ShouldCallEngineExecute()
-    {
-        var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
-
-        _service.RunJob(job);
-
-        _engineMock.Verify(e => e.Execute(job), Times.Once);
-    }
-
-    [Fact]
-    public void RunJobById_WithExistingJob_ShouldCallEngineExecute()
+    public void RunJob_WithExistingJob_ShouldCallEngineExecute()
     {
         var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job);
 
-        _service.RunJobById(1);
+        _service.RunJob(1);
 
         _engineMock.Verify(e => e.Execute(job), Times.Once);
     }
 
     [Fact]
-    public void RunJobsByIds_WithExistingJobs_ShouldCallEngineExecuteForEach()
+    public void RunJob_WithMissingJob_ShouldNotCallEngineExecute()
+    {
+        _repoMock.Setup(r => r.GetById(1)).Returns((BackupJob?)null);
+
+        _service.RunJob(1);
+
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>()), Times.Never);
+    }
+
+    [Fact]
+    public void RunJobs_WithExistingJobs_ShouldCallEngineExecuteForEach()
     {
         var job1 = new BackupJob { Id = 1, Name = "Job1", Source = "/src1", Destination = "/dst1", Type = BackupType.Complete };
         var job2 = new BackupJob { Id = 2, Name = "Job2", Source = "/src2", Destination = "/dst2", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job1);
         _repoMock.Setup(r => r.GetById(2)).Returns(job2);
 
-        _service.RunJobsByIds(new[] { 1, 2 });
+        _service.RunJobs(new[] { 1, 2 });
 
         _engineMock.Verify(e => e.Execute(job1), Times.Once);
         _engineMock.Verify(e => e.Execute(job2), Times.Once);
