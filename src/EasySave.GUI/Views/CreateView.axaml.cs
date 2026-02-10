@@ -10,7 +10,10 @@ public partial class CreateView : UserControl
     {
         InitializeComponent();
     }
-
+    /// <summary>
+    /// Opening a file explorer to select the source folder
+    /// </summary>
+    #region BrowseSource_Click
     private async void BrowseSource_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is not CreateViewModel vm)
@@ -26,9 +29,15 @@ public partial class CreateView : UserControl
         if (!string.IsNullOrWhiteSpace(result))
         {
             vm.SetSourcePath(result);
+            vm.ValidateSourcePathOnLostFocus();
         }
     }
+    #endregion
 
+    /// <summary>
+    /// Opening a file explorer to select the destination folder 
+    /// </summary>
+    #region BrowseDestination_Click
     private async void BrowseDestination_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is not CreateViewModel vm)
@@ -44,7 +53,31 @@ public partial class CreateView : UserControl
         if (!string.IsNullOrWhiteSpace(result))
         {
             vm.SetDestinationPath(result);
+            vm.ValidateDestinationPathOnLostFocus();
         }
     }
+    #endregion
+
+    /// <summary>
+    /// Loss of focus on the target area
+    /// </summary>
+    #region Source_LostFocus
+    private void Source_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is CreateViewModel vm)
+            vm.ValidateSourcePathOnLostFocus();
+    }
+
+    private void Destination_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is CreateViewModel vm)
+            vm.ValidateDestinationPathOnLostFocus();
+    }
+    private void Name_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is CreateViewModel vm)
+            vm.ValidateNameOnLostFocus();
+    }
+    #endregion
 }
 
