@@ -9,6 +9,43 @@ public partial class CreateView : UserControl
     public CreateView()
     {
         InitializeComponent();
+        DataContext = new CreateViewModel(); 
+    }
+
+    private async void BrowseSource_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is not CreateViewModel vm)
+            return;
+
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Choisir le dossier source"
+        };
+
+        var result = await dialog.ShowAsync((Window)this.VisualRoot!);
+
+        if (!string.IsNullOrWhiteSpace(result))
+        {
+            vm.SetSourcePath(result);
+        }
+    }
+
+    private async void BrowseDestination_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is not CreateViewModel vm)
+            return;
+
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Choisir le dossier de destination"
+        };
+
+        var result = await dialog.ShowAsync((Window)this.VisualRoot!);
+
+        if (!string.IsNullOrWhiteSpace(result))
+        {
+            vm.SetDestinationPath(result);
+        }
     }
     /// <summary>
     /// Opening a file explorer to select the source folder
