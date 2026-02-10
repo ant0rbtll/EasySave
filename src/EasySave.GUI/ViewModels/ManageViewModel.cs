@@ -257,12 +257,22 @@ public partial class ManageViewModel : ViewModelBase
         IsStatusBannerVisible = false;
 
         bool success = false;
-        string? errorMessage = null;
+        string errorMessage = string.Empty;
 
         try
         {
-            await Task.Run(() => _applicationService.RunJob(job.Id));
-            success = true;
+            // Ensure the job still exists before attempting to run it so we don't report success for a no-op.
+            var existingJob = await Task.Run(() => _applicationService.GetJob(job.Id));
+            if (existingJob is null)
+            {
+                // Use a specific, localized error when the job cannot be found.
+                errorMessage = _localizationService.TranslateText(LocalizationKey.error_job_not_found);
+            }
+            else
+            {
+                await Task.Run(() => _applicationService.RunJob(job.Id));
+                success = true;
+            }
         }
         catch (Exception ex)
         {
@@ -286,7 +296,7 @@ public partial class ManageViewModel : ViewModelBase
                 }
                 else
                 {
-                    StatusMessage = errorMessage ?? _localizationService.TranslateText(LocalizationKey.error_default);
+                    StatusMessage = errorMessage;
                     IsStatusError = true;
                 }
                 IsStatusBannerVisible = true;
@@ -357,7 +367,7 @@ public partial class ManageViewModel : ViewModelBase
         IsStatusBannerVisible = false;
 
         bool success = false;
-        string? errorMessage = null;
+        string errorMessage = string.Empty;
 
         try
         {
@@ -384,7 +394,7 @@ public partial class ManageViewModel : ViewModelBase
                 }
                 else
                 {
-                    StatusMessage = errorMessage ?? _localizationService.TranslateText(LocalizationKey.error_default);
+                    StatusMessage = errorMessage;
                     IsStatusError = true;
                 }
                 IsStatusBannerVisible = true;
