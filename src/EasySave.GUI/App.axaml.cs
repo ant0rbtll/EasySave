@@ -6,7 +6,6 @@ using Avalonia.Markup.Xaml;
 using EasySave.Configuration;
 using EasySave.GUI.ViewModels;
 using EasySave.GUI.Views;
-using EasySave.Localization;
 using EasySave.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
