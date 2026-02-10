@@ -265,6 +265,8 @@ public class ConsoleUI
             foreach (BackupJob job in backupJobList)
             {
                 Console.WriteLine(job.Id + " - " + job.Name);
+                string lastExecution = job.LastExecutionDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "never";
+                Console.WriteLine($"    LastExecution: {lastExecution} | Active: {job.IsActive}");
             }
         }
         catch (Exception e)
@@ -552,27 +554,31 @@ public class ConsoleUI
     /// </summary>
     public void ShowJobDetails(BackupJob job)
     {
+        var refreshedJob = _backupApplicationService.GetJobById(job.Id) ?? job;
         Action renderJobDetails = () =>
         {
             ShowMessage(LocalizationKey.backupjob_id, false);
-            Console.WriteLine($": {job.Id}");
+            Console.WriteLine($": {refreshedJob.Id}");
 
             ShowMessage(LocalizationKey.backupjob_name, false);
-            Console.WriteLine($": {job.Name}");
+            Console.WriteLine($": {refreshedJob.Name}");
 
             ShowMessage(LocalizationKey.backupjob_source, false);
-            Console.WriteLine($": {job.Source}");
+            Console.WriteLine($": {refreshedJob.Source}");
 
             ShowMessage(LocalizationKey.backupjob_destination, false);
-            Console.WriteLine($": {job.Destination}");
+            Console.WriteLine($": {refreshedJob.Destination}");
 
             ShowMessage(LocalizationKey.backupjob_type, false);
-            Console.WriteLine($": {job.Type}");
+            Console.WriteLine($": {refreshedJob.Type}");
+
+            Console.WriteLine($": LastExecution {(refreshedJob.LastExecutionDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "never")}");
+            Console.WriteLine($": Active {refreshedJob.IsActive}");
 
             Console.WriteLine();
         };
 
-        var menuConfig = _menuFactory.CreateJobDetailsMenu(job, renderJobDetails);
+        var menuConfig = _menuFactory.CreateJobDetailsMenu(refreshedJob, renderJobDetails);
         _menuService.ShowMenuWithActions(menuConfig);
     }
 

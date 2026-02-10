@@ -1,6 +1,9 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
+using EasySave.Configuration;
+using EasySave.State;
+using System.Text.Json;
 
 namespace EasySave.Application;
 
@@ -9,10 +12,14 @@ namespace EasySave.Application;
 /// </summary>
 /// <param name="repo">The repository used for data persistence.</param>
 /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
-public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine backupEngine)
+public class BackupApplicationService(
+    IBackupJobRepository repo,
+    IBackupEngine backupEngine,
+    IPathProvider pathProvider)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
+    private readonly IPathProvider _pathProvider = pathProvider;
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -93,7 +100,13 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     /// <returns>A list of <see cref="BackupJob"/> objects.</returns>
     public List<BackupJob> GetAllJobs()
     {
-        return _repo.GetAll();
+        var jobs = _repo.GetAll();
+        var stateEntries = LoadStateEntries();
+        foreach (var job in jobs)
+        {
+            ApplyState(job, stateEntries);
+        }
+        return jobs;
     }
 
     /// <summary>
@@ -103,7 +116,10 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     /// <returns>The BackupJob if found, null otherwise.</returns>
     public BackupJob? GetJobById(int id)
     {
-        return _repo.GetById(id);
+        var job = _repo.GetById(id);
+        if (job == null) return null;
+        ApplyState(job, LoadStateEntries());
+        return job;
     }
 
     /// <summary>
@@ -113,5 +129,52 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     public void UpdateJob(BackupJob job)
     {
         _repo.Update(job);
+    }
+
+    private Dictionary<int, StateEntry> LoadStateEntries()
+    {
+        try
+        {
+            string path = _pathProvider.GetStatePath();
+            if (!File.Exists(path))
+            {
+                return new Dictionary<int, StateEntry>();
+            }
+
+            string json = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return new Dictionary<int, StateEntry>();
+            }
+
+            return JsonSerializer.Deserialize<Dictionary<int, StateEntry>>(json)
+                   ?? new Dictionary<int, StateEntry>();
+        }
+        catch (JsonException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+        catch (IOException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+    }
+
+    private static void ApplyState(BackupJob job, Dictionary<int, StateEntry> entries)
+    {
+        if (entries.TryGetValue(job.Id, out var entry))
+        {
+            job.LastExecutionDate = entry.Timestamp;
+            job.IsActive = entry.Status == BackupStatus.Active;
+        }
+        else
+        {
+            job.LastExecutionDate = null;
+            job.IsActive = false;
+        }
     }
 }
