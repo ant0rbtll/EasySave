@@ -48,13 +48,20 @@ public partial class ManageViewModel : ViewModelBase
     private Models.BackupJob? pendingJob;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSuccessBannerVisible))]
+    [NotifyPropertyChangedFor(nameof(IsErrorBannerVisible))]
     private bool isStatusBannerVisible;
 
     [ObservableProperty]
     private string statusMessage = string.Empty;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSuccessBannerVisible))]
+    [NotifyPropertyChangedFor(nameof(IsErrorBannerVisible))]
     private bool isStatusError;
+
+    public bool IsSuccessBannerVisible => IsStatusBannerVisible && !IsStatusError;
+    public bool IsErrorBannerVisible => IsStatusBannerVisible && IsStatusError;
 
     [ObservableProperty]
     private bool isDeleteDialogOpen;
@@ -254,9 +261,7 @@ public partial class ManageViewModel : ViewModelBase
         {
             await Task.Run(() =>
             {
-                var coreJob = _applicationService.GetJobById(job.Id);
-                if (coreJob is null)
-                    throw new KeyNotFoundException();
+                var coreJob = _applicationService.GetJobById(job.Id) ?? throw new KeyNotFoundException();
                 _applicationService.RunJob(coreJob);
             });
             success = true;
@@ -267,12 +272,14 @@ public partial class ManageViewModel : ViewModelBase
         }
         finally
         {
+            var jobs = await Task.Run(FetchJobs);
+
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 IsRunning = false;
                 RunningJobName = string.Empty;
                 PendingJob = null;
-                LoadJobs();
+                ApplyJobs(jobs);
 
                 if (success)
                 {
@@ -296,7 +303,9 @@ public partial class ManageViewModel : ViewModelBase
 
     private async Task AutoDismissBannerAsync()
     {
-        _dismissCts?.Cancel();
+        var old = _dismissCts;
+        old?.Cancel();
+        old?.Dispose();
         var cts = _dismissCts = new CancellationTokenSource();
 
         try
@@ -362,10 +371,12 @@ public partial class ManageViewModel : ViewModelBase
         }
         finally
         {
+            var jobs = await Task.Run(FetchJobs);
+
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 PendingDeleteJob = null;
-                LoadJobs();
+                ApplyJobs(jobs);
 
                 if (success)
                 {
@@ -397,26 +408,34 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private void LoadJobs()
     {
-        _allJobs.Clear();
+        ApplyJobs(FetchJobs());
+    }
+
+    private List<Models.BackupJob> FetchJobs()
+    {
         try
         {
-            var coreJobs = _applicationService.GetAllJobs();
-            foreach (var job in coreJobs)
-            {
-                _allJobs.Add(new Models.BackupJob
+            return [.. _applicationService.GetAllJobs()
+                .Select(job => new Models.BackupJob
                 {
                     Id = job.Id,
                     Name = job.Name,
                     Source = job.Source,
                     Destination = job.Destination,
                     Type = job.Type
-                });
-            }
+                })];
         }
         catch (Exception)
         {
             // Repository may not be initialized yet
+            return [];
         }
+    }
+
+    private void ApplyJobs(List<Models.BackupJob> jobs)
+    {
+        _allJobs.Clear();
+        _allJobs.AddRange(jobs);
         Refresh();
     }
 }

@@ -111,13 +111,7 @@
                 CornerRadius="6"
                 Padding="12,8"
                 Margin="0,0,0,12"
-                IsVisible="{Binding IsStatusBannerVisible}">
-            <Border.IsVisible>
-                <MultiBinding Converter="{x:Static BoolConverters.And}">
-                    <Binding Path="IsStatusBannerVisible"/>
-                    <Binding Path="!IsStatusError"/>
-                </MultiBinding>
-            </Border.IsVisible>
+                IsVisible="{Binding IsSuccessBannerVisible}">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0"
                            Text="{Binding StatusMessage}"
@@ -143,13 +137,8 @@
                 Background="#1AEF5350"
                 CornerRadius="6"
                 Padding="12,8"
-                Margin="0,0,0,12">
-            <Border.IsVisible>
-                <MultiBinding Converter="{x:Static BoolConverters.And}">
-                    <Binding Path="IsStatusBannerVisible"/>
-                    <Binding Path="IsStatusError"/>
-                </MultiBinding>
-            </Border.IsVisible>
+                Margin="0,0,0,12"
+                IsVisible="{Binding IsErrorBannerVisible}">
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0"
                            Text="{Binding StatusMessage}"
