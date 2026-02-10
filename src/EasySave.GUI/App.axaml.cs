@@ -16,14 +16,14 @@ namespace EasySave.GUI;
 public partial class App : Avalonia.Application
 {
 
-    private readonly IServiceProvider _services;
+    private readonly IServiceProvider? _services;
 
-    // Constructeur par d�faut pour le designer
-    public App() : this(null!)
+    // Constructeur par défaut pour le designer
+    public App()
     {
     }
 
-    // Constructeur avec injection de d�pendances
+    // Constructeur avec injection de dépendances
     public App(IServiceProvider services)
     {
         _services = services;
@@ -35,23 +35,18 @@ public partial class App : Avalonia.Application
         AvaloniaXamlLoader.Load(this);
     }
 
-    /// <summary>
-    /// Acc�s global au ServiceProvider pour r�solution de d�pendances
-    /// </summary>
-    public static IServiceProvider Services { get; private set; } = null!;
-
     public override void OnFrameworkInitializationCompleted()
     {
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && _services is not null)
         {
             DisableAvaloniaDataAnnotationValidation();
 
-            // Cr�ation des services
+            // Création des services
             var pathProvider = _services.GetRequiredService<IPathProvider>();
             var preferencesRepository = _services.GetRequiredService<IUserPreferencesRepository>();
             var localizationService = _services.GetRequiredService<ILocalizationService>();
 
-            // Chargement des pr�f�rences sauvegard�es
+            // Chargement des préférences sauvegardées
             var preferences = preferencesRepository.Load();
             var language = localizationService.AllCultures.ContainsKey(preferences.Language)
                 ? preferences.Language

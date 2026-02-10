@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace EasySave.GUI.Models
 {
-    public abstract class IModel : INotifyPropertyChanged
+    public abstract class ModelBase : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler? PropertyChanged;
 

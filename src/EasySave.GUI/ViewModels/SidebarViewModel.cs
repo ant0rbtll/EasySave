@@ -6,7 +6,7 @@ namespace EasySave.GUI.ViewModels;
 
 public partial class SidebarViewModel: ViewModelBase
 {
-    private Action<string> _navigate;
+    private Action<string>? _navigate;
     private readonly ILocalizationService _localizationService;
 
     public void SetNavigateAction(Action<string> navigate)
@@ -38,8 +38,8 @@ public partial class SidebarViewModel: ViewModelBase
         ConfigLabel = _localizationService.TranslateText(LocalizationKey.gui_sidebar_config);
     }
 
-    [RelayCommand] private void GoToCreate() => _navigate("creation");
-    [RelayCommand] private void GoToManage() => _navigate("manage");
-    [RelayCommand] private void GoToLog() => _navigate("log");
-    [RelayCommand] private void GoToConfig() => _navigate("conf");
+    [RelayCommand] private void GoToCreate() => _navigate?.Invoke("creation");
+    [RelayCommand] private void GoToManage() => _navigate?.Invoke("manage");
+    [RelayCommand] private void GoToLog() => _navigate?.Invoke("log");
+    [RelayCommand] private void GoToConfig() => _navigate?.Invoke("conf");
 }

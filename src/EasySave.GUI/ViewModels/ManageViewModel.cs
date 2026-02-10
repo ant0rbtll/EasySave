@@ -124,19 +124,14 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private void DeleteJob(Models.BackupJob job)
     {
-        try
-        {
-            //TODO ask confirmation via popup
-            //_applicationService.RemoveJob(job.Id);
-            //_allJobs.Remove(job);
-            //Refresh();
-        }
-        catch (Exception ex)
-        {
-
-        }
+        //TODO ask confirmation via popup
+        //_applicationService.RemoveJob(job.Id);
+        //_allJobs.Remove(job);
+        //Refresh();
 
         // TODO: implement delete confirmation dialog
+
+        // TODO: try catch
     }
 
     [RelayCommand]

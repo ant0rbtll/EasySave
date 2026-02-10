@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace EasySave.GUI.Models
 {
-    public class BackupJob : IModel
+    public class BackupJob : ModelBase
     {
         public int Id { get; set; }
 
-        private string name;
+        private string name = String.Empty;
 
 		public string Name
 		{
@@ -19,7 +19,7 @@ namespace EasySave.GUI.Models
 			set { name = value; OnNotifyPropertyChanged(nameof(Name)); }
 		}
 
-		private string source;
+		private string source = String.Empty;
 
 		public string Source
 		{
@@ -27,7 +27,7 @@ namespace EasySave.GUI.Models
 			set { source = value; OnNotifyPropertyChanged(nameof(Source)); }
 		}
 
-		private string destination;
+		private string destination = String.Empty;
 
 		public string Destination
 		{

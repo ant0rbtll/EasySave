@@ -13,7 +13,7 @@ public partial class ConfigViewModel : ViewModelBase
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly ILocalizationService _localizationService;
     private readonly IPathProvider _pathProvider;
-    private Action _onLanguageChanged;
+    private Action _onLanguageChanged = static() => {};
 
     /// <summary>
     /// Fonction fournie par la couche UI pour ouvrir le sélecteur de dossier natif.
