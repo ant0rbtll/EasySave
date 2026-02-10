@@ -1,6 +1,8 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
+using EasySave.Log;
+using EasySave.Configuration;
 
 namespace EasySave.Application;
 
@@ -9,10 +11,15 @@ namespace EasySave.Application;
 /// </summary>
 /// <param name="repo">The repository used for data persistence.</param>
 /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
-public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine backupEngine)
+public class BackupApplicationService(
+    IBackupJobRepository repo,
+    IBackupEngine backupEngine,
+    IPathProvider pathProvider
+    )
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
+    private readonly IPathProvider _pathProvider = pathProvider;
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -104,9 +111,37 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     {
         _repo.Update(job);
     }
-
     private void ExecuteJob(BackupJob job)
     {
         _engine.Execute(job);
     }
+
+
+    /// <summary>
+    /// Get all the dates there has been logs
+    /// </summary>
+    /// <returns>a list of dates</returns>
+    public List<string> GetLogsDate()
+    {
+        List<string> dates = new();
+        var logsPath = _pathProvider.ResolveLogsDirectory();
+
+        string[] files = Directory.GetFiles(logsPath);
+        foreach (string file in files)
+        {
+            dates.Add(Path.GetFileNameWithoutExtension(file));
+        }
+        return dates;
+    } 
+
+    ///// <summary>
+    ///// YYYY-MM-DD
+    ///// Get the logs by a date
+    ///// </summary>
+    ///// <param name="date">The date of the searching logs</param>
+    ///// <returns> The logs of the date given</returns>
+    //public List<LogEntry> GetLogsByDate(string date)
+    //{
+
+    //}
 }
