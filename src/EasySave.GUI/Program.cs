@@ -24,6 +24,25 @@ sealed class Program
     [STAThread]
     public static void Main(string[] args)
     {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
+            Console.Error.WriteLine($"[EasySave] Unhandled exception: {e.ExceptionObject}");
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, e) =>
+        {
+            // Ignore known harmless Avalonia/DBus errors on Linux
+            if (e.Exception.InnerException is not null
+                && e.Exception.InnerException.GetType().Name == "DBusException")
+            {
+                e.SetObserved();
+                return;
+            }
+
+            Console.Error.WriteLine($"[EasySave] Unobserved task exception: {e.Exception}");
+            e.SetObserved();
+        };
+
         // Initialiser les services AVANT de démarrer Avalonia
         var services = InitServices();
 
