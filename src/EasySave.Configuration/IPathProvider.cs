@@ -38,5 +38,7 @@ namespace EasySave.Configuration
         /// </summary>
         /// <param name="directory">The custom directory path, or null to reset to default.</param>
         void SetLogDirectoryOverride(string? directory);
+
+        string ResolveLogsDirectory();
     }
 }

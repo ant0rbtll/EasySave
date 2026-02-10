@@ -1,6 +1,7 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
+using EasySave.Log;
 using EasySave.Configuration;
 using EasySave.State;
 using System.Text.Json;
@@ -120,7 +121,6 @@ public class BackupApplicationService(
     {
         _repo.Update(job);
     }
-
     private void ExecuteJob(BackupJob job)
     {
         _engine.Execute(job);
@@ -178,4 +178,33 @@ public class BackupApplicationService(
             job.IsActive = false;
         }
     }
+
+
+    /// <summary>
+    /// Get all the dates there has been logs
+    /// </summary>
+    /// <returns>a list of dates</returns>
+    public List<string> GetLogsDate()
+    {
+        List<string> dates = new();
+        var logsPath = _pathProvider.ResolveLogsDirectory();
+
+        string[] files = Directory.GetFiles(logsPath);
+        foreach (string file in files)
+        {
+            dates.Add(Path.GetFileNameWithoutExtension(file));
+        }
+        return dates;
+    } 
+
+    ///// <summary>
+    ///// YYYY-MM-DD
+    ///// Get the logs by a date
+    ///// </summary>
+    ///// <param name="date">The date of the searching logs</param>
+    ///// <returns> The logs of the date given</returns>
+    //public List<LogEntry> GetLogsByDate(string date)
+    //{
+
+    //}
 }
