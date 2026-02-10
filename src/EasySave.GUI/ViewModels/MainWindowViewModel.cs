@@ -1,3 +1,5 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace EasySave.GUI.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
@@ -16,7 +18,6 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         CreateViewModel createViewModel,
         ManageViewModel manageViewModel,
-        ProgressViewModel progressViewModel,
         LogViewModel logViewModel,
         ConfigViewModel configViewModel,
         SidebarViewModel sidebarViewModel,
@@ -25,7 +26,6 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _createViewModel = createViewModel;
         _manageViewModel = manageViewModel;
-        _progressViewModel = progressViewModel;
         _logViewModel = logViewModel;
         _configViewModel = configViewModel;
         _homeViewModel = homeViewModel;

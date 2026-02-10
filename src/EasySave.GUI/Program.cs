@@ -68,7 +68,6 @@ sealed class Program
 
         services.AddTransient<CreateViewModel>();
         services.AddTransient<ManageViewModel>();
-        services.AddTransient<ProgressViewModel>();
         services.AddTransient<LogViewModel>();
         services.AddTransient<ConfigViewModel>();
         services.AddTransient<SidebarViewModel>();
