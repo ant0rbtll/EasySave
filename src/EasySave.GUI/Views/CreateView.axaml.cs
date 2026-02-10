@@ -9,7 +9,6 @@ public partial class CreateView : UserControl
     public CreateView()
     {
         InitializeComponent();
-        DataContext = new CreateViewModel(); 
     }
 
     private async void BrowseSource_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

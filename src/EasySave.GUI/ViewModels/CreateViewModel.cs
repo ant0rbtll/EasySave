@@ -1,9 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Core;
+using EasySave.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Windows.Input;
+using EasySave.Configuration;
+using EasySave.Localization;
+using EasySave.Application;
 
 namespace EasySave.GUI.ViewModels;
 
@@ -21,6 +25,8 @@ public partial class CreateViewModel : ViewModelBase
     [ObservableProperty]
     private BackupType selectedBackupType = BackupType.Complete;
 
+    private BackupApplicationService _app;
+
     public IReadOnlyList<BackupType> BackupTypes { get; } =
         new[] { BackupType.Complete, BackupType.Differential };
 
@@ -30,10 +36,13 @@ public partial class CreateViewModel : ViewModelBase
 
     public Action<BackupJob>? OnJobCreated { get; set; }
 
-    public CreateViewModel()
+    public CreateViewModel(
+    BackupApplicationService back
+    )
     {
         CreateJobCommand = new RelayCommand(CreateJob, CanCreateJob);
         CancelCommand = new RelayCommand(ResetForm);
+        _app = back;
     }
 
     private bool CanCreateJob() =>
@@ -50,9 +59,13 @@ public partial class CreateViewModel : ViewModelBase
             Destination = DestinationPath,
             Type = SelectedBackupType
         };
+        _app.CreateJob(
+            job.Name = Name,
+            job.Source = SourcePath,
+            job.Destination = DestinationPath,
+            job.Type = SelectedBackupType
+        );
 
-        OnJobCreated?.Invoke(job);
-        ResetForm();
     }
 
     private void ResetForm()
@@ -71,4 +84,5 @@ public partial class CreateViewModel : ViewModelBase
 
     public void SetSourcePath(string path) => SourcePath = path;
     public void SetDestinationPath(string path) => DestinationPath = path;
+
 }
