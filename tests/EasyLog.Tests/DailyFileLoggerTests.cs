@@ -14,7 +14,8 @@ public class DailyFileLoggerTests
     [Fact]
     public void ExecuteBackup_WritesTodayLogWithRealData()
     {
-        var pathProvider = new DefaultPathProvider();
+        using var tempDir = new TempDirectory();
+        var pathProvider = new TestPathProvider(tempDir.Path);
         var logger = new DailyFileLogger(
             new JsonLogFormatter(),
             pathProvider,
@@ -29,7 +30,6 @@ public class DailyFileLoggerTests
         var stateWriter = new RealTimeStateWriter(pathProvider, state);
         var engine = new BackupEngine(fs, transfer, stateWriter, logger);
 
-        using var tempDir = new TempDirectory();
         var sourceDir = Path.Combine(tempDir.Path, "source");
         var destDir = Path.Combine(tempDir.Path, "dest");
         Directory.CreateDirectory(sourceDir);
@@ -58,7 +58,7 @@ public class DailyFileLoggerTests
             Type = BackupType.Complete
         };
 
-        var today = DateTime.Now.Date;
+        var today = DateTime.UtcNow.Date;
 
         engine.Execute(job);
 
@@ -116,6 +116,58 @@ public class DailyFileLoggerTests
             catch
             {
                 // Best-effort cleanup.
+            }
+        }
+    }
+
+    private sealed class TestPathProvider(string rootPath) : IPathProvider
+    {
+        private readonly string _rootPath = rootPath;
+
+        public string GetDailyLogPath(DateTime date, LogFormat format = LogFormat.Json)
+        {
+            var extension = format == LogFormat.Xml ? "xml" : "json";
+            var path = Path.Combine(_rootPath, "logs", $"{date:yyyy-MM-dd}.{extension}");
+            EnsureFile(path);
+            return path;
+        }
+
+        public string GetStatePath()
+        {
+            var path = Path.Combine(_rootPath, "state.json");
+            EnsureFile(path);
+            return path;
+        }
+
+        public string GetJobsConfigPath()
+        {
+            var path = Path.Combine(_rootPath, "jobs.json");
+            EnsureFile(path);
+            return path;
+        }
+
+        public string GetUserPreferencesPath()
+        {
+            var path = Path.Combine(_rootPath, "user-preferences.json");
+            EnsureFile(path);
+            return path;
+        }
+
+        public void SetLogDirectoryOverride(string? directory)
+        {
+        }
+
+        private static void EnsureFile(string path)
+        {
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            if (!File.Exists(path))
+            {
+                File.WriteAllText(path, string.Empty);
             }
         }
     }

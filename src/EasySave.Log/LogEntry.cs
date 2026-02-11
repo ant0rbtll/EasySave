@@ -11,5 +11,6 @@ public record LogEntry(
     string SourcePathUNC,
     string DestinationPathUNC,
     long FileSizeBytes,
-    long TransferTimeMs
+    long TransferTimeMs,
+    long EncryptionTimeMs = 0
 );

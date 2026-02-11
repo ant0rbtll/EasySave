@@ -26,7 +26,8 @@ public sealed class XmlLogFormatter : ILogFormatter, ILogFileLayout
             new XElement("SourcePathUNC", entry.SourcePathUNC),
             new XElement("DestinationPathUNC", entry.DestinationPathUNC),
             new XElement("FileSizeBytes", entry.FileSizeBytes),
-            new XElement("TransferTimeMs", entry.TransferTimeMs)
+            new XElement("TransferTimeMs", entry.TransferTimeMs),
+            new XElement("EncryptionTimeMs", entry.EncryptionTimeMs)
         );
 
         var settings = new XmlWriterSettings
