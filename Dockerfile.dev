@@ -24,6 +24,7 @@ COPY src/EasySave.State/*.csproj ./src/EasySave.State/
 COPY src/EasyLog/*.csproj ./src/EasyLog/
 COPY src/EasySave.Log/*.csproj ./src/EasySave.Log/
 COPY src/EasySave.GUI/*.csproj ./src/EasySave.GUI/
+COPY EasySave.AppCommon/*.csproj ./EasySave.AppCommon/
 
 
 # Copier TOUS les fichiers .csproj de tests/
@@ -47,4 +48,4 @@ COPY . .
 EXPOSE 5000
 
 # Commande par défaut - démarrer l'application UI
-CMD ["dotnet", "watch", "run", "--project", "src/EasySave.UI/EasySave.UI.csproj"]
+CMD ["dotnet", "watch", "run", "--project", "EasySave.AppCommon/EasySave.AppCommon.csproj"]

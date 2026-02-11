@@ -1,11 +1,13 @@
 using System.Reflection;
+using EasySave.AppCommon;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EasySave.UI.Tests;
 
 public class ProgramTests
 {
     [Fact]
-    public void Main_WithNoArgs_CallsConsoleMainMenu()
+    public void Host_Run_WithNoArgs_CallsConsoleMainMenu()
     {
         var app = CreateApplicationService(out _);
         var console = new FakeConsoleAdapter();
@@ -39,23 +41,19 @@ public class ProgramTests
             jobsFlow,
             settingsFlow);
 
-        var previousFactory = Program.ServiceProviderFactory;
-        Program.ServiceProviderFactory = () => new FakeServiceProvider(ui);
-        try
-        {
-            Program.Main([]);
-        }
-        finally
-        {
-            Program.ServiceProviderFactory = previousFactory;
-        }
+        var services = new ServiceCollection();
+        services.AddSingleton(ui);
+        var serviceProvider = services.BuildServiceProvider();
+
+        var host = new Host();
+        host.Run(serviceProvider, []);
 
         Assert.Single(menuService.ShownMenuConfigs);
         Assert.Equal(LocalizationKey.menu, menuService.ShownMenuConfigs[0].Label);
     }
 
     [Fact]
-    public void Main_WithArgs_CallsConsoleRunFromArgs()
+    public void Host_Run_WithArgs_CallsConsoleRunFromArgs()
     {
         var app = CreateApplicationService(out var engine);
         app.CreateJob("A", "S", "D", BackupType.Complete);
@@ -91,28 +89,31 @@ public class ProgramTests
             jobsFlow,
             settingsFlow);
 
-        var previousFactory = Program.ServiceProviderFactory;
-        Program.ServiceProviderFactory = () => new FakeServiceProvider(ui);
-        try
-        {
-            Program.Main(["1"]);
-        }
-        finally
-        {
-            Program.ServiceProviderFactory = previousFactory;
-        }
+        var services = new ServiceCollection();
+        services.AddSingleton(ui);
+        var serviceProvider = services.BuildServiceProvider();
+
+        var host = new Host();
+        host.Run(serviceProvider, ["1"]);
 
         Assert.Single(engine.ExecutedJobs);
         Assert.Equal(1, menuService.WaitCalls);
     }
 
     [Fact]
-    public void InitServices_ResolvesExpectedCoreServices()
+    public void ApplicationManager_ResolvesExpectedCoreServices()
     {
-        var initServices = typeof(Program).GetMethod("InitServices", BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(initServices);
+        var manager = new ApplicationManager([]);
 
-        var provider = (IServiceProvider)initServices!.Invoke(null, null)!;
+        // Use the Host to add UI-specific services, then verify core services resolve
+        var servicesField = typeof(ApplicationManager).GetField("_services", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(servicesField);
+
+        var services = (IServiceCollection)servicesField!.GetValue(manager)!;
+        var host = new Host();
+        host.ConfigureServices(services, []);
+
+        var provider = services.BuildServiceProvider();
         try
         {
             Assert.NotNull(provider.GetService(typeof(ConsoleUI)));
@@ -136,7 +137,7 @@ public class ProgramTests
     [Fact]
     public void CreateLogger_WhenPathProviderThrows_ReturnsNoOpLogger()
     {
-        var createLogger = typeof(Program).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
+        var createLogger = typeof(ApplicationManager).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(createLogger);
 
         var logger = (ILogger)createLogger!.Invoke(null, [new ThrowingPathProvider()])!;
@@ -147,7 +148,7 @@ public class ProgramTests
     [Fact]
     public void CreateLogger_WithXmlPreferences_UsesXmlFormatOnWrite()
     {
-        var createLogger = typeof(Program).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
+        var createLogger = typeof(ApplicationManager).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(createLogger);
 
         var pathProvider = new RecordingPathProvider(LogFormat.Xml);
@@ -168,7 +169,7 @@ public class ProgramTests
     [Fact]
     public void CreateLogger_WithJsonPreferences_UsesJsonFormatOnWrite()
     {
-        var createLogger = typeof(Program).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
+        var createLogger = typeof(ApplicationManager).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(createLogger);
 
         var pathProvider = new RecordingPathProvider(LogFormat.Json);
@@ -253,18 +254,5 @@ public class ProgramTests
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
         engine = new FakeBackupEngine();
         return new BackupApplicationService(repository, engine, Moq.Mock.Of<IBackupJobStateService>());
-    }
-
-    private sealed class FakeServiceProvider(ConsoleUI ui) : IServiceProvider
-    {
-        public object? GetService(Type serviceType)
-        {
-            if (serviceType == typeof(ConsoleUI))
-            {
-                return ui;
-            }
-
-            return null;
-        }
     }
 }

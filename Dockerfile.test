@@ -19,6 +19,7 @@ COPY src/EasySave.State/*.csproj ./src/EasySave.State/
 COPY src/EasyLog/*.csproj ./src/EasyLog/
 COPY src/EasySave.Log/*.csproj ./src/EasySave.Log/
 COPY src/EasySave.GUI/*.csproj ./src/EasySave.GUI/
+COPY EasySave.AppCommon/*.csproj ./EasySave.AppCommon/
 
 # Copier TOUS les fichiers .csproj de tests/
 COPY tests/EasyLog.Tests/*.csproj ./tests/EasyLog.Tests/

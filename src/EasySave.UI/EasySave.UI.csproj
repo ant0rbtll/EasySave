@@ -24,10 +24,5 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
 
 	</ItemGroup>
-	<ItemGroup>
-	  <None Update="EasyLog.dll">
-	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  </None>
-	</ItemGroup>
 
 </Project>
