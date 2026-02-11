@@ -15,11 +15,11 @@ namespace EasySave.Application;
 public class BackupApplicationService(
     IBackupJobRepository repo,
     IBackupEngine backupEngine,
-    IPathProvider pathProvider)
+    IPathProvider? pathProvider = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
-    private readonly IPathProvider _pathProvider = pathProvider;
+    private readonly IPathProvider? _pathProvider = pathProvider;
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -128,6 +128,11 @@ public class BackupApplicationService(
 
     private Dictionary<int, StateEntry> LoadStateEntries()
     {
+        if (_pathProvider is null)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+
         try
         {
             string path = _pathProvider.GetStatePath();
@@ -164,6 +169,7 @@ public class BackupApplicationService(
         if (entries.TryGetValue(job.Id, out var entry))
         {
             job.LastExecutionDate = entry.Timestamp;
+            // IsActive represents the current runtime state from the state file.
             job.IsActive = entry.Status == BackupStatus.Active;
         }
         else
@@ -173,4 +179,3 @@ public class BackupApplicationService(
         }
     }
 }
-

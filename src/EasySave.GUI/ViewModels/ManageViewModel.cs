@@ -215,20 +215,32 @@ public partial class ManageViewModel : ViewModelBase
 
         if (!string.IsNullOrEmpty(SortColumn))
         {
-            Func<Models.BackupJob, object> keySelector = SortColumn switch
+            if (SortColumn == "LastRun")
             {
-                "Id" => j => j.Id,
-                "Name" => j => j.Name,
-                "Source" => j => j.Source,
-                "Destination" => j => j.Destination,
-                "Type" => j => j.Type,
-                "LastRun" => j => j.LastExecutionDate ?? DateTime.MinValue,
-                _ => j => j.Id
-            };
+                filtered = SortAscending
+                    ? filtered
+                        .OrderBy(j => j.LastExecutionDate.HasValue ? 0 : 1)
+                        .ThenBy(j => j.LastExecutionDate)
+                    : filtered
+                        .OrderBy(j => j.LastExecutionDate.HasValue ? 0 : 1)
+                        .ThenByDescending(j => j.LastExecutionDate);
+            }
+            else
+            {
+                Func<Models.BackupJob, object> keySelector = SortColumn switch
+                {
+                    "Id" => j => j.Id,
+                    "Name" => j => j.Name,
+                    "Source" => j => j.Source,
+                    "Destination" => j => j.Destination,
+                    "Type" => j => j.Type,
+                    _ => j => j.Id
+                };
 
-            filtered = SortAscending
-                ? filtered.OrderBy(keySelector)
-                : filtered.OrderByDescending(keySelector);
+                filtered = SortAscending
+                    ? filtered.OrderBy(keySelector)
+                    : filtered.OrderByDescending(keySelector);
+            }
         }
 
         foreach (var job in filtered)

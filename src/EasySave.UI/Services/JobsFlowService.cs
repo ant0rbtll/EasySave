@@ -114,7 +114,7 @@ internal class JobsFlowService(
             _consoleAdapter.Write(": ");
             if (refreshedJob.LastExecutionDate is not null)
             {
-                _consoleAdapter.WriteLine(refreshedJob.LastExecutionDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+                _consoleAdapter.WriteLine(refreshedJob.LastExecutionDate.Value.ToString("g"));
             }
             else
             {

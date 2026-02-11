@@ -1,5 +1,6 @@
 using EasySave.Application;
 using EasySave.Configuration;
+using EasySave.Core;
 using EasySave.Localization;
 using EasySave.Persistence;
 using EasySave.UI.Menu;
@@ -21,6 +22,10 @@ public class ConsoleUI
     private readonly IConsoleInputService _inputService;
     private readonly JobsFlowService _jobsFlowService;
     private readonly SettingsFlowService _settingsFlowService;
+
+    /// <summary>
+    /// Gets the localization service used by the console UI.
+    /// </summary>
     public ILocalizationService LocalizationService { get; }
 
     /// <summary>
@@ -167,7 +172,7 @@ public class ConsoleUI
             _consoleAdapter.Write(": ");
             if (refreshedJob.LastExecutionDate is not null)
             {
-                _consoleAdapter.WriteLine(refreshedJob.LastExecutionDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+                _consoleAdapter.WriteLine(refreshedJob.LastExecutionDate.Value.ToString("g"));
             }
             else
             {
@@ -179,7 +184,13 @@ public class ConsoleUI
             _consoleAdapter.WriteLine();
         };
 
-        var menuConfig = _menuFactory.CreateJobDetailsMenu(refreshedJob, renderJobDetails);
+        var menuConfig = _menuFactory.CreateJobDetailsMenu(
+            refreshedJob,
+            backupJob => RunJob(backupJob),
+            backupJob => UpdateJob(backupJob),
+            backupJob => DeleteJob(backupJob),
+            ShowJobsList,
+            renderJobDetails);
         _menuService.ShowMenuWithActions(menuConfig);
     }
 
@@ -212,33 +223,37 @@ public class ConsoleUI
     public void UpdateJob(BackupJob job)
     {
         _consoleAdapter.Clear();
-        var menuConfig = _menuFactory.CreateJobUpdateMenu(job);
+        var menuConfig = _menuFactory.CreateJobUpdateMenu(
+            job,
+            (backupJob, field) => UpdateJobField(backupJob, field),
+            backupJob => SaveJobUpdate(backupJob),
+            backupJob => ShowJobDetails(backupJob));
         _menuService.ShowMenuWithActions(menuConfig);
     }
 
     /// <summary>
     /// Updates a specific field of a backup job.
     /// </summary>
-    public void UpdateJobField(BackupJob job, string field)
+    private void UpdateJobField(BackupJob job, JobEditableField field)
     {
         _consoleAdapter.Clear();
         _menuService.DisplayLabel(LocalizationKey.menu_job_update);
 
         switch (field)
         {
-            case "name":
+            case JobEditableField.Name:
                 string? newName = AskString(LocalizationKey.menu_job_update_name);
                 if (newName != null) job.Name = newName;
                 break;
-            case "source":
+            case JobEditableField.Source:
                 string? newSource = AskString(LocalizationKey.menu_job_update_source);
                 if (newSource != null) job.Source = newSource;
                 break;
-            case "destination":
+            case JobEditableField.Destination:
                 string? newDestination = AskString(LocalizationKey.menu_job_update_destination);
                 if (newDestination != null) job.Destination = newDestination;
                 break;
-            case "type":
+            case JobEditableField.Type:
                 BackupType? newType = AskBackupType(LocalizationKey.menu_job_update_type);
                 if (newType != null) job.Type = newType.Value;
                 break;
