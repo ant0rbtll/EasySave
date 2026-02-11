@@ -11,6 +11,8 @@ namespace EasySave.Application;
 /// </summary>
 public sealed class XmlLogReader : ILogReader
 {
+    private const long MaxLogFileSizeBytes = 50L * 1024 * 1024; // 50 MB
+
     public LogFormat Format => LogFormat.Xml;
 
     public IReadOnlyList<LogEntry> ReadEntries(string filePath)
@@ -25,7 +27,7 @@ public sealed class XmlLogReader : ILogReader
             throw new FileNotFoundException("Log file not found.", filePath);
         }
 
-        string xml = File.ReadAllText(filePath);
+        string xml = FileReadResilience.ReadAllTextWithRetry(filePath, MaxLogFileSizeBytes);
         if (string.IsNullOrWhiteSpace(xml))
         {
             return [];

@@ -9,6 +9,8 @@ namespace EasySave.Application;
 /// </summary>
 public sealed class JsonLogReader : ILogReader
 {
+    private const long MaxLogFileSizeBytes = 50L * 1024 * 1024; // 50 MB
+
     private static readonly JsonSerializerOptions s_jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
@@ -28,7 +30,7 @@ public sealed class JsonLogReader : ILogReader
             throw new FileNotFoundException("Log file not found.", filePath);
         }
 
-        string json = File.ReadAllText(filePath);
+        string json = FileReadResilience.ReadAllTextWithRetry(filePath, MaxLogFileSizeBytes);
         if (string.IsNullOrWhiteSpace(json))
         {
             return [];
