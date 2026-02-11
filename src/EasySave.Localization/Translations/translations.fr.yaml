@@ -47,7 +47,8 @@ translations:
   log_format_json: "JSON"
   log_format_xml: "XML"
   input_string_invalid: "Ce champ ne doit pas être vide. Veuillez réessayer"
-  backupjob_last_executed: "Dernier BackupJob effectué"
+  backupjob_last_executed: "Derniere execution"
+  backupjob_never: "jamais"
   input_number_invalid: "Veuillez saisir un nombre valide"
   input_backuptype_invalid: "Veuillez sélectionner un type de sauvegarde valide"
   waiting_user: "Veuillez appuyer sur une touche pour continuer ..."
@@ -124,4 +125,3 @@ translations:
   gui_manage_tooltip_delete: "Supprimer"
   gui_manage_run_success: "Job {0} terminé avec succès"
   gui_manage_delete_success: "Job {0} supprimé avec succès"
-

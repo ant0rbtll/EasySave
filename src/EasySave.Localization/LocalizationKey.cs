@@ -54,6 +54,7 @@ public enum LocalizationKey
     log_format_xml,
     input_string_invalid,
     backupjob_last_executed,
+    backupjob_never,
     input_number_invalid,
     input_backuptype_invalid,
     waiting_user,

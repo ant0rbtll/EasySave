@@ -51,6 +51,14 @@ namespace EasySave.GUI.Models
 			set { latestExecutionDate = value; OnNotifyPropertyChanged(nameof(LastExecutionDate)); } 
 		}
 
+		private string lastExecutionDisplay = String.Empty;
+
+		public string LastExecutionDisplay
+		{
+			get { return lastExecutionDisplay; }
+			set { lastExecutionDisplay = value; OnNotifyPropertyChanged(nameof(LastExecutionDisplay)); }
+		}
+
 		private bool isActive = false;
 
 		public bool IsActive
