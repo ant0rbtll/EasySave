@@ -1,6 +1,10 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
+using EasySave.Configuration;
+using EasySave.State;
+using System.Text.Json;
+using System.Diagnostics;
 
 namespace EasySave.Application;
 
@@ -12,11 +16,15 @@ namespace EasySave.Application;
 public class BackupApplicationService(
     IBackupJobRepository repo,
     IBackupEngine backupEngine,
-    IBackupJobStateService backupJobStateService)
+    IBackupJobStateService backupJobStateService,
+    IUserPreferencesRepository? preferencesRepository = null,
+    Func<string, bool>? isBusinessSoftwareRunning = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
     private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
+    private readonly IUserPreferencesRepository? _preferencesRepository = preferencesRepository;
+    private readonly Func<string, bool> _isBusinessSoftwareRunning = isBusinessSoftwareRunning ?? IsProcessRunning;
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -53,6 +61,8 @@ public class BackupApplicationService(
     /// <param name="id">Identifier of the job to run.</param>
     public void RunJob(int id)
     {
+        EnsureBusinessSoftwareIsNotRunning();
+
         var job = _repo.GetById(id);
         if (job != null) ExecuteJob(job);
     }
@@ -77,6 +87,7 @@ public class BackupApplicationService(
         var jobs = _repo.GetAll();
         foreach (var job in jobs)
         {
+            EnsureBusinessSoftwareIsNotRunning();
             ExecuteJob(job);
         }
     }
@@ -121,5 +132,165 @@ public class BackupApplicationService(
     private void ExecuteJob(BackupJob job)
     {
         _engine.Execute(job);
+    }
+
+    private void EnsureBusinessSoftwareIsNotRunning()
+    {
+        if (_preferencesRepository is null)
+        {
+            return;
+        }
+
+        string configuredProcessName;
+        try
+        {
+            configuredProcessName = NormalizeProcessName(_preferencesRepository.Load().BusinessSoftwareProcessName);
+        }
+        catch
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(configuredProcessName))
+        {
+            return;
+        }
+
+        if (_isBusinessSoftwareRunning(configuredProcessName))
+        {
+            var exception = new InvalidOperationException("error_business_software_running");
+            exception.Data["errorKey"] = "error_business_software_running";
+            exception.Data["0"] = configuredProcessName;
+            throw exception;
+        }
+    }
+
+    private static string NormalizeProcessName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = value.Trim();
+        var fileName = Path.GetFileName(trimmed);
+        var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
+        return string.IsNullOrWhiteSpace(withoutExtension) ? trimmed : withoutExtension;
+    }
+
+    private static bool IsProcessRunning(string processName)
+    {
+        try
+        {
+            var candidates = BuildProcessNameCandidates(processName);
+            if (candidates.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (var process in Process.GetProcesses())
+            {
+                string currentName;
+                try
+                {
+                    currentName = process.ProcessName;
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(currentName))
+                {
+                    continue;
+                }
+
+                if (candidates.Contains(currentName))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static HashSet<string> BuildProcessNameCandidates(string processName)
+    {
+        var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(processName))
+        {
+            return candidates;
+        }
+
+        var trimmed = processName.Trim();
+        candidates.Add(trimmed);
+
+        var fileName = Path.GetFileName(trimmed);
+        if (!string.IsNullOrWhiteSpace(fileName))
+        {
+            candidates.Add(fileName);
+            candidates.Add(Path.GetFileNameWithoutExtension(fileName));
+        }
+
+        candidates.RemoveWhere(string.IsNullOrWhiteSpace);
+        return candidates;
+    }
+
+    private Dictionary<int, StateEntry> LoadStateEntries()
+    {
+        if (_pathProvider is null)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+
+        try
+        {
+            string path = _pathProvider.GetStatePath();
+            if (!File.Exists(path))
+            {
+                return new Dictionary<int, StateEntry>();
+            }
+
+            string json = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return new Dictionary<int, StateEntry>();
+            }
+
+            return JsonSerializer.Deserialize<Dictionary<int, StateEntry>>(json)
+                   ?? new Dictionary<int, StateEntry>();
+        }
+        catch (JsonException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+        catch (IOException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+    }
+
+    private static void ApplyState(BackupJob job, Dictionary<int, StateEntry> entries)
+    {
+        if (entries.TryGetValue(job.Id, out var entry))
+        {
+            job.LastExecutionDate = entry.Timestamp;
+            // IsActive represents the current runtime state from the state file.
+            job.IsActive = entry.Status == BackupStatus.Active;
+        }
+        else
+        {
+            job.LastExecutionDate = null;
+            job.IsActive = false;
+        }
     }
 }

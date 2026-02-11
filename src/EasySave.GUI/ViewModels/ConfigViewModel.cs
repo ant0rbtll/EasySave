@@ -23,6 +23,7 @@ public partial class ConfigViewModel : ViewModelBase
 
     [ObservableProperty] private string selectedLanguage;
     [ObservableProperty] private string? logDirectory;
+    [ObservableProperty] private string? businessSoftwareProcessName;
     [ObservableProperty] private string? statusMessage;
     [ObservableProperty] private string? pathError;
 
@@ -31,6 +32,8 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string languageText = "";
     [ObservableProperty] private string logDirectoryText = "";
     [ObservableProperty] private string logDirectoryWatermark = "";
+    [ObservableProperty] private string businessSoftwareText = "";
+    [ObservableProperty] private string businessSoftwareWatermark = "";
     [ObservableProperty] private string resetText = "";
     [ObservableProperty] private string saveText = "";
     [ObservableProperty] private string browseText = "";
@@ -62,6 +65,7 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = preferencesRepository.Load();
         selectedLanguage = NormalizeLanguage(preferences.Language);
         logDirectory = preferences.LogDirectory;
+        businessSoftwareProcessName = preferences.BusinessSoftwareProcessName;
 
         foreach (
             var normalized in preferences.EncryptedExtensions
@@ -125,6 +129,8 @@ public partial class ConfigViewModel : ViewModelBase
         LanguageText = _localizationService.TranslateText(LocalizationKey.gui_config_language);
         LogDirectoryText = _localizationService.TranslateText(LocalizationKey.gui_config_log_directory);
         LogDirectoryWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_log_directory_watermark);
+        BusinessSoftwareText = _localizationService.TranslateText(LocalizationKey.gui_config_business_software);
+        BusinessSoftwareWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_business_software_watermark);
         ResetText = _localizationService.TranslateText(LocalizationKey.gui_config_reset);
         SaveText = _localizationService.TranslateText(LocalizationKey.gui_config_save);
         BrowseText = _localizationService.TranslateText(LocalizationKey.gui_config_browse);
@@ -156,6 +162,9 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = _preferencesRepository.Load();
         preferences.Language = language;
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
+        preferences.BusinessSoftwareProcessName = string.IsNullOrWhiteSpace(BusinessSoftwareProcessName)
+            ? null
+            : BusinessSoftwareProcessName.Trim();
         preferences.EncryptedExtensions = [..EncryptedExtensions];
         _preferencesRepository.Save(preferences);
 

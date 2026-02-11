@@ -310,6 +310,26 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void SaveAndLoad_PersistsBusinessSoftwareProcessName()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        var preferences = new UserPreferences
+        {
+            Language = "en",
+            BusinessSoftwareProcessName = "calc.exe"
+        };
+
+        // Act
+        repo.Save(preferences);
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Equal("calc.exe", loadedPreferences.BusinessSoftwareProcessName);
+    }
+
+    [Fact]
     public void Load_AfterSave_ReturnsPersistedData()
     {
         // Arrange

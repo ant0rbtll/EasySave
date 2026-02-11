@@ -72,7 +72,11 @@ public class Program
         services.AddSingleton<IBackupJobStateService, BackupJobStateService>();
 
         // Setup application service
-        services.AddSingleton<BackupApplicationService>();
+        services.AddSingleton(sp => new BackupApplicationService(
+            sp.GetRequiredService<IBackupJobRepository>(),
+            sp.GetRequiredService<IBackupEngine>(),
+            sp.GetRequiredService<IPathProvider>(),
+            sp.GetRequiredService<IUserPreferencesRepository>()));
         services.AddSingleton<ILogQueryService, LogQueryService>();
 
         // Setup and run UI

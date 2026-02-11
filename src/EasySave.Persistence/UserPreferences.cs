@@ -47,4 +47,10 @@ public class UserPreferences
     /// Gets or sets optional external CryptoSoft executable path.
     /// </summary>
     public string? CryptoSoftExecutablePath { get; set; }
+
+    /// <summary>
+    /// Gets or sets the business software process to monitor.
+    /// Backup launch is blocked when this process is running.
+    /// </summary>
+    public string? BusinessSoftwareProcessName { get; set; }
 }

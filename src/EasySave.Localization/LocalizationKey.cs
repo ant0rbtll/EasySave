@@ -100,6 +100,7 @@ public enum LocalizationKey
     error_directory_not_found,
     error_parts_empty,
     error_parts_null,
+    error_business_software_running,
 
     // GUI
     gui_sidebar_create,
@@ -110,6 +111,8 @@ public enum LocalizationKey
     gui_config_language,
     gui_config_log_directory,
     gui_config_log_directory_watermark,
+    gui_config_business_software,
+    gui_config_business_software_watermark,
     gui_config_reset,
     gui_config_save,
     gui_config_saved,

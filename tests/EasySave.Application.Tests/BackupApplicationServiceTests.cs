@@ -9,6 +9,7 @@ public class BackupApplicationServiceTests
 {
     private readonly Mock<IBackupJobRepository> _repoMock;
     private readonly Mock<IBackupEngine> _engineMock;
+    private readonly Mock<IUserPreferencesRepository> _preferencesRepositoryMock;
     private readonly Mock<IBackupJobStateService> _backupJobStateServiceMock;
     private readonly BackupApplicationService _service;
 
@@ -16,6 +17,7 @@ public class BackupApplicationServiceTests
     {
         _repoMock = new Mock<IBackupJobRepository>();
         _engineMock = new Mock<IBackupEngine>();
+        _preferencesRepositoryMock = new Mock<IUserPreferencesRepository>();
         _backupJobStateServiceMock = new Mock<IBackupJobStateService>();
         _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object, _backupJobStateServiceMock.Object);
     }
@@ -350,6 +352,53 @@ public class BackupApplicationServiceTests
 
         _engineMock.Verify(e => e.Execute(jobs[0]), Times.Once);
         _engineMock.Verify(e => e.Execute(jobs[1]), Times.Once);
+    }
+
+    [Fact]
+    public void RunJob_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
+    {
+        var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
+        _repoMock.Setup(r => r.GetById(1)).Returns(job);
+        _preferencesRepositoryMock.Setup(r => r.Load()).Returns(new UserPreferences
+        {
+            BusinessSoftwareProcessName = "calc.exe"
+        });
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            pathProvider: null,
+            preferencesRepository: _preferencesRepositoryMock.Object,
+            isBusinessSoftwareRunning: _ => true);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.RunJob(1));
+
+        Assert.Equal("error_business_software_running", exception.Message);
+        Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
+        Assert.Equal("calc", exception.Data["0"]);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>()), Times.Never);
+    }
+
+    [Fact]
+    public void RunJob_WhenBusinessSoftwareIsConfiguredButNotRunning_ShouldExecute()
+    {
+        var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
+        _repoMock.Setup(r => r.GetById(1)).Returns(job);
+        _preferencesRepositoryMock.Setup(r => r.Load()).Returns(new UserPreferences
+        {
+            BusinessSoftwareProcessName = "calc.exe"
+        });
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            pathProvider: null,
+            preferencesRepository: _preferencesRepositoryMock.Object,
+            isBusinessSoftwareRunning: _ => false);
+
+        service.RunJob(1);
+
+        _engineMock.Verify(e => e.Execute(job), Times.Once);
     }
 
     #endregion
