@@ -48,6 +48,12 @@ public partial class CreateViewModel : ViewModelBase
     private bool isSuccessMessageVisible;
 
     [ObservableProperty]
+    private string? errorMessage;
+
+    [ObservableProperty]
+    private bool isErrorMessageVisible;
+
+    [ObservableProperty]
     private string title = string.Empty;
 
     [ObservableProperty]
@@ -74,6 +80,12 @@ public partial class CreateViewModel : ViewModelBase
     [ObservableProperty]
     private string browseButtonLabel = string.Empty;
 
+    [ObservableProperty]
+    private string browseSourceTitle = string.Empty;
+
+    [ObservableProperty]
+    private string browseDestinationTitle = string.Empty;
+
     private readonly BackupApplicationService _app;
     private readonly ILocalizationService _localizationService;
     private CancellationTokenSource? _dismissCts;
@@ -94,8 +106,8 @@ public partial class CreateViewModel : ViewModelBase
 
     private bool CanCreateJob() =>
         !string.IsNullOrWhiteSpace(Name) &&
-        !string.IsNullOrWhiteSpace(SourcePath) &&
-        !string.IsNullOrWhiteSpace(DestinationPath) &&
+        IsValidPath(SourcePath) &&
+        IsValidPath(DestinationPath) &&
         SourcePathError == null &&
         DestinationPathError == null;
 
@@ -113,21 +125,32 @@ public partial class CreateViewModel : ViewModelBase
         {
             JobNameError = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
         }
-        catch (IOException ex)
-        {
-            DestinationPathError = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
-        }
         catch (Exception ex)
         {
-            JobNameError = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            ShowErrorMessage(ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService));
         }
     }
 
     private void ShowSuccessMessage(string message)
     {
+        IsErrorMessageVisible = false;
         SuccessMessage = message;
         IsSuccessMessageVisible = true;
         _ = AutoDismissSuccessAsync();
+    }
+
+    private void ShowErrorMessage(string message)
+    {
+        IsSuccessMessageVisible = false;
+        ErrorMessage = message;
+        IsErrorMessageVisible = true;
+    }
+
+    [RelayCommand]
+    private void DismissError()
+    {
+        IsErrorMessageVisible = false;
+        ErrorMessage = null;
     }
 
     private async Task AutoDismissSuccessAsync()
@@ -156,8 +179,13 @@ public partial class CreateViewModel : ViewModelBase
         SourcePath = string.Empty;
         DestinationPath = string.Empty;
         SelectedBackupType = BackupType.Complete;
+        JobNameError = null;
         SourcePathError = null;
         DestinationPathError = null;
+        IsSuccessMessageVisible = false;
+        SuccessMessage = null;
+        IsErrorMessageVisible = false;
+        ErrorMessage = null;
     }
 
     partial void OnNameChanged(string value)
@@ -265,6 +293,8 @@ public partial class CreateViewModel : ViewModelBase
         BackupTypeLabel = _localizationService.TranslateText(LocalizationKey.gui_create_backup_type);
 
         BrowseButtonLabel = _localizationService.TranslateText(LocalizationKey.gui_create_browse);
+        BrowseSourceTitle = _localizationService.TranslateText(LocalizationKey.gui_create_browse_source);
+        BrowseDestinationTitle = _localizationService.TranslateText(LocalizationKey.gui_create_browse_destination);
         CreateJobButtonLabel = _localizationService.TranslateText(LocalizationKey.gui_create_create_job);
         CancelButtonLabel = _localizationService.TranslateText(LocalizationKey.gui_create_cancel);
 

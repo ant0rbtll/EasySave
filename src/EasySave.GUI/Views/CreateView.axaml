@@ -90,6 +90,32 @@
                     TextAlignment="Center"/>
             </Border>
 
+            <!-- ERROR BANNER -->
+            <Border
+                IsVisible="{Binding IsErrorMessageVisible}"
+                Background="#1AEF5350"
+                CornerRadius="6"
+                Padding="12,8">
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding ErrorMessage}"
+                               Foreground="#EF5350"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"/>
+                    <Button Grid.Column="1"
+                            Content="&#x2715;"
+                            Command="{Binding DismissErrorCommand}"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Foreground="#EF5350"
+                            FontSize="14"
+                            Padding="4"
+                            Cursor="Hand"
+                            VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
             <!-- FORM CARD -->
             <Border
                 BorderBrush="#22FFFFFF"
@@ -102,7 +128,7 @@
                     <!-- Backup Name -->
                     <StackPanel Spacing="6">
                         <TextBlock Text="{Binding BackupNameLabel}" Classes="field-label"/>
-                        <TextBox Text="{Binding Name}" LostFocus="Name_LostFocus" TextChanged="Name_TextChanged"/>
+                        <TextBox Text="{Binding Name}" LostFocus="Name_LostFocus"/>
                         <TextBlock Text="{Binding JobNameError}" Classes="field-error"
                                    IsVisible="{Binding JobNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
                     </StackPanel>
@@ -113,8 +139,7 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBox Grid.Column="0"
                                      Text="{Binding SourcePath}"
-                                     LostFocus="Source_LostFocus"
-                                     TextChanged="Source_TextChanged"/>
+                                     LostFocus="Source_LostFocus"/>
                             <Button Grid.Column="1"
                                     Classes="btn-browse"
                                     Content="{Binding BrowseButtonLabel}"
@@ -131,8 +156,7 @@
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBox Grid.Column="0"
                                      Text="{Binding DestinationPath}"
-                                     LostFocus="Destination_LostFocus"
-                                     TextChanged="Destination_TextChanged"/>
+                                     LostFocus="Destination_LostFocus"/>
                             <Button Grid.Column="1"
                                     Classes="btn-browse"
                                     Content="{Binding BrowseButtonLabel}"

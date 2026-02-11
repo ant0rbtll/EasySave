@@ -18,7 +18,7 @@ public partial class CreateView : UserControl
 
         var dialog = new OpenFolderDialog
         {
-            Title = "Source..."
+            Title = vm.BrowseSourceTitle
         };
 
         var result = await dialog.ShowAsync((Window)this.VisualRoot!);
@@ -36,7 +36,7 @@ public partial class CreateView : UserControl
 
         var dialog = new OpenFolderDialog
         {
-            Title = "Destination..."
+            Title = vm.BrowseDestinationTitle
         };
 
         var result = await dialog.ShowAsync((Window)this.VisualRoot!);
@@ -45,24 +45,6 @@ public partial class CreateView : UserControl
         {
             vm.SetDestinationPathFromDialog(result);
         }
-    }
-
-    private void Name_TextChanged(object? sender, TextChangedEventArgs e)
-    {
-        if (sender is TextBox tb && DataContext is CreateViewModel vm)
-            vm.Name = tb.Text ?? string.Empty;
-    }
-
-    private void Source_TextChanged(object? sender, TextChangedEventArgs e)
-    {
-        if (sender is TextBox tb && DataContext is CreateViewModel vm)
-            vm.SourcePath = tb.Text ?? string.Empty;
-    }
-
-    private void Destination_TextChanged(object? sender, TextChangedEventArgs e)
-    {
-        if (sender is TextBox tb && DataContext is CreateViewModel vm)
-            vm.DestinationPath = tb.Text ?? string.Empty;
     }
 
     private void Source_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

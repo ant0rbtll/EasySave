@@ -7,16 +7,8 @@ using System.Threading.Tasks;
 
 namespace EasySave.GUI.Models
 {
-    public abstract class IModel : INotifyPropertyChanged
+    [Obsolete("IModel is deprecated. Use ModelBase as the base class instead.")]
+    public abstract class IModel : ModelBase
     {
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        public void OnNotifyPropertyChanged(string propertyName)
-        {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
     }
 }
