@@ -48,6 +48,7 @@ translations:
   log_format_xml: "XML"
   input_string_invalid: "Ce champ ne doit pas être vide. Veuillez réessayer"
   backupjob_last_executed: "Derniere execution"
+  backupjob_active: "Actif"
   backupjob_never: "jamais"
   input_number_invalid: "Veuillez saisir un nombre valide"
   input_backuptype_invalid: "Veuillez sélectionner un type de sauvegarde valide"

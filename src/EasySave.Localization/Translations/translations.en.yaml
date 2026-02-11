@@ -48,6 +48,7 @@ translations:
   log_format_xml: "XML"
   input_string_invalid: "This field cannot be empty. Please try again"
   backupjob_last_executed: "Last Execution"
+  backupjob_active: "Active"
   backupjob_never: "never"
   input_number_invalid: "Please enter a valid number"
   input_backuptype_invalid: "Please select a valid Backup type"

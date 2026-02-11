@@ -26,24 +26,6 @@ public class ConsoleUI
     /// <summary>
     /// Initializes a test-friendly console UI using prebuilt collaborators.
     /// </summary>
-    private void DisplayJobsList()
-    {
-        try
-        {
-            List<BackupJob> backupJobList = _backupApplicationService.GetAllJobs();
-            foreach (BackupJob job in backupJobList)
-            {
-                _consoleAdapter.WriteLine(job.Id + " - " + job.Name);
-                string lastExecution = job.LastExecutionDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "never";
-                _consoleAdapter.WriteLine($"    LastExecution: {lastExecution} | Active: {job.IsActive}");
-            }
-        }
-        catch (Exception e)
-        {
-            ShowError(e);
-            _menuService.WaitForUser();
-            MainMenu();
-        }
     /// <param name="backupApplicationService">Application service exposing backup use cases.</param>
     /// <param name="parser">Command-line parser for non-interactive execution.</param>
     /// <param name="localizationService">Localization service used by the UI.</param>
@@ -150,20 +132,20 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Shows interactive list of backup jobs
+    /// Shows interactive list of backup jobs.
     /// </summary>
     public void ShowJobsList()
     {
-        var menuConfig = _menuFactory.CreateJobsListMenu();
-        _menuService.ShowMenuWithActions(menuConfig);
+        _jobsFlowService.ShowJobsList(MainMenu);
     }
 
     /// <summary>
-    /// Shows details of a specific backup job with action options
+    /// Shows details of a specific backup job with action options.
     /// </summary>
     public void ShowJobDetails(BackupJob job)
     {
-        var refreshedJob = _backupApplicationService.GetJobById(job.Id) ?? job;
+        var refreshedJob = _backupApplicationService.GetJob(job.Id) ?? job;
+
         Action renderJobDetails = () =>
         {
             ShowMessage(LocalizationKey.backupjob_id, false);
@@ -181,9 +163,19 @@ public class ConsoleUI
             ShowMessage(LocalizationKey.backupjob_type, false);
             _consoleAdapter.WriteLine($": {refreshedJob.Type}");
 
-            _consoleAdapter.WriteLine($": LastExecution {(refreshedJob.LastExecutionDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "never")}");
-            _consoleAdapter.WriteLine($": Active {refreshedJob.IsActive}");
+            ShowMessage(LocalizationKey.backupjob_last_executed, false);
+            _consoleAdapter.Write(": ");
+            if (refreshedJob.LastExecutionDate is not null)
+            {
+                _consoleAdapter.WriteLine(refreshedJob.LastExecutionDate.Value.ToString("yyyy-MM-dd HH:mm:ss"));
+            }
+            else
+            {
+                ShowMessage(LocalizationKey.backupjob_never);
+            }
 
+            ShowMessage(LocalizationKey.backupjob_active, false);
+            _consoleAdapter.WriteLine($": {refreshedJob.IsActive}");
             _consoleAdapter.WriteLine();
         };
 
@@ -192,7 +184,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Runs a backup job
+    /// Runs a backup job.
     /// </summary>
     public void RunJob(BackupJob job)
     {
@@ -202,7 +194,7 @@ public class ConsoleUI
         ShowMessage(LocalizationKey.backupjob_running);
         try
         {
-            _backupApplicationService.RunJobById(job.Id);
+            _backupApplicationService.RunJob(job.Id);
             ShowMessage(LocalizationKey.backupjob_completed);
         }
         catch (Exception ex)
@@ -215,7 +207,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Updates a backup job
+    /// Updates a backup job.
     /// </summary>
     public void UpdateJob(BackupJob job)
     {
@@ -225,7 +217,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Updates a specific field of a backup job
+    /// Updates a specific field of a backup job.
     /// </summary>
     public void UpdateJobField(BackupJob job, string field)
     {
@@ -256,7 +248,7 @@ public class ConsoleUI
     }
 
     /// <summary>
-    /// Saves the updated backup job
+    /// Saves the updated backup job.
     /// </summary>
     public void SaveJobUpdate(BackupJob job)
     {
@@ -269,12 +261,13 @@ public class ConsoleUI
         {
             ShowError(e);
         }
+
         _menuService.WaitForUser();
         ShowJobsList();
     }
 
     /// <summary>
-    /// Deletes a backup job with confirmation
+    /// Deletes a backup job with confirmation.
     /// </summary>
     public void DeleteJob(BackupJob job)
     {
@@ -303,165 +296,7 @@ public class ConsoleUI
         {
             ShowJobDetails(job);
         }
-        _menuService.WaitForUser();
-        ShowJobsList();
-        Console.Clear();
-    }
 
-    /// <summary>
-    /// Shows interactive list of backup jobs
-    /// </summary>
-    public void ShowJobsList()
-    {
-        var menuConfig = _menuFactory.CreateJobsListMenu();
-        _menuService.ShowMenuWithActions(menuConfig);
-    }
-
-    /// <summary>
-    /// Shows details of a specific backup job with action options
-    /// </summary>
-    public void ShowJobDetails(BackupJob job)
-    {
-        var refreshedJob = _backupApplicationService.GetJobById(job.Id) ?? job;
-        Action renderJobDetails = () =>
-        {
-            ShowMessage(LocalizationKey.backupjob_id, false);
-            Console.WriteLine($": {refreshedJob.Id}");
-
-            ShowMessage(LocalizationKey.backupjob_name, false);
-            Console.WriteLine($": {refreshedJob.Name}");
-
-            ShowMessage(LocalizationKey.backupjob_source, false);
-            Console.WriteLine($": {refreshedJob.Source}");
-
-            ShowMessage(LocalizationKey.backupjob_destination, false);
-            Console.WriteLine($": {refreshedJob.Destination}");
-
-            ShowMessage(LocalizationKey.backupjob_type, false);
-            Console.WriteLine($": {refreshedJob.Type}");
-
-            Console.WriteLine($": LastExecution {(refreshedJob.LastExecutionDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "never")}");
-            Console.WriteLine($": Active {refreshedJob.IsActive}");
-
-            Console.WriteLine();
-        };
-
-        var menuConfig = _menuFactory.CreateJobDetailsMenu(refreshedJob, renderJobDetails);
-        _menuService.ShowMenuWithActions(menuConfig);
-    }
-
-    /// <summary>
-    /// Runs a backup job
-    /// </summary>
-    public void RunJob(BackupJob job)
-    {
-        Console.Clear();
-        _menuService.DisplayLabel(LocalizationKey.menu_job_run);
-
-        ShowMessage(LocalizationKey.backupjob_running);
-        try
-        {
-            _backupApplicationService.RunJobById(job.Id);
-            ShowMessage(LocalizationKey.backupjob_completed);
-        }
-        catch (Exception ex)
-        {
-            ShowError(ex);
-        }
-
-        _menuService.WaitForUser();
-        ShowJobsList();
-    }
-
-    /// <summary>
-    /// Updates a backup job
-    /// </summary>
-    public void UpdateJob(BackupJob job)
-    {
-        Console.Clear();
-        var menuConfig = _menuFactory.CreateJobUpdateMenu(job);
-        _menuService.ShowMenuWithActions(menuConfig);
-    }
-
-    /// <summary>
-    /// Updates a specific field of a backup job
-    /// </summary>
-    public void UpdateJobField(BackupJob job, string field)
-    {
-        Console.Clear();
-        _menuService.DisplayLabel(LocalizationKey.menu_job_update);
-
-        switch (field)
-        {
-            case "name":
-                string? newName = AskString(LocalizationKey.menu_job_update_name);
-                if (newName != null) job.Name = newName;
-                break;
-            case "source":
-                string? newSource = AskString(LocalizationKey.menu_job_update_source);
-                if (newSource != null) job.Source = newSource;
-                break;
-            case "destination":
-                string? newDestination = AskString(LocalizationKey.menu_job_update_destination);
-                if (newDestination != null) job.Destination = newDestination;
-                break;
-            case "type":
-                BackupType? newType = AskBackupType(LocalizationKey.menu_job_update_type);
-                if (newType != null) job.Type = newType.Value;
-                break;
-        }
-
-        UpdateJob(job);
-    }
-
-    /// <summary>
-    /// Saves the updated backup job
-    /// </summary>
-    public void SaveJobUpdate(BackupJob job)
-    {
-        try
-        {
-            _backupApplicationService.UpdateJob(job);
-            ShowMessage(LocalizationKey.backupjob_updated);
-        }
-        catch (Exception e)
-        {
-            ShowError(e);
-        }
-        _menuService.WaitForUser();
-        ShowJobsList();
-    }
-
-    /// <summary>
-    /// Deletes a backup job with confirmation
-    /// </summary>
-    public void DeleteJob(BackupJob job)
-    {
-        Console.Clear();
-        _menuService.DisplayLabel(LocalizationKey.menu_job_delete);
-
-        ShowMessage(LocalizationKey.backupjob_name, false);
-        Console.WriteLine($": {job.Name}");
-        Console.WriteLine();
-
-        ShowMessage(LocalizationKey.backupjob_delete_confirm);
-        var key = Console.ReadKey(intercept: true);
-        if (key.Key == ConsoleKey.Y || key.Key == ConsoleKey.Enter)
-        {
-            try
-            {
-                _backupApplicationService.RemoveJob(job.Id);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
-            ShowMessage(LocalizationKey.backupjob_deleted);
-        }
-        else
-        {
-            ShowJobDetails(job);
-        }
         _menuService.WaitForUser();
         ShowJobsList();
     }
@@ -483,5 +318,25 @@ public class ConsoleUI
         }
 
         _menuService.WaitForUser();
+    }
+
+    private string? AskString(LocalizationKey key)
+    {
+        return _inputService.AskString(key);
+    }
+
+    private BackupType? AskBackupType(LocalizationKey key)
+    {
+        return _inputService.AskBackupType(key);
+    }
+
+    private void ShowMessage(LocalizationKey key, bool newLine = true)
+    {
+        _messageService.Write(key, newLine);
+    }
+
+    private void ShowError(Exception exception)
+    {
+        _messageService.ShowError(exception);
     }
 }
