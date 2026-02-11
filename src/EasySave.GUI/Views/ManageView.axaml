@@ -204,7 +204,7 @@
                 <Border Grid.Row="0"
                         Background="#11FFFFFF"
                         Padding="16,10">
-                    <Grid ColumnDefinitions="50,*,1.5*,1.5*,100,130">
+                    <Grid ColumnDefinitions="50,*,1.5*,1.5*,100,180,130">
                         <Button Grid.Column="0" Classes="col-header"
                                 Command="{Binding SortByCommand}" CommandParameter="Id"
                                 HorizontalAlignment="Center">
@@ -231,6 +231,11 @@
                             <TextBlock Text="{Binding TypeHeader}"/>
                         </Button>
                         <Button Grid.Column="5" Classes="col-header"
+                                Command="{Binding SortByCommand}" CommandParameter="LastRun"
+                                HorizontalAlignment="Center">
+                            <TextBlock Text="{Binding LastRunHeader}"/>
+                        </Button>
+                        <Button Grid.Column="6" Classes="col-header"
                                 HorizontalAlignment="Center"
                                 IsHitTestVisible="False">
                             <TextBlock Text="{Binding ActionsHeader}"/>
@@ -249,7 +254,7 @@
                                         BorderBrush="#11FFFFFF"
                                         BorderThickness="0,0,0,1"
                                         Padding="16,10">
-                                    <Grid ColumnDefinitions="50,*,1.5*,1.5*,100,130"
+                                    <Grid ColumnDefinitions="50,*,1.5*,1.5*,100,180,130"
                                           VerticalAlignment="Center">
 
                                         <!-- ID -->
@@ -259,16 +264,20 @@
                                             <TextBlock Text="{Binding Id}"/>
                                         </Border>
 
-                                        <!-- Name -->
-                                        <TextBlock Grid.Column="1"
-                                                   Text="{Binding Name}"
-                                                   ToolTip.Tip="{Binding Name}"
-                                                   FontSize="13"
-                                                   FontWeight="SemiBold"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   MaxWidth="250"/>
+                                        <!-- Name + execution info -->
+                                        <StackPanel Grid.Column="1"
+                                                    Spacing="2"
+                                                    HorizontalAlignment="Center"
+                                                    VerticalAlignment="Center"
+                                                    MaxWidth="250">
+                                            <TextBlock Text="{Binding Name}"
+                                                       ToolTip.Tip="{Binding Name}"
+                                                       FontSize="13"
+                                                       FontWeight="SemiBold"
+                                                       HorizontalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="250"/>
+                                        </StackPanel>
 
                                         <!-- Source -->
                                         <TextBlock Grid.Column="2"
@@ -295,8 +304,16 @@
                                             <TextBlock Text="{Binding Type}"/>
                                         </Border>
 
+                                        <!-- Last execution -->
+                                        <TextBlock Grid.Column="5"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   FontSize="12"
+                                                   Foreground="#8FA3B8"
+                                                   Text="{Binding LastExecutionDisplay}"/>
+
                                         <!-- Actions -->
-                                        <StackPanel Grid.Column="5"
+                                        <StackPanel Grid.Column="6"
                                                     Orientation="Horizontal"
                                                     Spacing="4"
                                                     HorizontalAlignment="Center"

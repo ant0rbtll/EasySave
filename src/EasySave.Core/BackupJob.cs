@@ -29,4 +29,16 @@ public class BackupJob
     /// Gets or sets the type of backup to perform.
     /// </summary>
     public BackupType Type { get; set; }
+
+    /// <summary>
+    /// Gets or sets the last execution date of the job (null if never executed).
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public DateTime? LastExecutionDate { get; set; }
+
+    /// <summary>
+    /// Gets or sets whether the job is currently active.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool IsActive { get; set; }
 }

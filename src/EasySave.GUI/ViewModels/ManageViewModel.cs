@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -25,6 +26,7 @@ public partial class ManageViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(SourceHeader))]
     [NotifyPropertyChangedFor(nameof(DestinationHeader))]
     [NotifyPropertyChangedFor(nameof(TypeHeader))]
+    [NotifyPropertyChangedFor(nameof(LastRunHeader))]
     private string sortColumn = string.Empty;
 
     [ObservableProperty]
@@ -33,6 +35,7 @@ public partial class ManageViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(SourceHeader))]
     [NotifyPropertyChangedFor(nameof(DestinationHeader))]
     [NotifyPropertyChangedFor(nameof(TypeHeader))]
+    [NotifyPropertyChangedFor(nameof(LastRunHeader))]
     private bool sortAscending = true;
 
     [ObservableProperty]
@@ -121,19 +124,20 @@ public partial class ManageViewModel : ViewModelBase
     private string _sourceLabel = string.Empty;
     private string _destinationLabel = string.Empty;
     private string _typeLabel = string.Empty;
+    private string _lastRunLabel = string.Empty;
 
     public string IdHeader => _idLabel + GetSortIndicator("Id");
     public string NameHeader => _nameLabel + GetSortIndicator("Name");
     public string SourceHeader => _sourceLabel + GetSortIndicator("Source");
     public string DestinationHeader => _destinationLabel + GetSortIndicator("Destination");
     public string TypeHeader => _typeLabel + GetSortIndicator("Type");
+    public string LastRunHeader => _lastRunLabel + GetSortIndicator("LastRun");
 
     public ManageViewModel(BackupApplicationService backupApplicationService, ILocalizationService localizationService)
     {
         _applicationService = backupApplicationService;
         _localizationService = localizationService;
         RefreshTranslations();
-        LoadJobs();
     }
 
     public void RefreshTranslations()
@@ -159,11 +163,14 @@ public partial class ManageViewModel : ViewModelBase
         _sourceLabel = _localizationService.TranslateText(LocalizationKey.backupjob_source);
         _destinationLabel = _localizationService.TranslateText(LocalizationKey.backupjob_destination);
         _typeLabel = _localizationService.TranslateText(LocalizationKey.backupjob_type);
+        _lastRunLabel = _localizationService.TranslateText(LocalizationKey.backupjob_last_executed);
         OnPropertyChanged(nameof(IdHeader));
         OnPropertyChanged(nameof(NameHeader));
         OnPropertyChanged(nameof(SourceHeader));
         OnPropertyChanged(nameof(DestinationHeader));
         OnPropertyChanged(nameof(TypeHeader));
+        OnPropertyChanged(nameof(LastRunHeader));
+        ApplyJobs(FetchJobs());
     }
 
     partial void OnSearchTextChanged(string value)
@@ -208,19 +215,32 @@ public partial class ManageViewModel : ViewModelBase
 
         if (!string.IsNullOrEmpty(SortColumn))
         {
-            Func<Models.BackupJob, object> keySelector = SortColumn switch
+            if (SortColumn == "LastRun")
             {
-                "Id" => j => j.Id,
-                "Name" => j => j.Name,
-                "Source" => j => j.Source,
-                "Destination" => j => j.Destination,
-                "Type" => j => j.Type,
-                _ => j => j.Id
-            };
+                filtered = SortAscending
+                    ? filtered
+                        .OrderBy(j => j.LastExecutionDate.HasValue ? 0 : 1)
+                        .ThenBy(j => j.LastExecutionDate)
+                    : filtered
+                        .OrderBy(j => j.LastExecutionDate.HasValue ? 0 : 1)
+                        .ThenByDescending(j => j.LastExecutionDate);
+            }
+            else
+            {
+                Func<Models.BackupJob, object> keySelector = SortColumn switch
+                {
+                    "Id" => j => j.Id,
+                    "Name" => j => j.Name,
+                    "Source" => j => j.Source,
+                    "Destination" => j => j.Destination,
+                    "Type" => j => j.Type,
+                    _ => j => j.Id
+                };
 
-            filtered = SortAscending
-                ? filtered.OrderBy(keySelector)
-                : filtered.OrderByDescending(keySelector);
+                filtered = SortAscending
+                    ? filtered.OrderBy(keySelector)
+                    : filtered.OrderByDescending(keySelector);
+            }
         }
 
         foreach (var job in filtered)
@@ -233,7 +253,9 @@ public partial class ManageViewModel : ViewModelBase
             || job.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
             || job.Source.Contains(query, StringComparison.OrdinalIgnoreCase)
             || job.Destination.Contains(query, StringComparison.OrdinalIgnoreCase)
-            || job.Type.ToString().Contains(query, StringComparison.OrdinalIgnoreCase);
+            || job.Type.ToString().Contains(query, StringComparison.OrdinalIgnoreCase)
+            || job.IsActive.ToString().Contains(query, StringComparison.OrdinalIgnoreCase)
+            || job.LastExecutionDisplay.Contains(query, StringComparison.OrdinalIgnoreCase);
     }
 
     [RelayCommand(CanExecute = nameof(CanRunJob))]
@@ -431,7 +453,10 @@ public partial class ManageViewModel : ViewModelBase
                     Name = job.Name,
                     Source = job.Source,
                     Destination = job.Destination,
-                    Type = job.Type
+                    Type = job.Type,
+                    LastExecutionDate = job.LastExecutionDate,
+                    LastExecutionDisplay = FormatLastExecution(job.LastExecutionDate),
+                    IsActive = job.IsActive
                 })];
         }
         catch (Exception)
@@ -439,6 +464,26 @@ public partial class ManageViewModel : ViewModelBase
             // Repository may not be initialized yet
             return [];
         }
+    }
+
+    private string FormatLastExecution(DateTime? lastExecutionDate)
+    {
+        if (!lastExecutionDate.HasValue)
+        {
+            return _localizationService.TranslateText(LocalizationKey.backupjob_never);
+        }
+
+        CultureInfo culture;
+        try
+        {
+            culture = CultureInfo.GetCultureInfo(_localizationService.Culture);
+        }
+        catch (CultureNotFoundException)
+        {
+            culture = CultureInfo.CurrentCulture;
+        }
+
+        return lastExecutionDate.Value.ToString("g", culture);
     }
 
     private void ApplyJobs(List<Models.BackupJob> jobs)

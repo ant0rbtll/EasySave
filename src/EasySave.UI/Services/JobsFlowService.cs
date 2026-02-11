@@ -91,28 +91,44 @@ internal class JobsFlowService(
     /// <param name="onBackToMainMenu">Callback to return to the main menu.</param>
     private void ShowJobDetails(BackupJob job, Action onBackToMainMenu)
     {
+        var refreshedJob = _backupApplicationService.GetJob(job.Id) ?? job;
+
         Action renderJobDetails = () =>
         {
             _messageService.Write(LocalizationKey.backupjob_id, false);
-            _consoleAdapter.WriteLine($": {job.Id}");
+            _consoleAdapter.WriteLine($": {refreshedJob.Id}");
 
             _messageService.Write(LocalizationKey.backupjob_name, false);
-            _consoleAdapter.WriteLine($": {job.Name}");
+            _consoleAdapter.WriteLine($": {refreshedJob.Name}");
 
             _messageService.Write(LocalizationKey.backupjob_source, false);
-            _consoleAdapter.WriteLine($": {job.Source}");
+            _consoleAdapter.WriteLine($": {refreshedJob.Source}");
 
             _messageService.Write(LocalizationKey.backupjob_destination, false);
-            _consoleAdapter.WriteLine($": {job.Destination}");
+            _consoleAdapter.WriteLine($": {refreshedJob.Destination}");
 
             _messageService.Write(LocalizationKey.backupjob_type, false);
-            _consoleAdapter.WriteLine($": {job.Type}");
+            _consoleAdapter.WriteLine($": {refreshedJob.Type}");
+
+            _messageService.Write(LocalizationKey.backupjob_last_executed, false);
+            _consoleAdapter.Write(": ");
+            if (refreshedJob.LastExecutionDate is not null)
+            {
+                _consoleAdapter.WriteLine(refreshedJob.LastExecutionDate.Value.ToString("g"));
+            }
+            else
+            {
+                _messageService.Write(LocalizationKey.backupjob_never);
+            }
+
+            _messageService.Write(LocalizationKey.backupjob_active, false);
+            _consoleAdapter.WriteLine($": {refreshedJob.IsActive}");
 
             _consoleAdapter.WriteLine();
         };
 
         var menuConfig = _menuFactory.CreateJobDetailsMenu(
-            job,
+            refreshedJob,
             backupJob => RunJob(backupJob, onBackToMainMenu),
             backupJob => UpdateJob(backupJob, onBackToMainMenu),
             backupJob => DeleteJob(backupJob, onBackToMainMenu),
