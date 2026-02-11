@@ -108,6 +108,10 @@ internal class JobsFlowService(
             _messageService.Write(LocalizationKey.backupjob_type, false);
             _consoleAdapter.WriteLine($": {job.Type}");
 
+            string lastExecution = job.LastExecutionDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "never";
+            _consoleAdapter.WriteLine($": LastExecution {lastExecution}");
+            _consoleAdapter.WriteLine($": Active {job.IsActive}");
+
             _consoleAdapter.WriteLine();
         };
 

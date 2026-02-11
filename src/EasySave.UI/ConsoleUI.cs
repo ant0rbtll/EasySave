@@ -30,24 +30,6 @@ public class ConsoleUI
     /// <summary>
     /// Initializes a test-friendly console UI using prebuilt collaborators.
     /// </summary>
-    private void DisplayJobsList()
-    {
-        try
-        {
-            List<BackupJob> backupJobList = _backupApplicationService.GetAllJobs();
-            foreach (BackupJob job in backupJobList)
-            {
-                Console.WriteLine(job.Id + " - " + job.Name);
-                string lastExecution = job.LastExecutionDate?.ToString("yyyy-MM-dd HH:mm:ss") ?? "never";
-                Console.WriteLine($"    LastExecution: {lastExecution} | Active: {job.IsActive}");
-            }
-        }
-        catch (Exception e)
-        {
-            ShowError(e);
-            _menuService.WaitForUser();
-            MainMenu();
-        }
     /// <param name="backupApplicationService">Application service exposing backup use cases.</param>
     /// <param name="parser">Command-line parser for non-interactive execution.</param>
     /// <param name="localizationService">Localization service used by the UI.</param>
