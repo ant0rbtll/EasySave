@@ -195,6 +195,8 @@ public class ProgramTests
         public string GetUserPreferencesPath() => throw new InvalidOperationException("boom");
 
         public void SetLogDirectoryOverride(string? directory) => throw new InvalidOperationException("boom");
+
+        public string ResolveLogsDirectory() => throw new InvalidOperationException("boom");
     }
 
     private sealed class RecordingPathProvider : IPathProvider
@@ -239,6 +241,9 @@ public class ProgramTests
         public void SetLogDirectoryOverride(string? directory)
         {
         }
+
+        public string ResolveLogsDirectory()
+            => _rootDirectory;
     }
 
     private static BackupApplicationService CreateApplicationService(out FakeBackupEngine engine)

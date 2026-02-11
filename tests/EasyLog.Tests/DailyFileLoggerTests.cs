@@ -157,6 +157,11 @@ public class DailyFileLoggerTests
         {
         }
 
+        public string ResolveLogsDirectory()
+        {
+            return Path.Combine(_rootPath, "logs");
+        }
+
         private static void EnsureFile(string path)
         {
             var directory = Path.GetDirectoryName(path);

@@ -323,6 +323,9 @@ public class DailyFileLoggerUnitTests
         {
             // Not used in tests.
         }
+
+        public string ResolveLogsDirectory()
+            => _root;
     }
 
     private sealed class TempDirectory : IDisposable

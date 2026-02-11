@@ -84,9 +84,12 @@ sealed class Program
         services.AddSingleton<IEncryptionProviderResolver, EncryptionProviderResolver>();
         services.AddSingleton<IBackupEngine, BackupEngine>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
+        services.AddSingleton<ILogReader, JsonLogReader>();
+        services.AddSingleton<ILogReader, XmlLogReader>();
 
         // Setup application service
         services.AddSingleton<BackupApplicationService>();
+        services.AddSingleton<ILogQueryService, LogQueryService>();
 
         // Setup ViewModels pour Avalonia
         services.AddSingleton<MainWindowViewModel>();

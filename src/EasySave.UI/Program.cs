@@ -66,9 +66,12 @@ public class Program
         services.AddSingleton<IEncryptionProviderResolver, EncryptionProviderResolver>();
         services.AddSingleton<IBackupEngine, BackupEngine>();
         services.AddSingleton<CommandLineParser>();
+        services.AddSingleton<ILogReader, JsonLogReader>();
+        services.AddSingleton<ILogReader, XmlLogReader>();
 
         // Setup application service
         services.AddSingleton<BackupApplicationService>();
+        services.AddSingleton<ILogQueryService, LogQueryService>();
 
         // Setup and run UI
         services.AddSingleton<ConsoleUI>();
