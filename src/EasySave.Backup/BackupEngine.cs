@@ -258,6 +258,7 @@ public class BackupEngine(
 
         try
         {
+            // TODO v3.0: Refactor to async - Current sync-over-async pattern risks deadlock and blocks threads
             var result = provider.EncryptAsync(destinationFile, policy).GetAwaiter().GetResult();
             if (result.IsSuccess)
             {

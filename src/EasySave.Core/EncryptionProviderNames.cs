@@ -1,4 +1,4 @@
-namespace EasySave.Backup;
+namespace EasySave.Core;
 
 /// <summary>
 /// Well-known encryption provider names.

@@ -1,4 +1,5 @@
 using EasySave.Backup;
+using EasySave.Core;
 using EasySave.Persistence;
 using Moq;
 

@@ -1,17 +1,22 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
+using EasySave.Core;
 
 namespace EasySave.Backup;
 
 /// <summary>
 /// Built-in .NET provider that encrypts file content in-place using streaming AES.
-/// Encryption is one-way in EasySave: no decryption workflow is implemented.
+/// A fixed key and IV are used so encrypted data can be decrypted later.
 /// </summary>
 public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
 {
     private const int EncryptionKeySizeBytes = 32;
     private const int IvSizeBytes = 16;
     private const int CopyBufferSize = 1024 * 128;
+    private const string FixedEncryptionKeyBase64 = "jWfTkA2WzVd18XGN/FfYyQfQExx2Qx7XSE4aym0fNhA=";
+    private const string FixedIvBase64 = "M2jnwD1Qd9nLGsw9YGjDMQ==";
+    private static readonly byte[] FixedEncryptionKey = CreateFixedBytes(FixedEncryptionKeyBase64, EncryptionKeySizeBytes, nameof(FixedEncryptionKeyBase64));
+    private static readonly byte[] FixedIv = CreateFixedBytes(FixedIvBase64, IvSizeBytes, nameof(FixedIvBase64));
 
     /// <inheritdoc />
     public string Name => EncryptionProviderNames.DotNet;
@@ -39,10 +44,7 @@ public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
 
         try
         {
-            byte[] key = RandomNumberGenerator.GetBytes(EncryptionKeySizeBytes);
-            byte[] iv = RandomNumberGenerator.GetBytes(IvSizeBytes);
-
-            await EncryptFileToTemporaryAsync(filePath, tempFilePath, key, iv, cancellationToken);
+            await EncryptFileToTemporaryAsync(filePath, tempFilePath, FixedEncryptionKey, FixedIv, cancellationToken);
             File.Move(tempFilePath, filePath, overwrite: true);
 
             stopwatch.Stop();
@@ -138,5 +140,26 @@ public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
     private static long GetNegativeElapsed(Stopwatch stopwatch)
     {
         return -(long)Math.Max(1, stopwatch.ElapsedMilliseconds);
+    }
+
+    private static byte[] CreateFixedBytes(string base64Value, int expectedLength, string valueName)
+    {
+        byte[] decoded;
+
+        try
+        {
+            decoded = Convert.FromBase64String(base64Value);
+        }
+        catch (FormatException ex)
+        {
+            throw new InvalidOperationException($"{valueName} must be a valid Base64 string.", ex);
+        }
+
+        if (decoded.Length != expectedLength)
+        {
+            throw new InvalidOperationException($"{valueName} must decode to {expectedLength} bytes.");
+        }
+
+        return decoded;
     }
 }

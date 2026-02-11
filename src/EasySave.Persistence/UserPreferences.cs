@@ -8,7 +8,7 @@ namespace EasySave.Persistence;
 public class UserPreferences
 {
     private List<string>? _encryptedExtensions;
-    private string _encryptionProvider = "DotNet";
+    private string _encryptionProvider = EncryptionProviderNames.DotNet;
 
     /// <summary>
     /// Gets or sets the application language/culture.
@@ -39,8 +39,8 @@ public class UserPreferences
     /// </summary>
     public string EncryptionProvider
     {
-        get => string.IsNullOrWhiteSpace(_encryptionProvider) ? "DotNet" : _encryptionProvider;
-        set => _encryptionProvider = string.IsNullOrWhiteSpace(value) ? "DotNet" : value;
+        get => string.IsNullOrWhiteSpace(_encryptionProvider) ? EncryptionProviderNames.DotNet : _encryptionProvider;
+        set => _encryptionProvider = string.IsNullOrWhiteSpace(value) ? EncryptionProviderNames.DotNet : value;
     }
 
     /// <summary>
