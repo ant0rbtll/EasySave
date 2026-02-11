@@ -76,10 +76,8 @@ public class JobsFlowServiceAdditionalTests
     public void CreateBackupJob_WhenRepositoryRejectsCreate_ShowsErrorAndWaits()
     {
         var app = CreateApplicationService(out _);
-        for (var i = 0; i < IBackupJobRepository.DefaultMaxJobs; i++)
-        {
-            app.CreateJob($"Job{i}", "S", "D", BackupType.Complete);
-        }
+        
+        app.CreateJob($"Job{i}", "S", "D", BackupType.Complete);
 
         var service = CreateService(app, out var menuService, out var inputService, out var messageService, out _);
         inputService.StringAnswers.Enqueue("Overflow");

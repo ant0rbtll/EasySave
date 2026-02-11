@@ -392,9 +392,6 @@ public class JsonBackupJobRepositoryTests : IDisposable
     {
         // Arrange
         var repo = CreateRepository();
-
-        // Act & Assert
-        Assert.Equal(5, repo.MaxJobs());
     }
 
     #endregion

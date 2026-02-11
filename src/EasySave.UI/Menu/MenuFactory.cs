@@ -13,17 +13,14 @@ namespace EasySave.UI.Menu
         public MenuConfig CreateMainMenu(int currentJobCount, Action onCreateJob, Action onManageJobs, Action onConfigureParams, Action onQuit)
         {
             bool hasJobs = currentJobCount > 0;
-            bool canCreateJob = currentJobCount < IBackupJobRepository.DefaultMaxJobs;
 
             var items = new List<LocalizationKey>();
             var actions = new Dictionary<int, Action>();
             int index = 0;
 
-            if (canCreateJob)
-            {
-                items.Add(LocalizationKey.menu_create);
+            items.Add(LocalizationKey.menu_create);
                 actions[index++] = onCreateJob;
-            }
+            
 
             if (hasJobs)
             {

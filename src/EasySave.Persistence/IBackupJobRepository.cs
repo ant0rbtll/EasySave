@@ -8,11 +8,6 @@ namespace EasySave.Persistence;
 public interface IBackupJobRepository
 {
     /// <summary>
-    /// Default maximum number of allowed jobs.
-    /// </summary>
-    const int DefaultMaxJobs = 5;
-
-    /// <summary>
     /// Adds a job to the repository.
     /// </summary>
     /// <param name="job">The job to add.</param>
@@ -42,12 +37,6 @@ public interface IBackupJobRepository
     /// </summary>
     /// <returns>The job count.</returns>
     int Count();
-
-    /// <summary>
-    /// Returns the maximum number of allowed jobs.
-    /// </summary>
-    /// <returns>The maximum number of jobs.</returns>
-    int MaxJobs();
 
     /// <summary>
     /// Updates an existing job.
