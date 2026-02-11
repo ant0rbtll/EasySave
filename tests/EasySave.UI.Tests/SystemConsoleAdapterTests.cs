@@ -60,14 +60,6 @@ public class SystemConsoleAdapterTests
     }
 
     [Fact]
-    public void Clear_IsCallable()
-    {
-        var adapter = new SystemConsoleAdapter();
-        _ = Record.Exception(() => adapter.Clear());
-        Assert.True(true);
-    }
-
-    [Fact]
     public void Constructor_CreatesValidInstance()
     {
         var adapter = new SystemConsoleAdapter();
