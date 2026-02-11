@@ -1,17 +1,12 @@
-﻿using EasySave.Core;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using EasySave.Core;
 
 namespace EasySave.GUI.Models
 {
-    public class BackupJob : ModelBase
-    {
-        public int Id { get; set; }
+	public class BackupJob : ModelBase
+	{
+		public int Id { get; set; }
 
-        private string name = String.Empty;
+		private string name = string.Empty;
 
 		public string Name
 		{
@@ -19,7 +14,7 @@ namespace EasySave.GUI.Models
 			set { name = value; OnNotifyPropertyChanged(nameof(Name)); }
 		}
 
-		private string source = String.Empty;
+		private string source = string.Empty;
 
 		public string Source
 		{
@@ -27,7 +22,7 @@ namespace EasySave.GUI.Models
 			set { source = value; OnNotifyPropertyChanged(nameof(Source)); }
 		}
 
-		private string destination = String.Empty;
+		private string destination = string.Empty;
 
 		public string Destination
 		{
@@ -43,15 +38,15 @@ namespace EasySave.GUI.Models
 			set { type = value; OnNotifyPropertyChanged(nameof(Type)); }
 		}
 
-		private DateTime? latestExecutionDate = null;
+		private DateTime? lastExecutionDate;
 
 		public DateTime? LastExecutionDate
 		{
-			get { return latestExecutionDate; }
-			set { latestExecutionDate = value; OnNotifyPropertyChanged(nameof(LastExecutionDate)); } 
+			get { return lastExecutionDate; }
+			set { lastExecutionDate = value; OnNotifyPropertyChanged(nameof(LastExecutionDate)); }
 		}
 
-		private string lastExecutionDisplay = String.Empty;
+		private string lastExecutionDisplay = string.Empty;
 
 		public string LastExecutionDisplay
 		{
@@ -59,8 +54,8 @@ namespace EasySave.GUI.Models
 			set { lastExecutionDisplay = value; OnNotifyPropertyChanged(nameof(LastExecutionDisplay)); }
 		}
 
-		private bool isActive = false;
-
+		private bool isActive;
+		
 		public bool IsActive
 		{
 			get { return isActive; }
