@@ -1,7 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using EasySave.GUI.ViewModels;
-using EasySave.GUI.Helpers;
 
 namespace EasySave.GUI.Views;
 
@@ -11,10 +10,7 @@ public partial class CreateView : UserControl
     {
         InitializeComponent();
     }
-    /// <summary>
-    /// Opening a file explorer to select the source folder
-    /// </summary>
-    #region BrowseSource_Click
+
     private async void BrowseSource_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is not CreateViewModel vm)
@@ -29,16 +25,10 @@ public partial class CreateView : UserControl
 
         if (!string.IsNullOrWhiteSpace(result))
         {
-            vm.SetSourcePath(result);
-            vm.ValidateSourcePathOnLostFocus();
+            vm.SetSourcePathFromDialog(result);
         }
     }
-    #endregion
 
-    /// <summary>
-    /// Opening a file explorer to select the destination folder 
-    /// </summary>
-    #region BrowseDestination_Click
     private async void BrowseDestination_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is not CreateViewModel vm)
@@ -53,16 +43,28 @@ public partial class CreateView : UserControl
 
         if (!string.IsNullOrWhiteSpace(result))
         {
-            vm.SetDestinationPath(result);
-            vm.ValidateDestinationPathOnLostFocus();
+            vm.SetDestinationPathFromDialog(result);
         }
     }
-    #endregion
 
-    /// <summary>
-    /// Loss of focus on the target area
-    /// </summary>
-    #region Source_LostFocus
+    private void Name_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (sender is TextBox tb && DataContext is CreateViewModel vm)
+            vm.Name = tb.Text ?? string.Empty;
+    }
+
+    private void Source_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (sender is TextBox tb && DataContext is CreateViewModel vm)
+            vm.SourcePath = tb.Text ?? string.Empty;
+    }
+
+    private void Destination_TextChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (sender is TextBox tb && DataContext is CreateViewModel vm)
+            vm.DestinationPath = tb.Text ?? string.Empty;
+    }
+
     private void Source_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is CreateViewModel vm)
@@ -74,11 +76,10 @@ public partial class CreateView : UserControl
         if (DataContext is CreateViewModel vm)
             vm.ValidateDestinationPathOnLostFocus();
     }
+
     private void Name_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         if (DataContext is CreateViewModel vm)
             vm.ValidateNameOnLostFocus();
     }
-    #endregion
 }
-

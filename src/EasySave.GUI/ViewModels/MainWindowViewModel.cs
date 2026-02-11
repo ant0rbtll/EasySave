@@ -31,6 +31,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _configViewModel.SetOnLanguageChanged(OnLanguageChanged);
         _homeViewModel = homeViewModel;
 
+        _createViewModel.OnJobCreated = () => _manageViewModel.LoadJobsCommand.Execute(null);
+
         Sidebar = sidebarViewModel;
         Sidebar.SetNavigateAction(Navigate);
         CurrentPage = _homeViewModel;

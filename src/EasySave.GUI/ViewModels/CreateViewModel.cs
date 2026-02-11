@@ -2,38 +2,40 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Core;
 using EasySave.Application;
-using System.Windows.Input;
+using EasySave.GUI.Helpers;
 using EasySave.Localization;
+using System.Collections.ObjectModel;
 
 namespace EasySave.GUI.ViewModels;
 
+public record BackupTypeOption(BackupType Value, string Label)
+{
+    public override string ToString() => Label;
+}
+
 public partial class CreateViewModel : ViewModelBase
 {
-
-    public event Action? SourcePathSelected;
-    public event Action? DestinationPathSelected;
-
-
-    /// <summary>
-    /// ObservableProperty of CreateViewModel
-    /// </summary>
-    #region ObservableProperty
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateJobCommand))]
     private string name = string.Empty;
 
     [ObservableProperty]
     private BackupType selectedBackupType = BackupType.Complete;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateJobCommand))]
     private string sourcePath = string.Empty;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateJobCommand))]
     private string destinationPath = string.Empty;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateJobCommand))]
     private string? sourcePathError;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CreateJobCommand))]
     private string? destinationPathError;
 
     [ObservableProperty]
@@ -70,19 +72,15 @@ public partial class CreateViewModel : ViewModelBase
     private string createJobButtonLabel = string.Empty;
 
     [ObservableProperty]
-    private string browseSourceButtonLabel = string.Empty;
-    #endregion
+    private string browseButtonLabel = string.Empty;
 
     private readonly BackupApplicationService _app;
     private readonly ILocalizationService _localizationService;
+    private CancellationTokenSource? _dismissCts;
 
-    public IReadOnlyList<BackupType> BackupTypes { get; } =
-        new[] { BackupType.Complete, BackupType.Differential };
+    public ObservableCollection<BackupTypeOption> BackupTypeOptions { get; } = [];
 
-    public ICommand CreateJobCommand { get; }
-    public ICommand CancelCommand { get; }
-
-    public Action<BackupJob>? OnJobCreated { get; set; }
+    public Action? OnJobCreated { get; set; }
 
     public CreateViewModel(
         BackupApplicationService app,
@@ -91,74 +89,68 @@ public partial class CreateViewModel : ViewModelBase
     {
         _app = app;
         _localizationService = localizationService;
-        CreateJobCommand = new RelayCommand(ExecuteCreateJob, CanExecuteCreateJob);
-        CancelCommand = new RelayCommand(ExecuteCancel);
-
         RefreshTranslations();
     }
 
-    private bool CanExecuteCreateJob() =>
+    private bool CanCreateJob() =>
         !string.IsNullOrWhiteSpace(Name) &&
         !string.IsNullOrWhiteSpace(SourcePath) &&
         !string.IsNullOrWhiteSpace(DestinationPath) &&
         SourcePathError == null &&
         DestinationPathError == null;
 
-    /// <summary>
-    /// Send data 
-    /// </summary>
-    #region ExecuteCreateJob
-    private void ExecuteCreateJob()
+    [RelayCommand(CanExecute = nameof(CanCreateJob))]
+    private void CreateJob()
     {
         try
         {
-            var job = new BackupJob
-            {
-                Name = Name,
-                Source = SourcePath,
-                Destination = DestinationPath,
-                Type = SelectedBackupType
-            };
-            _app.CreateJob(
-                job.Name,
-                job.Source,
-                job.Destination,
-                job.Type);
-
-            OnJobCreated?.Invoke(job);
-            ExecuteCancel();
+            _app.CreateJob(Name, SourcePath, DestinationPath, SelectedBackupType);
+            OnJobCreated?.Invoke();
+            Cancel();
             ShowSuccessMessage(_localizationService.TranslateText(LocalizationKey.gui_create_add_success));
         }
         catch (ArgumentException ex)
         {
-            JobNameError = ex.Message;
+            JobNameError = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
         }
-        catch (IOException)
+        catch (IOException ex)
         {
-            DestinationPathError = _localizationService.TranslateText(LocalizationKey.gui_create_error_io);
+            DestinationPathError = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            JobNameError = _localizationService.TranslateText(LocalizationKey.gui_create_error_unexpected);
+            JobNameError = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
         }
     }
-    private async void ShowSuccessMessage(string message)
+
+    private void ShowSuccessMessage(string message)
     {
         SuccessMessage = message;
         IsSuccessMessageVisible = true;
-
-        await Task.Delay(3000); // 3 secondes
-
-        IsSuccessMessageVisible = false;
-        SuccessMessage = null;
+        _ = AutoDismissSuccessAsync();
     }
-    #endregion
 
-    /// <summary>
-    /// Cleaning of input areas 
-    /// </summary>
-    #region ExecuteCancel
-    private void ExecuteCancel()
+    private async Task AutoDismissSuccessAsync()
+    {
+        var old = _dismissCts;
+        old?.Cancel();
+        old?.Dispose();
+        var cts = _dismissCts = new CancellationTokenSource();
+
+        try
+        {
+            await Task.Delay(3000, cts.Token);
+            IsSuccessMessageVisible = false;
+            SuccessMessage = null;
+        }
+        catch (TaskCanceledException)
+        {
+            // A newer auto-dismiss replaced this one
+        }
+    }
+
+    [RelayCommand]
+    private void Cancel()
     {
         Name = string.Empty;
         SourcePath = string.Empty;
@@ -166,33 +158,47 @@ public partial class CreateViewModel : ViewModelBase
         SelectedBackupType = BackupType.Complete;
         SourcePathError = null;
         DestinationPathError = null;
-
-        ((RelayCommand)CreateJobCommand).NotifyCanExecuteChanged();
     }
-    #endregion
 
-    /// <summary>
-    /// Input validation 
-    /// </summary>
-    #region ValidatePath
+    partial void OnNameChanged(string value)
+    {
+        if (JobNameError != null && !string.IsNullOrWhiteSpace(value) && value.Length <= 100)
+            JobNameError = null;
+    }
+
+    partial void OnSourcePathChanged(string value)
+    {
+        if (SourcePathError != null && IsValidPath(value))
+            SourcePathError = null;
+    }
+
+    partial void OnDestinationPathChanged(string value)
+    {
+        if (DestinationPathError != null && IsValidPath(value))
+            DestinationPathError = null;
+    }
+
     public void ValidateSourcePathOnLostFocus()
     {
         SourcePathError = IsValidPath(SourcePath)
             ? null
-            : _localizationService.TranslateText(
-                LocalizationKey.gui_create_source_invalid);
-
-        ((RelayCommand)CreateJobCommand).NotifyCanExecuteChanged();
+            : _localizationService.TranslateTextWithParams(
+                LocalizationKey.gui_create_source_invalid, [ExamplePath("my_source")]);
     }
+
     public void ValidateDestinationPathOnLostFocus()
     {
         DestinationPathError = IsValidPath(DestinationPath)
             ? null
-            : _localizationService.TranslateText(
-                LocalizationKey.gui_create_destination_invalid);
-
-        ((RelayCommand)CreateJobCommand).NotifyCanExecuteChanged();
+            : _localizationService.TranslateTextWithParams(
+                LocalizationKey.gui_create_destination_invalid, [ExamplePath("my_destination")]);
     }
+
+    private static string ExamplePath(string folder) =>
+        OperatingSystem.IsWindows()
+            ? $"C:\\Users\\user\\{folder}"
+            : $"/home/user/{folder}";
+
     public void ValidateNameOnLostFocus()
     {
         const int inputMax = 100;
@@ -214,18 +220,17 @@ public partial class CreateViewModel : ViewModelBase
         {
             JobNameError = null;
         }
-
-    ((RelayCommand)CreateJobCommand).NotifyCanExecuteChanged();
     }
+
     private static bool IsValidPath(string path)
     {
         try
         {
+            if (string.IsNullOrWhiteSpace(path)) return false;
             if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()))
             {
                 path += Path.DirectorySeparatorChar;
             }
-            if (string.IsNullOrWhiteSpace(path)) return false;
             if (path.IndexOfAny(Path.GetInvalidPathChars()) >= 0) return false;
             if (!Path.IsPathRooted(path)) return false;
             Path.GetFullPath(path);
@@ -236,8 +241,6 @@ public partial class CreateViewModel : ViewModelBase
             return false;
         }
     }
-    public void SetSourcePath(string path) => SourcePath = path; 
-    public void SetDestinationPath(string path) => DestinationPath = path;
 
     public void SetSourcePathFromDialog(string path)
     {
@@ -250,11 +253,7 @@ public partial class CreateViewModel : ViewModelBase
         DestinationPath = path;
         ValidateDestinationPathOnLostFocus();
     }
-    #endregion
-    /// <summary>
-    /// Translations
-    /// </summary>
-    #region RefreshTranslations
+
     public void RefreshTranslations()
     {
         Title = _localizationService.TranslateText(LocalizationKey.gui_create_title);
@@ -265,9 +264,16 @@ public partial class CreateViewModel : ViewModelBase
         DestinationLabel = _localizationService.TranslateText(LocalizationKey.gui_create_destination);
         BackupTypeLabel = _localizationService.TranslateText(LocalizationKey.gui_create_backup_type);
 
-        BrowseSourceButtonLabel = _localizationService.TranslateText(LocalizationKey.gui_create_browse);
+        BrowseButtonLabel = _localizationService.TranslateText(LocalizationKey.gui_create_browse);
         CreateJobButtonLabel = _localizationService.TranslateText(LocalizationKey.gui_create_create_job);
         CancelButtonLabel = _localizationService.TranslateText(LocalizationKey.gui_create_cancel);
+
+        var current = SelectedBackupType;
+        BackupTypeOptions.Clear();
+        BackupTypeOptions.Add(new BackupTypeOption(BackupType.Complete,
+            _localizationService.TranslateText(LocalizationKey.backupjob_type_complete)));
+        BackupTypeOptions.Add(new BackupTypeOption(BackupType.Differential,
+            _localizationService.TranslateText(LocalizationKey.backupjob_type_differential)));
+        SelectedBackupType = current;
     }
-    #endregion
 }
