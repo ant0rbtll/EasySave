@@ -298,4 +298,164 @@ public class BackupApplicationService(
             job.IsActive = false;
         }
     }
+
+    private void EnsureBusinessSoftwareIsNotRunning()
+    {
+        if (_preferencesRepository is null)
+        {
+            return;
+        }
+
+        string configuredProcessName;
+        try
+        {
+            configuredProcessName = NormalizeProcessName(_preferencesRepository.Load().BusinessSoftwareProcessName);
+        }
+        catch
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(configuredProcessName))
+        {
+            return;
+        }
+
+        if (_isBusinessSoftwareRunning(configuredProcessName))
+        {
+            var exception = new InvalidOperationException("error_business_software_running");
+            exception.Data["errorKey"] = "error_business_software_running";
+            exception.Data["0"] = configuredProcessName;
+            throw exception;
+        }
+    }
+
+    private static string NormalizeProcessName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = value.Trim();
+        var fileName = Path.GetFileName(trimmed);
+        var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
+        return string.IsNullOrWhiteSpace(withoutExtension) ? trimmed : withoutExtension;
+    }
+
+    private static bool IsProcessRunning(string processName)
+    {
+        try
+        {
+            var candidates = BuildProcessNameCandidates(processName);
+            if (candidates.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (var process in Process.GetProcesses())
+            {
+                string currentName;
+                try
+                {
+                    currentName = process.ProcessName;
+                }
+                catch
+                {
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(currentName))
+                {
+                    continue;
+                }
+
+                if (candidates.Contains(currentName))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static HashSet<string> BuildProcessNameCandidates(string processName)
+    {
+        var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (string.IsNullOrWhiteSpace(processName))
+        {
+            return candidates;
+        }
+
+        var trimmed = processName.Trim();
+        candidates.Add(trimmed);
+
+        var fileName = Path.GetFileName(trimmed);
+        if (!string.IsNullOrWhiteSpace(fileName))
+        {
+            candidates.Add(fileName);
+            candidates.Add(Path.GetFileNameWithoutExtension(fileName));
+        }
+
+        candidates.RemoveWhere(string.IsNullOrWhiteSpace);
+        return candidates;
+    }
+
+    private Dictionary<int, StateEntry> LoadStateEntries()
+    {
+        if (_pathProvider is null)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+
+        try
+        {
+            string path = _pathProvider.GetStatePath();
+            if (!File.Exists(path))
+            {
+                return new Dictionary<int, StateEntry>();
+            }
+
+            string json = File.ReadAllText(path);
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return new Dictionary<int, StateEntry>();
+            }
+
+            return JsonSerializer.Deserialize<Dictionary<int, StateEntry>>(json)
+                   ?? new Dictionary<int, StateEntry>();
+        }
+        catch (JsonException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+        catch (IOException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return new Dictionary<int, StateEntry>();
+        }
+    }
+
+    private static void ApplyState(BackupJob job, Dictionary<int, StateEntry> entries)
+    {
+        if (entries.TryGetValue(job.Id, out var entry))
+        {
+            job.LastExecutionDate = entry.Timestamp;
+            // IsActive represents the current runtime state from the state file.
+            job.IsActive = entry.Status == BackupStatus.Active;
+        }
+        else
+        {
+            job.LastExecutionDate = null;
+            job.IsActive = false;
+        }
+    }
 }
