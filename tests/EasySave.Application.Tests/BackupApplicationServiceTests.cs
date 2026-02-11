@@ -9,13 +9,15 @@ public class BackupApplicationServiceTests
 {
     private readonly Mock<IBackupJobRepository> _repoMock;
     private readonly Mock<IBackupEngine> _engineMock;
+    private readonly Mock<IBackupJobStateService> _backupJobStateServiceMock;
     private readonly BackupApplicationService _service;
 
     public BackupApplicationServiceTests()
     {
         _repoMock = new Mock<IBackupJobRepository>();
         _engineMock = new Mock<IBackupEngine>();
-        _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object);
+        _backupJobStateServiceMock = new Mock<IBackupJobStateService>();
+        _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object, _backupJobStateServiceMock.Object);
     }
 
     /// <summary>
@@ -70,6 +72,7 @@ public class BackupApplicationServiceTests
         Assert.NotNull(result);
         Assert.Equal(2, result.Count);
         Assert.Equal("Job1", result[0].Name);
+        _backupJobStateServiceMock.Verify(s => s.ApplyState(It.IsAny<IEnumerable<BackupJob>>()), Times.Once);
     }
 
     /// <summary>
@@ -87,6 +90,7 @@ public class BackupApplicationServiceTests
         Assert.NotNull(result);
         Assert.Equal("SpecificJob", result.Name);
         _repoMock.Verify(r => r.GetById(jobId), Times.Once);
+        _backupJobStateServiceMock.Verify(s => s.ApplyState(expectedJob), Times.Once);
     }
 
     /// <summary>
@@ -113,6 +117,7 @@ public class BackupApplicationServiceTests
         var result = _service.GetJob(999);
 
         Assert.Null(result);
+        _backupJobStateServiceMock.Verify(s => s.ApplyState(It.IsAny<BackupJob>()), Times.Never);
     }
 
     /// <summary>

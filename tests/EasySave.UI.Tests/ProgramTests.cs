@@ -121,6 +121,8 @@ public class ProgramTests
             Assert.NotNull(provider.GetService(typeof(IBackupJobRepository)));
             Assert.NotNull(provider.GetService(typeof(IUserPreferencesRepository)));
             Assert.NotNull(provider.GetService(typeof(IStateWriter)));
+            Assert.NotNull(provider.GetService(typeof(IStateReader)));
+            Assert.NotNull(provider.GetService(typeof(IBackupJobStateService)));
         }
         finally
         {
@@ -195,6 +197,8 @@ public class ProgramTests
         public string GetUserPreferencesPath() => throw new InvalidOperationException("boom");
 
         public void SetLogDirectoryOverride(string? directory) => throw new InvalidOperationException("boom");
+
+        public string ResolveLogsDirectory() => throw new InvalidOperationException("boom");
     }
 
     private sealed class RecordingPathProvider : IPathProvider
@@ -239,13 +243,16 @@ public class ProgramTests
         public void SetLogDirectoryOverride(string? directory)
         {
         }
+
+        public string ResolveLogsDirectory()
+            => _rootDirectory;
     }
 
     private static BackupApplicationService CreateApplicationService(out FakeBackupEngine engine)
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
         engine = new FakeBackupEngine();
-        return new BackupApplicationService(repository, engine);
+        return new BackupApplicationService(repository, engine, Moq.Mock.Of<IBackupJobStateService>());
     }
 
     private sealed class FakeServiceProvider(ConsoleUI ui) : IServiceProvider

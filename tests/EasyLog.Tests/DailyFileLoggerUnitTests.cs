@@ -18,7 +18,10 @@ public class DailyFileLoggerUnitTests
         var expectedDate = expectedUtc.Date;
 
         var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var entry = new LogEntry(
             local,
@@ -47,7 +50,10 @@ public class DailyFileLoggerUnitTests
     {
         using var tempDir = new TempDirectory();
         var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         Assert.Throws<ArgumentNullException>(() => logger.Write(null!));
     }
@@ -64,7 +70,10 @@ public class DailyFileLoggerUnitTests
         // Create a proper empty JSON array
         File.WriteAllText(logPath, "[\n]");
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
@@ -93,7 +102,10 @@ public class DailyFileLoggerUnitTests
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
         File.WriteAllText(logPath, string.Empty);
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 11, 0, 0, DateTimeKind.Utc),
@@ -132,7 +144,10 @@ public class DailyFileLoggerUnitTests
 
         File.WriteAllText(logPath, "[\n" + IndentBlock(SerializeEntry(first), 2) + "\n]\n");
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var second = first with { BackupName = "JobSecond", FileSizeBytes = 42 };
         logger.Write(second);
@@ -167,7 +182,10 @@ public class DailyFileLoggerUnitTests
         // Write a corrupted file (incomplete JSON array)
         File.WriteAllText(logPath, "[\n  {\"test\": \"data\"}\n");
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         // Should not throw - will append entry despite corruption
         logger.Write(entry);
@@ -186,7 +204,10 @@ public class DailyFileLoggerUnitTests
         var pathProvider = new TestPathProvider(tempDir.Path);
         var logPath = pathProvider.GetDailyLogPath(date);
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 12, 0, 0, DateTimeKind.Utc),
@@ -212,7 +233,11 @@ public class DailyFileLoggerUnitTests
         var pathProvider = new TestPathProvider(tempDir.Path);
         var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
 
-        using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
+        using var logger = new DailyFileLogger(
+            new XmlLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}",
+            format: LogFormat.Xml);
         var entry = new LogEntry(
             new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
             "JobXml",
@@ -237,7 +262,11 @@ public class DailyFileLoggerUnitTests
         var pathProvider = new TestPathProvider(tempDir.Path);
         var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
 
-        using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
+        using var logger = new DailyFileLogger(
+            new XmlLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}",
+            format: LogFormat.Xml);
         var first = new LogEntry(
             new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
             "JobXml1",
@@ -323,6 +352,9 @@ public class DailyFileLoggerUnitTests
         {
             // Not used in tests.
         }
+
+        public string ResolveLogsDirectory()
+            => _root;
     }
 
     private sealed class TempDirectory : IDisposable

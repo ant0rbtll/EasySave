@@ -307,7 +307,7 @@ public class JobsFlowServiceAdditionalTests
     public void RunJob_WhenEngineThrows_ShowsErrorAndStillWaits()
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
-        var app = new BackupApplicationService(repository, new ThrowingBackupEngine());
+        var app = new BackupApplicationService(repository, new ThrowingBackupEngine(), Moq.Mock.Of<IBackupJobStateService>());
         app.CreateJob("A", "S", "D", BackupType.Complete);
         var service = CreateService(app, out var menuService, out _, out var messageService, out _);
 
@@ -394,7 +394,7 @@ public class JobsFlowServiceAdditionalTests
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
         engine = new FakeBackupEngine();
-        return new BackupApplicationService(repository, engine);
+        return new BackupApplicationService(repository, engine, Moq.Mock.Of<IBackupJobStateService>());
     }
 
     private sealed class ThrowingBackupEngine : IBackupEngine

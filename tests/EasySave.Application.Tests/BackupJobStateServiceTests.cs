@@ -1,0 +1,87 @@
+using EasySave.Core;
+using EasySave.State;
+
+namespace EasySave.Application.Tests;
+
+public class BackupJobStateServiceTests
+{
+    [Fact]
+    public void ApplyState_WithMatchingEntry_UpdatesRuntimeFields()
+    {
+        var timestamp = new DateTime(2026, 2, 11, 10, 30, 0, DateTimeKind.Utc);
+        var reader = new StubStateReader(new Dictionary<int, StateEntry>
+        {
+            [42] = new()
+            {
+                BackupId = 42,
+                Timestamp = timestamp,
+                Status = BackupStatus.Active
+            }
+        });
+
+        var service = new BackupJobStateService(reader);
+        var job = new BackupJob { Id = 42 };
+
+        service.ApplyState(job);
+
+        Assert.Equal(timestamp, job.LastExecutionDate);
+        Assert.True(job.IsActive);
+    }
+
+    [Fact]
+    public void ApplyState_WithMissingEntry_ResetsRuntimeFields()
+    {
+        var reader = new StubStateReader(new Dictionary<int, StateEntry>());
+        var service = new BackupJobStateService(reader);
+        var job = new BackupJob
+        {
+            Id = 42,
+            LastExecutionDate = DateTime.UtcNow,
+            IsActive = true
+        };
+
+        service.ApplyState(job);
+
+        Assert.Null(job.LastExecutionDate);
+        Assert.False(job.IsActive);
+    }
+
+    [Fact]
+    public void ApplyState_OnCollection_LoadsStateOnceAndUpdatesAllJobs()
+    {
+        var reader = new StubStateReader(new Dictionary<int, StateEntry>
+        {
+            [1] = new()
+            {
+                BackupId = 1,
+                Timestamp = new DateTime(2026, 2, 11, 9, 0, 0, DateTimeKind.Utc),
+                Status = BackupStatus.Active
+            }
+        });
+
+        var service = new BackupJobStateService(reader);
+        var jobs = new List<BackupJob>
+        {
+            new() { Id = 1 },
+            new() { Id = 2, LastExecutionDate = DateTime.UtcNow, IsActive = true }
+        };
+
+        service.ApplyState(jobs);
+
+        Assert.Equal(1, reader.ReadEntriesCalls);
+        Assert.True(jobs[0].IsActive);
+        Assert.False(jobs[1].IsActive);
+        Assert.Null(jobs[1].LastExecutionDate);
+    }
+
+    private sealed class StubStateReader(IReadOnlyDictionary<int, StateEntry> entries) : IStateReader
+    {
+        public int ReadEntriesCalls { get; private set; }
+
+        public IReadOnlyDictionary<int, StateEntry> ReadEntries()
+        {
+            ReadEntriesCalls++;
+            return entries;
+        }
+    }
+}

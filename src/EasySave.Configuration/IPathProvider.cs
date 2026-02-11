@@ -38,5 +38,11 @@ namespace EasySave.Configuration
         /// </summary>
         /// <param name="directory">The custom directory path, or null to reset to default.</param>
         void SetLogDirectoryOverride(string? directory);
+
+        /// <summary>
+        /// Resolves the effective directory used to store daily log files.
+        /// </summary>
+        /// <returns>The absolute log directory path.</returns>
+        string ResolveLogsDirectory();
     }
 }
