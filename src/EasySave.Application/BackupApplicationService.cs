@@ -1,10 +1,6 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
-using EasySave.Log;
-using EasySave.Configuration;
-using EasySave.State;
-using System.Text.Json;
 
 namespace EasySave.Application;
 
@@ -16,11 +12,11 @@ namespace EasySave.Application;
 public class BackupApplicationService(
     IBackupJobRepository repo,
     IBackupEngine backupEngine,
-    IPathProvider? pathProvider = null)
+    IBackupJobStateService backupJobStateService)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
-    private readonly IPathProvider? _pathProvider = pathProvider;
+    private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -92,11 +88,7 @@ public class BackupApplicationService(
     public List<BackupJob> GetAllJobs()
     {
         var jobs = _repo.GetAll();
-        var stateEntries = LoadStateEntries();
-        foreach (var job in jobs)
-        {
-            ApplyState(job, stateEntries);
-        }
+        _backupJobStateService.ApplyState(jobs);
         return jobs;
     }
 
@@ -109,7 +101,7 @@ public class BackupApplicationService(
     {
         var job = _repo.GetById(id);
         if (job == null) return null;
-        ApplyState(job, LoadStateEntries());
+        _backupJobStateService.ApplyState(job);
         return job;
     }
 
@@ -124,106 +116,5 @@ public class BackupApplicationService(
     private void ExecuteJob(BackupJob job)
     {
         _engine.Execute(job);
-    }
-
-    private Dictionary<int, StateEntry> LoadStateEntries()
-    {
-        if (_pathProvider is null)
-        {
-            return new Dictionary<int, StateEntry>();
-        }
-
-        try
-        {
-            string path = _pathProvider.GetStatePath();
-            if (!File.Exists(path))
-            {
-                return new Dictionary<int, StateEntry>();
-            }
-
-            string json = File.ReadAllText(path);
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                return new Dictionary<int, StateEntry>();
-            }
-
-            return JsonSerializer.Deserialize<Dictionary<int, StateEntry>>(json)
-                   ?? new Dictionary<int, StateEntry>();
-        }
-        catch (JsonException)
-        {
-            return new Dictionary<int, StateEntry>();
-        }
-        catch (IOException)
-        {
-            return new Dictionary<int, StateEntry>();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return new Dictionary<int, StateEntry>();
-        }
-    }
-
-    private static void ApplyState(BackupJob job, Dictionary<int, StateEntry> entries)
-    {
-        if (entries.TryGetValue(job.Id, out var entry))
-        {
-            job.LastExecutionDate = entry.Timestamp;
-            // IsActive represents the current runtime state from the state file.
-            job.IsActive = entry.Status == BackupStatus.Active;
-        }
-        else
-        {
-            job.LastExecutionDate = null;
-            job.IsActive = false;
-        }
-    }
-
-
-    /// <summary>
-    /// Get all the dates there has been logs
-    /// </summary>
-    /// <returns>a list of dates</returns>
-    public List<string> GetLogsDate()
-    {
-        var logsPath = _pathProvider.ResolveLogsDirectory();
-
-        if (!Directory.Exists(logsPath))
-        {
-            return new List<string>();
-        }
-
-        return Directory.GetFiles(logsPath, "*.json")
-            .Select(Path.GetFileNameWithoutExtension)
-            .OrderByDescending(static d => d)
-            .ToList();
-    }
-
-    ///// <summary>
-    ///// YYYY-MM-DD
-    ///// Get the logs by a date
-    ///// </summary>
-    ///// <param name="date">The date of the searching logs</param>
-    ///// <returns> The logs of the date given</returns>
-    public List<Dictionary<string, object>> GetLogsByDate(string date)
-    {
-        var logsPath = _pathProvider.ResolveLogsDirectory();
-        var filePath = Path.Combine(logsPath, $"{date}.json");
-
-        if (!File.Exists(filePath))
-        {
-            return new List<Dictionary<string, object>>();
-        }
-
-        try
-        {
-            var jsonString = File.ReadAllText(filePath);
-            return JsonSerializer.Deserialize<List<Dictionary<string, object>>>(jsonString)
-                   ?? new List<Dictionary<string, object>>();
-        }
-        catch (JsonException)
-        {
-            return new List<Dictionary<string, object>>();
-        }
     }
 }

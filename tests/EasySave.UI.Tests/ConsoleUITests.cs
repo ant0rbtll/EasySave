@@ -108,7 +108,7 @@ public class ConsoleUITests
     public void RunFromArgs_WhenRunJobThrows_ShowsErrorAndWaits()
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
-        var app = new BackupApplicationService(repository, new ThrowingBackupEngine());
+        var app = new BackupApplicationService(repository, new ThrowingBackupEngine(), Moq.Mock.Of<IBackupJobStateService>());
         app.CreateJob("A", "S", "D", BackupType.Complete);
 
         var ui = CreateConsoleUiForRun(app, out var menuService, out var messageService);
@@ -161,7 +161,7 @@ public class ConsoleUITests
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
         engine = new FakeBackupEngine();
-        return new BackupApplicationService(repository, engine);
+        return new BackupApplicationService(repository, engine, Moq.Mock.Of<IBackupJobStateService>());
     }
 
     private sealed class CapturingMainMenuFactory : IMenuFactory

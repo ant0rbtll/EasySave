@@ -86,6 +86,8 @@ sealed class Program
         services.AddSingleton<ILocalizationService, LocalizationService>();
         services.AddSingleton<ILogReader, JsonLogReader>();
         services.AddSingleton<ILogReader, XmlLogReader>();
+        services.AddSingleton<IStateReader, JsonStateReader>();
+        services.AddSingleton<IBackupJobStateService, BackupJobStateService>();
 
         // Setup application service
         services.AddSingleton<BackupApplicationService>();

@@ -121,6 +121,8 @@ public class ProgramTests
             Assert.NotNull(provider.GetService(typeof(IBackupJobRepository)));
             Assert.NotNull(provider.GetService(typeof(IUserPreferencesRepository)));
             Assert.NotNull(provider.GetService(typeof(IStateWriter)));
+            Assert.NotNull(provider.GetService(typeof(IStateReader)));
+            Assert.NotNull(provider.GetService(typeof(IBackupJobStateService)));
         }
         finally
         {
@@ -250,7 +252,7 @@ public class ProgramTests
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
         engine = new FakeBackupEngine();
-        return new BackupApplicationService(repository, engine);
+        return new BackupApplicationService(repository, engine, Moq.Mock.Of<IBackupJobStateService>());
     }
 
     private sealed class FakeServiceProvider(ConsoleUI ui) : IServiceProvider
