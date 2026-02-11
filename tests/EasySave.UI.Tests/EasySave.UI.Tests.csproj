@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\EasySave.UI\EasySave.UI.csproj" />
-    <ProjectReference Include="..\..\EasySave.AppCommon\EasySave.AppCommon.csproj" />
+    <ProjectReference Include="..\..\src\EasySave.AppCommon\EasySave.AppCommon.csproj" />
     <ProjectReference Include="..\..\src\EasySave.Application\EasySave.Application.csproj" />
     <ProjectReference Include="..\..\src\EasySave.Backup\EasySave.Backup.csproj" />
     <ProjectReference Include="..\..\src\EasySave.Core\EasySave.Core.csproj" />

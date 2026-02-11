@@ -13,10 +13,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\src\EasySave.Application\EasySave.Application.csproj" />
-	  <ProjectReference Include="..\src\EasySave.Backup\EasySave.Backup.csproj" />
-	  <ProjectReference Include="..\src\EasySave.GUI\EasySave.GUI.csproj" />
-	  <ProjectReference Include="..\src\EasySave.Persistence\EasySave.Persistence.csproj" />
-	  <ProjectReference Include="..\src\EasySave.UI\EasySave.UI.csproj" />
+	  <ProjectReference Include="..\EasySave.Application\EasySave.Application.csproj" />
+	  <ProjectReference Include="..\EasySave.Backup\EasySave.Backup.csproj" />
+	  <ProjectReference Include="..\EasySave.GUI\EasySave.GUI.csproj" />
+	  <ProjectReference Include="..\EasySave.Persistence\EasySave.Persistence.csproj" />
+	  <ProjectReference Include="..\EasySave.UI\EasySave.UI.csproj" />
 	</ItemGroup>
 </Project>
