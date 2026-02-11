@@ -13,8 +13,10 @@ public sealed class XmlLogReader : ILogReader
 {
     private const long MaxLogFileSizeBytes = 50L * 1024 * 1024; // 50 MB
 
+    /// <inheritdoc />
     public LogFormat Format => LogFormat.Xml;
 
+    /// <inheritdoc />
     public IReadOnlyList<LogEntry> ReadEntries(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -63,6 +65,12 @@ public sealed class XmlLogReader : ILogReader
         return entries;
     }
 
+    /// <summary>
+    /// Parses one <c>LogEntry</c> XML element into a typed model.
+    /// </summary>
+    /// <param name="element">Entry element to parse.</param>
+    /// <param name="filePath">Source file path used for diagnostics.</param>
+    /// <returns>Parsed log entry model.</returns>
     private static LogEntry ParseEntry(XElement element, string filePath)
     {
         DateTime timestamp = ParseTimestamp(element, filePath);
@@ -85,6 +93,12 @@ public sealed class XmlLogReader : ILogReader
             encryptionTimeMs);
     }
 
+    /// <summary>
+    /// Parses the timestamp value from one XML entry.
+    /// </summary>
+    /// <param name="element">Entry element to parse.</param>
+    /// <param name="filePath">Source file path used for diagnostics.</param>
+    /// <returns>Parsed timestamp.</returns>
     private static DateTime ParseTimestamp(XElement element, string filePath)
     {
         string raw = GetString(element, "Timestamp");
@@ -96,6 +110,12 @@ public sealed class XmlLogReader : ILogReader
         throw new InvalidDataException($"Invalid timestamp '{raw}' in '{filePath}'.");
     }
 
+    /// <summary>
+    /// Parses the event type value from one XML entry.
+    /// </summary>
+    /// <param name="element">Entry element to parse.</param>
+    /// <param name="filePath">Source file path used for diagnostics.</param>
+    /// <returns>Parsed event type.</returns>
     private static LogEventType ParseEventType(XElement element, string filePath)
     {
         string raw = GetString(element, "EventType");
@@ -113,6 +133,14 @@ public sealed class XmlLogReader : ILogReader
         throw new InvalidDataException($"Invalid event type '{raw}' in '{filePath}'.");
     }
 
+    /// <summary>
+    /// Parses a long integer field from one XML entry.
+    /// </summary>
+    /// <param name="element">Entry element to parse.</param>
+    /// <param name="name">Field name.</param>
+    /// <param name="filePath">Source file path used for diagnostics.</param>
+    /// <param name="fallback">Value returned when the field is missing or empty.</param>
+    /// <returns>Parsed numeric value or fallback.</returns>
     private static long ParseLong(XElement element, string name, string filePath, long fallback = 0)
     {
         string? raw = element.Element(name)?.Value;
@@ -129,6 +157,12 @@ public sealed class XmlLogReader : ILogReader
         throw new InvalidDataException($"Invalid numeric value '{raw}' for '{name}' in '{filePath}'.");
     }
 
+    /// <summary>
+    /// Gets a child element value as string.
+    /// </summary>
+    /// <param name="element">Parent element.</param>
+    /// <param name="name">Child element name.</param>
+    /// <returns>Child value or empty string when missing.</returns>
     private static string GetString(XElement element, string name)
     {
         return element.Element(name)?.Value ?? string.Empty;

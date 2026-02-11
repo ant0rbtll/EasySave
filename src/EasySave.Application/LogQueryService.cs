@@ -12,6 +12,11 @@ public sealed class LogQueryService : ILogQueryService
     private readonly IPathProvider _pathProvider;
     private readonly IReadOnlyDictionary<LogFormat, ILogReader> _readerByFormat;
 
+    /// <summary>
+    /// Initializes a log query service with path resolution and format-specific readers.
+    /// </summary>
+    /// <param name="pathProvider">Provider used to resolve the logs directory.</param>
+    /// <param name="readers">Registered readers keyed by log format.</param>
     public LogQueryService(IPathProvider pathProvider, IEnumerable<ILogReader> readers)
     {
         ArgumentNullException.ThrowIfNull(pathProvider);
@@ -29,6 +34,7 @@ public sealed class LogQueryService : ILogQueryService
         _readerByFormat = grouped.ToDictionary(static g => g.Key, static g => g.Single());
     }
 
+    /// <inheritdoc />
     public IReadOnlyList<DateOnly> GetAvailableDates(LogFormat format)
     {
         string logsDirectory = _pathProvider.ResolveLogsDirectory();
@@ -52,6 +58,7 @@ public sealed class LogQueryService : ILogQueryService
             .ToList();
     }
 
+    /// <inheritdoc />
     public IReadOnlyList<LogEntry> GetByDate(DateOnly date, LogFormat format)
     {
         var reader = ResolveReader(format);
@@ -67,6 +74,12 @@ public sealed class LogQueryService : ILogQueryService
         return reader.ReadEntries(filePath);
     }
 
+    /// <summary>
+    /// Resolves the reader registered for one log format.
+    /// </summary>
+    /// <param name="format">Requested log format.</param>
+    /// <returns>The matching reader implementation.</returns>
+    /// <exception cref="NotSupportedException">Thrown when no reader is registered for the format.</exception>
     private ILogReader ResolveReader(LogFormat format)
     {
         if (_readerByFormat.TryGetValue(format, out var reader))

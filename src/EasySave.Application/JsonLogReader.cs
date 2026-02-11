@@ -16,8 +16,10 @@ public sealed class JsonLogReader : ILogReader
         PropertyNameCaseInsensitive = true
     };
 
+    /// <inheritdoc />
     public LogFormat Format => LogFormat.Json;
 
+    /// <inheritdoc />
     public IReadOnlyList<LogEntry> ReadEntries(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))

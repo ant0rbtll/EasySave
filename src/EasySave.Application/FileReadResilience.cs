@@ -1,5 +1,8 @@
 namespace EasySave.Application;
 
+/// <summary>
+/// Provides resilient file read helpers used by readers in the application layer.
+/// </summary>
 internal static class FileReadResilience
 {
     private static readonly TimeSpan[] s_retryDelays =
@@ -8,6 +11,13 @@ internal static class FileReadResilience
         TimeSpan.FromMilliseconds(80)
     ];
 
+    /// <summary>
+    /// Reads a text file with a small retry policy for transient I/O errors and a size guard.
+    /// </summary>
+    /// <param name="filePath">Path of the file to read.</param>
+    /// <param name="maxFileSizeBytes">Maximum accepted file size in bytes.</param>
+    /// <returns>The full text content of the file.</returns>
+    /// <exception cref="InvalidDataException">Thrown when file size exceeds the configured limit.</exception>
     public static string ReadAllTextWithRetry(string filePath, long maxFileSizeBytes)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
@@ -27,6 +37,12 @@ internal static class FileReadResilience
         }
     }
 
+    /// <summary>
+    /// Ensures the target file does not exceed the configured maximum size.
+    /// </summary>
+    /// <param name="filePath">Path of the file to validate.</param>
+    /// <param name="maxFileSizeBytes">Maximum accepted file size in bytes.</param>
+    /// <exception cref="InvalidDataException">Thrown when file size exceeds the configured limit.</exception>
     private static void EnsureFileSizeWithinLimit(string filePath, long maxFileSizeBytes)
     {
         var info = new FileInfo(filePath);

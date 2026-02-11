@@ -113,6 +113,11 @@ public class BackupApplicationService(
     {
         _repo.Update(job);
     }
+
+    /// <summary>
+    /// Delegates job execution to the backup engine.
+    /// </summary>
+    /// <param name="job">The job instance to execute.</param>
     private void ExecuteJob(BackupJob job)
     {
         _engine.Execute(job);

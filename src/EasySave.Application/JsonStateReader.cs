@@ -18,6 +18,7 @@ public sealed class JsonStateReader(IPathProvider pathProvider) : IStateReader
         PropertyNameCaseInsensitive = true
     };
 
+    /// <inheritdoc />
     public IReadOnlyDictionary<int, StateEntry> ReadEntries()
     {
         try
@@ -38,19 +39,19 @@ public sealed class JsonStateReader(IPathProvider pathProvider) : IStateReader
             return JsonSerializer.Deserialize<Dictionary<int, StateEntry>>(json, s_jsonOptions)
                    ?? new Dictionary<int, StateEntry>();
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
             return new Dictionary<int, StateEntry>();
         }
-        catch (InvalidDataException ex)
+        catch (InvalidDataException)
         {
             return new Dictionary<int, StateEntry>();
         }
-        catch (IOException ex)
+        catch (IOException)
         {
             return new Dictionary<int, StateEntry>();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             return new Dictionary<int, StateEntry>();
         }
