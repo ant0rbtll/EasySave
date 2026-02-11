@@ -149,5 +149,8 @@ public enum LocalizationKey
     gui_create_name_too_long,
     gui_create_title,
     gui_create_browse_source,
-    gui_create_browse_destination
+    gui_create_browse_destination,
+    gui_create_error_io,
+    gui_create_error_unexpected,
+    gui_create_success
 }
