@@ -190,4 +190,16 @@ public enum LocalizationKey
     gui_window_maximize,
     gui_window_restore,
     gui_window_close
+    gui_create_success,
+    gui_home_description,
+
+    // Log - Log viewer
+    gui_log_history_subtitle,
+    gui_log_search_date_watermark,
+    gui_log_detail_subtitle,
+    gui_log_search_log_watermark,
+    gui_log_col_time,
+    gui_log_col_status,
+    gui_log_col_size,
+    gui_log_col_duration,
 }

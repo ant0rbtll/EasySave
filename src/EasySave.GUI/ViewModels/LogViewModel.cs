@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using EasySave.Application;
 using EasySave.GUI.Models;
+using EasySave.Localization;
 using EasySave.Log;
 using System;
 using System.Collections.Generic;
@@ -14,27 +16,80 @@ namespace EasySave.GUI.ViewModels;
 /// </summary>
 public partial class LogViewModel : ViewModelBase
 {
+    private readonly BackupApplicationService _backupService;
+    private readonly ILocalizationService _localizationService;
     private readonly List<string> _allAvailableDates = new();
     private readonly List<LogDisplayModel> _allLogEntries = new();
-
     public ObservableCollection<string> AvailableDates { get; } = new();
     public ObservableCollection<LogDisplayModel> LogEntries { get; } = new();
+    private Action _onLanguageChanged = static () => { };
+
+    [ObservableProperty] private string _searchText = string.Empty;
+    [ObservableProperty] private string _searchTextDate = string.Empty;
+    [ObservableProperty] private string? _selectedDate;
+    [ObservableProperty] private bool _isDateSelected;
+
+    [ObservableProperty] private string _historyTitle = "";
+    [ObservableProperty] private string _historySubtitle = "";
+    [ObservableProperty] private string _searchDateWatermark = "";
+    [ObservableProperty] private string _logDetailSubtitle = "";
+    [ObservableProperty] private string _searchLogWatermark = "";
+    [ObservableProperty] private string _colTime = "";
+    [ObservableProperty] private string _colName = "";
+    [ObservableProperty] private string _colStatus = "";
+    [ObservableProperty] private string _colSource = "";
+    [ObservableProperty] private string _colDest = "";
+    [ObservableProperty] private string _colSize = "";
+    [ObservableProperty] private string _colDuration = "";
 
     [ObservableProperty]
-    private string _searchText = string.Empty;
+    [NotifyPropertyChangedFor(nameof(IdHeader))]
+    [NotifyPropertyChangedFor(nameof(NameHeader))]
+    [NotifyPropertyChangedFor(nameof(SourceHeader))]
+    [NotifyPropertyChangedFor(nameof(DestinationHeader))]
+    [NotifyPropertyChangedFor(nameof(TypeHeader))]
+    private string sortColumn = string.Empty;
 
     [ObservableProperty]
-    private string _searchTextDate = string.Empty;
+    [NotifyPropertyChangedFor(nameof(IdHeader))]
+    [NotifyPropertyChangedFor(nameof(NameHeader))]
+    [NotifyPropertyChangedFor(nameof(SourceHeader))]
+    [NotifyPropertyChangedFor(nameof(DestinationHeader))]
+    [NotifyPropertyChangedFor(nameof(TypeHeader))]
+    private bool sortAscending = true;
 
-    [ObservableProperty]
-    private string? _selectedDate;
+    public string IdHeader => "ID" + GetSortIndicator("Id");
+    public string NameHeader => "Nom" + GetSortIndicator("Name");
+    public string SourceHeader => "Source" + GetSortIndicator("Source");
+    public string DestinationHeader => "Destination" + GetSortIndicator("Destination");
+    public string TypeHeader => "Type" + GetSortIndicator("Type");
 
-    [ObservableProperty]
-    private bool _isDateSelected;
-
-    public LogViewModel()
+    public LogViewModel(BackupApplicationService backupAppService, ILocalizationService localizationService)
     {
+        _backupService = backupAppService;
+        _localizationService = localizationService;
+
+        RefreshTranslations();
         LoadDates();
+    }
+
+        [RelayCommand]
+    private void SortBy(string column)
+    {
+        if (SortColumn == column)
+            SortAscending = !SortAscending;
+        else
+        {
+            SortColumn = column;
+            SortAscending = true;
+        }
+        Refresh();
+    }
+
+    public string GetSortIndicator(string column)
+    {
+        if (SortColumn != column) return "";
+        return SortAscending ? " \u25b2" : " \u25bc";
     }
 
     /// <summary>
@@ -48,6 +103,27 @@ public partial class LogViewModel : ViewModelBase
     /// </summary>
     /// <param name="value">The new search string.</param>
     partial void OnSearchTextDateChanged(string value) => Refresh();
+
+    /// <summary>
+    /// Updates all localized strings based on the current language.
+    /// </summary>
+    public void RefreshTranslations()
+    {
+        HistoryTitle = _localizationService.TranslateText(LocalizationKey.gui_sidebar_log);
+        HistorySubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_history_subtitle);
+        LogDetailSubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_detail_subtitle);
+
+        SearchDateWatermark = _localizationService.TranslateText(LocalizationKey.gui_log_search_date_watermark);
+        SearchLogWatermark = _localizationService.TranslateText(LocalizationKey.gui_log_search_log_watermark);
+
+        ColTime = _localizationService.TranslateText(LocalizationKey.gui_log_col_time);
+        ColName = _localizationService.TranslateText(LocalizationKey.backupjob_name);
+        ColStatus = _localizationService.TranslateText(LocalizationKey.gui_log_col_status);
+        ColSource = _localizationService.TranslateText(LocalizationKey.backupjob_source);
+        ColDest = _localizationService.TranslateText(LocalizationKey.backupjob_destination);
+        ColSize = _localizationService.TranslateText(LocalizationKey.gui_log_col_size);
+        ColDuration = _localizationService.TranslateText(LocalizationKey.gui_log_col_duration);
+    }
 
     /// <summary>
     /// Command to select a specific date and display its associated logs.
@@ -104,57 +180,71 @@ public partial class LogViewModel : ViewModelBase
     /// <summary>
     /// Initializes the list of available dates (mock data).
     /// </summary>
+    /// <summary>
+    /// Fetches available log dates from the backend service and updates the list.
+    /// </summary>
     private void LoadDates()
     {
         _allAvailableDates.Clear();
-        _allAvailableDates.Add("2026-02-10");
-        _allAvailableDates.Add("2026-02-09");
-        _allAvailableDates.Add("2026-02-08");
+
+        var dates = _backupService.GetLogsDate();
+
+        foreach (var date in dates)
+        {
+            _allAvailableDates.Add(date);
+        }
 
         Refresh();
     }
 
+    public void SetOnLanguageChanged(Action onLanguageChanged)
+    {
+        _onLanguageChanged = onLanguageChanged;
+    }
+
     /// <summary>
-    /// Loads log entries for a specific date (mock data).
+    /// Loads log entries for a specific date by deserializing JSON data from the backend.
     /// </summary>
-    /// <param name="date">The date for which logs should be loaded.</param>
+    /// <param name="date">The date of the logs to load.</param>
     private void LoadLogsForDate(string date)
     {
         _allLogEntries.Clear();
 
-        _allLogEntries.Add(new LogDisplayModel
-        {
-            Timestamp = "14:20:05",
-            BackupName = "Work_Files",
-            EventType = LogEventType.TransferFile.ToString(),
-            Source = "C:/Docs/budget.xlsx",
-            Destination = "D:/Backup/budget.xlsx",
-            FileSize = "45 KB",
-            Duration = "12 ms"
-        });
+        var rawLogs = _backupService.GetLogsByDate(date);
 
-        _allLogEntries.Add(new LogDisplayModel
+        foreach (var log in rawLogs)
         {
-            Timestamp = "14:20:06",
-            BackupName = "Work_Files",
-            EventType = LogEventType.CreateDirectory.ToString(),
-            Source = "C:/Docs/Invoices",
-            Destination = "D:/Backup/Invoices",
-            FileSize = "0 B",
-            Duration = "2 ms"
-        });
+            int typeValue = int.Parse(log.GetValueOrDefault("eventType")?.ToString() ?? "2");
+            string typeName = Enum.GetName(typeof(LogEventType), typeValue) ?? "Error";
 
-        _allLogEntries.Add(new LogDisplayModel
-        {
-            Timestamp = "14:21:10",
-            BackupName = "Work_Files",
-            EventType = LogEventType.Error.ToString(),
-            Source = "C:/Docs/locked_file.dat",
-            Destination = "D:/Backup/locked_file.dat",
-            FileSize = "0 B",
-            Duration = "0 ms"
-        });
+            long.TryParse(log.GetValueOrDefault("fileSizeBytes")?.ToString(), out long sizeInBytes);
+            _allLogEntries.Add(new LogDisplayModel
+            {
+                Timestamp = DateTime.TryParse(log.GetValueOrDefault("timestamp")?.ToString(), out var dt)
+                ? dt.ToString("HH:mm:ss")
+                : "00:00:00",
+                BackupName = log.GetValueOrDefault("backupName")?.ToString() ?? "",
+                EventType = typeName,
+                Source = log.GetValueOrDefault("sourcePathUNC")?.ToString() ?? "",
+                Destination = log.GetValueOrDefault("destinationPathUNC")?.ToString() ?? "",
+                FileSize = FormatFileSize(sizeInBytes),
+                Duration = $"{log.GetValueOrDefault("transferTimeMs")} ms"
+            });
+        }
 
         Refresh();
+    }
+
+    private string FormatFileSize(long bytes)
+    {
+        string[] units = { "B", "KB", "MB", "GB", "TB" };
+        double doubleBytes = bytes;
+        int i = 0;
+        while (doubleBytes >= 1024 && i < units.Length - 1)
+        {
+            doubleBytes /= 1024;
+            i++;
+        }
+        return $"{doubleBytes:0.##} {units[i]}";
     }
 }
