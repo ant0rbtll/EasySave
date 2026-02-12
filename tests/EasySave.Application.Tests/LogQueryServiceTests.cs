@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using EasySave.Configuration;
 using EasySave.Core;
 using EasySave.Log;
@@ -91,6 +92,7 @@ public class LogQueryServiceTests
             <Logs>
               <LogEntry>
                 <Timestamp>2026-02-11T13:12:50.8789933Z</Timestamp>
+                <BackupId>42</BackupId>
                 <BackupName>job-xml</BackupName>
                 <EventType>TransferFile</EventType>
                 <SourcePathUNC>\\src-xml</SourcePathUNC>
@@ -107,6 +109,7 @@ public class LogQueryServiceTests
         var result = service.GetByDate(new DateOnly(2026, 2, 11));
 
         var actual = Assert.Single(result);
+        Assert.Equal(42, actual.BackupId);
         Assert.Equal("job-xml", actual.BackupName);
         Assert.Equal(LogEventType.TransferFile, actual.EventType);
         Assert.Equal("\\\\src-xml", actual.SourcePathUNC);
@@ -138,6 +141,7 @@ public class LogQueryServiceTests
             <Logs>
               <LogEntry>
                 <Timestamp>2026-02-11T12:00:00Z</Timestamp>
+                <BackupId>11</BackupId>
                 <BackupName>job-xml</BackupName>
                 <EventType>TransferFile</EventType>
                 <SourcePathUNC>\\src-xml</SourcePathUNC>
@@ -169,7 +173,8 @@ public class LogQueryServiceTests
         var options = new JsonSerializerOptions
         {
             WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false) }
         };
 
         string json = JsonSerializer.Serialize(entries, options);
