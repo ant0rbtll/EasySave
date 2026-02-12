@@ -86,6 +86,9 @@
             <Setter Property="Opacity" Value="0.3"/>
             <Setter Property="Cursor" Value="Arrow"/>
         </Style>
+        <Style Selector="Button.run-selected-btn">
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
         <Style Selector="Button.run-selected-btn:disabled">
             <Setter Property="Opacity" Value="0.3"/>
             <Setter Property="Cursor" Value="Arrow"/>
@@ -268,8 +271,7 @@
                     Padding="10,6"
                     Background="#1A66BB6A"
                     BorderThickness="0"
-                    CornerRadius="6"
-                    Cursor="Hand">
+                    CornerRadius="6">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
                     <TextBlock Text="{Binding RunSelectedText}"
@@ -288,8 +290,7 @@
                     Padding="10,6"
                     Background="#1AEF5350"
                     BorderThickness="0"
-                    CornerRadius="6"
-                    Cursor="Hand">
+                    CornerRadius="6">
                 <StackPanel Orientation="Horizontal" Spacing="6">
                     <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350" Width="14" Height="14"/>
                     <TextBlock Text="{Binding DeleteSelectedText}"

@@ -597,6 +597,14 @@ public partial class ManageViewModel : ViewModelBase
 
             try
             {
+                var existingJob = await Task.Run(() => _applicationService.GetJob(job.Id));
+                if (existingJob is null)
+                {
+                    errorMessage = _localizationService.TranslateText(LocalizationKey.error_job_not_found);
+                    success = false;
+                    break;
+                }
+
                 await Task.Run(() => _applicationService.RunJob(job.Id));
                 completed++;
             }
@@ -617,6 +625,7 @@ public partial class ManageViewModel : ViewModelBase
             RunningJobName = string.Empty;
             ApplyJobs(jobs);
             UpdateHasSelection();
+            IsAllSelected = false;
 
             if (success)
             {
@@ -688,6 +697,7 @@ public partial class ManageViewModel : ViewModelBase
         {
             ApplyJobs(jobs);
             UpdateHasSelection();
+            IsAllSelected = false;
 
             if (success)
             {
