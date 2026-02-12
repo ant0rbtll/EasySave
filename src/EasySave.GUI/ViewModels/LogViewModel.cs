@@ -148,6 +148,7 @@ public partial class LogViewModel : ViewModelBase
     /// <summary>
     /// Fetches all available log dates from the log query service and updates the internal list.
     /// </summary>
+    [RelayCommand]
     private void LoadDates()
     {
         _allAvailableDates.Clear();
