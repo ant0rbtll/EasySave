@@ -39,6 +39,7 @@ public class BackupEngine(
     /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
     public void Execute(BackupJob job)
     {
+        long counterTimeMs = 0;
         try
         {
             var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
@@ -92,7 +93,7 @@ public class BackupEngine(
                     }
 
                     long encryptionTimeMs = EncryptTransferredFileIfRequired(destinationFile, encryptionPolicy);
-                        
+
                     Log(job.Id,
                         job.Name,
                         LogEventType.TransferFile,
@@ -102,6 +103,7 @@ public class BackupEngine(
                         result.TransferTimeMs,
                         encryptionTimeMs
                     );
+                    counterTimeMs += result.TransferTimeMs + Math.Max(0, encryptionTimeMs);
 
                     remainingFiles--;
                     remainingSize -= result.FileSizeBytes;
@@ -115,7 +117,7 @@ public class BackupEngine(
             }
 
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
-            Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, 0);
+            Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, counterTimeMs);
             _stateWriter.MarkInactive(job.Id);
         }
         catch (Exception ex)
@@ -132,7 +134,7 @@ public class BackupEngine(
                 eventType,
                 sourceContext,
                 destinationContext,
-                0,
+                counterTimeMs,
                 0
             );
             throw;
