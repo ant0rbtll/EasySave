@@ -11,7 +11,6 @@ public class BackupApplicationServiceTests
     private readonly Mock<IBackupEngine> _engineMock;
     private readonly Mock<IUserPreferencesRepository> _preferencesRepositoryMock;
     private readonly Mock<IBackupJobStateService> _backupJobStateServiceMock;
-    private readonly Mock<IUserPreferencesRepository> _preferencesRepositoryMock;
     private readonly BackupApplicationService _service;
 
     public BackupApplicationServiceTests()
@@ -20,7 +19,6 @@ public class BackupApplicationServiceTests
         _engineMock = new Mock<IBackupEngine>();
         _preferencesRepositoryMock = new Mock<IUserPreferencesRepository>();
         _backupJobStateServiceMock = new Mock<IBackupJobStateService>();
-        _preferencesRepositoryMock = new Mock<IUserPreferencesRepository>();
         _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object, _backupJobStateServiceMock.Object);
     }
 
@@ -369,7 +367,7 @@ public class BackupApplicationServiceTests
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            pathProvider: null,
+            _backupJobStateServiceMock.Object,
             preferencesRepository: _preferencesRepositoryMock.Object,
             isBusinessSoftwareRunning: _ => true);
 
@@ -394,7 +392,7 @@ public class BackupApplicationServiceTests
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            pathProvider: null,
+            _backupJobStateServiceMock.Object,
             preferencesRepository: _preferencesRepositoryMock.Object,
             isBusinessSoftwareRunning: _ => false);
 
@@ -412,7 +410,7 @@ public class BackupApplicationServiceTests
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            pathProvider: null,
+            _backupJobStateServiceMock.Object,
             preferencesRepository: _preferencesRepositoryMock.Object,
             isBusinessSoftwareRunning: _ => false);
 

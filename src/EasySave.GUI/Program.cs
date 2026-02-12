@@ -94,7 +94,7 @@ sealed class Program
         services.AddSingleton(sp => new BackupApplicationService(
             sp.GetRequiredService<IBackupJobRepository>(),
             sp.GetRequiredService<IBackupEngine>(),
-            sp.GetRequiredService<IPathProvider>(),
+            sp.GetRequiredService<IBackupJobStateService>(),
             sp.GetRequiredService<IUserPreferencesRepository>()));
         services.AddSingleton<ILogQueryService, LogQueryService>();
 
