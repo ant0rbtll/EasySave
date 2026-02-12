@@ -72,26 +72,6 @@ public class JobsFlowServiceAdditionalTests
         Assert.Equal(0, menuService.WaitCalls);
     }
 
-    [Fact]
-    public void CreateBackupJob_WhenRepositoryRejectsCreate_ShowsErrorAndWaits()
-    {
-        var app = CreateApplicationService(out _);
-        for (var i = 0; i < IBackupJobRepository.DefaultMaxJobs; i++)
-        {
-            app.CreateJob($"Job{i}", "S", "D", BackupType.Complete);
-        }
-
-        var service = CreateService(app, out var menuService, out var inputService, out var messageService, out _);
-        inputService.StringAnswers.Enqueue("Overflow");
-        inputService.StringAnswers.Enqueue("S");
-        inputService.StringAnswers.Enqueue("D");
-        inputService.BackupTypeAnswers.Enqueue(BackupType.Complete);
-
-        service.CreateBackupJob(() => { });
-
-        Assert.Single(messageService.Errors);
-        Assert.Equal(1, menuService.WaitCalls);
-    }
 
     [Fact]
     public void UpdateJobField_NameAction_ChangesNameInSession()

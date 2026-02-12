@@ -81,7 +81,6 @@ translations:
   job_update_unsaved_save_and_quit: "Sauvegarder et quitter"
   job_update_unsaved_discard_and_quit: "Quitter sans sauvegarder"
   error: "Erreur !"
-  error_add_max: "Impossible d'ajouter plus de {0} backupJobs"
   error_add_exists: "BackupJob d'identifiant {0} existe déjà"
   error_parser_arg_null: "L'argument ne doit pas être vide ou null"
   error_parser_arg_invalid: "L'argument n'est pas valide"

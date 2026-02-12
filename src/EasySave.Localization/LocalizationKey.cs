@@ -87,7 +87,6 @@ public enum LocalizationKey
     job_update_unsaved_save_and_quit,
     job_update_unsaved_discard_and_quit,
     error,
-    error_add_max,
     error_add_exists,
     error_parser_arg_null,
     error_parser_arg_invalid,

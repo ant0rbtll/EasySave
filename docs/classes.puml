@@ -42,13 +42,11 @@ package "Application" {
 
 package "Persistence" {
   interface IBackupJobRepository {
-    +{static} DefaultMaxJobs : int = 5
     +Add(job : BackupJob) : void
     +Remove(id : int) : void
     +GetById(id : int) : BackupJob?
     +GetAll() : List<BackupJob>
     +Count() : int
-    +MaxJobs() : int
     +Update(job : BackupJob) : void
   }
 
@@ -470,7 +468,6 @@ UI.SettingsFlowService ..> Core.LogFormat
 UI.MenuService --> Localization.ILocalizationService
 UI.MenuService --> UI.IConsoleAdapter
 UI.MenuService --> UI.SystemConsoleAdapter
-UI.MenuFactory ..> Persistence.IBackupJobRepository : DefaultMaxJobs
 UI.MenuFactory ..> UI.MenuConfig
 
 UI.ConsoleMessageService --> Localization.ILocalizationService
