@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using EasySave.Configuration;
 using EasySave.Localization;
 using EasySave.Persistence;
+using static EasySave.GUI.Helpers.PathValidation;
 
 namespace EasySave.GUI.ViewModels;
 
@@ -110,26 +111,6 @@ public partial class ConfigViewModel : ViewModelBase
             : _localizationService.TranslateText(LocalizationKey.gui_config_path_invalid);
     }
 
-    private static bool IsValidPath(string path)
-    {
-        try
-        {
-            if (path.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
-                return false;
-
-            // Doit être un chemin absolu (/home/... sur Linux, C:\... sur Windows)
-            if (!Path.IsPathRooted(path))
-                return false;
-
-            // GetFullPath lève une exception sur les formats vraiment invalides
-            Path.GetFullPath(path);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
 
     public void RefreshTranslations()
     {
