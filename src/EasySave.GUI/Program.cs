@@ -95,7 +95,7 @@ sealed class Program
             sp.GetRequiredService<IBackupJobRepository>(),
             sp.GetRequiredService<IBackupEngine>(),
             sp.GetRequiredService<IBackupJobStateService>(),
-            sp.GetRequiredService<IUserPreferencesRepository>()));
+            sp.GetRequiredService<IBackupExecutionGuard>()));
         services.AddSingleton<ILogQueryService, LogQueryService>();
 
         // Setup ViewModels pour Avalonia

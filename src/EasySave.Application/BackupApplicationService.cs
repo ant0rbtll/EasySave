@@ -1,8 +1,7 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
-using EasySave.Configuration;
-using System.Diagnostics;
+using EasySave.System;
 
 namespace EasySave.Application;
 
@@ -15,14 +14,12 @@ public class BackupApplicationService(
     IBackupJobRepository repo,
     IBackupEngine backupEngine,
     IBackupJobStateService backupJobStateService,
-    IUserPreferencesRepository? preferencesRepository = null,
-    Func<string, bool>? isBusinessSoftwareRunning = null)
+    IBackupExecutionGuard? backupExecutionGuard = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
     private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
-    private readonly IUserPreferencesRepository? _preferencesRepository = preferencesRepository;
-    private readonly Func<string, bool> _isBusinessSoftwareRunning = isBusinessSoftwareRunning ?? IsProcessRunning;
+    private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -132,116 +129,8 @@ public class BackupApplicationService(
         _engine.Execute(job);
     }
 
-    private static InvalidOperationException CreateBusinessSoftwareRunningException(string configuredProcessName)
-    {
-        var exception = new InvalidOperationException("error_business_software_running");
-        exception.Data["errorKey"] = "error_business_software_running";
-        exception.Data["0"] = configuredProcessName;
-        return exception;
-    }
-
     private void EnsureBusinessSoftwareIsNotRunning()
     {
-        if (_preferencesRepository is null)
-        {
-            return;
-        }
-
-        string configuredProcessName;
-        try
-        {
-            configuredProcessName = NormalizeProcessName(_preferencesRepository.Load().BusinessSoftwareProcessName);
-        }
-        catch
-        {
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(configuredProcessName))
-        {
-            return;
-        }
-
-        if (_isBusinessSoftwareRunning(configuredProcessName))
-        {
-            throw CreateBusinessSoftwareRunningException(configuredProcessName);
-        }
+        _backupExecutionGuard.EnsureCanCopyNextFile();
     }
-
-    private static string NormalizeProcessName(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return string.Empty;
-        }
-
-        var trimmed = value.Trim();
-        var fileName = Path.GetFileName(trimmed);
-        var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
-        return string.IsNullOrWhiteSpace(withoutExtension) ? trimmed : withoutExtension;
-    }
-
-    private static bool IsProcessRunning(string processName)
-    {
-        try
-        {
-            var candidates = BuildProcessNameCandidates(processName);
-            if (candidates.Count == 0)
-            {
-                return false;
-            }
-
-            foreach (var process in Process.GetProcesses())
-            {
-                string currentName;
-                try
-                {
-                    currentName = process.ProcessName;
-                }
-                catch
-                {
-                    continue;
-                }
-
-                if (string.IsNullOrWhiteSpace(currentName))
-                {
-                    continue;
-                }
-
-                if (candidates.Contains(currentName))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static HashSet<string> BuildProcessNameCandidates(string processName)
-    {
-        var candidates = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        if (string.IsNullOrWhiteSpace(processName))
-        {
-            return candidates;
-        }
-
-        var trimmed = processName.Trim();
-        candidates.Add(trimmed);
-
-        var fileName = Path.GetFileName(trimmed);
-        if (!string.IsNullOrWhiteSpace(fileName))
-        {
-            candidates.Add(fileName);
-            candidates.Add(Path.GetFileNameWithoutExtension(fileName));
-        }
-
-        candidates.RemoveWhere(string.IsNullOrWhiteSpace);
-        return candidates;
-    }
-
 }
