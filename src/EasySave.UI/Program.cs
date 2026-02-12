@@ -64,6 +64,7 @@ public class Program
         services.AddSingleton<IEncryptionProvider, DotNetAesEncryptionProvider>();
         services.AddSingleton<IEncryptionProvider, ExternalEncryptionProvider>();
         services.AddSingleton<IEncryptionProviderResolver, EncryptionProviderResolver>();
+        services.AddSingleton<IBackupExecutionGuard, BusinessSoftwareBackupExecutionGuard>();
         services.AddSingleton<IBackupEngine, BackupEngine>();
         services.AddSingleton<CommandLineParser>();
         services.AddSingleton<ILogReader, JsonLogReader>();

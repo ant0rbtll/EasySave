@@ -401,5 +401,36 @@ public class BackupApplicationServiceTests
         _engineMock.Verify(e => e.Execute(job), Times.Once);
     }
 
+    [Fact]
+    public void RunJob_WhenEngineThrowsBusinessSoftwareError_ShouldPropagate()
+    {
+        var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
+        _repoMock.Setup(r => r.GetById(1)).Returns(job);
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            pathProvider: null,
+            preferencesRepository: _preferencesRepositoryMock.Object,
+            isBusinessSoftwareRunning: _ => false);
+
+        _engineMock
+            .Setup(e => e.Execute(job))
+            .Throws(() =>
+            {
+                var ex = new InvalidOperationException("error_business_software_running");
+                ex.Data["errorKey"] = "error_business_software_running";
+                ex.Data["0"] = "calc";
+                return ex;
+            });
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.RunJob(1));
+
+        Assert.Equal("error_business_software_running", exception.Message);
+        Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
+        Assert.Equal("calc", exception.Data["0"]);
+        _engineMock.Verify(e => e.Execute(job), Times.Once);
+    }
+
     #endregion
 }
