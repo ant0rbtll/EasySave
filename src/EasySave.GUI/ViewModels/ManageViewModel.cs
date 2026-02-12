@@ -12,13 +12,51 @@ namespace EasySave.GUI.ViewModels;
 public partial class ManageViewModel : ViewModelBase
 {
     public ObservableCollection<Models.BackupJob> Jobs { get; } = [];
+    public ObservableCollection<PaginationItem> PaginationItems { get; } = [];
+    public IReadOnlyList<int> PageSizeOptions { get; } = [15, 25, 50];
     private readonly List<Models.BackupJob> _allJobs = [];
     private readonly BackupApplicationService _applicationService;
     private readonly ILocalizationService _localizationService;
     private CancellationTokenSource? _dismissCts;
+    public int PageSize => Math.Max(1, SelectedPageSize);
 
     [ObservableProperty]
     private string searchText = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PageDisplay))]
+    [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+    private int currentPage = 1;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TotalPages))]
+    [NotifyPropertyChangedFor(nameof(PageDisplay))]
+    [NotifyPropertyChangedFor(nameof(IsPaginationVisible))]
+    [NotifyPropertyChangedFor(nameof(PageJumpWatermark))]
+    [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+    private int filteredJobsCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TotalPages))]
+    [NotifyPropertyChangedFor(nameof(PageDisplay))]
+    [NotifyPropertyChangedFor(nameof(IsPaginationVisible))]
+    [NotifyPropertyChangedFor(nameof(PageJumpWatermark))]
+    [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+    private int selectedPageSize = 25;
+
+    [ObservableProperty]
+    private string pageInputText = string.Empty;
+
+    public int TotalPages => FilteredJobsCount == 0
+        ? 1
+        : (int)Math.Ceiling((double)FilteredJobsCount / PageSize);
+
+    public string PageDisplay => $"{CurrentPage}/{TotalPages}";
+    public string PageJumpWatermark => $"1-{TotalPages}";
+    public bool IsPaginationVisible => TotalPages > 1;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IdHeader))]
@@ -183,6 +221,19 @@ public partial class ManageViewModel : ViewModelBase
 
     partial void OnSearchTextChanged(string value)
     {
+        CurrentPage = 1;
+        Refresh();
+    }
+
+    partial void OnSelectedPageSizeChanged(int value)
+    {
+        if (value <= 0)
+        {
+            SelectedPageSize = 25;
+            return;
+        }
+
+        CurrentPage = 1;
         Refresh();
     }
 
@@ -202,6 +253,7 @@ public partial class ManageViewModel : ViewModelBase
             SortColumn = column;
             SortAscending = true;
         }
+        CurrentPage = 1;
         Refresh();
     }
 
@@ -251,8 +303,19 @@ public partial class ManageViewModel : ViewModelBase
             }
         }
 
-        foreach (var job in filtered)
+        var filteredJobs = filtered.ToList();
+        FilteredJobsCount = filteredJobs.Count;
+
+        if (CurrentPage > TotalPages)
+            CurrentPage = TotalPages;
+        else if (CurrentPage < 1)
+            CurrentPage = 1;
+
+        var skipCount = (CurrentPage - 1) * PageSize;
+        foreach (var job in filteredJobs.Skip(skipCount).Take(PageSize))
             Jobs.Add(job);
+
+        RebuildPaginationItems();
     }
 
     private static bool MatchesSearch(Models.BackupJob job, string query)
@@ -264,6 +327,56 @@ public partial class ManageViewModel : ViewModelBase
             || job.Type.ToString().Contains(query, StringComparison.OrdinalIgnoreCase)
             || job.IsActive.ToString().Contains(query, StringComparison.OrdinalIgnoreCase)
             || job.LastExecutionDisplay.Contains(query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
+    private void PreviousPage()
+    {
+        if (CurrentPage <= 1)
+            return;
+
+        CurrentPage--;
+        Refresh();
+    }
+
+    private bool CanGoToPreviousPage() => CurrentPage > 1;
+
+    [RelayCommand(CanExecute = nameof(CanGoToNextPage))]
+    private void NextPage()
+    {
+        if (CurrentPage >= TotalPages)
+            return;
+
+        CurrentPage++;
+        Refresh();
+    }
+
+    private bool CanGoToNextPage() => CurrentPage < TotalPages;
+
+    [RelayCommand]
+    private void GoToPage(int pageNumber)
+    {
+        if (pageNumber < 1 || pageNumber > TotalPages || pageNumber == CurrentPage)
+            return;
+
+        CurrentPage = pageNumber;
+        Refresh();
+    }
+
+    [RelayCommand]
+    private void JumpToEnteredPage()
+    {
+        if (!int.TryParse(PageInputText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var page))
+            return;
+
+        page = Math.Clamp(page, 1, TotalPages);
+        PageInputText = string.Empty;
+
+        if (page == CurrentPage)
+            return;
+
+        CurrentPage = page;
+        Refresh();
     }
 
     [RelayCommand(CanExecute = nameof(CanRunJob))]
@@ -564,5 +677,102 @@ public partial class ManageViewModel : ViewModelBase
         _allJobs.Clear();
         _allJobs.AddRange(jobs);
         Refresh();
+    }
+
+    private void RebuildPaginationItems()
+    {
+        PaginationItems.Clear();
+        foreach (var item in BuildVisibleItems(CurrentPage, TotalPages))
+            PaginationItems.Add(item);
+    }
+
+    private static List<PaginationItem> BuildVisibleItems(int currentPage, int totalPages)
+    {
+        if (totalPages <= 0)
+            return [];
+
+        if (totalPages <= 7)
+        {
+            var items = new List<PaginationItem>(totalPages);
+            for (var page = 1; page <= totalPages; page++)
+                items.Add(PaginationItem.Page(page, page == currentPage));
+            return items;
+        }
+
+        // Standard 7-slot pagination:
+        // Start:  1 2 3 4 5 ... N
+        // Middle: 1 ... p-1 p p+1 ... N
+        // End:    1 ... N-4 N-3 N-2 N-1 N
+        if (currentPage <= 4)
+        {
+            return
+            [
+                PaginationItem.Page(1, currentPage == 1),
+                PaginationItem.Page(2, currentPage == 2),
+                PaginationItem.Page(3, currentPage == 3),
+                PaginationItem.Page(4, currentPage == 4),
+                PaginationItem.Page(5, currentPage == 5),
+                PaginationItem.Ellipsis(),
+                PaginationItem.Page(totalPages, currentPage == totalPages)
+            ];
+        }
+
+        if (currentPage >= totalPages - 3)
+        {
+            return
+            [
+                PaginationItem.Page(1, currentPage == 1),
+                PaginationItem.Ellipsis(),
+                PaginationItem.Page(totalPages - 4, currentPage == totalPages - 4),
+                PaginationItem.Page(totalPages - 3, currentPage == totalPages - 3),
+                PaginationItem.Page(totalPages - 2, currentPage == totalPages - 2),
+                PaginationItem.Page(totalPages - 1, currentPage == totalPages - 1),
+                PaginationItem.Page(totalPages, currentPage == totalPages)
+            ];
+        }
+
+        return
+        [
+            PaginationItem.Page(1, currentPage == 1),
+            PaginationItem.Ellipsis(),
+            PaginationItem.Page(currentPage - 1, false),
+            PaginationItem.Page(currentPage, true),
+            PaginationItem.Page(currentPage + 1, false),
+            PaginationItem.Ellipsis(),
+            PaginationItem.Page(totalPages, currentPage == totalPages)
+        ];
+    }
+}
+
+public sealed class PaginationItem
+{
+    private PaginationItem()
+    {
+    }
+
+    public int PageNumber { get; init; }
+    public string Label { get; init; } = string.Empty;
+    public bool IsEllipsis { get; init; }
+    public bool IsCurrent { get; init; }
+    public bool IsPage => !IsEllipsis;
+    public bool IsSelectable => !IsEllipsis && !IsCurrent;
+
+    public static PaginationItem Page(int pageNumber, bool isCurrent)
+    {
+        return new PaginationItem
+        {
+            PageNumber = pageNumber,
+            Label = pageNumber.ToString(CultureInfo.InvariantCulture),
+            IsCurrent = isCurrent
+        };
+    }
+
+    public static PaginationItem Ellipsis()
+    {
+        return new PaginationItem
+        {
+            Label = "...",
+            IsEllipsis = true
+        };
     }
 }
