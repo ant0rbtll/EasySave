@@ -682,35 +682,65 @@ public partial class ManageViewModel : ViewModelBase
     private void RebuildPaginationItems()
     {
         PaginationItems.Clear();
-
-        var pages = BuildVisiblePages(CurrentPage, TotalPages);
-        var previousPage = 0;
-
-        foreach (var page in pages)
-        {
-            if (previousPage > 0 && page - previousPage > 1)
-                PaginationItems.Add(PaginationItem.Ellipsis());
-
-            PaginationItems.Add(PaginationItem.Page(page, page == CurrentPage));
-            previousPage = page;
-        }
+        foreach (var item in BuildVisibleItems(CurrentPage, TotalPages))
+            PaginationItems.Add(item);
     }
 
-    private static List<int> BuildVisiblePages(int currentPage, int totalPages)
+    private static List<PaginationItem> BuildVisibleItems(int currentPage, int totalPages)
     {
         if (totalPages <= 0)
             return [];
 
-        var pages = new SortedSet<int>
+        if (totalPages <= 7)
         {
-            1,
-            totalPages,
-            Math.Max(1, currentPage - 1),
-            currentPage,
-            Math.Min(totalPages, currentPage + 1)
-        };
+            var items = new List<PaginationItem>(totalPages);
+            for (var page = 1; page <= totalPages; page++)
+                items.Add(PaginationItem.Page(page, page == currentPage));
+            return items;
+        }
 
-        return [.. pages];
+        // Standard 7-slot pagination:
+        // Start:  1 2 3 4 5 ... N
+        // Middle: 1 ... p-1 p p+1 ... N
+        // End:    1 ... N-4 N-3 N-2 N-1 N
+        if (currentPage <= 4)
+        {
+            return
+            [
+                PaginationItem.Page(1, currentPage == 1),
+                PaginationItem.Page(2, currentPage == 2),
+                PaginationItem.Page(3, currentPage == 3),
+                PaginationItem.Page(4, currentPage == 4),
+                PaginationItem.Page(5, currentPage == 5),
+                PaginationItem.Ellipsis(),
+                PaginationItem.Page(totalPages, currentPage == totalPages)
+            ];
+        }
+
+        if (currentPage >= totalPages - 3)
+        {
+            return
+            [
+                PaginationItem.Page(1, currentPage == 1),
+                PaginationItem.Ellipsis(),
+                PaginationItem.Page(totalPages - 4, currentPage == totalPages - 4),
+                PaginationItem.Page(totalPages - 3, currentPage == totalPages - 3),
+                PaginationItem.Page(totalPages - 2, currentPage == totalPages - 2),
+                PaginationItem.Page(totalPages - 1, currentPage == totalPages - 1),
+                PaginationItem.Page(totalPages, currentPage == totalPages)
+            ];
+        }
+
+        return
+        [
+            PaginationItem.Page(1, currentPage == 1),
+            PaginationItem.Ellipsis(),
+            PaginationItem.Page(currentPage - 1, false),
+            PaginationItem.Page(currentPage, true),
+            PaginationItem.Page(currentPage + 1, false),
+            PaginationItem.Ellipsis(),
+            PaginationItem.Page(totalPages, currentPage == totalPages)
+        ];
     }
 }
 
