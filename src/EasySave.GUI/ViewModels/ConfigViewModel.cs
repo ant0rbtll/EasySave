@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Configuration;
+using EasySave.Core;
 using EasySave.Localization;
 using EasySave.Persistence;
 using static EasySave.GUI.Helpers.PathValidation;
@@ -24,6 +25,7 @@ public partial class ConfigViewModel : ViewModelBase
     public Func<Task<string?>>? BrowseFolder { get; set; }
 
     [ObservableProperty] private string selectedLanguage;
+    [ObservableProperty] private LogFormat selectedLogFormat;
     [ObservableProperty] private string? logDirectory;
     [ObservableProperty] private string? statusMessage;
     [ObservableProperty] private string? pathError;
@@ -31,6 +33,9 @@ public partial class ConfigViewModel : ViewModelBase
     // Propriétés traduites
     [ObservableProperty] private string titleText = "";
     [ObservableProperty] private string languageText = "";
+    [ObservableProperty] private string logFormatText = "";
+    [ObservableProperty] private string logFormatJsonText = "";
+    [ObservableProperty] private string logFormatXmlText = "";
     [ObservableProperty] private string logDirectoryText = "";
     [ObservableProperty] private string logDirectoryWatermark = "";
     [ObservableProperty] private string businessSoftwareText = "";
@@ -47,6 +52,9 @@ public partial class ConfigViewModel : ViewModelBase
 
     public ObservableCollection<string> EncryptedExtensions { get; } = [];
     public ObservableCollection<string> BusinessSoftwareProcesses { get; } = [];
+
+    public bool IsJsonLogFormatSelected => SelectedLogFormat == LogFormat.Json;
+    public bool IsXmlLogFormatSelected => SelectedLogFormat == LogFormat.Xml;
 
     [ObservableProperty] private string? newExtensionInput;
     [ObservableProperty] private string? newBusinessSoftwareInput;
@@ -69,6 +77,7 @@ public partial class ConfigViewModel : ViewModelBase
 
         var preferences = preferencesRepository.Load();
         selectedLanguage = NormalizeLanguage(preferences.Language);
+        selectedLogFormat = preferences.LogFormat;
         logDirectory = preferences.LogDirectory;
 
         foreach (var processName in preferences.BusinessSoftwareProcessNames)
@@ -116,6 +125,9 @@ public partial class ConfigViewModel : ViewModelBase
     {
         TitleText = _localizationService.TranslateText(LocalizationKey.gui_config_title);
         LanguageText = _localizationService.TranslateText(LocalizationKey.gui_config_language);
+        LogFormatText = _localizationService.TranslateText(LocalizationKey.gui_config_log_format);
+        LogFormatJsonText = _localizationService.TranslateText(LocalizationKey.log_format_json);
+        LogFormatXmlText = _localizationService.TranslateText(LocalizationKey.log_format_xml);
         LogDirectoryText = _localizationService.TranslateText(LocalizationKey.gui_config_log_directory);
         LogDirectoryWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_log_directory_watermark);
         BusinessSoftwareText = _localizationService.TranslateText(LocalizationKey.gui_config_business_software);
@@ -130,6 +142,12 @@ public partial class ConfigViewModel : ViewModelBase
         EncryptedExtensionsAddText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_add);
         EncryptedExtensionsEmptyText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_empty);
         ValidatePath();
+    }
+
+    partial void OnSelectedLogFormatChanged(LogFormat value)
+    {
+        OnPropertyChanged(nameof(IsJsonLogFormatSelected));
+        OnPropertyChanged(nameof(IsXmlLogFormatSelected));
     }
 
     [RelayCommand]
@@ -151,7 +169,9 @@ public partial class ConfigViewModel : ViewModelBase
         SelectedLanguage = language;
 
         var preferences = _preferencesRepository.Load();
+        var logFormatChanged = preferences.LogFormat != SelectedLogFormat;
         preferences.Language = language;
+        preferences.LogFormat = SelectedLogFormat;
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
         preferences.BusinessSoftwareProcessNames = [..BusinessSoftwareProcesses];
         preferences.EncryptedExtensions = [..EncryptedExtensions];
@@ -162,7 +182,9 @@ public partial class ConfigViewModel : ViewModelBase
 
         _onLanguageChanged();
 
-        StatusMessage = _localizationService.TranslateText(LocalizationKey.gui_config_saved);
+        StatusMessage = logFormatChanged
+            ? $"{_localizationService.TranslateText(LocalizationKey.gui_config_saved)} {_localizationService.TranslateText(LocalizationKey.log_format_restart_required)}"
+            : _localizationService.TranslateText(LocalizationKey.gui_config_saved);
     }
 
     private bool CanSave() => PathError is null;
@@ -185,6 +207,18 @@ public partial class ConfigViewModel : ViewModelBase
     private void ResetLogDirectory()
     {
         LogDirectory = null;
+    }
+
+    [RelayCommand]
+    private void SelectJsonLogFormat()
+    {
+        SelectedLogFormat = LogFormat.Json;
+    }
+
+    [RelayCommand]
+    private void SelectXmlLogFormat()
+    {
+        SelectedLogFormat = LogFormat.Xml;
     }
 
     [RelayCommand]
@@ -277,6 +311,7 @@ public partial class ConfigViewModel : ViewModelBase
         var normalized = NormalizeBusinessSoftwareForDisplay(processName);
         return normalized ?? string.Empty;
     }
+
 }
 
 public record LanguageOption(string Code, string Label)

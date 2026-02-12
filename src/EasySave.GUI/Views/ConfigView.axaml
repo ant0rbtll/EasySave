@@ -1,9 +1,21 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EasySave.GUI.ViewModels"
+             xmlns:primitives="using:Avalonia.Controls.Primitives"
              xmlns:conv="using:Avalonia.Data.Converters"
              x:Class="EasySave.GUI.Views.ConfigView"
              x:DataType="vm:ConfigViewModel">
+    <UserControl.Styles>
+        <Style Selector="primitives|ToggleButton.log-format">
+            <Setter Property="MinWidth" Value="96"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+        </Style>
+        <Style Selector="primitives|ToggleButton.log-format:checked /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1976D2"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </UserControl.Styles>
     <ScrollViewer Padding="32">
         <StackPanel Spacing="24" MaxWidth="500" HorizontalAlignment="Left">
 
@@ -16,6 +28,21 @@
                           SelectedValueBinding="{Binding Code}"
                           SelectedValue="{Binding SelectedLanguage}"
                           HorizontalAlignment="Stretch"/>
+            </StackPanel>
+
+            <!-- Format de logs -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="{Binding LogFormatText}" FontWeight="SemiBold"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <primitives:ToggleButton Classes="log-format"
+                                             Content="{Binding LogFormatJsonText}"
+                                             IsChecked="{Binding IsJsonLogFormatSelected, Mode=OneWay}"
+                                             Command="{Binding SelectJsonLogFormatCommand}"/>
+                    <primitives:ToggleButton Classes="log-format"
+                                             Content="{Binding LogFormatXmlText}"
+                                             IsChecked="{Binding IsXmlLogFormatSelected, Mode=OneWay}"
+                                             Command="{Binding SelectXmlLogFormatCommand}"/>
+                </StackPanel>
             </StackPanel>
 
             <!-- Dossier de logs -->

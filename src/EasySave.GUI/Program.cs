@@ -2,6 +2,7 @@
 using EasySave.Application;
 using EasySave.Backup;
 using EasySave.Configuration;
+using EasySave.Core;
 using EasySave.GUI.ViewModels;
 using EasySave.Localization;
 using EasySave.Log;
@@ -115,11 +116,19 @@ sealed class Program
     {
         try
         {
-            var formatter = new EasyLog.JsonLogFormatter();
+            var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
+            var userPreferences = preferencesRepository.Load();
+            pathProvider.SetLogDirectoryOverride(userPreferences.LogDirectory);
+
+            EasyLog.ILogFormatter formatter = userPreferences.LogFormat == LogFormat.Xml
+                ? new EasyLog.XmlLogFormatter()
+                : new EasyLog.JsonLogFormatter();
+
             var logger = new EasyLog.DailyFileLogger(
                 formatter,
                 pathProvider,
-                EasyLogDailyFileMutexName);
+                EasyLogDailyFileMutexName,
+                userPreferences.LogFormat);
             return logger;
         }
         catch (Exception ex)
