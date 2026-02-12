@@ -8,6 +8,7 @@ using EasySave.Log;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 
 namespace EasySave.GUI.ViewModels;
@@ -24,12 +25,47 @@ public partial class LogViewModel : ViewModelBase
 
     public ObservableCollection<string> AvailableDates { get; } = new();
     public ObservableCollection<LogDisplayModel> LogEntries { get; } = new();
+    public ObservableCollection<PaginationItem> PaginationItems { get; } = new();
+    public IReadOnlyList<int> PageSizeOptions { get; } = [15, 25, 50];
     private Action _onLanguageChanged = static () => { };
 
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _searchTextDate = string.Empty;
     [ObservableProperty] private string? _selectedDate;
-    [ObservableProperty] private bool _isDateSelected;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPaginationVisible))]
+    private bool _isDateSelected;
+    [ObservableProperty] private string _pageInputText = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(PageDisplay))]
+    [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+    private int _currentPage = 1;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TotalPages))]
+    [NotifyPropertyChangedFor(nameof(PageDisplay))]
+    [NotifyPropertyChangedFor(nameof(IsPaginationVisible))]
+    [NotifyPropertyChangedFor(nameof(PageJumpWatermark))]
+    [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+    private int _filteredLogsCount;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TotalPages))]
+    [NotifyPropertyChangedFor(nameof(PageDisplay))]
+    [NotifyPropertyChangedFor(nameof(IsPaginationVisible))]
+    [NotifyPropertyChangedFor(nameof(PageJumpWatermark))]
+    [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
+    private int _selectedPageSize = 25;
+
+    public int PageSize => Math.Max(1, SelectedPageSize);
+    public int TotalPages => FilteredLogsCount == 0 ? 1 : (int)Math.Ceiling((double)FilteredLogsCount / PageSize);
+    public string PageDisplay => $"{CurrentPage}/{TotalPages}";
+    public string PageJumpWatermark => $"1-{TotalPages}";
+    public bool IsPaginationVisible => IsDateSelected && TotalPages > 1;
 
     [ObservableProperty] private string _historyTitle = "";
     [ObservableProperty] private string _historySubtitle = "";
@@ -63,13 +99,29 @@ public partial class LogViewModel : ViewModelBase
     /// Triggered when the log search text changes to refresh the filtered list.
     /// </summary>
     /// <param name="value">The new search string.</param>
-    partial void OnSearchTextChanged(string value) => Refresh();
+    partial void OnSearchTextChanged(string value)
+    {
+        CurrentPage = 1;
+        Refresh();
+    }
 
     /// <summary>
     /// Triggered when the date search text changes to refresh the filtered list.
     /// </summary>
     /// <param name="value">The new search string.</param>
     partial void OnSearchTextDateChanged(string value) => Refresh();
+
+    partial void OnSelectedPageSizeChanged(int value)
+    {
+        if (value <= 0)
+        {
+            SelectedPageSize = 25;
+            return;
+        }
+
+        CurrentPage = 1;
+        Refresh();
+    }
 
     /// <summary>
     /// Updates all localized strings based on the current language from the localization service.
@@ -100,6 +152,8 @@ public partial class LogViewModel : ViewModelBase
     [RelayCommand]
     private void SelectDate(string date)
     {
+        CurrentPage = 1;
+        PageInputText = string.Empty;
         SelectedDate = date;
         IsDateSelected = true;
         LoadLogsForDate(date);
@@ -114,7 +168,59 @@ public partial class LogViewModel : ViewModelBase
         IsDateSelected = false;
         SelectedDate = null;
         SearchText = string.Empty;
+        PageInputText = string.Empty;
+        CurrentPage = 1;
         _allLogEntries.Clear();
+        Refresh();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
+    private void PreviousPage()
+    {
+        if (CurrentPage <= 1)
+            return;
+
+        CurrentPage--;
+        Refresh();
+    }
+
+    private bool CanGoToPreviousPage() => CurrentPage > 1;
+
+    [RelayCommand(CanExecute = nameof(CanGoToNextPage))]
+    private void NextPage()
+    {
+        if (CurrentPage >= TotalPages)
+            return;
+
+        CurrentPage++;
+        Refresh();
+    }
+
+    private bool CanGoToNextPage() => CurrentPage < TotalPages;
+
+    [RelayCommand]
+    private void GoToPage(int pageNumber)
+    {
+        if (pageNumber < 1 || pageNumber > TotalPages || pageNumber == CurrentPage)
+            return;
+
+        CurrentPage = pageNumber;
+        Refresh();
+    }
+
+    [RelayCommand]
+    private void JumpToEnteredPage()
+    {
+        if (!int.TryParse(PageInputText, NumberStyles.Integer, CultureInfo.InvariantCulture, out var page))
+            return;
+
+        page = Math.Clamp(page, 1, TotalPages);
+        PageInputText = string.Empty;
+
+        if (page == CurrentPage)
+            return;
+
+        CurrentPage = page;
         Refresh();
     }
 
@@ -139,10 +245,20 @@ public partial class LogViewModel : ViewModelBase
             l.Source.Contains(logQuery, StringComparison.OrdinalIgnoreCase) ||
             l.Destination.Contains(logQuery, StringComparison.OrdinalIgnoreCase) ||
             l.EventType.Contains(logQuery, StringComparison.OrdinalIgnoreCase)
-        );
+        ).ToList();
 
-        foreach (var entry in filteredLogs)
+        FilteredLogsCount = filteredLogs.Count;
+
+        if (CurrentPage > TotalPages)
+            CurrentPage = TotalPages;
+        else if (CurrentPage < 1)
+            CurrentPage = 1;
+
+        var skipCount = (CurrentPage - 1) * PageSize;
+        foreach (var entry in filteredLogs.Skip(skipCount).Take(PageSize))
             LogEntries.Add(entry);
+
+        RebuildPaginationItems();
     }
 
     /// <summary>
@@ -196,6 +312,66 @@ public partial class LogViewModel : ViewModelBase
         }
 
         Refresh();
+    }
+
+    private void RebuildPaginationItems()
+    {
+        PaginationItems.Clear();
+        foreach (var item in BuildVisibleItems(CurrentPage, TotalPages))
+            PaginationItems.Add(item);
+    }
+
+    private static List<PaginationItem> BuildVisibleItems(int currentPage, int totalPages)
+    {
+        if (totalPages <= 0)
+            return [];
+
+        if (totalPages <= 7)
+        {
+            var items = new List<PaginationItem>(totalPages);
+            for (var page = 1; page <= totalPages; page++)
+                items.Add(PaginationItem.Page(page, page == currentPage));
+            return items;
+        }
+
+        if (currentPage <= 4)
+        {
+            return
+            [
+                PaginationItem.Page(1, currentPage == 1),
+                PaginationItem.Page(2, currentPage == 2),
+                PaginationItem.Page(3, currentPage == 3),
+                PaginationItem.Page(4, currentPage == 4),
+                PaginationItem.Page(5, currentPage == 5),
+                PaginationItem.Ellipsis(),
+                PaginationItem.Page(totalPages, currentPage == totalPages)
+            ];
+        }
+
+        if (currentPage >= totalPages - 3)
+        {
+            return
+            [
+                PaginationItem.Page(1, currentPage == 1),
+                PaginationItem.Ellipsis(),
+                PaginationItem.Page(totalPages - 4, currentPage == totalPages - 4),
+                PaginationItem.Page(totalPages - 3, currentPage == totalPages - 3),
+                PaginationItem.Page(totalPages - 2, currentPage == totalPages - 2),
+                PaginationItem.Page(totalPages - 1, currentPage == totalPages - 1),
+                PaginationItem.Page(totalPages, currentPage == totalPages)
+            ];
+        }
+
+        return
+        [
+            PaginationItem.Page(1, currentPage == 1),
+            PaginationItem.Ellipsis(),
+            PaginationItem.Page(currentPage - 1, false),
+            PaginationItem.Page(currentPage, true),
+            PaginationItem.Page(currentPage + 1, false),
+            PaginationItem.Ellipsis(),
+            PaginationItem.Page(totalPages, currentPage == totalPages)
+        ];
     }
 
     /// <summary>
