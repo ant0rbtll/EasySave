@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using EasyLog;
 using EasySave.Log;
 
@@ -43,7 +44,7 @@ public class JsonLogFormatterTests
     }
 
     [Fact]
-    public void Format_SerializesEnumAsNumber()
+    public void Format_SerializesEnumAsString()
     {
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 8, 30, 0, DateTimeKind.Utc),
@@ -60,8 +61,8 @@ public class JsonLogFormatterTests
         using var doc = JsonDocument.Parse(json);
         var eventType = doc.RootElement.GetProperty("eventType");
 
-        Assert.Equal(JsonValueKind.Number, eventType.ValueKind);
-        Assert.Equal((int)LogEventType.Error, eventType.GetInt32());
+        Assert.Equal(JsonValueKind.String, eventType.ValueKind);
+        Assert.Equal(nameof(LogEventType.Error), eventType.GetString());
     }
 
     [Fact]
@@ -79,7 +80,11 @@ public class JsonLogFormatterTests
         var formatter = new JsonLogFormatter();
         var json = formatter.Format(entry);
 
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false) }
+        };
         var roundTripped = JsonSerializer.Deserialize<LogEntry>(json, options);
 
         Assert.NotNull(roundTripped);
