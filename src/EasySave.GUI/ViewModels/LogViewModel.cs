@@ -177,7 +177,7 @@ public partial class LogViewModel : ViewModelBase
     private void LoadLogsForDate(string date)
     {
         _allLogEntries.Clear();
-        var rawLogs = _logQueryService.GetByDate(DateOnly.Parse(date), LogFormat.Json);
+        var rawLogs = _logQueryService.GetByDate(DateOnly.Parse(date));
 
         foreach (var log in rawLogs)
         {
