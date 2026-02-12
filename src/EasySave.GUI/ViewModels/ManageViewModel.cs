@@ -73,6 +73,12 @@ public partial class ManageViewModel : ViewModelBase
     [ObservableProperty]
     private Models.BackupJob? pendingDeleteJob;
 
+    [ObservableProperty]
+    private bool isEditDialogOpen;
+
+    [ObservableProperty]
+    private EditJobViewModel? editingJob;
+
     // Localized text properties
     [ObservableProperty]
     private string titleText = string.Empty;
@@ -369,7 +375,8 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private void ModifyJob(Models.BackupJob job)
     {
-        // TODO: navigate to edit page
+        EditingJob = new EditJobViewModel(job, _localizationService);
+        IsEditDialogOpen = true;
     }
 
     [RelayCommand]
@@ -434,6 +441,66 @@ public partial class ManageViewModel : ViewModelBase
     {
         IsDeleteDialogOpen = false;
         PendingDeleteJob = null;
+    }
+
+    [RelayCommand]
+    private async Task ConfirmEdit()
+    {
+        if (EditingJob is null)
+            return;
+
+        EditingJob.ValidateAll();
+
+        if (!EditingJob.CanSave())
+            return;
+
+        IsStatusBannerVisible = false;
+
+        string jobName = EditingJob.Name;
+
+        try
+        {
+            var domainJob = new Core.BackupJob
+            {
+                Id = EditingJob.JobId,
+                Name = EditingJob.Name,
+                Source = EditingJob.SourcePath,
+                Destination = EditingJob.DestinationPath,
+                Type = EditingJob.SelectedBackupType
+            };
+            await Task.Run(() => _applicationService.UpdateJob(domainJob));
+        }
+        catch (Exception ex)
+        {
+            var errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            StatusMessage = errorMessage;
+            IsStatusError = true;
+            IsStatusBannerVisible = true;
+            return;
+        }
+
+        IsEditDialogOpen = false;
+        EditingJob = null;
+
+        var jobs = await Task.Run(FetchJobs);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            ApplyJobs(jobs);
+            StatusMessage = _localizationService.TranslateTextWithParams(
+                LocalizationKey.gui_manage_edit_success, [jobName]);
+            IsStatusError = false;
+            IsStatusBannerVisible = true;
+        });
+
+        _ = AutoDismissBannerAsync();
+    }
+
+    [RelayCommand]
+    private void CancelEdit()
+    {
+        IsEditDialogOpen = false;
+        EditingJob = null;
     }
 
     [RelayCommand]

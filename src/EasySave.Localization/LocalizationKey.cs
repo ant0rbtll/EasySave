@@ -162,5 +162,10 @@ public enum LocalizationKey
     gui_config_encrypted_extensions,
     gui_config_encrypted_extensions_watermark,
     gui_config_encrypted_extensions_add,
-    gui_config_encrypted_extensions_empty
+    gui_config_encrypted_extensions_empty,
+
+    // Manage - Edit dialog
+    gui_manage_edit_title,
+    gui_manage_edit_save,
+    gui_manage_edit_success
 }

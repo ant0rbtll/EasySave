@@ -4,6 +4,7 @@ using EasySave.Core;
 using EasySave.Application;
 using EasySave.GUI.Helpers;
 using EasySave.Localization;
+using static EasySave.GUI.Helpers.PathValidation;
 using System.Collections.ObjectModel;
 
 namespace EasySave.GUI.ViewModels;
@@ -222,11 +223,6 @@ public partial class CreateViewModel : ViewModelBase
                 LocalizationKey.gui_create_destination_invalid, [ExamplePath("my_destination")]);
     }
 
-    private static string ExamplePath(string folder) =>
-        OperatingSystem.IsWindows()
-            ? $"C:\\Users\\user\\{folder}"
-            : $"/home/user/{folder}";
-
     public void ValidateNameOnLostFocus()
     {
         const int inputMax = 100;
@@ -247,26 +243,6 @@ public partial class CreateViewModel : ViewModelBase
         else
         {
             JobNameError = null;
-        }
-    }
-
-    private static bool IsValidPath(string path)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(path)) return false;
-            if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()))
-            {
-                path += Path.DirectorySeparatorChar;
-            }
-            if (path.IndexOfAny(Path.GetInvalidPathChars()) >= 0) return false;
-            if (!Path.IsPathRooted(path)) return false;
-            Path.GetFullPath(path);
-            return true;
-        }
-        catch
-        {
-            return false;
         }
     }
 
