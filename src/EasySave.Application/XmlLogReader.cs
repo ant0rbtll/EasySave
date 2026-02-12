@@ -75,6 +75,7 @@ public sealed class XmlLogReader : ILogReader
     {
         DateTime timestamp = ParseTimestamp(element, filePath);
         string backupName = GetString(element, "BackupName");
+        int backupId = (int)ParseLong(element, "BackupId", filePath);
         LogEventType eventType = ParseEventType(element, filePath);
         string sourcePath = GetString(element, "SourcePathUNC");
         string destinationPath = GetString(element, "DestinationPathUNC");
@@ -84,6 +85,7 @@ public sealed class XmlLogReader : ILogReader
 
         return new LogEntry(
             timestamp,
+            backupId,
             backupName,
             eventType,
             sourcePath,
