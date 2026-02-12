@@ -454,16 +454,13 @@ public partial class ManageViewModel : ViewModelBase
         if (!EditingJob.CanSave())
             return;
 
-        IsEditDialogOpen = false;
         IsStatusBannerVisible = false;
 
-        bool success = false;
-        string errorMessage = string.Empty;
         string jobName = EditingJob.Name;
 
         try
         {
-            var domainJob = new EasySave.Core.BackupJob
+            var domainJob = new Core.BackupJob
             {
                 Id = EditingJob.JobId,
                 Name = EditingJob.Name,
@@ -472,40 +469,31 @@ public partial class ManageViewModel : ViewModelBase
                 Type = EditingJob.SelectedBackupType
             };
             await Task.Run(() => _applicationService.UpdateJob(domainJob));
-            success = true;
         }
         catch (Exception ex)
         {
-            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            var errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            StatusMessage = errorMessage;
+            IsStatusError = true;
+            IsStatusBannerVisible = true;
+            return;
         }
-        finally
+
+        IsEditDialogOpen = false;
+        EditingJob = null;
+
+        var jobs = await Task.Run(FetchJobs);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            var jobs = await Task.Run(FetchJobs);
+            ApplyJobs(jobs);
+            StatusMessage = _localizationService.TranslateTextWithParams(
+                LocalizationKey.gui_manage_edit_success, [jobName]);
+            IsStatusError = false;
+            IsStatusBannerVisible = true;
+        });
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                EditingJob = null;
-                ApplyJobs(jobs);
-
-                if (success)
-                {
-                    StatusMessage = _localizationService.TranslateTextWithParams(
-                        LocalizationKey.gui_manage_edit_success, [jobName]);
-                    IsStatusError = false;
-                }
-                else
-                {
-                    StatusMessage = errorMessage;
-                    IsStatusError = true;
-                }
-                IsStatusBannerVisible = true;
-            });
-        }
-
-        if (success)
-        {
-            _ = AutoDismissBannerAsync();
-        }
+        _ = AutoDismissBannerAsync();
     }
 
     [RelayCommand]

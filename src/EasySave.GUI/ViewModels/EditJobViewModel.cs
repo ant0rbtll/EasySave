@@ -2,11 +2,13 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using EasySave.Core;
 using EasySave.Localization;
+using static EasySave.GUI.Helpers.PathValidation;
 
 namespace EasySave.GUI.ViewModels;
 
 public partial class EditJobViewModel : ViewModelBase
 {
+    private const int NameMaxLength = 100;
     private readonly ILocalizationService _localizationService;
 
     public int JobId { get; }
@@ -73,7 +75,7 @@ public partial class EditJobViewModel : ViewModelBase
 
     partial void OnNameChanged(string value)
     {
-        if (JobNameError != null && !string.IsNullOrWhiteSpace(value) && value.Length <= 100)
+        if (JobNameError != null && !string.IsNullOrWhiteSpace(value) && value.Length <= NameMaxLength)
             JobNameError = null;
     }
 
@@ -93,17 +95,15 @@ public partial class EditJobViewModel : ViewModelBase
 
     public void ValidateNameOnLostFocus()
     {
-        const int inputMax = 100;
-
         if (string.IsNullOrWhiteSpace(Name))
         {
             JobNameError = _localizationService.TranslateText(LocalizationKey.gui_create_name_required);
         }
-        else if (Name.Length > inputMax)
+        else if (Name.Length > NameMaxLength)
         {
             JobNameError = string.Format(
                 _localizationService.TranslateText(LocalizationKey.gui_create_name_too_long),
-                inputMax);
+                NameMaxLength);
         }
         else
         {
@@ -137,7 +137,7 @@ public partial class EditJobViewModel : ViewModelBase
     public bool CanSave()
     {
         return !string.IsNullOrWhiteSpace(Name)
-            && Name.Length <= 100
+            && Name.Length <= NameMaxLength
             && IsValidPath(SourcePath)
             && IsValidPath(DestinationPath)
             && JobNameError == null
@@ -159,30 +159,4 @@ public partial class EditJobViewModel : ViewModelBase
         ValidateDestinationPathOnLostFocus();
     }
 
-    // Path validation (same as CreateViewModel)
-
-    private static bool IsValidPath(string path)
-    {
-        try
-        {
-            if (string.IsNullOrWhiteSpace(path)) return false;
-            if (!path.EndsWith(Path.DirectorySeparatorChar.ToString()))
-            {
-                path += Path.DirectorySeparatorChar;
-            }
-            if (path.IndexOfAny(Path.GetInvalidPathChars()) >= 0) return false;
-            if (!Path.IsPathRooted(path)) return false;
-            Path.GetFullPath(path);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    private static string ExamplePath(string folder) =>
-        OperatingSystem.IsWindows()
-            ? $"C:\\Users\\user\\{folder}"
-            : $"/home/user/{folder}";
 }
