@@ -148,3 +148,6 @@ translations:
   gui_config_encrypted_extensions_watermark: ".pdf, .docx, ..."
   gui_config_encrypted_extensions_add: "Add"
   gui_config_encrypted_extensions_empty: "No encrypted extensions configured"
+  gui_manage_edit_title: "Edit backup job"
+  gui_manage_edit_save: "Save"
+  gui_manage_edit_success: "Job {0} modified successfully"

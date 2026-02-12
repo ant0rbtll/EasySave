@@ -73,6 +73,12 @@ public partial class ManageViewModel : ViewModelBase
     [ObservableProperty]
     private Models.BackupJob? pendingDeleteJob;
 
+    [ObservableProperty]
+    private bool isEditDialogOpen;
+
+    [ObservableProperty]
+    private EditJobViewModel? editingJob;
+
     // Localized text properties
     [ObservableProperty]
     private string titleText = string.Empty;
@@ -369,7 +375,8 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private void ModifyJob(Models.BackupJob job)
     {
-        // TODO: navigate to edit page
+        EditingJob = new EditJobViewModel(job, _localizationService);
+        IsEditDialogOpen = true;
     }
 
     [RelayCommand]
@@ -434,6 +441,78 @@ public partial class ManageViewModel : ViewModelBase
     {
         IsDeleteDialogOpen = false;
         PendingDeleteJob = null;
+    }
+
+    [RelayCommand]
+    private async Task ConfirmEdit()
+    {
+        if (EditingJob is null)
+            return;
+
+        EditingJob.ValidateAll();
+
+        if (!EditingJob.CanSave())
+            return;
+
+        IsEditDialogOpen = false;
+        IsStatusBannerVisible = false;
+
+        bool success = false;
+        string errorMessage = string.Empty;
+        string jobName = EditingJob.Name;
+
+        try
+        {
+            var domainJob = new EasySave.Core.BackupJob
+            {
+                Id = EditingJob.JobId,
+                Name = EditingJob.Name,
+                Source = EditingJob.SourcePath,
+                Destination = EditingJob.DestinationPath,
+                Type = EditingJob.SelectedBackupType
+            };
+            await Task.Run(() => _applicationService.UpdateJob(domainJob));
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+        }
+        finally
+        {
+            var jobs = await Task.Run(FetchJobs);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                EditingJob = null;
+                ApplyJobs(jobs);
+
+                if (success)
+                {
+                    StatusMessage = _localizationService.TranslateTextWithParams(
+                        LocalizationKey.gui_manage_edit_success, [jobName]);
+                    IsStatusError = false;
+                }
+                else
+                {
+                    StatusMessage = errorMessage;
+                    IsStatusError = true;
+                }
+                IsStatusBannerVisible = true;
+            });
+        }
+
+        if (success)
+        {
+            _ = AutoDismissBannerAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void CancelEdit()
+    {
+        IsEditDialogOpen = false;
+        EditingJob = null;
     }
 
     [RelayCommand]
