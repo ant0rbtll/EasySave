@@ -51,7 +51,7 @@ public class BackupEngine(
             long remainingSize = totalSize;
 
             UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
-            Log(job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
+            Log(job.Id, job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
 
             foreach (var file in files)
             {
@@ -68,6 +68,7 @@ public class BackupEngine(
                     {
                         _fileSystem.CreateDirectory(destinationDir);
                         Log(
+                            job.Id,
                             job.Name,
                             LogEventType.CreateDirectory,
                             destinationDir,
@@ -91,7 +92,9 @@ public class BackupEngine(
                     }
 
                     long encryptionTimeMs = EncryptTransferredFileIfRequired(destinationFile, encryptionPolicy);
-                    Log(job.Name,
+                        
+                    Log(job.Id,
+                        job.Name,
                         LogEventType.TransferFile,
                         file,
                         destinationFile,
@@ -112,7 +115,7 @@ public class BackupEngine(
             }
 
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
-            Log(job.Name, LogEventType.EndBackup, "", "", totalSize, 0);
+            Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, 0);
             _stateWriter.MarkInactive(job.Id);
         }
         catch (Exception ex)
@@ -124,6 +127,7 @@ public class BackupEngine(
                 ? LogEventType.BusinessSoftwareDetected
                 : LogEventType.Error;
             Log(
+                job.Id,
                 job.Name,
                 eventType,
                 sourceContext,
@@ -224,6 +228,7 @@ public class BackupEngine(
     /// <param name="transferTimeMs">Transfer time in milliseconds.</param>
     /// <param name="encryptionTimeMs">Encryption time in milliseconds.</param>
     private void Log(
+        int backupId,
         string backupName,
         LogEventType eventType,
         string sourcePath,
@@ -236,6 +241,7 @@ public class BackupEngine(
         {
             _logger.Write(new LogEntry(
                 DateTime.Now,
+                backupId,
                 backupName,
                 eventType,
                 sourcePath,
