@@ -113,6 +113,8 @@ public enum LocalizationKey
     gui_config_log_directory_watermark,
     gui_config_business_software,
     gui_config_business_software_watermark,
+    gui_config_business_software_add,
+    gui_config_business_software_empty,
     gui_config_reset,
     gui_config_save,
     gui_config_saved,

@@ -104,7 +104,9 @@ translations:
   gui_config_log_directory: "Dossier de logs"
   gui_config_log_directory_watermark: "Par défaut (dossier de l'application)"
   gui_config_business_software: "Logiciel métier (processus)"
-  gui_config_business_software_watermark: "Ex: calc ou calc.exe"
+  gui_config_business_software_watermark: "Ex: calc ou calc.exe, excel"
+  gui_config_business_software_add: "Ajouter"
+  gui_config_business_software_empty: "Aucun logiciel métier configuré"
   gui_config_reset: "Réinitialiser"
   gui_config_save: "Sauvegarder"
   gui_config_saved: "Configuration sauvegardée."
@@ -151,4 +153,3 @@ translations:
   gui_config_encrypted_extensions_watermark: ".pdf, .docx, ..."
   gui_config_encrypted_extensions_add: "Ajouter"
   gui_config_encrypted_extensions_empty: "Aucune extension chiffrée configurée"
-

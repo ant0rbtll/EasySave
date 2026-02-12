@@ -11,32 +11,36 @@ public sealed class BusinessSoftwareBackupExecutionGuard(
     IUserPreferencesRepository preferencesRepository,
     Func<string, bool>? isBusinessSoftwareRunning = null) : IBackupExecutionGuard
 {
+    private static readonly char[] ProcessSeparators = [',', ';'];
     private readonly IUserPreferencesRepository _preferencesRepository = preferencesRepository;
     private readonly Func<string, bool> _isBusinessSoftwareRunning = isBusinessSoftwareRunning ?? IsProcessRunning;
 
     public void EnsureCanCopyNextFile()
     {
-        string configuredProcessName = GetConfiguredBusinessSoftwareProcessName();
-        if (string.IsNullOrWhiteSpace(configuredProcessName))
+        IReadOnlyList<string> configuredProcessNames = GetConfiguredBusinessSoftwareProcessNames();
+        if (configuredProcessNames.Count == 0)
         {
             return;
         }
 
-        if (_isBusinessSoftwareRunning(configuredProcessName))
+        foreach (var configuredProcessName in configuredProcessNames)
         {
-            throw CreateBusinessSoftwareRunningException(configuredProcessName);
+            if (_isBusinessSoftwareRunning(configuredProcessName))
+            {
+                throw CreateBusinessSoftwareRunningException(configuredProcessName);
+            }
         }
     }
 
-    private string GetConfiguredBusinessSoftwareProcessName()
+    private IReadOnlyList<string> GetConfiguredBusinessSoftwareProcessNames()
     {
         try
         {
-            return NormalizeProcessName(_preferencesRepository.Load().BusinessSoftwareProcessName);
+            return ParseConfiguredProcessNames(_preferencesRepository.Load().BusinessSoftwareProcessName);
         }
         catch
         {
-            return string.Empty;
+            return [];
         }
     }
 
@@ -59,6 +63,21 @@ public sealed class BusinessSoftwareBackupExecutionGuard(
         var fileName = Path.GetFileName(trimmed);
         var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
         return string.IsNullOrWhiteSpace(withoutExtension) ? trimmed : withoutExtension;
+    }
+
+    private static IReadOnlyList<string> ParseConfiguredProcessNames(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        return value
+            .Split(ProcessSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(NormalizeProcessName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     private static bool IsProcessRunning(string processName)

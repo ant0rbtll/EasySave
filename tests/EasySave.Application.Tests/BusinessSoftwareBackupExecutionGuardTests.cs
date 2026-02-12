@@ -38,4 +38,21 @@ public class BusinessSoftwareBackupExecutionGuardTests
         var exception = Record.Exception(() => guard.EnsureCanCopyNextFile());
         Assert.Null(exception);
     }
+
+    [Fact]
+    public void EnsureCanCopyNextFile_WhenAnyConfiguredBusinessSoftwareIsRunning_ShouldThrow()
+    {
+        var preferencesRepositoryMock = new Mock<IUserPreferencesRepository>();
+        preferencesRepositoryMock
+            .Setup(r => r.Load())
+            .Returns(new UserPreferences { BusinessSoftwareProcessName = "calc.exe, excel" });
+
+        var guard = new BusinessSoftwareBackupExecutionGuard(
+            preferencesRepositoryMock.Object,
+            name => string.Equals(name, "excel", StringComparison.OrdinalIgnoreCase));
+
+        var exception = Assert.Throws<InvalidOperationException>(() => guard.EnsureCanCopyNextFile());
+        Assert.Equal("error_business_software_running", exception.Message);
+        Assert.Equal("excel", exception.Data["0"]);
+    }
 }
