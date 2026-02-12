@@ -172,6 +172,7 @@ translations:
   gui_log_col_status: "Event type"
   gui_log_col_size: "Size"
   gui_log_col_duration: "Duration"
+  gui_log_col_encryption: "Encryption"
   gui_manage_empty_title: "No backup jobs"
   gui_manage_empty_subtitle: "You haven't created any backup jobs yet. Use the Create button in the top left corner to add one."
   gui_window_minimize: "Minimize"

@@ -202,4 +202,5 @@ public enum LocalizationKey
     gui_log_col_status,
     gui_log_col_size,
     gui_log_col_duration,
+    gui_log_col_encryption,
 }

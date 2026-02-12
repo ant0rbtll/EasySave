@@ -173,3 +173,13 @@ translations:
   gui_window_maximize: "Agrandir"
   gui_window_restore: "Restaurer"
   gui_window_close: "Fermer"
+
+  gui_log_history_subtitle: "Sélectionnez une date pour voir les logs d'activité"
+  gui_log_search_date_watermark: "Rechercher par date..."
+  gui_log_detail_subtitle: "Détails des opérations effectuées"
+  gui_log_search_log_watermark: "Rechercher par un nom"
+  gui_log_col_time: "Heure"
+  gui_log_col_status: "Type d'événements'"
+  gui_log_col_size: "Taille"
+  gui_log_col_duration: "Durée"
+  gui_log_col_encryption: "Chiffrement"

@@ -71,7 +71,7 @@
 			<Border Grid.Row="1" BorderBrush="#22FFFFFF" BorderThickness="1" CornerRadius="8" ClipToBounds="True">
 				<Grid RowDefinitions="Auto,*">
 					<Border Background="#11FFFFFF" Padding="15,10">
-						<Grid ColumnDefinitions="80,120,100,*,*,100,80">
+						<Grid ColumnDefinitions="80,120,100,*,*,100,80,80">
 							<TextBlock Grid.Column="0" Text="{Binding ColTime}" Foreground="#999" FontSize="11" FontWeight="Bold"/>
 							<TextBlock Grid.Column="1" Text="{Binding ColName}" Foreground="#999" FontSize="11" FontWeight="Bold"/>
 							<TextBlock Grid.Column="2" Text="{Binding ColStatus}" Foreground="#999" FontSize="11" FontWeight="Bold" HorizontalAlignment="Center"/>
@@ -79,6 +79,7 @@
 							<TextBlock Grid.Column="4" Text="{Binding ColDest}" Foreground="#999" FontSize="11" FontWeight="Bold" Margin="10,0"/>
 							<TextBlock Grid.Column="5" Text="{Binding ColSize}" Foreground="#999" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right"/>
 							<TextBlock Grid.Column="6" Text="{Binding ColDuration}" Foreground="#999" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right"/>
+							<TextBlock Grid.Column="7" Text="{Binding ColEncryption}" Foreground="#999" FontSize="11" FontWeight="Bold" HorizontalAlignment="Right"/>
 						</Grid>
 					</Border>
 
@@ -87,19 +88,20 @@
 							<ItemsControl.ItemTemplate>
 								<DataTemplate x:DataType="models:LogDisplayModel">
 									<Border BorderBrush="#11FFFFFF" BorderThickness="0,0,0,1" Padding="15,10" Classes="log-row">
-										<Grid ColumnDefinitions="80,120,100,*,*,100,80">
+										<Grid ColumnDefinitions="80,120,100,*,*,100,80,80">
 											<TextBlock Grid.Column="0" Text="{Binding Timestamp}" VerticalAlignment="Center" FontSize="12"/>
 											<TextBlock Grid.Column="1"
-													   Text="{Binding BackupName}"
-													   VerticalAlignment="Center"
-													   FontWeight="SemiBold"
-													   TextTrimming="CharacterEllipsis">
+                                                       Text="{Binding BackupName}"
+                                                       VerticalAlignment="Center"
+                                                       FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis">
 												<ToolTip.Tip>
 													<TextBlock Text="{Binding BackupName}"
-															   TextWrapping="NoWrap"
-															   MaxWidth="1000" />
+                                                               TextWrapping="NoWrap"
+                                                               MaxWidth="1000" />
 												</ToolTip.Tip>
 											</TextBlock>
+
 											<Border Grid.Column="2" CornerRadius="4" Padding="8,3" HorizontalAlignment="Center" VerticalAlignment="Center">
 												<Border.Styles>
 													<Style Selector="Border[Tag=TransferFile]">
@@ -109,7 +111,6 @@
 														<Setter Property="Foreground" Value="#81C784"/>
 														<Setter Property="Text" Value="TRANSFERT"/>
 													</Style>
-
 													<Style Selector="Border[Tag=CreateDirectory]">
 														<Setter Property="Background" Value="#222196F3"/>
 													</Style>
@@ -117,7 +118,6 @@
 														<Setter Property="Foreground" Value="#64B5F6"/>
 														<Setter Property="Text" Value="DOSSIER"/>
 													</Style>
-
 													<Style Selector="Border[Tag=Error]">
 														<Setter Property="Background" Value="#22EF5350"/>
 													</Style>
@@ -126,31 +126,33 @@
 														<Setter Property="Text" Value="ERREUR"/>
 													</Style>
 												</Border.Styles>
-
 												<Border.Tag>
 													<Binding Path="EventType"/>
 												</Border.Tag>
-
 												<TextBlock FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
 											</Border>
 
 											<TextBlock Grid.Column="3"
-													   Text="{Binding Source}"
-													   Classes="path-text"
-													   VerticalAlignment="Center"
-													   Margin="20,0"
-													   TextTrimming="CharacterEllipsis"
-													   ToolTip.Tip="{Binding Source}"/>
+                                                       Text="{Binding Source}"
+                                                       Classes="path-text"
+                                                       VerticalAlignment="Center"
+                                                       Margin="20,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip.Tip="{Binding Source}"/>
 
 											<TextBlock Grid.Column="4"
-													   Text="{Binding Destination}"
-													   Classes="path-text"
-													   VerticalAlignment="Center"
-													   Margin="10,0"
-													   TextTrimming="CharacterEllipsis"
-													   ToolTip.Tip="{Binding Destination}"/>
-											<TextBlock Grid.Column="5" Text="{Binding FileSize, StringFormat=\{0\}}" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+                                                       Text="{Binding Destination}"
+                                                       Classes="path-text"
+                                                       VerticalAlignment="Center"
+                                                       Margin="10,0"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip.Tip="{Binding Destination}"/>
+
+											<TextBlock Grid.Column="5" Text="{Binding FileSize}" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12"/>
+
 											<TextBlock Grid.Column="6" Text="{Binding Duration}" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="#66BBFF"/>
+
+											<TextBlock Grid.Column="7" Text="{Binding EncryptionTime}" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="12" Foreground="#FFAB40"/>
 										</Grid>
 									</Border>
 								</DataTemplate>

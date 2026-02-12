@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
+using EasySave.Core;
 using EasySave.GUI.Models;
 using EasySave.Localization;
 using EasySave.Log;
@@ -16,10 +17,11 @@ namespace EasySave.GUI.ViewModels;
 /// </summary>
 public partial class LogViewModel : ViewModelBase
 {
-    private readonly BackupApplicationService _backupService;
+    private readonly ILogQueryService _logQueryService;
     private readonly ILocalizationService _localizationService;
     private readonly List<string> _allAvailableDates = new();
     private readonly List<LogDisplayModel> _allLogEntries = new();
+
     public ObservableCollection<string> AvailableDates { get; } = new();
     public ObservableCollection<LogDisplayModel> LogEntries { get; } = new();
     private Action _onLanguageChanged = static () => { };
@@ -41,71 +43,36 @@ public partial class LogViewModel : ViewModelBase
     [ObservableProperty] private string _colDest = "";
     [ObservableProperty] private string _colSize = "";
     [ObservableProperty] private string _colDuration = "";
+    [ObservableProperty] private string _colEncryption = "";
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IdHeader))]
-    [NotifyPropertyChangedFor(nameof(NameHeader))]
-    [NotifyPropertyChangedFor(nameof(SourceHeader))]
-    [NotifyPropertyChangedFor(nameof(DestinationHeader))]
-    [NotifyPropertyChangedFor(nameof(TypeHeader))]
-    private string sortColumn = string.Empty;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IdHeader))]
-    [NotifyPropertyChangedFor(nameof(NameHeader))]
-    [NotifyPropertyChangedFor(nameof(SourceHeader))]
-    [NotifyPropertyChangedFor(nameof(DestinationHeader))]
-    [NotifyPropertyChangedFor(nameof(TypeHeader))]
-    private bool sortAscending = true;
-
-    public string IdHeader => "ID" + GetSortIndicator("Id");
-    public string NameHeader => "Nom" + GetSortIndicator("Name");
-    public string SourceHeader => "Source" + GetSortIndicator("Source");
-    public string DestinationHeader => "Destination" + GetSortIndicator("Destination");
-    public string TypeHeader => "Type" + GetSortIndicator("Type");
-
-    public LogViewModel(BackupApplicationService backupAppService, ILocalizationService localizationService)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="LogViewModel"/> class.
+    /// </summary>
+    /// <param name="logQueryService">Service to query log files.</param>
+    /// <param name="localizationService">Service for text localization.</param>
+    public LogViewModel(ILogQueryService logQueryService, ILocalizationService localizationService)
     {
-        _backupService = backupAppService;
+        _logQueryService = logQueryService;
         _localizationService = localizationService;
 
         RefreshTranslations();
         LoadDates();
     }
 
-        [RelayCommand]
-    private void SortBy(string column)
-    {
-        if (SortColumn == column)
-            SortAscending = !SortAscending;
-        else
-        {
-            SortColumn = column;
-            SortAscending = true;
-        }
-        Refresh();
-    }
-
-    public string GetSortIndicator(string column)
-    {
-        if (SortColumn != column) return "";
-        return SortAscending ? " \u25b2" : " \u25bc";
-    }
-
     /// <summary>
-    /// Triggered when the log search text changes.
+    /// Triggered when the log search text changes to refresh the filtered list.
     /// </summary>
     /// <param name="value">The new search string.</param>
     partial void OnSearchTextChanged(string value) => Refresh();
 
     /// <summary>
-    /// Triggered when the date search text changes.
+    /// Triggered when the date search text changes to refresh the filtered list.
     /// </summary>
     /// <param name="value">The new search string.</param>
     partial void OnSearchTextDateChanged(string value) => Refresh();
 
     /// <summary>
-    /// Updates all localized strings based on the current language.
+    /// Updates all localized strings based on the current language from the localization service.
     /// </summary>
     public void RefreshTranslations()
     {
@@ -123,10 +90,11 @@ public partial class LogViewModel : ViewModelBase
         ColDest = _localizationService.TranslateText(LocalizationKey.backupjob_destination);
         ColSize = _localizationService.TranslateText(LocalizationKey.gui_log_col_size);
         ColDuration = _localizationService.TranslateText(LocalizationKey.gui_log_col_duration);
+        ColEncryption = _localizationService.TranslateText(LocalizationKey.gui_log_col_encryption);
     }
 
     /// <summary>
-    /// Command to select a specific date and display its associated logs.
+    /// Selects a specific date, updates the state, and loads the corresponding log entries.
     /// </summary>
     /// <param name="date">The date string selected by the user.</param>
     [RelayCommand]
@@ -138,7 +106,7 @@ public partial class LogViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Command to go back to the date selection screen and reset search filters.
+    /// Returns to the date selection screen and clears the current log selection and search filters.
     /// </summary>
     [RelayCommand]
     private void GoBack()
@@ -151,7 +119,7 @@ public partial class LogViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Filters both dates and log entries based on their respective search queries.
+    /// Filters available dates and log entries based on their respective search text values.
     /// </summary>
     private void Refresh()
     {
@@ -178,63 +146,74 @@ public partial class LogViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Initializes the list of available dates (mock data).
-    /// </summary>
-    /// <summary>
-    /// Fetches available log dates from the backend service and updates the list.
+    /// Fetches all available log dates from the log query service and updates the internal list.
     /// </summary>
     private void LoadDates()
     {
         _allAvailableDates.Clear();
-
-        var dates = _backupService.GetLogsDate();
+        var dates = _logQueryService.GetAvailableDates();
 
         foreach (var date in dates)
         {
-            _allAvailableDates.Add(date);
+            _allAvailableDates.Add(date.ToString("yyyy-MM-dd"));
         }
 
         Refresh();
     }
 
+    /// <summary>
+    /// Sets the callback action to be executed when the application language changes.
+    /// </summary>
+    /// <param name="onLanguageChanged">The action to execute.</param>
     public void SetOnLanguageChanged(Action onLanguageChanged)
     {
         _onLanguageChanged = onLanguageChanged;
     }
 
     /// <summary>
-    /// Loads log entries for a specific date by deserializing JSON data from the backend.
+    /// Loads log entries for a specific date from the log service and maps them to the display model.
     /// </summary>
-    /// <param name="date">The date of the logs to load.</param>
+    /// <param name="date">The date of the logs to load (formatted as yyyy-MM-dd).</param>
     private void LoadLogsForDate(string date)
     {
         _allLogEntries.Clear();
-
-        var rawLogs = _backupService.GetLogsByDate(date);
+        var rawLogs = _logQueryService.GetByDate(DateOnly.Parse(date), LogFormat.Json);
 
         foreach (var log in rawLogs)
         {
-            int typeValue = int.Parse(log.GetValueOrDefault("eventType")?.ToString() ?? "2");
-            string typeName = Enum.GetName(typeof(LogEventType), typeValue) ?? "Error";
-
-            long.TryParse(log.GetValueOrDefault("fileSizeBytes")?.ToString(), out long sizeInBytes);
             _allLogEntries.Add(new LogDisplayModel
             {
-                Timestamp = DateTime.TryParse(log.GetValueOrDefault("timestamp")?.ToString(), out var dt)
-                ? dt.ToString("HH:mm:ss")
-                : "00:00:00",
-                BackupName = log.GetValueOrDefault("backupName")?.ToString() ?? "",
-                EventType = typeName,
-                Source = log.GetValueOrDefault("sourcePathUNC")?.ToString() ?? "",
-                Destination = log.GetValueOrDefault("destinationPathUNC")?.ToString() ?? "",
-                FileSize = FormatFileSize(sizeInBytes),
-                Duration = $"{log.GetValueOrDefault("transferTimeMs")} ms"
+                Timestamp = log.Timestamp.ToString("HH:mm:ss"),
+                BackupName = log.BackupName,
+                EventType = log.EventType.ToString(),
+                Source = log.SourcePathUNC,
+                Destination = log.DestinationPathUNC,
+                FileSize = FormatFileSize(log.FileSizeBytes),
+                Duration = $"{log.TransferTimeMs} ms",
+                EncryptionTime = FormatEncryptionTime(log.EncryptionTimeMs)
             });
         }
 
         Refresh();
     }
 
+    /// <summary>
+    /// Formats the encryption time based on business rules: 0 for no encryption, positive for duration, negative for errors.
+    /// </summary>
+    /// <param name="timeMs">The encryption time in milliseconds.</param>
+    /// <returns>A formatted string representing the encryption status or duration.</returns>
+    private string FormatEncryptionTime(long timeMs)
+    {
+        if (timeMs == 0) return "0 ms";
+        if (timeMs > 0) return $"{timeMs} ms";
+        return "Error";
+    }
+
+    /// <summary>
+    /// Converts a file size in bytes to a human-readable string with appropriate units (B, KB, MB, GB, TB).
+    /// </summary>
+    /// <param name="bytes">The file size in bytes.</param>
+    /// <returns>A string representation of the file size (e.g., "1.25 MB").</returns>
     private string FormatFileSize(long bytes)
     {
         string[] units = { "B", "KB", "MB", "GB", "TB" };
