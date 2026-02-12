@@ -35,7 +35,7 @@ public sealed class LogQueryService : ILogQueryService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<DateOnly> GetAvailableDates(LogFormat format)
+    public IReadOnlyList<DateOnly> GetAvailableDates()
     {
         string logsDirectory = _pathProvider.ResolveLogsDirectory();
         if (!Directory.Exists(logsDirectory))
@@ -43,10 +43,14 @@ public sealed class LogQueryService : ILogQueryService
             return [];
         }
 
-        string extension = LogFileNaming.GetFileExtension(format);
-        string pattern = $"*.{extension}";
+        return Enum.GetValues<LogFormat>()
+            .SelectMany(format =>
+            {
+                string extension = LogFileNaming.GetFileExtension(format);
+                string pattern = $"*.{extension}";
 
-        return Directory.EnumerateFiles(logsDirectory, pattern, SearchOption.TopDirectoryOnly)
+                return Directory.EnumerateFiles(logsDirectory, pattern, SearchOption.TopDirectoryOnly);
+            })
             .Where(static path => LogFileNaming.TryParseDateFromFilePath(path, out _))
             .Select(static path =>
             {

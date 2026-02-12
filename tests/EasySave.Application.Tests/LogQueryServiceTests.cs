@@ -13,26 +13,27 @@ public class LogQueryServiceTests
         string missingDirectory = Path.Combine(Path.GetTempPath(), "easysave-log-query-missing", Guid.NewGuid().ToString("N"));
         var service = CreateService(missingDirectory, [new JsonLogReader()]);
 
-        var result = service.GetAvailableDates(LogFormat.Json);
+        var result = service.GetAvailableDates();
 
         Assert.Empty(result);
     }
 
     [Fact]
-    public void GetAvailableDates_FiltersByFormatAndSortsDescending()
+    public void GetAvailableDates_MergesDistinctDatesAndSortsDescending()
     {
         using var temp = new TempDirectory();
         File.WriteAllText(Path.Combine(temp.LogsDirectory, "2026-02-09.json"), "[]");
         File.WriteAllText(Path.Combine(temp.LogsDirectory, "2026-02-11.json"), "[]");
         File.WriteAllText(Path.Combine(temp.LogsDirectory, "2026-02-10.xml"), "<Logs />");
+        File.WriteAllText(Path.Combine(temp.LogsDirectory, "2026-02-09.xml"), "<Logs />");
         File.WriteAllText(Path.Combine(temp.LogsDirectory, "invalid.json"), "[]");
 
-        var service = CreateService(temp.LogsDirectory, [new JsonLogReader()]);
+        var service = CreateService(temp.LogsDirectory, [new JsonLogReader(), new XmlLogReader()]);
 
-        var result = service.GetAvailableDates(LogFormat.Json);
+        var result = service.GetAvailableDates();
 
         Assert.Equal(
-            [new DateOnly(2026, 2, 11), new DateOnly(2026, 2, 9)],
+            [new DateOnly(2026, 2, 11), new DateOnly(2026, 2, 10), new DateOnly(2026, 2, 9)],
             result);
     }
 

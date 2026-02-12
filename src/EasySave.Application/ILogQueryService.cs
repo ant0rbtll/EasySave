@@ -9,11 +9,10 @@ namespace EasySave.Application;
 public interface ILogQueryService
 {
     /// <summary>
-    /// Lists available log dates for a specific format.
+    /// Lists available log dates across all supported formats.
     /// </summary>
-    /// <param name="format">The log file format to search for.</param>
-    /// <returns>Dates sorted from newest to oldest.</returns>
-    IReadOnlyList<DateOnly> GetAvailableDates(LogFormat format);
+    /// <returns>Distinct dates sorted from newest to oldest.</returns>
+    IReadOnlyList<DateOnly> GetAvailableDates();
 
     /// <summary>
     /// Reads all entries for a date and format.
