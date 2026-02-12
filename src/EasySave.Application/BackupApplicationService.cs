@@ -323,10 +323,7 @@ public class BackupApplicationService(
 
         if (_isBusinessSoftwareRunning(configuredProcessName))
         {
-            var exception = new InvalidOperationException("error_business_software_running");
-            exception.Data["errorKey"] = "error_business_software_running";
-            exception.Data["0"] = configuredProcessName;
-            throw exception;
+            throw CreateBusinessSoftwareRunningException(configuredProcessName);
         }
     }
 
