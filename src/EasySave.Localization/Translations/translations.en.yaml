@@ -144,3 +144,7 @@ translations:
   gui_create_name_too_long: "Invalid backup name, maximum length: {0}"
   gui_create_browse_source: "Select source folder"
   gui_create_browse_destination: "Select destination folder"
+  gui_config_encrypted_extensions: "Encrypted file extensions"
+  gui_config_encrypted_extensions_watermark: ".pdf, .docx, ..."
+  gui_config_encrypted_extensions_add: "Add"
+  gui_config_encrypted_extensions_empty: "No encrypted extensions configured"

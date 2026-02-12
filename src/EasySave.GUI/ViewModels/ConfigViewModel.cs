@@ -34,6 +34,14 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string resetText = "";
     [ObservableProperty] private string saveText = "";
     [ObservableProperty] private string browseText = "";
+    [ObservableProperty] private string encryptedExtensionsText = "";
+    [ObservableProperty] private string encryptedExtensionsWatermark = "";
+    [ObservableProperty] private string encryptedExtensionsAddText = "";
+    [ObservableProperty] private string encryptedExtensionsEmptyText = "";
+
+    public ObservableCollection<string> EncryptedExtensions { get; } = [];
+
+    [ObservableProperty] private string? newExtensionInput;
 
     public ObservableCollection<LanguageOption> AvailableLanguages { get; } =
     [
@@ -54,6 +62,15 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = preferencesRepository.Load();
         selectedLanguage = NormalizeLanguage(preferences.Language);
         logDirectory = preferences.LogDirectory;
+
+        foreach (var ext in preferences.EncryptedExtensions)
+        {
+            var normalized = NormalizeExtensionForDisplay(ext);
+            if (normalized is not null)
+            {
+                EncryptedExtensions.Add(normalized);
+            }
+        }
 
         RefreshTranslations();
     }
@@ -111,6 +128,10 @@ public partial class ConfigViewModel : ViewModelBase
         ResetText = _localizationService.TranslateText(LocalizationKey.gui_config_reset);
         SaveText = _localizationService.TranslateText(LocalizationKey.gui_config_save);
         BrowseText = _localizationService.TranslateText(LocalizationKey.gui_config_browse);
+        EncryptedExtensionsText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions);
+        EncryptedExtensionsWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_watermark);
+        EncryptedExtensionsAddText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_add);
+        EncryptedExtensionsEmptyText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_empty);
         ValidatePath();
     }
 
@@ -135,6 +156,7 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = _preferencesRepository.Load();
         preferences.Language = language;
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
+        preferences.EncryptedExtensions = EncryptedExtensions.ToList();
         _preferencesRepository.Save(preferences);
 
         _localizationService.Culture = language;
@@ -165,6 +187,40 @@ public partial class ConfigViewModel : ViewModelBase
     private void ResetLogDirectory()
     {
         LogDirectory = null;
+    }
+
+    [RelayCommand]
+    private void AddExtension()
+    {
+        var normalized = NormalizeExtensionForDisplay(NewExtensionInput);
+        if (normalized is null)
+            return;
+
+        if (!EncryptedExtensions.Contains(normalized))
+            EncryptedExtensions.Add(normalized);
+
+        NewExtensionInput = null;
+    }
+
+    [RelayCommand]
+    private void RemoveExtension(string extension)
+    {
+        EncryptedExtensions.Remove(extension);
+    }
+
+    private static string? NormalizeExtensionForDisplay(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+            return null;
+
+        var trimmed = extension.Trim().ToLowerInvariant();
+        if (trimmed.Length == 0)
+            return null;
+
+        if (!trimmed.StartsWith('.'))
+            trimmed = "." + trimmed;
+
+        return trimmed;
     }
 }
 

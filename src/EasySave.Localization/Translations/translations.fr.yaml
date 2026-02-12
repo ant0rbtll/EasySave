@@ -144,4 +144,8 @@ translations:
   gui_create_name_too_long: "Nom de sauvegarde invalide, nombre de caractères maximum : {0}"
   gui_create_browse_source: "Choisir le dossier source"
   gui_create_browse_destination: "Choisir le dossier de destination"
+  gui_config_encrypted_extensions: "Extensions de fichiers chiffrés"
+  gui_config_encrypted_extensions_watermark: ".pdf, .docx, ..."
+  gui_config_encrypted_extensions_add: "Ajouter"
+  gui_config_encrypted_extensions_empty: "Aucune extension chiffrée configurée"
 

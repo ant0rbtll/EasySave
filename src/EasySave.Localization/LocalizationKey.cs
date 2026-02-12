@@ -151,5 +151,11 @@ public enum LocalizationKey
     gui_create_browse_destination,
     gui_create_error_io,
     gui_create_error_unexpected,
-    gui_create_success
+    gui_create_success,
+
+    // Config - Encrypted Extensions
+    gui_config_encrypted_extensions,
+    gui_config_encrypted_extensions_watermark,
+    gui_config_encrypted_extensions_add,
+    gui_config_encrypted_extensions_empty
 }
