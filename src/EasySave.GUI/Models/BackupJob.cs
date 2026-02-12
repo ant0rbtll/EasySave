@@ -55,11 +55,19 @@ namespace EasySave.GUI.Models
 		}
 
 		private bool isActive;
-		
+
 		public bool IsActive
 		{
 			get { return isActive; }
 			set { isActive = value; OnNotifyPropertyChanged(nameof(IsActive)); }
+		}
+
+		private bool isSelected;
+
+		public bool IsSelected
+		{
+			get { return isSelected; }
+			set { isSelected = value; OnNotifyPropertyChanged(nameof(IsSelected)); }
 		}
 	}
 }
