@@ -322,7 +322,7 @@ public class InMemoryBackupJobRepositoryTests
 
     #endregion
 
-    #region Count and MaxJobs Tests
+    #region Count Tests
 
     [Fact]
     public void Count_EmptyRepository_ReturnsZero()
@@ -363,13 +363,6 @@ public class InMemoryBackupJobRepositoryTests
 
         // Act & Assert
         Assert.Equal(1, repo.Count());
-    }
-
-    [Fact]
-    public void MaxJobs_Always_Returns5()
-    {
-        // Arrange
-        var repo = CreateRepository();
     }
 
     #endregion

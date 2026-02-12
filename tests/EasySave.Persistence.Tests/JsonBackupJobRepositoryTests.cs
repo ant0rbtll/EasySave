@@ -117,31 +117,7 @@ public class JsonBackupJobRepositoryTests : IDisposable
         Assert.Contains("already exists", ex.Message);                                                                                                                                                                        
     }                                                                                                                                                                                                                         
                                                                                                                                                                                                                     
-    [Fact]                                                                                                                                                                                                                    
-    public void Add_MoreThanMaxJobs_ThrowsException()                                                                                                                                                                         
-    {                                                                                                                                                                                                                         
-        // Arrange                                                                                                                                                                                                            
-        var callCount = 0;                                                                                                                                                                                                    
-        _idProviderMock.Setup(p => p.NextId(It.IsAny<List<BackupJob>>()))                                                                                                                                                     
-        .Returns(() => ++callCount);                                                                                                                                                                                      
-        var repo = CreateRepository();                                                                                                                                                                                        
-                                                                                                                                                                                                                        
-        // Act - Add 5 jobs (limit)                                                                                                                                                                                      
-        for (int i = 0; i < 5; i++)                                                                                                                                                                                           
-        {                                                                                                                                                                                                                     
-            repo.Add(new BackupJob                                                                                                                                                                                            
-            {                                                                                                                                                                                                                 
-                Name = $"Job{i}",                                                                                                                                                                                             
-                Source = "/src",                                                                                                                                                                                              
-                Destination = "/dst",                                                                                                                                                                                         
-                Type = BackupType.Complete                                                                                                                                                                                    
-            });                                                                                                                                                                                                               
-        }                                                                                                                                                                                                                     
-                                                                                                                                                                                                                    
-        // Assert - 6th job should throw exception                                                                                                                                                                                      
-        var ex = Assert.Throws<InvalidOperationException>(() => repo.Add(new BackupJob { Name = "Job6", Source = "/src", Destination = "/dst" }));                                                                                                                                
-        Assert.Contains("Cannot add more than", ex.Message);                                                                                                                                                                  
-    }                                                                                                                                                                                                                         
+                                                                                                                                                                                                                         
                                                                                                                                                                                                                     
     #endregion                                                                                                                                                                                                                
                                                                                                                                                                                                                     
@@ -360,7 +336,7 @@ public class JsonBackupJobRepositoryTests : IDisposable
                                                                                                                                                                                                                     
     #endregion                                                                                                                                                                                                                
                                                                                                                                                                                                                     
-    #region Count and MaxJobs Tests                                                                                                                                                                                           
+    #region Count Tests                                                                                                                                                                                           
                                                                                                                                                                                                                     
     [Fact]                                                                                                                                                                                                                    
     public void Count_EmptyRepository_ReturnsZero()                                                                                                                                                                           
@@ -387,13 +363,6 @@ public class JsonBackupJobRepositoryTests : IDisposable
         Assert.Equal(2, repo.Count());                                                                                                                                                                                        
     }                                                                                                                                                                                                                         
                                                                                                                                                                                                                     
-    [Fact]                                                                                                                                                                                                                    
-    public void MaxJobs_Always_Returns5()                                                                                                                                                                                     
-    {
-        // Arrange
-        var repo = CreateRepository();
-    }
-
     #endregion
 
     #region Edge Cases Tests

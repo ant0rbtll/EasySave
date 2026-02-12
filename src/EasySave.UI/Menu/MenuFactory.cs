@@ -1,6 +1,5 @@
 ﻿using EasySave.Core;
 using EasySave.Localization;
-using EasySave.Persistence;
 
 namespace EasySave.UI.Menu
 {
@@ -19,8 +18,7 @@ namespace EasySave.UI.Menu
             int index = 0;
 
             items.Add(LocalizationKey.menu_create);
-                actions[index++] = onCreateJob;
-            
+            actions[index++] = onCreateJob;
 
             if (hasJobs)
             {

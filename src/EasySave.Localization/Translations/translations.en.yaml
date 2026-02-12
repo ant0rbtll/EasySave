@@ -81,7 +81,6 @@ translations:
   job_update_unsaved_save_and_quit: "Save and quit"
   job_update_unsaved_discard_and_quit: "Quit without saving"
   error: "Error !"
-  error_add_max: "Cannot add more than {0} jobs."
   error_add_exists: "Job with ID {0} already exists."
   error_parser_arg_null: "The argument array must not be null or empty."
   error_parser_arg_invalid: "The argument is not valid"
