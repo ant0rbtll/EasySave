@@ -70,9 +70,7 @@ public partial class ConfigViewModel : ViewModelBase
         selectedLanguage = NormalizeLanguage(preferences.Language);
         logDirectory = preferences.LogDirectory;
 
-        foreach (
-            var processName in ParseBusinessSoftwareEntries(preferences.BusinessSoftwareProcessName)
-        )
+        foreach (var processName in preferences.BusinessSoftwareProcessNames)
         {
             BusinessSoftwareProcesses.Add(processName);
         }
@@ -174,9 +172,7 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = _preferencesRepository.Load();
         preferences.Language = language;
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
-        preferences.BusinessSoftwareProcessName = BusinessSoftwareProcesses.Count == 0
-            ? null
-            : string.Join(", ", BusinessSoftwareProcesses);
+        preferences.BusinessSoftwareProcessNames = [..BusinessSoftwareProcesses];
         preferences.EncryptedExtensions = [..EncryptedExtensions];
         _preferencesRepository.Save(preferences);
 
@@ -282,21 +278,6 @@ public partial class ConfigViewModel : ViewModelBase
             return null;
 
         return "." + trimmed;
-    }
-
-    private static IEnumerable<string> ParseBusinessSoftwareEntries(string? rawValue)
-    {
-        if (string.IsNullOrWhiteSpace(rawValue))
-            yield break;
-
-        foreach (var entry in rawValue.Split(BusinessSoftwareSeparators, StringSplitOptions.RemoveEmptyEntries))
-        {
-            var normalized = NormalizeBusinessSoftwareForDisplay(entry);
-            if (normalized is not null)
-            {
-                yield return normalized;
-            }
-        }
     }
 
     private static string? NormalizeBusinessSoftwareForDisplay(string? processName)

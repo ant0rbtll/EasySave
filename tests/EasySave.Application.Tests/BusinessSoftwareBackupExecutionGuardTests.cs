@@ -11,7 +11,7 @@ public class BusinessSoftwareBackupExecutionGuardTests
         var preferencesRepositoryMock = new Mock<IUserPreferencesRepository>();
         preferencesRepositoryMock
             .Setup(r => r.Load())
-            .Returns(new UserPreferences { BusinessSoftwareProcessName = "calc.exe" });
+            .Returns(new UserPreferences { BusinessSoftwareProcessNames = ["calc.exe"] });
 
         var guard = new BusinessSoftwareBackupExecutionGuard(
             preferencesRepositoryMock.Object,
@@ -29,7 +29,7 @@ public class BusinessSoftwareBackupExecutionGuardTests
         var preferencesRepositoryMock = new Mock<IUserPreferencesRepository>();
         preferencesRepositoryMock
             .Setup(r => r.Load())
-            .Returns(new UserPreferences { BusinessSoftwareProcessName = "   " });
+            .Returns(new UserPreferences { BusinessSoftwareProcessNames = [] });
 
         var guard = new BusinessSoftwareBackupExecutionGuard(
             preferencesRepositoryMock.Object,
@@ -45,7 +45,7 @@ public class BusinessSoftwareBackupExecutionGuardTests
         var preferencesRepositoryMock = new Mock<IUserPreferencesRepository>();
         preferencesRepositoryMock
             .Setup(r => r.Load())
-            .Returns(new UserPreferences { BusinessSoftwareProcessName = "calc.exe, excel" });
+            .Returns(new UserPreferences { BusinessSoftwareProcessNames = ["calc.exe", "excel"] });
 
         var guard = new BusinessSoftwareBackupExecutionGuard(
             preferencesRepositoryMock.Object,

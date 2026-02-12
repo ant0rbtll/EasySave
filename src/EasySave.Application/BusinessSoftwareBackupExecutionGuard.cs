@@ -11,7 +11,6 @@ public sealed class BusinessSoftwareBackupExecutionGuard(
     IUserPreferencesRepository preferencesRepository,
     Func<string, bool>? isBusinessSoftwareRunning = null) : IBackupExecutionGuard
 {
-    private static readonly char[] ProcessSeparators = [',', ';'];
     private readonly IUserPreferencesRepository _preferencesRepository = preferencesRepository;
     private readonly Func<string, bool> _isBusinessSoftwareRunning = isBusinessSoftwareRunning ?? IsProcessRunning;
 
@@ -36,7 +35,7 @@ public sealed class BusinessSoftwareBackupExecutionGuard(
     {
         try
         {
-            return ParseConfiguredProcessNames(_preferencesRepository.Load().BusinessSoftwareProcessName);
+            return _preferencesRepository.Load().BusinessSoftwareProcessNames;
         }
         catch
         {
@@ -50,34 +49,6 @@ public sealed class BusinessSoftwareBackupExecutionGuard(
         exception.Data["errorKey"] = "error_business_software_running";
         exception.Data["0"] = configuredProcessName;
         return exception;
-    }
-
-    private static string NormalizeProcessName(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return string.Empty;
-        }
-
-        var trimmed = value.Trim();
-        var fileName = Path.GetFileName(trimmed);
-        var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
-        return string.IsNullOrWhiteSpace(withoutExtension) ? trimmed : withoutExtension;
-    }
-
-    private static IReadOnlyList<string> ParseConfiguredProcessNames(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return [];
-        }
-
-        return value
-            .Split(ProcessSeparators, StringSplitOptions.RemoveEmptyEntries)
-            .Select(NormalizeProcessName)
-            .Where(name => !string.IsNullOrWhiteSpace(name))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
     }
 
     private static bool IsProcessRunning(string processName)
