@@ -41,9 +41,9 @@ public class LogQueryServiceTests
     public void GetByDate_WhenFileDoesNotExist_ReturnsEmpty()
     {
         using var temp = new TempDirectory();
-        var service = CreateService(temp.LogsDirectory, [new JsonLogReader()]);
+        var service = CreateService(temp.LogsDirectory, [new JsonLogReader(), new XmlLogReader()]);
 
-        var result = service.GetByDate(new DateOnly(2026, 2, 11), LogFormat.Json);
+        var result = service.GetByDate(new DateOnly(2026, 2, 11));
 
         Assert.Empty(result);
     }
@@ -67,7 +67,7 @@ public class LogQueryServiceTests
 
         var service = CreateService(temp.LogsDirectory, [new JsonLogReader()]);
 
-        var result = service.GetByDate(new DateOnly(2026, 2, 11), LogFormat.Json);
+        var result = service.GetByDate(new DateOnly(2026, 2, 11));
 
         var actual = Assert.Single(result);
         Assert.Equal(expected.BackupName, actual.BackupName);
@@ -104,7 +104,7 @@ public class LogQueryServiceTests
 
         var service = CreateService(temp.LogsDirectory, [new XmlLogReader()]);
 
-        var result = service.GetByDate(new DateOnly(2026, 2, 11), LogFormat.Xml);
+        var result = service.GetByDate(new DateOnly(2026, 2, 11));
 
         var actual = Assert.Single(result);
         Assert.Equal("job-xml", actual.BackupName);
@@ -117,14 +117,46 @@ public class LogQueryServiceTests
     }
 
     [Fact]
-    public void GetByDate_WhenReaderIsMissing_ThrowsNotSupportedException()
+    public void GetByDate_MergesEntriesFromAllFormats_AndSortsByTimestampDescending()
     {
         using var temp = new TempDirectory();
-        var service = CreateService(temp.LogsDirectory, [new JsonLogReader()]);
+        var jsonEntry = new LogEntry(
+            DateTime.Parse("2026-02-11T11:00:00Z"),
+            "job-json",
+            LogEventType.TransferFile,
+            "\\\\src-json",
+            "\\\\dst-json",
+            10,
+            20,
+            30);
+        WriteJson(Path.Combine(temp.LogsDirectory, "2026-02-11.json"), [jsonEntry]);
 
-        var action = () => service.GetByDate(new DateOnly(2026, 2, 11), LogFormat.Xml);
+        File.WriteAllText(
+            Path.Combine(temp.LogsDirectory, "2026-02-11.xml"),
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Logs>
+              <LogEntry>
+                <Timestamp>2026-02-11T12:00:00Z</Timestamp>
+                <BackupName>job-xml</BackupName>
+                <EventType>TransferFile</EventType>
+                <SourcePathUNC>\\src-xml</SourcePathUNC>
+                <DestinationPathUNC>\\dst-xml</DestinationPathUNC>
+                <FileSizeBytes>44</FileSizeBytes>
+                <TransferTimeMs>55</TransferTimeMs>
+                <EncryptionTimeMs>66</EncryptionTimeMs>
+              </LogEntry>
+            </Logs>
+            """);
 
-        Assert.Throws<NotSupportedException>(action);
+        var service = CreateService(temp.LogsDirectory, [new JsonLogReader(), new XmlLogReader()]);
+
+        var result = service.GetByDate(new DateOnly(2026, 2, 11));
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, static entry => entry.BackupName == "job-xml");
+        Assert.Contains(result, static entry => entry.BackupName == "job-json");
+        Assert.True(result[0].Timestamp >= result[1].Timestamp);
     }
 
     private static LogQueryService CreateService(string logsDirectory, IEnumerable<ILogReader> readers)
