@@ -40,6 +40,8 @@ public partial class ManageViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ModifyJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteJobCommand))]
     private bool isRunning;
 
     [ObservableProperty]
@@ -372,19 +374,23 @@ public partial class ManageViewModel : ViewModelBase
         PendingJob = null;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanModifyJob))]
     private void ModifyJob(Models.BackupJob job)
     {
         EditingJob = new EditJobViewModel(job, _localizationService);
         IsEditDialogOpen = true;
     }
 
-    [RelayCommand]
+    private bool CanModifyJob(Models.BackupJob job) => !(IsRunning && PendingJob?.Id == job.Id);
+
+    [RelayCommand(CanExecute = nameof(CanDeleteJob))]
     private void DeleteJob(Models.BackupJob job)
     {
         PendingDeleteJob = job;
         IsDeleteDialogOpen = true;
     }
+
+    private bool CanDeleteJob(Models.BackupJob job) => !(IsRunning && PendingJob?.Id == job.Id);
 
     [RelayCommand]
     private async Task ConfirmDelete()
