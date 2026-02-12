@@ -167,5 +167,16 @@ public enum LocalizationKey
     // Manage - Edit dialog
     gui_manage_edit_title,
     gui_manage_edit_save,
-    gui_manage_edit_success
+    gui_manage_edit_success,
+
+    // Manage - Multi-select run
+    gui_manage_run_selected,
+    gui_manage_select_all,
+    gui_manage_run_selected_success,
+    gui_manage_confirm_run_selected_message,
+
+    // Manage - Multi-select delete
+    gui_manage_delete_selected,
+    gui_manage_delete_selected_success,
+    gui_manage_confirm_delete_selected_message
 }

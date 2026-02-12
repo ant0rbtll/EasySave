@@ -78,6 +78,8 @@ public partial class ManageViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RunJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RunSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSelectedCommand))]
     [NotifyCanExecuteChangedFor(nameof(ModifyJobCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteJobCommand))]
     private bool isRunning;
@@ -165,6 +167,54 @@ public partial class ManageViewModel : ViewModelBase
     [ObservableProperty]
     private string tooltipDelete = string.Empty;
 
+    [ObservableProperty]
+    private string runSelectedText = string.Empty;
+
+    [ObservableProperty]
+    private string selectAllTooltip = string.Empty;
+
+    [ObservableProperty]
+    private string confirmRunSelectedMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool isConfirmRunSelectedDialogOpen;
+
+    [ObservableProperty]
+    private string deleteSelectedText = string.Empty;
+
+    [ObservableProperty]
+    private string confirmDeleteSelectedMessage = string.Empty;
+
+    [ObservableProperty]
+    private bool isConfirmDeleteSelectedDialogOpen;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(RunSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(DeleteSelectedCommand))]
+    private bool hasSelection;
+
+    private bool _updatingSelection;
+    private readonly HashSet<int> _runningJobIds = [];
+
+    private bool _isAllSelected;
+    public bool IsAllSelected
+    {
+        get => _isAllSelected;
+        set
+        {
+            if (_isAllSelected == value) return;
+            _isAllSelected = value;
+            OnPropertyChanged(nameof(IsAllSelected));
+
+            _updatingSelection = true;
+            foreach (var job in Jobs)
+                job.IsSelected = value;
+            _updatingSelection = false;
+
+            UpdateHasSelection();
+        }
+    }
+
     private string _idLabel = "ID";
     private string _nameLabel = string.Empty;
     private string _sourceLabel = string.Empty;
@@ -203,6 +253,9 @@ public partial class ManageViewModel : ViewModelBase
         TooltipRun = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_run);
         TooltipModify = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_modify);
         TooltipDelete = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_delete);
+        RunSelectedText = _localizationService.TranslateText(LocalizationKey.gui_manage_run_selected);
+        DeleteSelectedText = _localizationService.TranslateText(LocalizationKey.gui_manage_delete_selected);
+        SelectAllTooltip = _localizationService.TranslateText(LocalizationKey.gui_manage_select_all);
 
         _idLabel = _localizationService.TranslateText(LocalizationKey.backupjob_id);
         _nameLabel = _localizationService.TranslateText(LocalizationKey.backupjob_name);
@@ -388,6 +441,22 @@ public partial class ManageViewModel : ViewModelBase
 
     private bool CanRunJob(Models.BackupJob job) => !IsRunning;
 
+    public void OnJobSelectionChanged()
+    {
+        if (_updatingSelection) return;
+        UpdateHasSelection();
+
+        _updatingSelection = true;
+        _isAllSelected = Jobs.Count > 0 && Jobs.All(j => j.IsSelected);
+        OnPropertyChanged(nameof(IsAllSelected));
+        _updatingSelection = false;
+    }
+
+    private void UpdateHasSelection()
+    {
+        HasSelection = Jobs.Any(j => j.IsSelected);
+    }
+
     [RelayCommand]
     private async Task ConfirmRun()
     {
@@ -487,6 +556,175 @@ public partial class ManageViewModel : ViewModelBase
         PendingJob = null;
     }
 
+    [RelayCommand(CanExecute = nameof(CanRunSelected))]
+    private void RunSelected()
+    {
+        var count = Jobs.Count(j => j.IsSelected);
+        ConfirmRunSelectedMessage = _localizationService.TranslateTextWithParams(
+            LocalizationKey.gui_manage_confirm_run_selected_message, [count.ToString()]);
+        IsConfirmRunSelectedDialogOpen = true;
+    }
+
+    private bool CanRunSelected() => HasSelection && !IsRunning;
+
+    [RelayCommand]
+    private async Task ConfirmRunSelected()
+    {
+        var selectedJobs = Jobs.Where(j => j.IsSelected).ToList();
+        if (selectedJobs.Count == 0) return;
+
+        IsConfirmRunSelectedDialogOpen = false;
+        _runningJobIds.Clear();
+        foreach (var j in selectedJobs)
+            _runningJobIds.Add(j.Id);
+        IsRunning = true;
+
+        IsStatusBannerVisible = false;
+
+        int total = selectedJobs.Count;
+        int completed = 0;
+        bool success = true;
+        string errorMessage = string.Empty;
+
+        RunningJobName = $"0/{total}";
+
+        foreach (var job in selectedJobs)
+        {
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                RunningJobName = $"{completed}/{total} — {job.Name}";
+            });
+
+            try
+            {
+                var existingJob = await Task.Run(() => _applicationService.GetJob(job.Id));
+                if (existingJob is null)
+                {
+                    errorMessage = _localizationService.TranslateText(LocalizationKey.error_job_not_found);
+                    success = false;
+                    break;
+                }
+
+                await Task.Run(() => _applicationService.RunJob(job.Id));
+                completed++;
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+                success = false;
+                break;
+            }
+        }
+
+        var jobs = await Task.Run(FetchJobs);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            _runningJobIds.Clear();
+            IsRunning = false;
+            RunningJobName = string.Empty;
+            ApplyJobs(jobs);
+            UpdateHasSelection();
+            IsAllSelected = false;
+
+            if (success)
+            {
+                StatusMessage = _localizationService.TranslateTextWithParams(
+                    LocalizationKey.gui_manage_run_selected_success, [total.ToString()]);
+                IsStatusError = false;
+            }
+            else
+            {
+                StatusMessage = errorMessage;
+                IsStatusError = true;
+            }
+            IsStatusBannerVisible = true;
+        });
+
+        if (success)
+        {
+            _ = AutoDismissBannerAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void CancelRunSelected()
+    {
+        IsConfirmRunSelectedDialogOpen = false;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanDeleteSelected))]
+    private void DeleteSelected()
+    {
+        var count = Jobs.Count(j => j.IsSelected);
+        ConfirmDeleteSelectedMessage = _localizationService.TranslateTextWithParams(
+            LocalizationKey.gui_manage_confirm_delete_selected_message, [count.ToString()]);
+        IsConfirmDeleteSelectedDialogOpen = true;
+    }
+
+    private bool CanDeleteSelected() => HasSelection && !IsRunning;
+
+    [RelayCommand]
+    private async Task ConfirmDeleteSelected()
+    {
+        var selectedJobs = Jobs.Where(j => j.IsSelected).ToList();
+        if (selectedJobs.Count == 0) return;
+
+        IsConfirmDeleteSelectedDialogOpen = false;
+        IsStatusBannerVisible = false;
+
+        int total = selectedJobs.Count;
+        bool success = true;
+        string errorMessage = string.Empty;
+
+        foreach (var job in selectedJobs)
+        {
+            try
+            {
+                await Task.Run(() => _applicationService.RemoveJob(job.Id));
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+                success = false;
+                break;
+            }
+        }
+
+        var jobs = await Task.Run(FetchJobs);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            ApplyJobs(jobs);
+            UpdateHasSelection();
+            IsAllSelected = false;
+
+            if (success)
+            {
+                StatusMessage = _localizationService.TranslateTextWithParams(
+                    LocalizationKey.gui_manage_delete_selected_success, [total.ToString()]);
+                IsStatusError = false;
+            }
+            else
+            {
+                StatusMessage = errorMessage;
+                IsStatusError = true;
+            }
+            IsStatusBannerVisible = true;
+        });
+
+        if (success)
+        {
+            _ = AutoDismissBannerAsync();
+        }
+    }
+
+    [RelayCommand]
+    private void CancelDeleteSelected()
+    {
+        IsConfirmDeleteSelectedDialogOpen = false;
+    }
+
     [RelayCommand(CanExecute = nameof(CanModifyJob))]
     private void ModifyJob(Models.BackupJob job)
     {
@@ -494,7 +732,7 @@ public partial class ManageViewModel : ViewModelBase
         IsEditDialogOpen = true;
     }
 
-    private bool CanModifyJob(Models.BackupJob job) => !(IsRunning && PendingJob?.Id == job.Id);
+    private bool CanModifyJob(Models.BackupJob job) => !(IsRunning && (PendingJob?.Id == job.Id || _runningJobIds.Contains(job.Id)));
 
     [RelayCommand(CanExecute = nameof(CanDeleteJob))]
     private void DeleteJob(Models.BackupJob job)
@@ -503,7 +741,7 @@ public partial class ManageViewModel : ViewModelBase
         IsDeleteDialogOpen = true;
     }
 
-    private bool CanDeleteJob(Models.BackupJob job) => !(IsRunning && PendingJob?.Id == job.Id);
+    private bool CanDeleteJob(Models.BackupJob job) => !(IsRunning && (PendingJob?.Id == job.Id || _runningJobIds.Contains(job.Id)));
 
     [RelayCommand]
     private async Task ConfirmDelete()

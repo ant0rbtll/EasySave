@@ -51,4 +51,10 @@ public partial class ManageView : UserControl
         if (DataContext is ManageViewModel mvm && mvm.EditingJob is { } vm)
             vm.ValidateDestinationPathOnLostFocus();
     }
+
+    private void JobCheckBox_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is ManageViewModel mvm)
+            mvm.OnJobSelectionChanged();
+    }
 }

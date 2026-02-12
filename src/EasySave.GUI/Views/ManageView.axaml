@@ -86,6 +86,13 @@
             <Setter Property="Opacity" Value="0.3"/>
             <Setter Property="Cursor" Value="Arrow"/>
         </Style>
+        <Style Selector="Button.run-selected-btn">
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.run-selected-btn:disabled">
+            <Setter Property="Opacity" Value="0.3"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
 
         <!-- Pagination style -->
         <Style Selector="Border.pagination-row">
@@ -244,7 +251,7 @@
         </Border>
 
         <!-- Header -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,16">
             <StackPanel Grid.Column="0">
                 <TextBlock Text="{Binding TitleText}"
                            FontSize="22"
@@ -255,7 +262,45 @@
                            Foreground="#888"/>
             </StackPanel>
 
-            <TextBox Grid.Column="1"
+            <Button Grid.Column="1"
+                    Classes="run-selected-btn"
+                    Command="{Binding RunSelectedCommand}"
+                    ToolTip.Tip="{Binding RunSelectedText}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,12,0"
+                    Padding="10,6"
+                    Background="#1A66BB6A"
+                    BorderThickness="0"
+                    CornerRadius="6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
+                    <TextBlock Text="{Binding RunSelectedText}"
+                               Foreground="#66BB6A"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <Button Grid.Column="2"
+                    Classes="run-selected-btn"
+                    Command="{Binding DeleteSelectedCommand}"
+                    ToolTip.Tip="{Binding DeleteSelectedText}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,12,0"
+                    Padding="10,6"
+                    Background="#1AEF5350"
+                    BorderThickness="0"
+                    CornerRadius="6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350" Width="14" Height="14"/>
+                    <TextBlock Text="{Binding DeleteSelectedText}"
+                               Foreground="#EF5350"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <TextBox Grid.Column="3"
                      Text="{Binding SearchText}"
                      Watermark="{Binding SearchWatermark}"
                      Width="250"
@@ -288,38 +333,43 @@
                 <Border Grid.Row="0"
                         Background="#11FFFFFF"
                         Padding="16,10">
-                    <Grid ColumnDefinitions="50,*,1.5*,1.5*,100,180,130">
-                        <Button Grid.Column="0" Classes="col-header"
+                    <Grid ColumnDefinitions="40,50,*,1.5*,1.5*,100,180,130">
+                        <CheckBox Grid.Column="0"
+                                  IsChecked="{Binding IsAllSelected}"
+                                  ToolTip.Tip="{Binding SelectAllTooltip}"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center"/>
+                        <Button Grid.Column="1" Classes="col-header"
                                 Command="{Binding SortByCommand}" CommandParameter="Id"
                                 HorizontalAlignment="Center">
                             <TextBlock Text="{Binding IdHeader}"/>
                         </Button>
-                        <Button Grid.Column="1" Classes="col-header"
+                        <Button Grid.Column="2" Classes="col-header"
                                 Command="{Binding SortByCommand}" CommandParameter="Name"
                                 HorizontalAlignment="Center">
                             <TextBlock Text="{Binding NameHeader}"/>
                         </Button>
-                        <Button Grid.Column="2" Classes="col-header"
+                        <Button Grid.Column="3" Classes="col-header"
                                 Command="{Binding SortByCommand}" CommandParameter="Source"
                                 HorizontalAlignment="Center">
                             <TextBlock Text="{Binding SourceHeader}"/>
                         </Button>
-                        <Button Grid.Column="3" Classes="col-header"
+                        <Button Grid.Column="4" Classes="col-header"
                                 Command="{Binding SortByCommand}" CommandParameter="Destination"
                                 HorizontalAlignment="Center">
                             <TextBlock Text="{Binding DestinationHeader}"/>
                         </Button>
-                        <Button Grid.Column="4" Classes="col-header"
+                        <Button Grid.Column="5" Classes="col-header"
                                 Command="{Binding SortByCommand}" CommandParameter="Type"
                                 HorizontalAlignment="Center">
                             <TextBlock Text="{Binding TypeHeader}"/>
                         </Button>
-                        <Button Grid.Column="5" Classes="col-header"
+                        <Button Grid.Column="6" Classes="col-header"
                                 Command="{Binding SortByCommand}" CommandParameter="LastRun"
                                 HorizontalAlignment="Center">
                             <TextBlock Text="{Binding LastRunHeader}"/>
                         </Button>
-                        <Button Grid.Column="6" Classes="col-header"
+                        <Button Grid.Column="7" Classes="col-header"
                                 HorizontalAlignment="Center"
                                 IsHitTestVisible="False">
                             <TextBlock Text="{Binding ActionsHeader}"/>
@@ -338,18 +388,25 @@
                                         BorderBrush="#11FFFFFF"
                                         BorderThickness="0,0,0,1"
                                         Padding="16,10">
-                                    <Grid ColumnDefinitions="50,*,1.5*,1.5*,100,180,130"
+                                    <Grid ColumnDefinitions="40,50,*,1.5*,1.5*,100,180,130"
                                           VerticalAlignment="Center">
 
+                                        <!-- Checkbox -->
+                                        <CheckBox Grid.Column="0"
+                                                  IsChecked="{Binding IsSelected}"
+                                                  Click="JobCheckBox_Click"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
+
                                         <!-- ID -->
-                                        <Border Grid.Column="0" Classes="id-badge"
+                                        <Border Grid.Column="1" Classes="id-badge"
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Id}"/>
                                         </Border>
 
                                         <!-- Name + execution info -->
-                                        <StackPanel Grid.Column="1"
+                                        <StackPanel Grid.Column="2"
                                                     Spacing="2"
                                                     HorizontalAlignment="Center"
                                                     VerticalAlignment="Center"
@@ -364,7 +421,7 @@
                                         </StackPanel>
 
                                         <!-- Source -->
-                                        <TextBlock Grid.Column="2"
+                                        <TextBlock Grid.Column="3"
                                                    Text="{Binding Source}"
                                                    ToolTip.Tip="{Binding Source}"
                                                    Classes="path-text"
@@ -373,7 +430,7 @@
                                                    MaxWidth="250"/>
 
                                         <!-- Destination -->
-                                        <TextBlock Grid.Column="3"
+                                        <TextBlock Grid.Column="4"
                                                    Text="{Binding Destination}"
                                                    ToolTip.Tip="{Binding Destination}"
                                                    Classes="path-text"
@@ -382,14 +439,14 @@
                                                    MaxWidth="250"/>
 
                                         <!-- Type -->
-                                        <Border Grid.Column="4" Classes="type-badge"
+                                        <Border Grid.Column="5" Classes="type-badge"
                                                 HorizontalAlignment="Center"
                                                 VerticalAlignment="Center">
                                             <TextBlock Text="{Binding Type}"/>
                                         </Border>
 
                                         <!-- Last execution -->
-                                        <TextBlock Grid.Column="5"
+                                        <TextBlock Grid.Column="6"
                                                    HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"
                                                    FontSize="12"
@@ -397,7 +454,7 @@
                                                    Text="{Binding LastExecutionDisplay}"/>
 
                                         <!-- Actions -->
-                                        <StackPanel Grid.Column="6"
+                                        <StackPanel Grid.Column="7"
                                                     Orientation="Horizontal"
                                                     Spacing="4"
                                                     HorizontalAlignment="Center"
@@ -557,6 +614,86 @@
                             Command="{Binding ConfirmRunCommand}"
                             Padding="20,8"
                             Background="#66BB6A"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            CornerRadius="6"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Border>
+
+    <!-- Run selected confirmation overlay -->
+    <Border Background="#AA000000"
+            IsVisible="{Binding IsConfirmRunSelectedDialogOpen}">
+        <Border Background="#2D2D3D"
+                CornerRadius="10"
+                Padding="32,24"
+                MaxWidth="420"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BoxShadow="0 8 24 0 #60000000">
+            <StackPanel Spacing="20">
+                <TextBlock Text="{Binding ConfirmRunTitle}"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding ConfirmRunSelectedMessage}"
+                           FontSize="14"
+                           Foreground="#BBBBBB"
+                           HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal"
+                            Spacing="12"
+                            HorizontalAlignment="Center">
+                    <Button Content="{Binding BtnCancelText}"
+                            Command="{Binding CancelRunSelectedCommand}"
+                            Padding="20,8"
+                            Background="#44FFFFFF"
+                            Foreground="White"
+                            CornerRadius="6"/>
+                    <Button Content="{Binding BtnConfirmText}"
+                            Command="{Binding ConfirmRunSelectedCommand}"
+                            Padding="20,8"
+                            Background="#66BB6A"
+                            Foreground="White"
+                            FontWeight="SemiBold"
+                            CornerRadius="6"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Border>
+
+    <!-- Delete selected confirmation overlay -->
+    <Border Background="#AA000000"
+            IsVisible="{Binding IsConfirmDeleteSelectedDialogOpen}">
+        <Border Background="#2D2D3D"
+                CornerRadius="10"
+                Padding="32,24"
+                MaxWidth="420"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BoxShadow="0 8 24 0 #60000000">
+            <StackPanel Spacing="20">
+                <TextBlock Text="{Binding ConfirmDeleteTitle}"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding ConfirmDeleteSelectedMessage}"
+                           FontSize="14"
+                           Foreground="#BBBBBB"
+                           HorizontalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal"
+                            Spacing="12"
+                            HorizontalAlignment="Center">
+                    <Button Content="{Binding BtnCancelText}"
+                            Command="{Binding CancelDeleteSelectedCommand}"
+                            Padding="20,8"
+                            Background="#44FFFFFF"
+                            Foreground="White"
+                            CornerRadius="6"/>
+                    <Button Content="{Binding BtnDeleteText}"
+                            Command="{Binding ConfirmDeleteSelectedCommand}"
+                            Padding="20,8"
+                            Background="#EF5350"
                             Foreground="White"
                             FontWeight="SemiBold"
                             CornerRadius="6"/>
