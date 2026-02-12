@@ -148,4 +148,7 @@ translations:
   gui_config_encrypted_extensions_watermark: ".pdf, .docx, ..."
   gui_config_encrypted_extensions_add: "Ajouter"
   gui_config_encrypted_extensions_empty: "Aucune extension chiffrée configurée"
+  gui_manage_edit_title: "Modifier le travail de sauvegarde"
+  gui_manage_edit_save: "Enregistrer"
+  gui_manage_edit_success: "Job {0} modifié avec succès"
 

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EasySave.GUI.ViewModels"
              xmlns:models="using:EasySave.GUI.Models"
+             xmlns:conv="using:Avalonia.Data.Converters"
              x:Class="EasySave.GUI.Views.ManageView"
              x:DataType="vm:ManageViewModel">
 
@@ -442,5 +443,111 @@
             </StackPanel>
         </Border>
     </Border>
+
+    <!-- Edit job overlay -->
+    <Border Background="#AA000000"
+            IsVisible="{Binding IsEditDialogOpen}">
+        <Border Background="#2D2D3D"
+                CornerRadius="10"
+                Padding="32,24"
+                MaxWidth="500"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                BoxShadow="0 8 24 0 #60000000">
+            <ScrollViewer MaxHeight="600" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel Spacing="18"
+                            DataContext="{Binding EditingJob}"
+                            x:DataType="vm:EditJobViewModel">
+
+                    <!-- Title -->
+                    <TextBlock Text="{Binding TitleText}"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"
+                               Margin="0,0,0,4"/>
+
+                    <!-- Backup Name -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding NameLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+                        <TextBox Text="{Binding Name}" LostFocus="EditName_LostFocus"/>
+                        <TextBlock Text="{Binding JobNameError}"
+                                   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+                                   IsVisible="{Binding JobNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+                    </StackPanel>
+
+                    <!-- Source Path -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding SourceLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding SourcePath}"
+                                     LostFocus="EditSource_LostFocus"/>
+                            <Button Grid.Column="1"
+                                    Content="{Binding BrowseButtonLabel}"
+                                    Click="EditBrowseSource_Click"
+                                    Background="#22FFFFFF" Foreground="#BBBBBB"
+                                    CornerRadius="6" Padding="14,8"
+                                    Cursor="Hand" BorderThickness="0"
+                                    Margin="8,0,0,0"/>
+                        </Grid>
+                        <TextBlock Text="{Binding SourcePathError}"
+                                   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+                                   IsVisible="{Binding SourcePathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+                    </StackPanel>
+
+                    <!-- Destination Path -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding DestinationLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBox Grid.Column="0"
+                                     Text="{Binding DestinationPath}"
+                                     LostFocus="EditDestination_LostFocus"/>
+                            <Button Grid.Column="1"
+                                    Content="{Binding BrowseButtonLabel}"
+                                    Click="EditBrowseDestination_Click"
+                                    Background="#22FFFFFF" Foreground="#BBBBBB"
+                                    CornerRadius="6" Padding="14,8"
+                                    Cursor="Hand" BorderThickness="0"
+                                    Margin="8,0,0,0"/>
+                        </Grid>
+                        <TextBlock Text="{Binding DestinationPathError}"
+                                   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+                                   IsVisible="{Binding DestinationPathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+                    </StackPanel>
+
+                    <!-- Backup Type -->
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding BackupTypeLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+                        <ComboBox ItemsSource="{Binding BackupTypeOptions}"
+                                  SelectedValueBinding="{Binding Value}"
+                                  SelectedValue="{Binding SelectedBackupType}"
+                                  HorizontalAlignment="Stretch"/>
+                    </StackPanel>
+
+                    <!-- Buttons -->
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="12"
+                                HorizontalAlignment="Right"
+                                Margin="0,8,0,0">
+                        <Button Content="{Binding CancelButtonLabel}"
+                                Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).CancelEditCommand}"
+                                Padding="20,8"
+                                Background="#44FFFFFF"
+                                Foreground="White"
+                                CornerRadius="6"/>
+                        <Button Content="{Binding SaveButtonLabel}"
+                                Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ConfirmEditCommand}"
+                                Padding="20,8"
+                                Background="#42A5F5"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                CornerRadius="6"/>
+                    </StackPanel>
+
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+    </Border>
+
     </Panel>
 </UserControl>
