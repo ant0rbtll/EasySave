@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Configuration;
@@ -13,6 +12,7 @@ public partial class ConfigViewModel : ViewModelBase
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly ILocalizationService _localizationService;
     private readonly IPathProvider _pathProvider;
+    private static readonly char[] ExtensionSeparators = [',', ' '];
     private Action _onLanguageChanged = static() => {};
 
     /// <summary>
@@ -34,6 +34,14 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string resetText = "";
     [ObservableProperty] private string saveText = "";
     [ObservableProperty] private string browseText = "";
+    [ObservableProperty] private string encryptedExtensionsText = "";
+    [ObservableProperty] private string encryptedExtensionsWatermark = "";
+    [ObservableProperty] private string encryptedExtensionsAddText = "";
+    [ObservableProperty] private string encryptedExtensionsEmptyText = "";
+
+    public ObservableCollection<string> EncryptedExtensions { get; } = [];
+
+    [ObservableProperty] private string? newExtensionInput;
 
     public ObservableCollection<LanguageOption> AvailableLanguages { get; } =
     [
@@ -54,6 +62,15 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = preferencesRepository.Load();
         selectedLanguage = NormalizeLanguage(preferences.Language);
         logDirectory = preferences.LogDirectory;
+
+        foreach (
+            var normalized in preferences.EncryptedExtensions
+                .Select(NormalizeExtensionForDisplay)
+                .Where(n => n is not null)
+        )
+        {
+            EncryptedExtensions.Add(normalized!);
+        }
 
         RefreshTranslations();
     }
@@ -111,6 +128,10 @@ public partial class ConfigViewModel : ViewModelBase
         ResetText = _localizationService.TranslateText(LocalizationKey.gui_config_reset);
         SaveText = _localizationService.TranslateText(LocalizationKey.gui_config_save);
         BrowseText = _localizationService.TranslateText(LocalizationKey.gui_config_browse);
+        EncryptedExtensionsText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions);
+        EncryptedExtensionsWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_watermark);
+        EncryptedExtensionsAddText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_add);
+        EncryptedExtensionsEmptyText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_empty);
         ValidatePath();
     }
 
@@ -135,6 +156,7 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = _preferencesRepository.Load();
         preferences.Language = language;
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
+        preferences.EncryptedExtensions = [..EncryptedExtensions];
         _preferencesRepository.Save(preferences);
 
         _localizationService.Culture = language;
@@ -165,6 +187,48 @@ public partial class ConfigViewModel : ViewModelBase
     private void ResetLogDirectory()
     {
         LogDirectory = null;
+    }
+
+    [RelayCommand]
+    private void AddExtension()
+    {
+        if (string.IsNullOrWhiteSpace(NewExtensionInput))
+            return;
+
+        var extensions = NewExtensionInput
+            .Split(ExtensionSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(NormalizeExtensionForDisplay)
+            .Where(n => n is not null && !EncryptedExtensions.Contains(n));
+
+        foreach (var ext in extensions)
+        {
+            EncryptedExtensions.Add(ext!);
+        }
+
+        NewExtensionInput = null;
+    }
+
+    [RelayCommand]
+    private void RemoveExtension(string extension)
+    {
+        EncryptedExtensions.Remove(extension);
+    }
+
+    private static string? NormalizeExtensionForDisplay(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+            return null;
+
+        // Keep only alphanumeric chars and the leading dot
+        var chars = extension.Trim().ToLowerInvariant()
+            .Where(c => char.IsLetterOrDigit(c) || c == '.')
+            .ToArray();
+
+        var trimmed = new string(chars).TrimStart('.');
+        if (trimmed.Length == 0)
+            return null;
+
+        return "." + trimmed;
     }
 }
 
