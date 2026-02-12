@@ -82,6 +82,10 @@
             <Setter Property="Width" Value="14"/>
             <Setter Property="Height" Value="14"/>
         </Style>
+        <Style Selector="Button.action-btn:disabled">
+            <Setter Property="Opacity" Value="0.3"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
     </UserControl.Styles>
 
     <Panel>
