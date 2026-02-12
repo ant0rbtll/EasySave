@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Configuration;
@@ -13,6 +12,7 @@ public partial class ConfigViewModel : ViewModelBase
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly ILocalizationService _localizationService;
     private readonly IPathProvider _pathProvider;
+    private static readonly char[] ExtensionSeparators = [',', ' '];
     private Action _onLanguageChanged = static() => {};
 
     /// <summary>
@@ -63,13 +63,13 @@ public partial class ConfigViewModel : ViewModelBase
         selectedLanguage = NormalizeLanguage(preferences.Language);
         logDirectory = preferences.LogDirectory;
 
-        foreach (var ext in preferences.EncryptedExtensions)
+        foreach (
+            var normalized in preferences.EncryptedExtensions
+                .Select(NormalizeExtensionForDisplay)
+                .Where(n => n is not null)
+        )
         {
-            var normalized = NormalizeExtensionForDisplay(ext);
-            if (normalized is not null)
-            {
-                EncryptedExtensions.Add(normalized);
-            }
+            EncryptedExtensions.Add(normalized!);
         }
 
         RefreshTranslations();
@@ -156,7 +156,7 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = _preferencesRepository.Load();
         preferences.Language = language;
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
-        preferences.EncryptedExtensions = EncryptedExtensions.ToList();
+        preferences.EncryptedExtensions = [..EncryptedExtensions];
         _preferencesRepository.Save(preferences);
 
         _localizationService.Culture = language;
@@ -192,12 +192,18 @@ public partial class ConfigViewModel : ViewModelBase
     [RelayCommand]
     private void AddExtension()
     {
-        var normalized = NormalizeExtensionForDisplay(NewExtensionInput);
-        if (normalized is null)
+        if (string.IsNullOrWhiteSpace(NewExtensionInput))
             return;
 
-        if (!EncryptedExtensions.Contains(normalized))
-            EncryptedExtensions.Add(normalized);
+        var extensions = NewExtensionInput
+            .Split(ExtensionSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(NormalizeExtensionForDisplay)
+            .Where(n => n is not null && !EncryptedExtensions.Contains(n));
+
+        foreach (var ext in extensions)
+        {
+            EncryptedExtensions.Add(ext!);
+        }
 
         NewExtensionInput = null;
     }
@@ -213,14 +219,16 @@ public partial class ConfigViewModel : ViewModelBase
         if (string.IsNullOrWhiteSpace(extension))
             return null;
 
-        var trimmed = extension.Trim().ToLowerInvariant();
+        // Keep only alphanumeric chars and the leading dot
+        var chars = extension.Trim().ToLowerInvariant()
+            .Where(c => char.IsLetterOrDigit(c) || c == '.')
+            .ToArray();
+
+        var trimmed = new string(chars).TrimStart('.');
         if (trimmed.Length == 0)
             return null;
 
-        if (!trimmed.StartsWith('.'))
-            trimmed = "." + trimmed;
-
-        return trimmed;
+        return "." + trimmed;
     }
 }
 
