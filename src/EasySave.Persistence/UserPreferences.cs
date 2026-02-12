@@ -1,4 +1,5 @@
 using EasySave.Core;
+using System.Text.Json.Serialization;
 
 namespace EasySave.Persistence;
 
@@ -7,7 +8,9 @@ namespace EasySave.Persistence;
 /// </summary>
 public class UserPreferences
 {
+    private static readonly char[] BusinessSoftwareSeparators = [',', ';'];
     private List<string>? _encryptedExtensions;
+    private List<string>? _businessSoftwareProcessNames;
     private string _encryptionProvider = EncryptionProviderNames.DotNet;
 
     /// <summary>
@@ -47,4 +50,65 @@ public class UserPreferences
     /// Gets or sets optional external CryptoSoft executable path.
     /// </summary>
     public string? CryptoSoftExecutablePath { get; set; }
+
+    /// <summary>
+    /// Gets or sets business software process names to monitor.
+    /// Backup launch is blocked when this process is running.
+    /// </summary>
+    public List<string> BusinessSoftwareProcessNames
+    {
+        get => _businessSoftwareProcessNames ??= [];
+        set => _businessSoftwareProcessNames = NormalizeBusinessSoftwareProcessNames(value);
+    }
+
+    /// <summary>
+    /// Backward compatibility with legacy single-string persisted field.
+    /// </summary>
+    [JsonPropertyName("businessSoftwareProcessName")]
+    public string? LegacyBusinessSoftwareProcessName
+    {
+        set => BusinessSoftwareProcessNames = ParseLegacyBusinessSoftwareProcessNames(value);
+    }
+
+    private static List<string> NormalizeBusinessSoftwareProcessNames(IEnumerable<string>? names)
+    {
+        if (names is null)
+        {
+            return [];
+        }
+
+        return names
+            .Select(NormalizeBusinessSoftwareProcessName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static List<string> ParseLegacyBusinessSoftwareProcessNames(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return [];
+        }
+
+        return value
+            .Split(BusinessSoftwareSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(NormalizeBusinessSoftwareProcessName)
+            .Where(name => !string.IsNullOrWhiteSpace(name))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static string NormalizeBusinessSoftwareProcessName(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = value.Trim();
+        var fileName = Path.GetFileName(trimmed);
+        var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
+        return string.IsNullOrWhiteSpace(withoutExtension) ? trimmed : withoutExtension;
+    }
 }

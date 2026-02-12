@@ -400,6 +400,61 @@ public class BackupEngineTests
     }
 
     [Fact]
+    public void Execute_WhenBusinessSoftwareDetectedDuringFileLoop_StopsAndLogsReason()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt", "/source/file2.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        var guardMock = new Mock<IBackupExecutionGuard>();
+        int callCount = 0;
+        guardMock.Setup(g => g.EnsureCanCopyNextFile())
+            .Callback(() =>
+            {
+                callCount++;
+                if (callCount >= 2)
+                {
+                    var ex = new InvalidOperationException("error_business_software_running");
+                    ex.Data["errorKey"] = "error_business_software_running";
+                    ex.Data["0"] = "calc";
+                    throw ex;
+                }
+            });
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionGuard: guardMock.Object);
+
+        var exThrown = Assert.Throws<InvalidOperationException>(() => engine.Execute(job));
+        Assert.Equal("error_business_software_running", exThrown.Message);
+
+        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file1.txt", "/destination/file1.txt", true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file2.txt", "/destination/file2.txt", true), Times.Never);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Once);
+        _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
+            le.EventType == LogEventType.BusinessSoftwareDetected &&
+            le.SourcePathUNC == "error_business_software_running" &&
+            le.DestinationPathUNC == "calc")), Times.Once);
+    }
+
+    [Fact]
     public void Execute_UnsupportedBackupType_ThrowsNotSupportedException()
     {
         // Arrange

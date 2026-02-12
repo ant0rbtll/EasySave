@@ -1,6 +1,7 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
+using EasySave.System;
 
 namespace EasySave.Application;
 
@@ -12,11 +13,13 @@ namespace EasySave.Application;
 public class BackupApplicationService(
     IBackupJobRepository repo,
     IBackupEngine backupEngine,
-    IBackupJobStateService backupJobStateService)
+    IBackupJobStateService backupJobStateService,
+    IBackupExecutionGuard? backupExecutionGuard = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
     private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
+    private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -53,6 +56,8 @@ public class BackupApplicationService(
     /// <param name="id">Identifier of the job to run.</param>
     public void RunJob(int id)
     {
+        EnsureBusinessSoftwareIsNotRunning();
+
         var job = _repo.GetById(id);
         if (job != null) ExecuteJob(job);
     }
@@ -77,6 +82,7 @@ public class BackupApplicationService(
         var jobs = _repo.GetAll();
         foreach (var job in jobs)
         {
+            EnsureBusinessSoftwareIsNotRunning();
             ExecuteJob(job);
         }
     }
@@ -121,5 +127,10 @@ public class BackupApplicationService(
     private void ExecuteJob(BackupJob job)
     {
         _engine.Execute(job);
+    }
+
+    private void EnsureBusinessSoftwareIsNotRunning()
+    {
+        _backupExecutionGuard.EnsureCanCopyNextFile();
     }
 }

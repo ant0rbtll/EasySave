@@ -82,6 +82,7 @@ sealed class Program
         services.AddSingleton<IEncryptionProvider, DotNetAesEncryptionProvider>();
         services.AddSingleton<IEncryptionProvider, ExternalEncryptionProvider>();
         services.AddSingleton<IEncryptionProviderResolver, EncryptionProviderResolver>();
+        services.AddSingleton<IBackupExecutionGuard, BusinessSoftwareBackupExecutionGuard>();
         services.AddSingleton<IBackupEngine, BackupEngine>();
         services.AddSingleton<ILocalizationService, LocalizationService>();
         services.AddSingleton<ILogReader, JsonLogReader>();
@@ -90,7 +91,11 @@ sealed class Program
         services.AddSingleton<IBackupJobStateService, BackupJobStateService>();
 
         // Setup application service
-        services.AddSingleton<BackupApplicationService>();
+        services.AddSingleton(sp => new BackupApplicationService(
+            sp.GetRequiredService<IBackupJobRepository>(),
+            sp.GetRequiredService<IBackupEngine>(),
+            sp.GetRequiredService<IBackupJobStateService>(),
+            sp.GetRequiredService<IBackupExecutionGuard>()));
         services.AddSingleton<ILogQueryService, LogQueryService>();
 
         // Setup ViewModels pour Avalonia

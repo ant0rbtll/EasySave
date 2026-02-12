@@ -13,6 +13,7 @@ public partial class ConfigViewModel : ViewModelBase
     private readonly ILocalizationService _localizationService;
     private readonly IPathProvider _pathProvider;
     private static readonly char[] ExtensionSeparators = [',', ' '];
+    private static readonly char[] BusinessSoftwareSeparators = [',', ';'];
     private Action _onLanguageChanged = static() => {};
 
     /// <summary>
@@ -31,6 +32,10 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string languageText = "";
     [ObservableProperty] private string logDirectoryText = "";
     [ObservableProperty] private string logDirectoryWatermark = "";
+    [ObservableProperty] private string businessSoftwareText = "";
+    [ObservableProperty] private string businessSoftwareWatermark = "";
+    [ObservableProperty] private string businessSoftwareAddText = "";
+    [ObservableProperty] private string businessSoftwareEmptyText = "";
     [ObservableProperty] private string resetText = "";
     [ObservableProperty] private string saveText = "";
     [ObservableProperty] private string browseText = "";
@@ -40,8 +45,10 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string encryptedExtensionsEmptyText = "";
 
     public ObservableCollection<string> EncryptedExtensions { get; } = [];
+    public ObservableCollection<string> BusinessSoftwareProcesses { get; } = [];
 
     [ObservableProperty] private string? newExtensionInput;
+    [ObservableProperty] private string? newBusinessSoftwareInput;
 
     public ObservableCollection<LanguageOption> AvailableLanguages { get; } =
     [
@@ -62,6 +69,11 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = preferencesRepository.Load();
         selectedLanguage = NormalizeLanguage(preferences.Language);
         logDirectory = preferences.LogDirectory;
+
+        foreach (var processName in preferences.BusinessSoftwareProcessNames)
+        {
+            BusinessSoftwareProcesses.Add(processName);
+        }
 
         foreach (
             var normalized in preferences.EncryptedExtensions
@@ -125,6 +137,10 @@ public partial class ConfigViewModel : ViewModelBase
         LanguageText = _localizationService.TranslateText(LocalizationKey.gui_config_language);
         LogDirectoryText = _localizationService.TranslateText(LocalizationKey.gui_config_log_directory);
         LogDirectoryWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_log_directory_watermark);
+        BusinessSoftwareText = _localizationService.TranslateText(LocalizationKey.gui_config_business_software);
+        BusinessSoftwareWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_business_software_watermark);
+        BusinessSoftwareAddText = _localizationService.TranslateText(LocalizationKey.gui_config_business_software_add);
+        BusinessSoftwareEmptyText = _localizationService.TranslateText(LocalizationKey.gui_config_business_software_empty);
         ResetText = _localizationService.TranslateText(LocalizationKey.gui_config_reset);
         SaveText = _localizationService.TranslateText(LocalizationKey.gui_config_save);
         BrowseText = _localizationService.TranslateText(LocalizationKey.gui_config_browse);
@@ -156,6 +172,7 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = _preferencesRepository.Load();
         preferences.Language = language;
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
+        preferences.BusinessSoftwareProcessNames = [..BusinessSoftwareProcesses];
         preferences.EncryptedExtensions = [..EncryptedExtensions];
         _preferencesRepository.Save(preferences);
 
@@ -214,6 +231,38 @@ public partial class ConfigViewModel : ViewModelBase
         EncryptedExtensions.Remove(extension);
     }
 
+    [RelayCommand]
+    private void AddBusinessSoftware()
+    {
+        if (string.IsNullOrWhiteSpace(NewBusinessSoftwareInput))
+            return;
+
+        var existingNormalized = new HashSet<string>(
+            BusinessSoftwareProcesses.Select(NormalizeBusinessSoftwareForComparison),
+            StringComparer.OrdinalIgnoreCase
+        );
+
+        var toAdd = NewBusinessSoftwareInput
+            .Split(BusinessSoftwareSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(NormalizeBusinessSoftwareForDisplay)
+            .Where(name => name is not null)
+            .Cast<string>()
+            .Where(name => existingNormalized.Add(NormalizeBusinessSoftwareForComparison(name)));
+
+        foreach (var processName in toAdd)
+        {
+            BusinessSoftwareProcesses.Add(processName);
+        }
+
+        NewBusinessSoftwareInput = null;
+    }
+
+    [RelayCommand]
+    private void RemoveBusinessSoftware(string processName)
+    {
+        BusinessSoftwareProcesses.Remove(processName);
+    }
+
     private static string? NormalizeExtensionForDisplay(string? extension)
     {
         if (string.IsNullOrWhiteSpace(extension))
@@ -229,6 +278,23 @@ public partial class ConfigViewModel : ViewModelBase
             return null;
 
         return "." + trimmed;
+    }
+
+    private static string? NormalizeBusinessSoftwareForDisplay(string? processName)
+    {
+        if (string.IsNullOrWhiteSpace(processName))
+            return null;
+
+        var trimmed = processName.Trim();
+        var fileName = Path.GetFileName(trimmed);
+        var withoutExtension = Path.GetFileNameWithoutExtension(fileName);
+        return string.IsNullOrWhiteSpace(withoutExtension) ? trimmed : withoutExtension;
+    }
+
+    private static string NormalizeBusinessSoftwareForComparison(string processName)
+    {
+        var normalized = NormalizeBusinessSoftwareForDisplay(processName);
+        return normalized ?? string.Empty;
     }
 }
 

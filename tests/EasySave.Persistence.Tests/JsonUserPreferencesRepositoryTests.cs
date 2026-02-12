@@ -310,6 +310,47 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void SaveAndLoad_PersistsBusinessSoftwareProcessNames()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        var preferences = new UserPreferences
+        {
+            Language = "en",
+            BusinessSoftwareProcessNames = ["calc.exe", "excel"]
+        };
+
+        // Act
+        repo.Save(preferences);
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Equal(["calc", "excel"], loadedPreferences.BusinessSoftwareProcessNames);
+    }
+
+    [Fact]
+    public void Load_WithLegacyBusinessSoftwareProcessName_MigratesToProcessNamesList()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        const string legacyJson = """
+            {
+              "language": "en",
+              "businessSoftwareProcessName": "calc.exe, excel"
+            }
+            """;
+        File.WriteAllText(_testFilePath, legacyJson);
+
+        // Act
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Equal(["calc", "excel"], loadedPreferences.BusinessSoftwareProcessNames);
+    }
+
+    [Fact]
     public void Load_AfterSave_ReturnsPersistedData()
     {
         // Arrange

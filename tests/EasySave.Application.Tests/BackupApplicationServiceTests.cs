@@ -2,6 +2,7 @@ using Moq;
 using EasySave.Backup;
 using EasySave.Persistence;
 using EasySave.Core;
+using EasySave.System;
 
 namespace EasySave.Application.Tests;
 
@@ -9,6 +10,7 @@ public class BackupApplicationServiceTests
 {
     private readonly Mock<IBackupJobRepository> _repoMock;
     private readonly Mock<IBackupEngine> _engineMock;
+    private readonly Mock<IBackupExecutionGuard> _backupExecutionGuardMock;
     private readonly Mock<IBackupJobStateService> _backupJobStateServiceMock;
     private readonly BackupApplicationService _service;
 
@@ -16,6 +18,7 @@ public class BackupApplicationServiceTests
     {
         _repoMock = new Mock<IBackupJobRepository>();
         _engineMock = new Mock<IBackupEngine>();
+        _backupExecutionGuardMock = new Mock<IBackupExecutionGuard>();
         _backupJobStateServiceMock = new Mock<IBackupJobStateService>();
         _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object, _backupJobStateServiceMock.Object);
     }
@@ -350,6 +353,82 @@ public class BackupApplicationServiceTests
 
         _engineMock.Verify(e => e.Execute(jobs[0]), Times.Once);
         _engineMock.Verify(e => e.Execute(jobs[1]), Times.Once);
+    }
+
+    [Fact]
+    public void RunJob_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
+    {
+        var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
+        _repoMock.Setup(r => r.GetById(1)).Returns(job);
+        _backupExecutionGuardMock
+            .Setup(g => g.EnsureCanCopyNextFile())
+            .Throws(() =>
+            {
+                var ex = new InvalidOperationException("error_business_software_running");
+                ex.Data["errorKey"] = "error_business_software_running";
+                ex.Data["0"] = "calc";
+                return ex;
+            });
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            _backupExecutionGuardMock.Object);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.RunJob(1));
+
+        Assert.Equal("error_business_software_running", exception.Message);
+        Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
+        Assert.Equal("calc", exception.Data["0"]);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>()), Times.Never);
+    }
+
+    [Fact]
+    public void RunJob_WhenBusinessSoftwareIsConfiguredButNotRunning_ShouldExecute()
+    {
+        var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
+        _repoMock.Setup(r => r.GetById(1)).Returns(job);
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            _backupExecutionGuardMock.Object);
+
+        service.RunJob(1);
+
+        _engineMock.Verify(e => e.Execute(job), Times.Once);
+    }
+
+    [Fact]
+    public void RunJob_WhenEngineThrowsBusinessSoftwareError_ShouldPropagate()
+    {
+        var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
+        _repoMock.Setup(r => r.GetById(1)).Returns(job);
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            _backupExecutionGuardMock.Object);
+
+        _engineMock
+            .Setup(e => e.Execute(job))
+            .Throws(() =>
+            {
+                var ex = new InvalidOperationException("error_business_software_running");
+                ex.Data["errorKey"] = "error_business_software_running";
+                ex.Data["0"] = "calc";
+                return ex;
+            });
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.RunJob(1));
+
+        Assert.Equal("error_business_software_running", exception.Message);
+        Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
+        Assert.Equal("calc", exception.Data["0"]);
+        _engineMock.Verify(e => e.Execute(job), Times.Once);
     }
 
     #endregion

@@ -21,7 +21,8 @@ public class BackupEngine(
     IStateWriter stateWriter,
     ILogger logger,
     IEncryptionPolicyProvider? encryptionPolicyProvider = null,
-    IEncryptionProviderResolver? encryptionProviderResolver = null) : IBackupEngine
+    IEncryptionProviderResolver? encryptionProviderResolver = null,
+    IBackupExecutionGuard? executionGuard = null) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
@@ -29,6 +30,7 @@ public class BackupEngine(
     private readonly ILogger _logger = logger;
     private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
+    private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
 
     /// <summary>
     /// Executes a complete or differential backup.
@@ -58,6 +60,8 @@ public class BackupEngine(
 
                 if (CanCopyFile(job.Type, file, destinationFile))
                 {
+                    _executionGuard.EnsureCanCopyNextFile();
+
                     var destinationDir = Path.GetDirectoryName(destinationFile)!;
 
                     if (!_fileSystem.DirectoryExists(destinationDir))
@@ -111,14 +115,19 @@ public class BackupEngine(
             Log(job.Name, LogEventType.EndBackup, "", "", totalSize, 0);
             _stateWriter.MarkInactive(job.Id);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
+            string sourceContext = ex.Data["errorKey"]?.ToString() ?? ex.GetType().Name;
+            string destinationContext = ex.Data["0"]?.ToString() ?? ex.Message;
+            var eventType = sourceContext == "error_business_software_running"
+                ? LogEventType.BusinessSoftwareDetected
+                : LogEventType.Error;
             Log(
                 job.Name,
-                LogEventType.Error,
-                "",
-                "",
+                eventType,
+                sourceContext,
+                destinationContext,
                 0,
                 0
             );

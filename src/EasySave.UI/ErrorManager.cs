@@ -30,7 +30,8 @@ namespace EasySave.UI
                 { "error_file_not_found", LocalizationKey.error_file_not_found },
                 { "error_directory_not_found", LocalizationKey.error_directory_not_found },
                 { "error_parts_empty", LocalizationKey.error_parts_empty },
-                { "error_parts_null", LocalizationKey.error_parts_null }
+                { "error_parts_null", LocalizationKey.error_parts_null },
+                { "error_business_software_running", LocalizationKey.error_business_software_running }
             };
         }
 
