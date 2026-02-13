@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>WinExe</OutputType>
+	<AssemblyName>EasySave</AssemblyName>
+  </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\EasyLog\EasyLog.csproj" />
+	  <ProjectReference Include="..\EasySave.Application\EasySave.Application.csproj" />
+	  <ProjectReference Include="..\EasySave.Backup\EasySave.Backup.csproj" />
+	  <ProjectReference Include="..\EasySave.Configuration\EasySave.Configuration.csproj" />
+	  <ProjectReference Include="..\EasySave.Core\EasySave.Core.csproj" />
+	  <ProjectReference Include="..\EasySave.GUI\EasySave.GUI.csproj" />
+	  <ProjectReference Include="..\EasySave.Localization\EasySave.Localization.csproj" />
+	  <ProjectReference Include="..\EasySave.Log\EasySave.Log.csproj" />
+	  <ProjectReference Include="..\EasySave.Persistence\EasySave.Persistence.csproj" />
+	  <ProjectReference Include="..\EasySave.State\EasySave.State.csproj" />
+	  <ProjectReference Include="..\EasySave.System\EasySave.System.csproj" />
+	  <ProjectReference Include="..\EasySave.UI\EasySave.UI.csproj" />
+	</ItemGroup>
+</Project>
