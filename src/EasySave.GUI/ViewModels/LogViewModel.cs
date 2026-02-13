@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
+using EasySave.GUI.Helpers;
 using EasySave.GUI.Models;
 using EasySave.Localization;
 using System;
@@ -28,8 +29,11 @@ public partial class LogViewModel : ViewModelBase
     private DateOnly? _selectedDateValue;
     private DateOnly _calendarMonth;
     private string _selectedRunId = string.Empty;
+    private bool _isUpdatingYearPicker;
 
     public ObservableCollection<LogCalendarDayModel> CalendarDays { get; } = [];
+    public ObservableCollection<LogYearPickerItemModel> YearPickerItems { get; } = [];
+    public ObservableCollection<LogMonthPickerItemModel> MonthPickerItems { get; } = [];
     public ObservableCollection<LogJobSummaryModel> BackupJobs { get; } = [];
     public ObservableCollection<LogDisplayModel> LogEntries { get; } = [];
     public ObservableCollection<PaginationItem> PaginationItems { get; } = [];
@@ -39,6 +43,7 @@ public partial class LogViewModel : ViewModelBase
     [ObservableProperty] private string _searchText = string.Empty;
     [ObservableProperty] private string _selectedDate = string.Empty;
     [ObservableProperty] private string _calendarMonthTitle = string.Empty;
+    [ObservableProperty] private LogYearPickerItemModel? _selectedYearItem;
 
     [ObservableProperty] private string _historyTitle = string.Empty;
     [ObservableProperty] private string _historySubtitle = string.Empty;
@@ -127,6 +132,16 @@ public partial class LogViewModel : ViewModelBase
 
     partial void OnSearchTextChanged(string value) => RefreshJobs();
 
+    partial void OnSelectedYearItemChanged(LogYearPickerItemModel? value)
+    {
+        if (_isUpdatingYearPicker || value is null)
+        {
+            return;
+        }
+
+        SelectYear(value);
+    }
+
     partial void OnSelectedPageSizeChanged(int value)
     {
         if (value <= 0)
@@ -187,6 +202,9 @@ public partial class LogViewModel : ViewModelBase
         StatusCompleted = _localizationService.TranslateText(LocalizationKey.gui_log_status_completed);
         StatusError = _localizationService.TranslateText(LocalizationKey.gui_log_status_error);
 
+        BuildYearPickerItems();
+        BuildMonthPickerItems();
+        BuildCalendarDays();
         UpdateCalendarMonthTitle();
         UpdateDetailSubtitle();
 
@@ -221,12 +239,67 @@ public partial class LogViewModel : ViewModelBase
             _allBackupJobs.Clear();
             BackupJobs.Clear();
             IsRunSelected = false;
+            BuildYearPickerItems();
+            BuildMonthPickerItems();
             BuildCalendarDays();
             UpdateDetailSubtitle();
             return;
         }
 
         SelectDateInternal(targetDate.Value, true);
+    }
+
+    [RelayCommand]
+    private void SelectYear(LogYearPickerItemModel? yearItem)
+    {
+        if (yearItem is null)
+        {
+            return;
+        }
+
+        var datesInYear = _allAvailableDates
+            .Where(d => d.Year == yearItem.Year)
+            .OrderByDescending(d => d)
+            .ToList();
+
+        if (datesInYear.Count == 0)
+        {
+            return;
+        }
+
+        var targetDate = _selectedDateValue.HasValue && _selectedDateValue.Value.Year == yearItem.Year
+            ? _selectedDateValue.Value
+            : datesInYear[0];
+
+        SelectDateInternal(targetDate, true);
+    }
+
+    [RelayCommand]
+    private void SelectMonth(LogMonthPickerItemModel? monthItem)
+    {
+        if (monthItem is null || !monthItem.HasLogs)
+        {
+            return;
+        }
+
+        var selectedYear = _calendarMonth.Year;
+        var datesInMonth = _allAvailableDates
+            .Where(d => d.Year == selectedYear && d.Month == monthItem.Month)
+            .OrderByDescending(d => d)
+            .ToList();
+
+        if (datesInMonth.Count == 0)
+        {
+            return;
+        }
+
+        var targetDate = _selectedDateValue.HasValue &&
+                         _selectedDateValue.Value.Year == selectedYear &&
+                         _selectedDateValue.Value.Month == monthItem.Month
+            ? _selectedDateValue.Value
+            : datesInMonth[0];
+
+        SelectDateInternal(targetDate, true);
     }
 
     [RelayCommand]
@@ -358,6 +431,8 @@ public partial class LogViewModel : ViewModelBase
         SelectedDate = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         _calendarMonth = date.AddDays(1 - date.Day);
 
+        BuildYearPickerItems();
+        BuildMonthPickerItems();
         BuildCalendarDays();
 
         if (reloadJobs)
@@ -392,6 +467,51 @@ public partial class LogViewModel : ViewModelBase
     private void UpdateCalendarMonthTitle()
     {
         CalendarMonthTitle = _calendarMonth.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+    }
+
+    private void BuildYearPickerItems()
+    {
+        YearPickerItems.Clear();
+
+        var selectedYear = _calendarMonth.Year;
+        foreach (var year in _allAvailableDates
+                     .Select(d => d.Year)
+                     .Distinct()
+                     .OrderByDescending(y => y))
+        {
+            YearPickerItems.Add(new LogYearPickerItemModel
+            {
+                Year = year,
+                IsSelected = year == selectedYear
+            });
+        }
+
+        _isUpdatingYearPicker = true;
+        SelectedYearItem = YearPickerItems.FirstOrDefault(y => y.IsSelected) ?? YearPickerItems.FirstOrDefault();
+        _isUpdatingYearPicker = false;
+    }
+
+    private void BuildMonthPickerItems()
+    {
+        MonthPickerItems.Clear();
+
+        var selectedYear = _calendarMonth.Year;
+        var selectedMonth = _calendarMonth.Month;
+        var culture = CultureInfo.CurrentCulture;
+
+        for (var month = 1; month <= 12; month++)
+        {
+            var monthLabel = new DateTime(2000, month, 1).ToString("MMM", culture);
+            var hasLogs = _allAvailableDates.Any(d => d.Year == selectedYear && d.Month == month);
+
+            MonthPickerItems.Add(new LogMonthPickerItemModel
+            {
+                Month = month,
+                Label = monthLabel,
+                HasLogs = hasLogs,
+                IsSelected = month == selectedMonth
+            });
+        }
     }
 
     private void LoadBackupJobsForDate(DateOnly date)
@@ -456,9 +576,11 @@ public partial class LogViewModel : ViewModelBase
                 EventType = log.EventType.ToString(),
                 Source = log.SourcePathUNC,
                 Destination = log.DestinationPathUNC,
-                FileSize = FormatFileSize(log.FileSizeBytes),
-                Duration = $"{log.TransferTimeMs} ms",
-                EncryptionTime = FormatEncryptionTime(log.EncryptionTimeMs)
+                FileSize = LogValueFormatter.FormatFileSize(log.FileSizeBytes),
+                Duration = LogValueFormatter.FormatDuration(log.TransferTimeMs),
+                EncryptionTime = log.EncryptionTimeMs < 0
+                    ? StatusError
+                    : LogValueFormatter.FormatDuration(log.EncryptionTimeMs)
             });
         }
 
@@ -640,7 +762,7 @@ public partial class LogViewModel : ViewModelBase
             StatusTone = GetRunStatusTone(run.Status),
             TotalDuration = GetRunTotalDurationText(run),
             TotalSize = run.Status == LogRunStatus.Completed && run.TotalSizeBytes.HasValue
-                ? FormatFileSize(run.TotalSizeBytes.Value)
+                ? LogValueFormatter.FormatFileSize(run.TotalSizeBytes.Value)
                 : string.Empty,
             Format = run.Format.ToString().ToUpperInvariant(),
             IsInProgress = run.Status == LogRunStatus.InProgress,
@@ -669,7 +791,7 @@ public partial class LogViewModel : ViewModelBase
         {
             LogRunStatus.InProgress => StatusInProgress,
             LogRunStatus.Error => "-",
-            _ => run.TotalDurationMs.HasValue ? $"{run.TotalDurationMs.Value} ms" : "-"
+            _ => run.TotalDurationMs.HasValue ? LogValueFormatter.FormatDuration(run.TotalDurationMs.Value) : "-"
         };
     }
 
@@ -681,35 +803,5 @@ public partial class LogViewModel : ViewModelBase
             LogRunStatus.Error => "error",
             _ => "inprogress"
         };
-    }
-
-    private string FormatEncryptionTime(long timeMs)
-    {
-        if (timeMs == 0)
-        {
-            return "0 ms";
-        }
-
-        if (timeMs > 0)
-        {
-            return $"{timeMs} ms";
-        }
-
-        return "Error";
-    }
-
-    private static string FormatFileSize(long bytes)
-    {
-        string[] units = ["B", "KB", "MB", "GB", "TB"];
-        double value = bytes;
-        var i = 0;
-
-        while (value >= 1024 && i < units.Length - 1)
-        {
-            value /= 1024;
-            i++;
-        }
-
-        return $"{value:0.##} {units[i]}";
     }
 }

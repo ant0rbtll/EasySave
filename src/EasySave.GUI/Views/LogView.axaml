@@ -19,6 +19,37 @@
         <Style Selector="Button.calendar-nav-btn:pointerover /template/ ContentPresenter">
             <Setter Property="Background" Value="#22FFFFFF"/>
         </Style>
+        <Style Selector="ComboBox.year-picker-combo">
+            <Setter Property="Width" Value="120"/>
+            <Setter Property="Height" Value="30"/>
+        </Style>
+        <Style Selector="Button.month-picker-btn">
+            <Setter Property="MinWidth" Value="56"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Background" Value="#0BFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#16FFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Foreground" Value="#667F99"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
+        <Style Selector="Button.month-picker-btn:disabled">
+            <Setter Property="Opacity" Value="0.5"/>
+        </Style>
+        <Style Selector="Button.month-picker-btn.available">
+            <Setter Property="BorderBrush" Value="#2A4A90D9"/>
+            <Setter Property="Foreground" Value="#D0E5FB"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.month-picker-btn.available:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1B2A4769"/>
+        </Style>
+        <Style Selector="Button.month-picker-btn.selected">
+            <Setter Property="Background" Value="#2A4A90D9"/>
+            <Setter Property="BorderBrush" Value="#7CB8E4FF"/>
+            <Setter Property="Foreground" Value="#FFFFFF"/>
+        </Style>
 
         <Style Selector="Button.calendar-day-btn">
             <Setter Property="MinWidth" Value="42"/>
@@ -232,28 +263,46 @@
             <Grid Grid.Column="0" RowDefinitions="Auto,*" RowSpacing="14">
                 <Border Grid.Row="0" Classes="drawer-card" Padding="14,12">
                     <StackPanel Spacing="8">
-                        <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="10">
-                            <Button Grid.Column="0" Classes="calendar-nav-btn" Command="{Binding PreviousMonthCommand}">
-                                <TextBlock Text="◀" FontSize="12"/>
-                            </Button>
-
-                            <TextBlock Grid.Column="1"
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <TextBlock Grid.Column="0"
                                        Text="{Binding CalendarMonthTitle}"
                                        VerticalAlignment="Center"
                                        FontSize="18"
                                        FontWeight="Bold"/>
 
-                            <TextBlock Grid.Column="2"
+                            <TextBlock Grid.Column="1"
                                        Text="{Binding SelectedDate, StringFormat='Date: \{0\}'}"
                                        VerticalAlignment="Center"
                                        Foreground="#9BB5CE"
-                                       FontSize="12"
-                                       Margin="12,0,0,0"/>
-
-                            <Button Grid.Column="4" Classes="calendar-nav-btn" Command="{Binding NextMonthCommand}">
-                                <TextBlock Text="▶" FontSize="12"/>
-                            </Button>
+                                       FontSize="12"/>
                         </Grid>
+
+                        <ComboBox Classes="year-picker-combo"
+                                  ItemsSource="{Binding YearPickerItems}"
+                                  DisplayMemberBinding="{Binding Year}"
+                                  SelectedItem="{Binding SelectedYearItem}">
+                        </ComboBox>
+
+                        <ItemsControl ItemsSource="{Binding MonthPickerItems}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel Orientation="Horizontal"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="models:LogMonthPickerItemModel">
+                                    <Button Margin="0,0,8,6"
+                                            Classes="month-picker-btn"
+                                            Classes.available="{Binding HasLogs}"
+                                            Classes.selected="{Binding IsSelected}"
+                                            IsEnabled="{Binding HasLogs}"
+                                            Command="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).SelectMonthCommand}"
+                                            CommandParameter="{Binding}">
+                                        <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold"/>
+                                    </Button>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
 
                         <Grid ColumnDefinitions="*,*,*,*,*,*,*">
                             <TextBlock Grid.Column="0" Text="L" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
