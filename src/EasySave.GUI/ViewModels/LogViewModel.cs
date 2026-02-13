@@ -24,6 +24,7 @@ public partial class LogViewModel : ViewModelBase
     private readonly List<LogRunSummaryModel> _allRuns = new();
     private readonly List<LogDisplayModel> _allLogEntries = new();
     private Action _onLanguageChanged = static () => { };
+    private bool _hasAppliedDefaultDateSelection;
 
     public ObservableCollection<string> AvailableDates { get; } = new();
     public ObservableCollection<LogJobSummaryModel> BackupJobs { get; } = new();
@@ -369,6 +370,13 @@ public partial class LogViewModel : ViewModelBase
             _allAvailableDates.Add(date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
         }
 
+        if (!_hasAppliedDefaultDateSelection && _allAvailableDates.Count > 0)
+        {
+            _hasAppliedDefaultDateSelection = true;
+            SelectDate(_allAvailableDates[0]);
+            return;
+        }
+
         Refresh();
     }
 
@@ -418,6 +426,7 @@ public partial class LogViewModel : ViewModelBase
                 StartTime = run.StartTimestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
                 EndTime = run.EndTimestamp?.ToString("HH:mm:ss", CultureInfo.InvariantCulture) ?? StatusInProgress,
                 Status = GetRunStatusText(run.Status),
+                StatusTone = GetRunStatusTone(run.Status),
                 TotalDuration = GetRunTotalDurationText(run),
                 TotalSize = run.TotalSizeBytes.HasValue
                     ? FormatFileSize(run.TotalSizeBytes.Value)
@@ -506,7 +515,6 @@ public partial class LogViewModel : ViewModelBase
         {
             var filteredLogs = _allLogEntries.Where(l =>
                 string.IsNullOrEmpty(query) ||
-                l.BackupName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 l.Source.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 l.Destination.Contains(query, StringComparison.OrdinalIgnoreCase) ||
                 l.EventType.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
@@ -704,6 +712,16 @@ public partial class LogViewModel : ViewModelBase
             LogRunStatus.InProgress => StatusInProgress,
             LogRunStatus.Error => "-",
             _ => run.TotalDurationMs.HasValue ? $"{run.TotalDurationMs.Value} ms" : "-"
+        };
+    }
+
+    private static string GetRunStatusTone(LogRunStatus status)
+    {
+        return status switch
+        {
+            LogRunStatus.Completed => "completed",
+            LogRunStatus.Error => "error",
+            _ => "inprogress"
         };
     }
 }
