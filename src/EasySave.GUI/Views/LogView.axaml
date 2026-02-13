@@ -297,7 +297,7 @@
                                     <Border Classes="job-card">
                                         <Expander IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
                                             <Expander.Header>
-                                                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
                                                     <Border Background="#163E6B9A" BorderBrush="#2C72A8DC" BorderThickness="1" CornerRadius="6" Padding="7,2">
                                                         <TextBlock Text="{Binding BackupId}" FontWeight="Bold" Foreground="#9FD4FF"/>
                                                     </Border>
@@ -306,13 +306,6 @@
                                                         <TextBlock Text="{Binding BackupName}" FontSize="15" FontWeight="SemiBold"/>
                                                         <TextBlock Text="{Binding RunsSubtitle}" FontSize="11" Foreground="#88A3BC"/>
                                                     </StackPanel>
-
-                                                    <PathIcon Grid.Column="2"
-                                                              Data="M10,17L15,12L10,7V17Z"
-                                                              Width="14"
-                                                              Height="14"
-                                                              Foreground="#6E91B5"
-                                                              VerticalAlignment="Center"/>
                                                 </Grid>
                                             </Expander.Header>
 
@@ -455,22 +448,28 @@
                                             <TextBlock Text="{Binding Source}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Source}" Classes="meta-value"/>
                                             <TextBlock Text="{Binding Destination}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Destination}" Classes="meta-value"/>
 
-                                            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="0,2,0,0">
-                                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColSize}" Classes="meta-label"/>
-                                                    <TextBlock Text=":" Classes="meta-label"/>
-                                                    <TextBlock Text="{Binding FileSize}" Classes="meta-value" TextTrimming="CharacterEllipsis"/>
-                                                </StackPanel>
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColDuration}" Classes="meta-label"/>
-                                                    <TextBlock Text=":" Classes="meta-label"/>
-                                                    <TextBlock Text="{Binding Duration}" Classes="meta-value" TextTrimming="CharacterEllipsis"/>
-                                                </StackPanel>
-                                                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
-                                                    <TextBlock Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColEncryption}" Classes="meta-label"/>
-                                                    <TextBlock Text=":" Classes="meta-label"/>
-                                                    <TextBlock Text="{Binding EncryptionTime}" Classes="meta-value" TextTrimming="CharacterEllipsis"/>
-                                                </StackPanel>
+                                            <Grid ColumnDefinitions="*,*,*" Margin="0,2,0,0">
+                                                <TextBlock Grid.Column="0"
+                                                           HorizontalAlignment="Left"
+                                                           TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColSize}" />
+                                                    <Run Text=" : " />
+                                                    <Run Text="{Binding FileSize}" />
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="1"
+                                                           HorizontalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColDuration}" />
+                                                    <Run Text=" : " />
+                                                    <Run Text="{Binding Duration}" />
+                                                </TextBlock>
+                                                <TextBlock Grid.Column="2"
+                                                           HorizontalAlignment="Right"
+                                                           TextTrimming="CharacterEllipsis">
+                                                    <Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColEncryption}" />
+                                                    <Run Text=" : " />
+                                                    <Run Text="{Binding EncryptionTime}" />
+                                                </TextBlock>
                                             </Grid>
                                         </StackPanel>
                                     </Border>
