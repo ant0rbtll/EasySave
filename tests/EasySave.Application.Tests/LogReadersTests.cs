@@ -3,6 +3,33 @@ namespace EasySave.Application.Tests;
 public class LogReadersTests
 {
     [Fact]
+    public void JsonLogReader_WhenEventTypeIsNumeric_ThrowsInvalidDataException()
+    {
+        using var temp = new TempDirectory();
+        string path = Path.Combine(temp.RootPath, "2026-02-11.json");
+        File.WriteAllText(
+            path,
+            """
+            [
+              {
+                "timestamp": "2026-02-11T13:12:50Z",
+                "backupName": "job-json",
+                "eventType": 1,
+                "sourcePathUNC": "\\\\src",
+                "destinationPathUNC": "\\\\dst",
+                "fileSizeBytes": 10,
+                "transferTimeMs": 20,
+                "encryptionTimeMs": 0
+              }
+            ]
+            """);
+
+        var reader = new JsonLogReader();
+
+        Assert.Throws<InvalidDataException>(() => reader.ReadEntries(path));
+    }
+
+    [Fact]
     public void JsonLogReader_WhenFileExceedsSizeLimit_ThrowsInvalidDataException()
     {
         using var temp = new TempDirectory();

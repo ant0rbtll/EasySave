@@ -35,7 +35,7 @@ public sealed class LogQueryService : ILogQueryService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<DateOnly> GetAvailableDates(LogFormat format)
+    public IReadOnlyList<DateOnly> GetAvailableDates()
     {
         string logsDirectory = _pathProvider.ResolveLogsDirectory();
         if (!Directory.Exists(logsDirectory))
@@ -43,10 +43,14 @@ public sealed class LogQueryService : ILogQueryService
             return [];
         }
 
-        string extension = LogFileNaming.GetFileExtension(format);
-        string pattern = $"*.{extension}";
+        return Enum.GetValues<LogFormat>()
+            .SelectMany(format =>
+            {
+                string extension = LogFileNaming.GetFileExtension(format);
+                string pattern = $"*.{extension}";
 
-        return Directory.EnumerateFiles(logsDirectory, pattern, SearchOption.TopDirectoryOnly)
+                return Directory.EnumerateFiles(logsDirectory, pattern, SearchOption.TopDirectoryOnly);
+            })
             .Where(static path => LogFileNaming.TryParseDateFromFilePath(path, out _))
             .Select(static path =>
             {
@@ -59,34 +63,26 @@ public sealed class LogQueryService : ILogQueryService
     }
 
     /// <inheritdoc />
-    public IReadOnlyList<LogEntry> GetByDate(DateOnly date, LogFormat format)
+    public IReadOnlyList<LogEntry> GetByDate(DateOnly date)
     {
-        var reader = ResolveReader(format);
-
         string logsDirectory = _pathProvider.ResolveLogsDirectory();
-        string filePath = Path.Combine(logsDirectory, LogFileNaming.BuildFileName(date, format));
-
-        if (!File.Exists(filePath))
+        if (!Directory.Exists(logsDirectory))
         {
             return [];
         }
 
-        return reader.ReadEntries(filePath);
-    }
+        return _readerByFormat
+            .SelectMany(pair =>
+            {
+                string filePath = Path.Combine(logsDirectory, LogFileNaming.BuildFileName(date, pair.Key));
+                if (!File.Exists(filePath))
+                {
+                    return [];
+                }
 
-    /// <summary>
-    /// Resolves the reader registered for one log format.
-    /// </summary>
-    /// <param name="format">Requested log format.</param>
-    /// <returns>The matching reader implementation.</returns>
-    /// <exception cref="NotSupportedException">Thrown when no reader is registered for the format.</exception>
-    private ILogReader ResolveReader(LogFormat format)
-    {
-        if (_readerByFormat.TryGetValue(format, out var reader))
-        {
-            return reader;
-        }
-
-        throw new NotSupportedException($"No log reader is registered for format '{format}'.");
+                return pair.Value.ReadEntries(filePath);
+            })
+            .OrderByDescending(static e => e.Timestamp)
+            .ToList();
     }
 }

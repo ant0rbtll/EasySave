@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using EasySave.Backup;
 using EasySave.Configuration;
 using EasySave.Core;
@@ -89,7 +90,11 @@ public class DailyFileLoggerTests
     private static List<LogEntry> ReadLogEntries(string path)
     {
         var json = File.ReadAllText(path);
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false) }
+        };
         return JsonSerializer.Deserialize<List<LogEntry>>(json, options) ?? new List<LogEntry>();
     }
 

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using EasySave.Configuration;
 using EasySave.Core;
 using EasySave.Log;
@@ -13,26 +14,27 @@ public class LogQueryServiceTests
         string missingDirectory = Path.Combine(Path.GetTempPath(), "easysave-log-query-missing", Guid.NewGuid().ToString("N"));
         var service = CreateService(missingDirectory, [new JsonLogReader()]);
 
-        var result = service.GetAvailableDates(LogFormat.Json);
+        var result = service.GetAvailableDates();
 
         Assert.Empty(result);
     }
 
     [Fact]
-    public void GetAvailableDates_FiltersByFormatAndSortsDescending()
+    public void GetAvailableDates_MergesDistinctDatesAndSortsDescending()
     {
         using var temp = new TempDirectory();
         File.WriteAllText(Path.Combine(temp.LogsDirectory, "2026-02-09.json"), "[]");
         File.WriteAllText(Path.Combine(temp.LogsDirectory, "2026-02-11.json"), "[]");
         File.WriteAllText(Path.Combine(temp.LogsDirectory, "2026-02-10.xml"), "<Logs />");
+        File.WriteAllText(Path.Combine(temp.LogsDirectory, "2026-02-09.xml"), "<Logs />");
         File.WriteAllText(Path.Combine(temp.LogsDirectory, "invalid.json"), "[]");
 
-        var service = CreateService(temp.LogsDirectory, [new JsonLogReader()]);
+        var service = CreateService(temp.LogsDirectory, [new JsonLogReader(), new XmlLogReader()]);
 
-        var result = service.GetAvailableDates(LogFormat.Json);
+        var result = service.GetAvailableDates();
 
         Assert.Equal(
-            [new DateOnly(2026, 2, 11), new DateOnly(2026, 2, 9)],
+            [new DateOnly(2026, 2, 11), new DateOnly(2026, 2, 10), new DateOnly(2026, 2, 9)],
             result);
     }
 
@@ -40,9 +42,9 @@ public class LogQueryServiceTests
     public void GetByDate_WhenFileDoesNotExist_ReturnsEmpty()
     {
         using var temp = new TempDirectory();
-        var service = CreateService(temp.LogsDirectory, [new JsonLogReader()]);
+        var service = CreateService(temp.LogsDirectory, [new JsonLogReader(), new XmlLogReader()]);
 
-        var result = service.GetByDate(new DateOnly(2026, 2, 11), LogFormat.Json);
+        var result = service.GetByDate(new DateOnly(2026, 2, 11));
 
         Assert.Empty(result);
     }
@@ -66,7 +68,7 @@ public class LogQueryServiceTests
 
         var service = CreateService(temp.LogsDirectory, [new JsonLogReader()]);
 
-        var result = service.GetByDate(new DateOnly(2026, 2, 11), LogFormat.Json);
+        var result = service.GetByDate(new DateOnly(2026, 2, 11));
 
         var actual = Assert.Single(result);
         Assert.Equal(expected.BackupName, actual.BackupName);
@@ -90,6 +92,7 @@ public class LogQueryServiceTests
             <Logs>
               <LogEntry>
                 <Timestamp>2026-02-11T13:12:50.8789933Z</Timestamp>
+                <BackupId>42</BackupId>
                 <BackupName>job-xml</BackupName>
                 <EventType>TransferFile</EventType>
                 <SourcePathUNC>\\src-xml</SourcePathUNC>
@@ -103,9 +106,10 @@ public class LogQueryServiceTests
 
         var service = CreateService(temp.LogsDirectory, [new XmlLogReader()]);
 
-        var result = service.GetByDate(new DateOnly(2026, 2, 11), LogFormat.Xml);
+        var result = service.GetByDate(new DateOnly(2026, 2, 11));
 
         var actual = Assert.Single(result);
+        Assert.Equal(42, actual.BackupId);
         Assert.Equal("job-xml", actual.BackupName);
         Assert.Equal(LogEventType.TransferFile, actual.EventType);
         Assert.Equal("\\\\src-xml", actual.SourcePathUNC);
@@ -116,14 +120,47 @@ public class LogQueryServiceTests
     }
 
     [Fact]
-    public void GetByDate_WhenReaderIsMissing_ThrowsNotSupportedException()
+    public void GetByDate_MergesEntriesFromAllFormats_AndSortsByTimestampDescending()
     {
         using var temp = new TempDirectory();
-        var service = CreateService(temp.LogsDirectory, [new JsonLogReader()]);
+        var jsonEntry = new LogEntry(
+            DateTime.Parse("2026-02-11T11:00:00Z"),
+            "job-json",
+            LogEventType.TransferFile,
+            "\\\\src-json",
+            "\\\\dst-json",
+            10,
+            20,
+            30);
+        WriteJson(Path.Combine(temp.LogsDirectory, "2026-02-11.json"), [jsonEntry]);
 
-        var action = () => service.GetByDate(new DateOnly(2026, 2, 11), LogFormat.Xml);
+        File.WriteAllText(
+            Path.Combine(temp.LogsDirectory, "2026-02-11.xml"),
+            """
+            <?xml version="1.0" encoding="utf-8"?>
+            <Logs>
+              <LogEntry>
+                <Timestamp>2026-02-11T12:00:00Z</Timestamp>
+                <BackupId>11</BackupId>
+                <BackupName>job-xml</BackupName>
+                <EventType>TransferFile</EventType>
+                <SourcePathUNC>\\src-xml</SourcePathUNC>
+                <DestinationPathUNC>\\dst-xml</DestinationPathUNC>
+                <FileSizeBytes>44</FileSizeBytes>
+                <TransferTimeMs>55</TransferTimeMs>
+                <EncryptionTimeMs>66</EncryptionTimeMs>
+              </LogEntry>
+            </Logs>
+            """);
 
-        Assert.Throws<NotSupportedException>(action);
+        var service = CreateService(temp.LogsDirectory, [new JsonLogReader(), new XmlLogReader()]);
+
+        var result = service.GetByDate(new DateOnly(2026, 2, 11));
+
+        Assert.Equal(2, result.Count);
+        Assert.Contains(result, static entry => entry.BackupName == "job-xml");
+        Assert.Contains(result, static entry => entry.BackupName == "job-json");
+        Assert.True(result[0].Timestamp >= result[1].Timestamp);
     }
 
     private static LogQueryService CreateService(string logsDirectory, IEnumerable<ILogReader> readers)
@@ -136,7 +173,8 @@ public class LogQueryServiceTests
         var options = new JsonSerializerOptions
         {
             WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false) }
         };
 
         string json = JsonSerializer.Serialize(entries, options);

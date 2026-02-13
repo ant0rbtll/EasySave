@@ -49,6 +49,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _createViewModel = createViewModel;
         _manageViewModel = manageViewModel;
         _logViewModel = logViewModel;
+        _logViewModel.SetOnLanguageChanged(OnLanguageChanged);
         _configViewModel = configViewModel;
         _configViewModel.SetOnLanguageChanged(OnLanguageChanged);
         _homeViewModel = homeViewModel;
@@ -82,6 +83,7 @@ public partial class MainWindowViewModel : ViewModelBase
         RefreshTranslations();
         Sidebar.RefreshTranslations();
         _configViewModel.RefreshTranslations();
+        _logViewModel.RefreshTranslations();
         _homeViewModel.RefreshTranslations();
         _manageViewModel.RefreshTranslations();
         _createViewModel.RefreshTranslations();

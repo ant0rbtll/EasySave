@@ -79,6 +79,7 @@ public class Program
             sp.GetRequiredService<IBackupJobStateService>(),
             sp.GetRequiredService<IBackupExecutionGuard>()));
         services.AddSingleton<ILogQueryService, LogQueryService>();
+        services.AddSingleton<ILogNavigationService, LogNavigationService>();
 
         // Setup and run UI
         services.AddSingleton<ConsoleUI>();
