@@ -189,9 +189,7 @@ public enum LocalizationKey
     gui_window_minimize,
     gui_window_maximize,
     gui_window_restore,
-    gui_window_close
-    gui_create_success,
-    gui_home_description,
+    gui_window_close,
 
     // Log - Log viewer
     gui_log_history_subtitle,
