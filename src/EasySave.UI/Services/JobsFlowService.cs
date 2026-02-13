@@ -8,7 +8,7 @@ namespace EasySave.UI.Services;
 /// <summary>
 /// Handles backup jobs menu navigation and actions.
 /// </summary>
-internal class JobsFlowService(
+public class JobsFlowService(
     BackupApplicationService backupApplicationService,
     IMenuService menuService,
     IMenuFactory menuFactory,

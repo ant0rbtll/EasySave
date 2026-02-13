@@ -5,7 +5,7 @@ namespace EasySave.UI.Services;
 /// <summary>
 /// Defines localized output and error display operations for the console UI.
 /// </summary>
-internal interface IConsoleMessageService
+public interface IConsoleMessageService
 {
     /// <summary>
     /// Writes a localized message.

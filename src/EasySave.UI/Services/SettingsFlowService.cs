@@ -9,7 +9,7 @@ namespace EasySave.UI.Services;
 /// <summary>
 /// Handles the settings navigation and persistence flow.
 /// </summary>
-internal class SettingsFlowService(
+public class SettingsFlowService(
     IUserPreferencesRepository preferencesRepository,
     UserPreferences userPreferences,
     IPathProvider pathProvider,

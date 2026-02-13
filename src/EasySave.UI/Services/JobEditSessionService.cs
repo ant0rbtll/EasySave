@@ -5,7 +5,7 @@ namespace EasySave.UI.Services;
 /// <summary>
 /// Tracks the in-memory edit state for a backup job update session.
 /// </summary>
-internal class JobEditSessionService
+public class JobEditSessionService
 {
     private int? _editingJobId;
     private BackupJob? _editingJobSnapshot;

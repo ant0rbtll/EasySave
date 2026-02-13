@@ -6,7 +6,7 @@ namespace EasySave.UI.Services;
 /// <summary>
 /// Defines interactive input prompts used by console flows.
 /// </summary>
-internal interface IConsoleInputService
+public interface IConsoleInputService
 {
     /// <summary>
     /// Prompts the user for a non-empty string value.

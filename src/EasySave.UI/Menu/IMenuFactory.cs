@@ -6,7 +6,7 @@ namespace EasySave.UI.Menu;
 /// <summary>
 /// Defines menu configuration builders used by the UI flows.
 /// </summary>
-internal interface IMenuFactory
+public interface IMenuFactory
 {
     /// <summary>
     /// Builds the main menu with actions depending on current job count.

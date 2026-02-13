@@ -3,7 +3,7 @@ namespace EasySave.UI.Services;
 /// <summary>
 /// Abstracts console I/O to simplify testing of interactive flows.
 /// </summary>
-internal interface IConsoleAdapter
+public interface IConsoleAdapter
 {
     /// <summary>
     /// Clears the console buffer and viewport.

@@ -5,7 +5,7 @@ namespace EasySave.UI.Menu;
 /// <summary>
 /// Defines menu rendering and interaction services for console navigation.
 /// </summary>
-internal interface IMenuService
+public interface IMenuService
 {
     /// <summary>
     /// Displays a localized menu and returns the selected index.

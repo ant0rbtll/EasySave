@@ -4,6 +4,7 @@ using EasySave.Localization;
 using EasySave.Persistence;
 using EasySave.UI.Menu;
 using EasySave.UI.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EasySave.UI;
 
@@ -40,7 +41,8 @@ public class ConsoleUI
     /// <param name="inputService">Console input service.</param>
     /// <param name="jobsFlowService">Jobs workflow service.</param>
     /// <param name="settingsFlowService">Settings workflow service.</param>
-    internal ConsoleUI(
+    [ActivatorUtilitiesConstructor]
+    public ConsoleUI(
         BackupApplicationService backupApplicationService,
         CommandLineParser parser,
         ILocalizationService localizationService,
@@ -71,7 +73,7 @@ public class ConsoleUI
     /// <param name="preferencesRepository">Repository used to load and persist user preferences.</param>
     /// <param name="pathProvider">Path provider used by settings flows.</param>
     /// <param name="parser">Command-line parser for non-interactive execution.</param>
-    public ConsoleUI(
+    internal ConsoleUI(
         BackupApplicationService backupApplicationService,
         IUserPreferencesRepository preferencesRepository,
         IPathProvider pathProvider,

@@ -7,6 +7,9 @@ using EasySave.System;
 using EasySave.Log;
 using EasySave.Core;
 using Microsoft.Extensions.DependencyInjection;
+using EasySave.UI.Services;
+using EasySave.UI.Menu;
+using EasySave.Localization;
 
 
 namespace EasySave.UI;
@@ -61,7 +64,20 @@ public class Program
         services.AddSingleton<IFileSystem, DefaultFileSystem>();
         services.AddSingleton<ITransferService, DefaultTransferService>();
         services.AddSingleton<IBackupEngine, BackupEngine>();
+        services.AddSingleton<UserPreferences>();
+
+        // Setup UI services
         services.AddSingleton<CommandLineParser>();
+        services.AddSingleton<IConsoleAdapter, SystemConsoleAdapter>();
+        services.AddSingleton<IMenuFactory, MenuFactory>();
+        services.AddSingleton<IMenuService, MenuService>();
+        services.AddSingleton<IConsoleMessageService,  ConsoleMessageService>();
+        services.AddSingleton<IConsoleInputService, ConsoleInputService>();
+        services.AddSingleton<JobsFlowService>();
+        services.AddSingleton<SettingsFlowService>();
+        services.AddSingleton<ILocalizationService, LocalizationService>();
+        services.AddSingleton<ErrorManager>();
+        services.AddSingleton<JobEditSessionService>();
 
         // Setup application service
         services.AddSingleton<BackupApplicationService>();
