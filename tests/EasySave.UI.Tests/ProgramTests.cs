@@ -1,5 +1,6 @@
 using System.Reflection;
 using EasySave.AppCommon;
+using EasySave.AppCommon.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EasySave.UI.Tests;
@@ -135,24 +136,24 @@ public class ProgramTests
     }
 
     [Fact]
-    public void CreateLogger_WhenPathProviderThrows_ReturnsNoOpLogger()
+    public void ReloadableLogger_WhenPathProviderThrows_UsesNoOpFallback()
     {
-        var createLogger = typeof(ApplicationManager).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(createLogger);
+        var logger = new ReloadableLogger(
+            new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Json } },
+            new ThrowingPathProvider());
 
-        var logger = (ILogger)createLogger!.Invoke(null, [new ThrowingPathProvider()])!;
+        logger.Write(new LogEntry(DateTime.UtcNow, "job", LogEventType.TransferFile, "src", "dst", 12, 34));
 
-        Assert.IsType<NoOpLogger>(logger);
+        Assert.IsType<NoOpLogger>(GetCurrentLogger(logger));
     }
 
     [Fact]
-    public void CreateLogger_WithXmlPreferences_UsesXmlFormatOnWrite()
+    public void ReloadableLogger_WithXmlPreferences_UsesXmlFormatOnWrite()
     {
-        var createLogger = typeof(ApplicationManager).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(createLogger);
-
-        var pathProvider = new RecordingPathProvider(LogFormat.Xml);
-        var logger = (ILogger)createLogger!.Invoke(null, [pathProvider])!;
+        var pathProvider = new RecordingPathProvider();
+        using var logger = new ReloadableLogger(
+            new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Xml } },
+            pathProvider);
 
         logger.Write(new LogEntry(
             DateTime.UtcNow,
@@ -167,13 +168,12 @@ public class ProgramTests
     }
 
     [Fact]
-    public void CreateLogger_WithJsonPreferences_UsesJsonFormatOnWrite()
+    public void ReloadableLogger_WithJsonPreferences_UsesJsonFormatOnWrite()
     {
-        var createLogger = typeof(ApplicationManager).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(createLogger);
-
-        var pathProvider = new RecordingPathProvider(LogFormat.Json);
-        var logger = (ILogger)createLogger!.Invoke(null, [pathProvider])!;
+        var pathProvider = new RecordingPathProvider();
+        using var logger = new ReloadableLogger(
+            new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Json } },
+            pathProvider);
 
         logger.Write(new LogEntry(
             DateTime.UtcNow,
@@ -185,6 +185,13 @@ public class ProgramTests
             34));
 
         Assert.Equal(LogFormat.Json, pathProvider.LastRequestedFormat);
+    }
+
+    private static ILogger GetCurrentLogger(ReloadableLogger logger)
+    {
+        var field = typeof(ReloadableLogger).GetField("_currentLogger", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(field);
+        return Assert.IsAssignableFrom<ILogger>(field!.GetValue(logger));
     }
 
     private sealed class ThrowingPathProvider : IPathProvider
@@ -204,26 +211,13 @@ public class ProgramTests
 
     private sealed class RecordingPathProvider : IPathProvider
     {
-        private readonly string _rootDirectory;
-        private readonly string _preferencesPath;
+        private readonly string _rootDirectory = Path.Combine(Path.GetTempPath(), "easysave-ui-tests", Guid.NewGuid().ToString("N"));
 
         public LogFormat LastRequestedFormat { get; private set; } = LogFormat.Json;
 
-        public RecordingPathProvider(LogFormat storedPreference)
+        public RecordingPathProvider()
         {
-            _rootDirectory = Path.Combine(Path.GetTempPath(), "easysave-ui-tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_rootDirectory);
-
-            _preferencesPath = Path.Combine(_rootDirectory, "user-preferences.json");
-            File.WriteAllText(
-                _preferencesPath,
-                $$"""
-                {
-                  "language": "fr",
-                  "logDirectory": null,
-                  "logFormat": "{{storedPreference.ToString().ToLowerInvariant()}}"
-                }
-                """);
         }
 
         public string GetDailyLogPath(DateTime date, LogFormat format = LogFormat.Json)
@@ -239,7 +233,7 @@ public class ProgramTests
 
         public string GetJobsConfigPath() => Path.Combine(_rootDirectory, "jobs.json");
 
-        public string GetUserPreferencesPath() => _preferencesPath;
+        public string GetUserPreferencesPath() => Path.Combine(_rootDirectory, "prefs.json");
 
         public void SetLogDirectoryOverride(string? directory)
         {
