@@ -493,7 +493,7 @@ public partial class LogViewModel : ViewModelBase
 
     private void UpdateCalendarMonthTitle()
     {
-        CalendarMonthTitle = _calendarMonth.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+        CalendarMonthTitle = $"{GetMonthName(_calendarMonth.Month)} {_calendarMonth.Year}";
     }
 
     private void BuildYearPickerItems()
@@ -524,11 +524,10 @@ public partial class LogViewModel : ViewModelBase
 
         var selectedYear = _calendarMonth.Year;
         var selectedMonth = _calendarMonth.Month;
-        var culture = CultureInfo.CurrentCulture;
 
         for (var month = 1; month <= 12; month++)
         {
-            var monthLabel = new DateTime(2000, month, 1).ToString("MMM", culture);
+            var monthLabel = GetMonthShortName(month);
             var hasLogs = _allAvailableDates.Any(d => d.Year == selectedYear && d.Month == month);
 
             MonthPickerItems.Add(new LogMonthPickerItemModel
@@ -820,6 +819,46 @@ public partial class LogViewModel : ViewModelBase
             LogRunStatus.InProgress => StatusInProgress,
             LogRunStatus.Error => "-",
             _ => run.TotalDurationMs.HasValue ? LogValueFormatter.FormatDuration(run.TotalDurationMs.Value) : "-"
+        };
+    }
+
+    private string GetMonthName(int month)
+    {
+        return month switch
+        {
+            1 => _localizationService.TranslateText(LocalizationKey.gui_log_month_january),
+            2 => _localizationService.TranslateText(LocalizationKey.gui_log_month_february),
+            3 => _localizationService.TranslateText(LocalizationKey.gui_log_month_march),
+            4 => _localizationService.TranslateText(LocalizationKey.gui_log_month_april),
+            5 => _localizationService.TranslateText(LocalizationKey.gui_log_month_may),
+            6 => _localizationService.TranslateText(LocalizationKey.gui_log_month_june),
+            7 => _localizationService.TranslateText(LocalizationKey.gui_log_month_july),
+            8 => _localizationService.TranslateText(LocalizationKey.gui_log_month_august),
+            9 => _localizationService.TranslateText(LocalizationKey.gui_log_month_september),
+            10 => _localizationService.TranslateText(LocalizationKey.gui_log_month_october),
+            11 => _localizationService.TranslateText(LocalizationKey.gui_log_month_november),
+            12 => _localizationService.TranslateText(LocalizationKey.gui_log_month_december),
+            _ => month.ToString(CultureInfo.InvariantCulture)
+        };
+    }
+
+    private string GetMonthShortName(int month)
+    {
+        return month switch
+        {
+            1 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_january),
+            2 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_february),
+            3 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_march),
+            4 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_april),
+            5 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_may),
+            6 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_june),
+            7 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_july),
+            8 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_august),
+            9 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_september),
+            10 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_october),
+            11 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_november),
+            12 => _localizationService.TranslateText(LocalizationKey.gui_log_month_short_december),
+            _ => month.ToString(CultureInfo.InvariantCulture)
         };
     }
 
