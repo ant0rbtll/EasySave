@@ -41,9 +41,22 @@
             <Setter Property="BorderBrush" Value="#1976D2"/>
         </Style>
     </UserControl.Styles>
-
-    <StackPanel Spacing="24" MaxWidth="500" HorizontalAlignment="Left" Margin="32">
-        <TextBlock Text="{Binding TitleText}" FontSize="24" FontWeight="Bold"/>
+<StackPanel Spacing="20" MaxWidth="800" Margin="24">
+	<StackPanel>
+		<!-- HEADER -->
+		<Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+			<StackPanel Spacing="4" Margin="0,0,0,4">
+                <TextBlock Text="{Binding TitleText}" FontSize="22" FontWeight="Bold"/>
+			</StackPanel>
+		</Grid>
+		<StackPanel Spacing="20" MaxWidth="800">
+			<Border
+					BorderBrush="#22FFFFFF"
+					BorderThickness="1"
+					CornerRadius="8"
+					Padding="24,20"
+					Background="#08FFFFFF">
+				<StackPanel Spacing="18">
 
         <!-- Langue -->
         <StackPanel Spacing="8">
@@ -186,5 +199,9 @@
         <TextBlock Text="{Binding StatusMessage}"
                    Foreground="#4CAF50"
                    IsVisible="{Binding StatusMessage, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+                    </StackPanel>
+				</Border>
+		</StackPanel>
+	</StackPanel>
     </StackPanel>
 </UserControl>
