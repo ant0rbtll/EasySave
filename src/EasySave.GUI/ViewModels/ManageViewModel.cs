@@ -369,6 +369,11 @@ public partial class ManageViewModel : ViewModelBase
             Jobs.Add(job);
 
         RebuildPaginationItems();
+
+        _updatingSelection = true;
+        _isAllSelected = Jobs.Count > 0 && Jobs.All(j => j.IsSelected);
+        OnPropertyChanged(nameof(IsAllSelected));
+        _updatingSelection = false;
     }
 
     private static bool MatchesSearch(Models.BackupJob job, string query)
@@ -454,7 +459,7 @@ public partial class ManageViewModel : ViewModelBase
 
     private void UpdateHasSelection()
     {
-        HasSelection = Jobs.Any(j => j.IsSelected);
+        HasSelection = _allJobs.Any(j => j.IsSelected);
     }
 
     [RelayCommand]
@@ -559,7 +564,7 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanRunSelected))]
     private void RunSelected()
     {
-        var count = Jobs.Count(j => j.IsSelected);
+        var count = _allJobs.Count(j => j.IsSelected);
         ConfirmRunSelectedMessage = _localizationService.TranslateTextWithParams(
             LocalizationKey.gui_manage_confirm_run_selected_message, [count.ToString()]);
         IsConfirmRunSelectedDialogOpen = true;
@@ -570,7 +575,7 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private async Task ConfirmRunSelected()
     {
-        var selectedJobs = Jobs.Where(j => j.IsSelected).ToList();
+        var selectedJobs = _allJobs.Where(j => j.IsSelected).ToList();
         if (selectedJobs.Count == 0) return;
 
         IsConfirmRunSelectedDialogOpen = false;
@@ -656,7 +661,7 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanDeleteSelected))]
     private void DeleteSelected()
     {
-        var count = Jobs.Count(j => j.IsSelected);
+        var count = _allJobs.Count(j => j.IsSelected);
         ConfirmDeleteSelectedMessage = _localizationService.TranslateTextWithParams(
             LocalizationKey.gui_manage_confirm_delete_selected_message, [count.ToString()]);
         IsConfirmDeleteSelectedDialogOpen = true;
@@ -667,7 +672,7 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand]
     private async Task ConfirmDeleteSelected()
     {
-        var selectedJobs = Jobs.Where(j => j.IsSelected).ToList();
+        var selectedJobs = _allJobs.Where(j => j.IsSelected).ToList();
         if (selectedJobs.Count == 0) return;
 
         IsConfirmDeleteSelectedDialogOpen = false;
