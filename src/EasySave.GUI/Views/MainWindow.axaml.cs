@@ -16,10 +16,14 @@ public partial class MainWindow : Window
 
         if (OperatingSystem.IsMacOS())
         {
+            ExtendClientAreaTitleBarHeightHint = 32;
+            MainLayoutGrid.RowDefinitions = new RowDefinitions("32,*");
             TitleBarLogo.IsVisible = false;
             TitleBarBrand.Spacing = 0;
             TitleBarBrand.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
             TitleBarBrand.Margin = new Thickness(0, -2, 0, 0);
+            TitleBarBrand.SetValue(Grid.ColumnProperty, 0);
+            TitleBarBrand.SetValue(Grid.ColumnSpanProperty, 4);
         }
         ConfigurePlatformTitleBar();
     }
@@ -81,4 +85,3 @@ public partial class MainWindow : Window
         BeginMoveDrag(e);
     }
 }
-

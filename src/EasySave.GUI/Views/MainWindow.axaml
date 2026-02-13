@@ -39,7 +39,7 @@
         </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="40,*">
+    <Grid x:Name="MainLayoutGrid" RowDefinitions="40,*">
         <!-- Barre de titre custom -->
         <Grid x:Name="TitleBarGrid" Grid.Row="0"
               ColumnDefinitions="Auto,Auto,*,Auto"
