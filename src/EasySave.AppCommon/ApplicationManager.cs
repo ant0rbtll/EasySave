@@ -1,13 +1,12 @@
 ﻿using EasySave.Application;
 using EasySave.Backup;
 using EasySave.Configuration;
-using EasySave.Core;
 using EasySave.Localization;
 using EasySave.Log;
 using EasySave.Persistence;
 using EasySave.State;
 using EasySave.System;
-using EasySave.GUI.Services;
+using EasySave.AppCommon.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -42,6 +41,7 @@ namespace EasySave.AppCommon
             // Setup configuration providers
             _services.AddSingleton<IPathProvider, DefaultPathProvider>();
             _services.AddSingleton<IJobIdProvider, SequentialJobIdProvider>();
+            _services.AddSingleton<ReloadableLogger>();
 
             // Setup infrastructure
             _services.AddSingleton<ILogger>(sp => sp.GetRequiredService<ReloadableLogger>());
@@ -67,18 +67,7 @@ namespace EasySave.AppCommon
             // Setup application service
             _services.AddSingleton<BackupApplicationService>();
             _services.AddSingleton<ILogQueryService, LogQueryService>();
-
-            // Setup application service
-            _services.AddSingleton(sp => new BackupApplicationService(
-                sp.GetRequiredService<IBackupJobRepository>(),
-                sp.GetRequiredService<IBackupEngine>(),
-                sp.GetRequiredService<IBackupJobStateService>(),
-                sp.GetRequiredService<IBackupExecutionGuard>()));
-            _services.AddSingleton<ILogQueryService, LogQueryService>();
             _services.AddSingleton<ILogNavigationService, LogNavigationService>();
-
-
-            _services.AddSingleton(_args);
         }
 
         /// <summary>

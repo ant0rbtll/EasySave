@@ -3,10 +3,10 @@ using EasySave.Core;
 using EasySave.Log;
 using EasySave.Persistence;
 
-namespace EasySave.GUI.Services;
+namespace EasySave.AppCommon.Services;
 
 /// <summary>
-/// Runtime-reloadable logger wrapper used by the GUI.
+/// Runtime-reloadable logger wrapper used by application hosts.
 /// </summary>
 public sealed class ReloadableLogger : ILogger, ILoggerRuntimeReloader, IDisposable
 {
