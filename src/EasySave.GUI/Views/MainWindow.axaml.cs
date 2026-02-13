@@ -45,9 +45,11 @@ public partial class MainWindow : Window
 
         PropertyChanged += (_, e) =>
         {
-            if (e.Property == WindowStateProperty)
-                UpdateMaximizeIcon((WindowState)e.NewValue!);
+            if (e.Property == WindowStateProperty && e.NewValue is WindowState state)
+                UpdateMaximizeIcon(state);
         };
+
+        UpdateMaximizeIcon(WindowState);
     }
 
     private void ToggleMaximize()
@@ -59,8 +61,10 @@ public partial class MainWindow : Window
 
     private void UpdateMaximizeIcon(WindowState state)
     {
-        var pathData = state == WindowState.Maximized ? RestorePathData : MaximizePathData;
-        MaximizeIcon.Data = StreamGeometry.Parse(pathData);
+        var isMaximized = state == WindowState.Maximized;
+        MaximizeIcon.Data = StreamGeometry.Parse(isMaximized ? RestorePathData : MaximizePathData);
+        if (DataContext is ViewModels.MainWindowViewModel vm)
+            vm.UpdateMaximizeTooltip(isMaximized);
     }
 
     private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)

@@ -88,14 +88,14 @@
                         VerticalAlignment="Stretch">
                 <Button Classes="window-control"
                         x:Name="MinimizeButton"
-                        ToolTip.Tip="Réduire">
+                        ToolTip.Tip="{Binding TooltipMinimize}">
                     <PathIcon Data="M20 14H4v-2h16"
                               Width="10" Height="10"
                               Foreground="White"/>
                 </Button>
                 <Button Classes="window-control"
                         x:Name="MaximizeButton"
-                        ToolTip.Tip="Agrandir">
+                        ToolTip.Tip="{Binding TooltipMaximize}">
                     <PathIcon x:Name="MaximizeIcon"
                               Data="M4 4h16v16H4V4m2 2v12h12V6H6z"
                               Width="10" Height="10"
@@ -103,7 +103,7 @@
                 </Button>
                 <Button Classes="window-control window-close"
                         x:Name="CloseButton"
-                        ToolTip.Tip="Fermer">
+                        ToolTip.Tip="{Binding TooltipClose}">
                     <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
                               Width="10" Height="10"
                               Foreground="White"/>

@@ -166,3 +166,7 @@ translations:
   gui_manage_confirm_delete_selected_message: "Do you want to delete the {0} selected jobs?"
   gui_manage_empty_title: "No backup jobs"
   gui_manage_empty_subtitle: "You haven't created any backup jobs yet. Use the Create button in the top left corner to add one."
+  gui_window_minimize: "Minimize"
+  gui_window_maximize: "Maximize"
+  gui_window_restore: "Restore"
+  gui_window_close: "Close"
