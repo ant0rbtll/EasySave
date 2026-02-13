@@ -44,8 +44,8 @@ namespace EasySave.AppCommon
             _services.AddSingleton<IJobIdProvider, SequentialJobIdProvider>();
 
             // Setup infrastructure
-            _services.AddSingleton<ILogger>(sp =>
-                CreateLogger(sp.GetRequiredService<IPathProvider>()));
+            _services.AddSingleton<ILogger>(sp => sp.GetRequiredService<ReloadableLogger>());
+            _services.AddSingleton<ILoggerRuntimeReloader>(sp => sp.GetRequiredService<ReloadableLogger>());
             _services.AddSingleton<GlobalState>();
             _services.AddSingleton<IStateWriter, RealTimeStateWriter>();
             _services.AddSingleton<IBackupJobRepository, JsonBackupJobRepository>();
@@ -95,56 +95,6 @@ namespace EasySave.AppCommon
 
             // Run host
             host.Run(serviceProvider, _args);
-        }
-
-        /// <summary>
-        /// Creates the application logger based on user preferences.
-        /// </summary>
-        /// <param name="pathProvider">Application path provider.</param>
-        /// <returns>
-        /// A configured logger instance, or a no-op logger if initialization fails.
-        /// </returns>
-        private static ILogger CreateLogger(IPathProvider pathProvider)
-        {
-            try
-            {
-                // Load user preferences to get log format
-                var preferencesRepository = new JsonUserPreferencesRepository(pathProvider);
-                var userPreferences = preferencesRepository.Load();
-
-                // Select formatter based on user preference
-                EasyLog.ILogFormatter formatter;
-
-                if (userPreferences.LogFormat == LogFormat.Xml)
-                {
-                    formatter = new EasyLog.XmlLogFormatter();
-                }
-                else
-                {
-                    formatter = new EasyLog.JsonLogFormatter();
-                }
-
-                var logger = new EasyLog.DailyFileLogger(
-                    formatter,
-                    pathProvider,
-                    EasyLogDailyFileMutexName,
-                    userPreferences.LogFormat);
-
-                return logger;
-            }
-            catch (Exception ex)
-            {
-                try
-                {
-                    Console.Error.WriteLine($"EasyLog initialization failed: {ex}");
-                }
-                catch
-                {
-                    // Best-effort logging only.
-                }
-
-                return new NoOpLogger();
-            }
         }
     }
 }
