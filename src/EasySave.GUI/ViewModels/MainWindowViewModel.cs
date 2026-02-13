@@ -9,6 +9,13 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase currentPage;
 
+    [ObservableProperty]
+    private bool useGlobalScroll;
+
+    public ViewModelBase? ScrollablePage => UseGlobalScroll ? CurrentPage : null;
+
+    public ViewModelBase? FixedPage => UseGlobalScroll ? null : CurrentPage;
+
     private readonly HomeViewModel _homeViewModel;
     private readonly CreateViewModel _createViewModel;
     private readonly ManageViewModel _manageViewModel;
@@ -56,5 +63,30 @@ public partial class MainWindowViewModel : ViewModelBase
             "conf" => _configViewModel,
             _ => CurrentPage
         };
+    }
+
+    partial void OnCurrentPageChanged(ViewModelBase value)
+    {
+        // Keep global scroll only on long form pages.
+        // Other pages keep their own centered layout without a scroll container.
+        var shouldUseGlobalScroll = value is CreateViewModel or ConfigViewModel;
+        if (UseGlobalScroll != shouldUseGlobalScroll)
+        {
+            UseGlobalScroll = shouldUseGlobalScroll;
+            return;
+        }
+
+        NotifyPageTargetsChanged();
+    }
+
+    partial void OnUseGlobalScrollChanged(bool value)
+    {
+        NotifyPageTargetsChanged();
+    }
+
+    private void NotifyPageTargetsChanged()
+    {
+        OnPropertyChanged(nameof(ScrollablePage));
+        OnPropertyChanged(nameof(FixedPage));
     }
 }

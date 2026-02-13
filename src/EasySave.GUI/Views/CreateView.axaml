@@ -66,8 +66,7 @@
         </Style>
     </UserControl.Styles>
 
-    <ScrollViewer Padding="24">
-        <StackPanel Spacing="20" MaxWidth="600">
+    <StackPanel Spacing="20" MaxWidth="600" Margin="24">
 
             <!-- HEADER -->
             <StackPanel Spacing="4" Margin="0,0,0,4">
@@ -192,6 +191,5 @@
                         Command="{Binding CreateJobCommand}"/>
             </StackPanel>
 
-        </StackPanel>
-    </ScrollViewer>
+    </StackPanel>
 </UserControl>
