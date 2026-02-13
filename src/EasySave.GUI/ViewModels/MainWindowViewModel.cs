@@ -10,7 +10,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private ViewModelBase currentPage;
 
     [ObservableProperty]
-    private bool useGlobalScroll = true;
+    private string pageVerticalScrollBarVisibility = "Auto";
 
     private readonly HomeViewModel _homeViewModel;
     private readonly CreateViewModel _createViewModel;
@@ -63,8 +63,9 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnCurrentPageChanged(ViewModelBase value)
     {
-        // Manage view already owns scrollable regions (table + editor),
-        // so disable the outer scroll there to avoid nested scroll conflicts.
-        UseGlobalScroll = value is not ManageViewModel;
+        // Only ManageViewModel owns internal scroll regions (jobs list + editor modal),
+        // so we disable outer scrolling there to avoid nested-scroll conflicts.
+        // Other pages currently rely on the global page scroll.
+        PageVerticalScrollBarVisibility = value is ManageViewModel ? "Disabled" : "Auto";
     }
 }

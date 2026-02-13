@@ -15,19 +15,12 @@
                            DataContext="{Binding Sidebar}"/>
         <ScrollViewer Grid.Column="1"
                       MinHeight="0"
-                      IsVisible="{Binding UseGlobalScroll}"
-                      VerticalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="{Binding PageVerticalScrollBarVisibility}"
                       HorizontalScrollBarVisibility="Disabled">
             <ContentControl MinHeight="0"
                             HorizontalContentAlignment="Stretch"
                             VerticalContentAlignment="Top"
                             Content="{Binding CurrentPage}"/>
         </ScrollViewer>
-        <ContentControl Grid.Column="1"
-                        MinHeight="0"
-                        IsVisible="{Binding !UseGlobalScroll}"
-                        HorizontalContentAlignment="Stretch"
-                        VerticalContentAlignment="Top"
-                        Content="{Binding CurrentPage}"/>
     </Grid>
 </Window>
