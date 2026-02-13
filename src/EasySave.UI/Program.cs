@@ -64,14 +64,15 @@ public class Program
         services.AddSingleton<IFileSystem, DefaultFileSystem>();
         services.AddSingleton<ITransferService, DefaultTransferService>();
         services.AddSingleton<IBackupEngine, BackupEngine>();
-        services.AddSingleton<UserPreferences>();
+        services.AddSingleton<UserPreferences>(sp =>
+            sp.GetRequiredService<IUserPreferencesRepository>().Load());
 
         // Setup UI services
         services.AddSingleton<CommandLineParser>();
         services.AddSingleton<IConsoleAdapter, SystemConsoleAdapter>();
         services.AddSingleton<IMenuFactory, MenuFactory>();
         services.AddSingleton<IMenuService, MenuService>();
-        services.AddSingleton<IConsoleMessageService,  ConsoleMessageService>();
+        services.AddSingleton<IConsoleMessageService, ConsoleMessageService>();
         services.AddSingleton<IConsoleInputService, ConsoleInputService>();
         services.AddSingleton<JobsFlowService>();
         services.AddSingleton<SettingsFlowService>();

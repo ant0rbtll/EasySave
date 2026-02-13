@@ -64,6 +64,7 @@ public class ConsoleUI
         _inputService = inputService;
         _jobsFlowService = jobsFlowService;
         _settingsFlowService = settingsFlowService;
+        _settingsFlowService.InitializeCulture();
     }
 
     /// <summary>
