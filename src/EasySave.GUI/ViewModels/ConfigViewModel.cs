@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using EasySave.Configuration;
 using EasySave.Core;
 using EasySave.Localization;
+using EasySave.Log;
 using EasySave.Persistence;
 using static EasySave.GUI.Helpers.PathValidation;
 
@@ -14,6 +15,7 @@ public partial class ConfigViewModel : ViewModelBase
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly ILocalizationService _localizationService;
     private readonly IPathProvider _pathProvider;
+    private readonly ILoggerRuntimeReloader _loggerRuntimeReloader;
     private static readonly char[] ExtensionSeparators = [',', ' '];
     private static readonly char[] BusinessSoftwareSeparators = [',', ';'];
     private Action _onLanguageChanged = static() => {};
@@ -68,12 +70,14 @@ public partial class ConfigViewModel : ViewModelBase
     public ConfigViewModel(
         IUserPreferencesRepository preferencesRepository,
         ILocalizationService localizationService,
-        IPathProvider pathProvider
+        IPathProvider pathProvider,
+        ILoggerRuntimeReloader loggerRuntimeReloader
         )
     {
         _preferencesRepository = preferencesRepository;
         _localizationService = localizationService;
         _pathProvider = pathProvider;
+        _loggerRuntimeReloader = loggerRuntimeReloader;
 
         var preferences = preferencesRepository.Load();
         selectedLanguage = NormalizeLanguage(preferences.Language);
@@ -144,7 +148,7 @@ public partial class ConfigViewModel : ViewModelBase
         ValidatePath();
     }
 
-    partial void OnSelectedLogFormatChanged(LogFormat value)
+    partial void OnSelectedLogFormatChanged(LogFormat _)
     {
         OnPropertyChanged(nameof(IsJsonLogFormatSelected));
         OnPropertyChanged(nameof(IsXmlLogFormatSelected));
@@ -179,12 +183,14 @@ public partial class ConfigViewModel : ViewModelBase
 
         _localizationService.Culture = language;
         _pathProvider.SetLogDirectoryOverride(preferences.LogDirectory);
+        if (logFormatChanged)
+        {
+            _loggerRuntimeReloader.Reload();
+        }
 
         _onLanguageChanged();
 
-        StatusMessage = logFormatChanged
-            ? $"{_localizationService.TranslateText(LocalizationKey.gui_config_saved)} {_localizationService.TranslateText(LocalizationKey.log_format_restart_required)}"
-            : _localizationService.TranslateText(LocalizationKey.gui_config_saved);
+        StatusMessage = _localizationService.TranslateText(LocalizationKey.gui_config_saved);
     }
 
     private bool CanSave() => PathError is null;
