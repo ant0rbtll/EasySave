@@ -9,6 +9,9 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private ViewModelBase currentPage;
 
+    [ObservableProperty]
+    private bool useGlobalScroll = true;
+
     private readonly HomeViewModel _homeViewModel;
     private readonly CreateViewModel _createViewModel;
     private readonly ManageViewModel _manageViewModel;
@@ -56,5 +59,12 @@ public partial class MainWindowViewModel : ViewModelBase
             "conf" => _configViewModel,
             _ => CurrentPage
         };
+    }
+
+    partial void OnCurrentPageChanged(ViewModelBase value)
+    {
+        // Manage view already owns scrollable regions (table + editor),
+        // so disable the outer scroll there to avoid nested scroll conflicts.
+        UseGlobalScroll = value is not ManageViewModel;
     }
 }
