@@ -69,7 +69,13 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         // Keep global scroll only on long form pages.
         // Other pages keep their own centered layout without a scroll container.
-        UseGlobalScroll = value is CreateViewModel or ConfigViewModel;
+        var shouldUseGlobalScroll = value is CreateViewModel or ConfigViewModel;
+        if (UseGlobalScroll != shouldUseGlobalScroll)
+        {
+            UseGlobalScroll = shouldUseGlobalScroll;
+            return;
+        }
+
         NotifyPageTargetsChanged();
     }
 
