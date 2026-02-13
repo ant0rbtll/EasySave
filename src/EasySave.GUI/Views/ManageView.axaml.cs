@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Platform.Storage;
 using EasySave.GUI.ViewModels;
 
 namespace EasySave.GUI.Views;
@@ -15,11 +16,17 @@ public partial class ManageView : UserControl
         if (DataContext is not ManageViewModel mvm || mvm.EditingJob is not { } vm)
             return;
 
-        var dialog = new OpenFolderDialog { Title = vm.BrowseSourceTitle };
-        var result = await dialog.ShowAsync((Window)this.VisualRoot!);
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return;
 
-        if (!string.IsNullOrWhiteSpace(result))
-            vm.SetSourcePathFromDialog(result);
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = vm.BrowseSourceTitle,
+            AllowMultiple = false
+        });
+
+        if (folders.Count > 0)
+            vm.SetSourcePathFromDialog(folders[0].Path.LocalPath);
     }
 
     private async void EditBrowseDestination_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -27,11 +34,17 @@ public partial class ManageView : UserControl
         if (DataContext is not ManageViewModel mvm || mvm.EditingJob is not { } vm)
             return;
 
-        var dialog = new OpenFolderDialog { Title = vm.BrowseDestinationTitle };
-        var result = await dialog.ShowAsync((Window)this.VisualRoot!);
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return;
 
-        if (!string.IsNullOrWhiteSpace(result))
-            vm.SetDestinationPathFromDialog(result);
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = vm.BrowseDestinationTitle,
+            AllowMultiple = false
+        });
+
+        if (folders.Count > 0)
+            vm.SetDestinationPathFromDialog(folders[0].Path.LocalPath);
     }
 
     private void EditName_LostFocus(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
