@@ -321,12 +321,41 @@
             </TextBox>
         </Grid>
 
+        <!-- Empty state -->
+        <Border Grid.Row="3"
+                BorderBrush="#22FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8"
+                IsVisible="{Binding !HasJobs}">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="12"
+                        Margin="0,80">
+                <PathIcon Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"
+                          Foreground="#555"
+                          Width="48" Height="48"/>
+                <TextBlock Text="{Binding EmptyTitleText}"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Foreground="#AAAAAA"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding EmptySubtitleText}"
+                           FontSize="13"
+                           Foreground="#777777"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           MaxWidth="400"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
         <!-- Column headers + list -->
         <Border Grid.Row="3"
                 BorderBrush="#22FFFFFF"
                 BorderThickness="1"
                 CornerRadius="8"
-                ClipToBounds="True">
+                ClipToBounds="True"
+                IsVisible="{Binding HasJobs}">
             <Grid RowDefinitions="Auto,*,Auto">
 
                 <!-- Column headers -->
@@ -499,7 +528,7 @@
                                     VerticalAlignment="Center">
                             <Button Classes="page-nav-btn"
                                     Command="{Binding PreviousPageCommand}">
-                                <TextBlock Text="◀" FontSize="12"/>
+                                <TextBlock Text="&#9664;" FontSize="12"/>
                             </Button>
 
                             <ItemsControl ItemsSource="{Binding PaginationItems}">
@@ -529,7 +558,7 @@
 
                             <Button Classes="page-nav-btn"
                                     Command="{Binding NextPageCommand}">
-                                <TextBlock Text="▶" FontSize="12"/>
+                                <TextBlock Text="&#9654;" FontSize="12"/>
                             </Button>
                         </StackPanel>
 
@@ -555,7 +584,7 @@
 
                             <Button Classes="page-go-btn"
                                     Command="{Binding JumpToEnteredPageCommand}">
-                                <TextBlock Text="↵" FontSize="13"/>
+                                <TextBlock Text="&#8629;" FontSize="13"/>
                             </Button>
 
                             <TextBlock Text="|"
