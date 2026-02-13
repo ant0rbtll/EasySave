@@ -169,3 +169,7 @@ translations:
   gui_manage_confirm_delete_selected_message: "Voulez-vous supprimer les {0} jobs sélectionnés ?"
   gui_manage_empty_title: "Aucun travail de sauvegarde"
   gui_manage_empty_subtitle: "Vous n'avez pas encore créé de travail de sauvegarde. Utilisez le bouton Créer en haut à gauche pour en ajouter un."
+  gui_window_minimize: "Réduire"
+  gui_window_maximize: "Agrandir"
+  gui_window_restore: "Restaurer"
+  gui_window_close: "Fermer"

@@ -183,5 +183,11 @@ public enum LocalizationKey
 
     // Manage - Empty state
     gui_manage_empty_title,
-    gui_manage_empty_subtitle
+    gui_manage_empty_subtitle,
+
+    // Window controls
+    gui_window_minimize,
+    gui_window_maximize,
+    gui_window_restore,
+    gui_window_close
 }

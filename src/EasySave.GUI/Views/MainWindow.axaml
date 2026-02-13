@@ -11,25 +11,86 @@
         Title="EasySave"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="PreferSystemChrome"
-        ExtendClientAreaTitleBarHeightHint="32">
-    <Grid RowDefinitions="32,*" MinHeight="0">
-        <Grid Grid.Row="0"
-              Background="#1E1E2E"
-              IsHitTestVisible="False">
-            <StackPanel x:Name="TitleBarBrand"
+        ExtendClientAreaTitleBarHeightHint="40">
+
+    <Window.Styles>
+        <Style Selector="Button.window-control">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="46"/>
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="CornerRadius" Value="0"/>
+        </Style>
+        <Style Selector="Button.window-control:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+        </Style>
+        <Style Selector="Button.window-control:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#55FFFFFF"/>
+        </Style>
+        <Style Selector="Button.window-close:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#E81123"/>
+        </Style>
+        <Style Selector="Button.window-close:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#F1707A"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid x:Name="MainLayoutGrid" RowDefinitions="40,*">
+        <!-- Barre de titre custom -->
+        <Grid x:Name="TitleBarGrid" Grid.Row="0"
+              ColumnDefinitions="Auto,Auto,*,Auto"
+              Background="#1E1E2E">
+
+            <!-- Icone + Titre de l'app -->
+            <StackPanel x:Name="TitleBarBrand" Grid.Column="0" Grid.ColumnSpan="2"
                         Orientation="Horizontal"
                         Spacing="8"
                         VerticalAlignment="Center"
-                        Margin="12,0,0,0">
+                        Margin="12,0,0,0"
+                        IsHitTestVisible="False">
                 <Image x:Name="TitleBarLogo"
                        Source="/Assets/easysave-icon.png"
-                       Width="20"
-                       Height="20"/>
+                       Width="20" Height="20"/>
                 <TextBlock Text="EasySave"
-                           Foreground="White"
-                           FontWeight="SemiBold"
-                           FontSize="14"
+                           Foreground="White" FontWeight="SemiBold" FontSize="14"
                            VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <!-- Spacer (zone de drag) -->
+            <Border Grid.Column="2" Background="Transparent"
+                    IsHitTestVisible="False"/>
+
+            <!-- Boutons de fenêtre Linux (cachés par défaut) -->
+            <StackPanel x:Name="LinuxWindowButtons" Grid.Column="3"
+                        Orientation="Horizontal"
+                        IsVisible="False"
+                        VerticalAlignment="Stretch">
+                <Button Classes="window-control"
+                        x:Name="MinimizeButton"
+                        ToolTip.Tip="{Binding TooltipMinimize}">
+                    <PathIcon Data="M20 14H4v-2h16"
+                              Width="10" Height="10"
+                              Foreground="White"/>
+                </Button>
+                <Button Classes="window-control"
+                        x:Name="MaximizeButton"
+                        ToolTip.Tip="{Binding TooltipMaximize}">
+                    <PathIcon x:Name="MaximizeIcon"
+                              Data="M4 4h16v16H4V4m2 2v12h12V6H6z"
+                              Width="10" Height="10"
+                              Foreground="White"/>
+                </Button>
+                <Button Classes="window-control window-close"
+                        x:Name="CloseButton"
+                        ToolTip.Tip="{Binding TooltipClose}">
+                    <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+                              Width="10" Height="10"
+                              Foreground="White"/>
+                </Button>
             </StackPanel>
         </Grid>
 
