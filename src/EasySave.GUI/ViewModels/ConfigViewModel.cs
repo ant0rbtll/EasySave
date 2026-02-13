@@ -148,7 +148,7 @@ public partial class ConfigViewModel : ViewModelBase
         ValidatePath();
     }
 
-    partial void OnSelectedLogFormatChanged(LogFormat _)
+    partial void OnSelectedLogFormatChanged(LogFormat value)
     {
         OnPropertyChanged(nameof(IsJsonLogFormatSelected));
         OnPropertyChanged(nameof(IsXmlLogFormatSelected));

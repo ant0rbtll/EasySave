@@ -1,5 +1,5 @@
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+using Avalonia.Platform.Storage;
 using EasySave.GUI.ViewModels;
 
 namespace EasySave.GUI.Views;
@@ -16,16 +16,18 @@ public partial class CreateView : UserControl
         if (DataContext is not CreateViewModel vm)
             return;
 
-        var dialog = new OpenFolderDialog
-        {
-            Title = vm.BrowseSourceTitle
-        };
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return;
 
-        var result = await dialog.ShowAsync((Window)this.VisualRoot!);
-
-        if (!string.IsNullOrWhiteSpace(result))
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            vm.SetSourcePathFromDialog(result);
+            Title = vm.BrowseSourceTitle,
+            AllowMultiple = false
+        });
+
+        if (folders.Count > 0)
+        {
+            vm.SetSourcePathFromDialog(folders[0].Path.LocalPath);
         }
     }
 
@@ -34,16 +36,18 @@ public partial class CreateView : UserControl
         if (DataContext is not CreateViewModel vm)
             return;
 
-        var dialog = new OpenFolderDialog
-        {
-            Title = vm.BrowseDestinationTitle
-        };
+        var topLevel = TopLevel.GetTopLevel(this);
+        if (topLevel is null) return;
 
-        var result = await dialog.ShowAsync((Window)this.VisualRoot!);
-
-        if (!string.IsNullOrWhiteSpace(result))
+        var folders = await topLevel.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            vm.SetDestinationPathFromDialog(result);
+            Title = vm.BrowseDestinationTitle,
+            AllowMultiple = false
+        });
+
+        if (folders.Count > 0)
+        {
+            vm.SetDestinationPathFromDialog(folders[0].Path.LocalPath);
         }
     }
 
