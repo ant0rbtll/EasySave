@@ -11,7 +11,10 @@ public partial class MainWindow : Window
 
         if (OperatingSystem.IsMacOS())
         {
-            TitleBarBrand.Margin = new Thickness(70, -2, 0, 0);
+            TitleBarLogo.IsVisible = false;
+            TitleBarBrand.Spacing = 0;
+            TitleBarBrand.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
+            TitleBarBrand.Margin = new Thickness(0, -2, 0, 0);
         }
     }
 }

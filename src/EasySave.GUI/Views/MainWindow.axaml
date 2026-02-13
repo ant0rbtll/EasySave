@@ -21,7 +21,8 @@
                         Spacing="8"
                         VerticalAlignment="Center"
                         Margin="12,0,0,0">
-                <Image Source="/Assets/easysave-icon.png"
+                <Image x:Name="TitleBarLogo"
+                       Source="/Assets/easysave-icon.png"
                        Width="20"
                        Height="20"/>
                 <TextBlock Text="EasySave"
