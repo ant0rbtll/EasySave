@@ -169,6 +169,7 @@ translations:
   gui_log_detail_subtitle: "Details of operations performed"
   gui_log_search_log_watermark: "Search by a name"
   gui_log_col_time: "Time"
+  gui_log_col_backup_state: "Backup state"
   gui_log_col_status: "Event type"
   gui_log_col_size: "Size"
   gui_log_col_duration: "Duration"

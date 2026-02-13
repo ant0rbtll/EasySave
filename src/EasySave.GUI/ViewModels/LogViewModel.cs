@@ -12,58 +12,71 @@ using System.Linq;
 namespace EasySave.GUI.ViewModels;
 
 /// <summary>
-/// ViewModel for the Log view, handling date selection, backup job grouping, run selection and detailed log display.
+/// Single-page log navigation view model: calendar, job accordion and run details drawer.
 /// </summary>
 public partial class LogViewModel : ViewModelBase
 {
     private readonly ILogQueryService _logQueryService;
     private readonly ILogNavigationService _logNavigationService;
     private readonly ILocalizationService _localizationService;
-    private readonly List<string> _allAvailableDates = new();
-    private readonly List<LogJobSummaryModel> _allBackupJobs = new();
-    private readonly List<LogRunSummaryModel> _allRuns = new();
-    private readonly List<LogDisplayModel> _allLogEntries = new();
-    private Action _onLanguageChanged = static () => { };
-    private bool _hasAppliedDefaultDateSelection;
 
-    public ObservableCollection<string> AvailableDates { get; } = new();
-    public ObservableCollection<LogJobSummaryModel> BackupJobs { get; } = new();
-    public ObservableCollection<LogRunSummaryModel> Runs { get; } = new();
-    public ObservableCollection<LogDisplayModel> LogEntries { get; } = new();
-    public ObservableCollection<PaginationItem> PaginationItems { get; } = new();
+    private readonly List<DateOnly> _allAvailableDates = [];
+    private readonly HashSet<DateOnly> _availableDateLookup = [];
+    private readonly List<LogJobSummaryModel> _allBackupJobs = [];
+    private readonly List<LogDisplayModel> _allLogEntries = [];
+
+    private DateOnly? _selectedDateValue;
+    private DateOnly _calendarMonth;
+    private string _selectedRunId = string.Empty;
+
+    public ObservableCollection<LogCalendarDayModel> CalendarDays { get; } = [];
+    public ObservableCollection<LogJobSummaryModel> BackupJobs { get; } = [];
+    public ObservableCollection<LogDisplayModel> LogEntries { get; } = [];
+    public ObservableCollection<PaginationItem> PaginationItems { get; } = [];
 
     public IReadOnlyList<int> PageSizeOptions { get; } = [15, 25, 50];
 
     [ObservableProperty] private string _searchText = string.Empty;
-    [ObservableProperty] private string _searchTextDate = string.Empty;
-    [ObservableProperty] private string? _selectedDate;
+    [ObservableProperty] private string _selectedDate = string.Empty;
+    [ObservableProperty] private string _calendarMonthTitle = string.Empty;
+
+    [ObservableProperty] private string _historyTitle = string.Empty;
+    [ObservableProperty] private string _historySubtitle = string.Empty;
+    [ObservableProperty] private string _searchLogWatermark = string.Empty;
+    [ObservableProperty] private string _logDetailSubtitle = string.Empty;
+
+    [ObservableProperty] private string _colTime = string.Empty;
+    [ObservableProperty] private string _colBackupState = string.Empty;
+    [ObservableProperty] private string _colStatus = string.Empty;
+    [ObservableProperty] private string _colSource = string.Empty;
+    [ObservableProperty] private string _colDest = string.Empty;
+    [ObservableProperty] private string _colSize = string.Empty;
+    [ObservableProperty] private string _colDuration = string.Empty;
+    [ObservableProperty] private string _colEncryption = string.Empty;
+    [ObservableProperty] private string _colStart = string.Empty;
+    [ObservableProperty] private string _colEnd = string.Empty;
+    [ObservableProperty] private string _colTotalDuration = string.Empty;
+    [ObservableProperty] private string _colTotalSize = string.Empty;
+    [ObservableProperty] private string _colFormat = string.Empty;
+    [ObservableProperty] private string _colRuns = string.Empty;
+
+    [ObservableProperty] private string _statusInProgress = string.Empty;
+    [ObservableProperty] private string _statusCompleted = string.Empty;
+    [ObservableProperty] private string _statusError = string.Empty;
+
+    [ObservableProperty] private string _selectedBackupName = string.Empty;
+    [ObservableProperty] private string _selectedRunTitle = string.Empty;
+    [ObservableProperty] private string _selectedRunFormat = string.Empty;
+    [ObservableProperty] private string _selectedRunStatus = string.Empty;
+    [ObservableProperty] private string _selectedRunStatusTone = "inprogress";
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsJobListVisible))]
-    [NotifyPropertyChangedFor(nameof(IsRunListVisible))]
-    [NotifyPropertyChangedFor(nameof(IsRunEntriesVisible))]
-    [NotifyPropertyChangedFor(nameof(IsPaginationVisible))]
-    private bool _isDateSelected;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsJobListVisible))]
-    [NotifyPropertyChangedFor(nameof(IsRunListVisible))]
-    [NotifyPropertyChangedFor(nameof(IsRunEntriesVisible))]
-    [NotifyPropertyChangedFor(nameof(IsPaginationVisible))]
-    private bool _isBackupJobSelected;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsJobListVisible))]
-    [NotifyPropertyChangedFor(nameof(IsRunListVisible))]
-    [NotifyPropertyChangedFor(nameof(IsRunEntriesVisible))]
+    [NotifyPropertyChangedFor(nameof(IsRunDrawerVisible))]
     [NotifyPropertyChangedFor(nameof(IsPaginationVisible))]
     [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
     [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
     private bool _isRunSelected;
 
-    [ObservableProperty] private int _selectedBackupId;
-    [ObservableProperty] private string _selectedBackupName = string.Empty;
-    [ObservableProperty] private string _selectedRunTitle = string.Empty;
     [ObservableProperty] private string _pageInputText = string.Empty;
 
     [ObservableProperty]
@@ -90,47 +103,13 @@ public partial class LogViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
     private int _selectedPageSize = 25;
 
-    [ObservableProperty] private string _historyTitle = string.Empty;
-    [ObservableProperty] private string _historySubtitle = string.Empty;
-    [ObservableProperty] private string _searchDateWatermark = string.Empty;
-    [ObservableProperty] private string _logDetailSubtitle = string.Empty;
-    [ObservableProperty] private string _searchLogWatermark = string.Empty;
-
-    [ObservableProperty] private string _colTime = string.Empty;
-    [ObservableProperty] private string _colName = string.Empty;
-    [ObservableProperty] private string _colStatus = string.Empty;
-    [ObservableProperty] private string _colSource = string.Empty;
-    [ObservableProperty] private string _colDest = string.Empty;
-    [ObservableProperty] private string _colSize = string.Empty;
-    [ObservableProperty] private string _colDuration = string.Empty;
-    [ObservableProperty] private string _colEncryption = string.Empty;
-
-    [ObservableProperty] private string _colBackupId = string.Empty;
-    [ObservableProperty] private string _colRuns = string.Empty;
-    [ObservableProperty] private string _colStart = string.Empty;
-    [ObservableProperty] private string _colEnd = string.Empty;
-    [ObservableProperty] private string _colTotalDuration = string.Empty;
-    [ObservableProperty] private string _colTotalSize = string.Empty;
-    [ObservableProperty] private string _colFormat = string.Empty;
-    [ObservableProperty] private string _statusInProgress = string.Empty;
-    [ObservableProperty] private string _statusCompleted = string.Empty;
-    [ObservableProperty] private string _statusError = string.Empty;
-
     public int PageSize => Math.Max(1, SelectedPageSize);
     public int TotalPages => FilteredLogsCount == 0 ? 1 : (int)Math.Ceiling((double)FilteredLogsCount / PageSize);
     public string PageDisplay => $"{CurrentPage}/{TotalPages}";
     public string PageJumpWatermark => $"1-{TotalPages}";
-    public bool IsJobListVisible => IsDateSelected && !IsBackupJobSelected;
-    public bool IsRunListVisible => IsDateSelected && IsBackupJobSelected && !IsRunSelected;
-    public bool IsRunEntriesVisible => IsDateSelected && IsRunSelected;
-    public bool IsPaginationVisible => IsRunEntriesVisible && TotalPages > 1;
+    public bool IsRunDrawerVisible => IsRunSelected;
+    public bool IsPaginationVisible => IsRunDrawerVisible && TotalPages > 1;
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="LogViewModel"/> class.
-    /// </summary>
-    /// <param name="logQueryService">Service to query log files by date.</param>
-    /// <param name="logNavigationService">Service to navigate logs by job and run.</param>
-    /// <param name="localizationService">Service for text localization.</param>
     public LogViewModel(
         ILogQueryService logQueryService,
         ILogNavigationService logNavigationService,
@@ -140,21 +119,13 @@ public partial class LogViewModel : ViewModelBase
         _logNavigationService = logNavigationService;
         _localizationService = localizationService;
 
+        _calendarMonth = DateOnly.FromDateTime(DateTime.Today).AddDays(1 - DateTime.Today.Day);
+
         RefreshTranslations();
         LoadDates();
     }
 
-    partial void OnSearchTextChanged(string value)
-    {
-        if (IsRunEntriesVisible)
-        {
-            CurrentPage = 1;
-        }
-
-        Refresh();
-    }
-
-    partial void OnSearchTextDateChanged(string value) => Refresh();
+    partial void OnSearchTextChanged(string value) => RefreshJobs();
 
     partial void OnSelectedPageSizeChanged(int value)
     {
@@ -165,133 +136,150 @@ public partial class LogViewModel : ViewModelBase
         }
 
         CurrentPage = 1;
-        Refresh();
+        RefreshRunEntries();
+    }
+
+    partial void OnIsRunSelectedChanged(bool value)
+    {
+        if (!value)
+        {
+            CurrentPage = 1;
+            PageInputText = string.Empty;
+            _selectedRunId = string.Empty;
+            _allLogEntries.Clear();
+            LogEntries.Clear();
+            FilteredLogsCount = 0;
+            PaginationItems.Clear();
+            SelectedBackupName = string.Empty;
+            SelectedRunTitle = string.Empty;
+            SelectedRunFormat = string.Empty;
+            SelectedRunStatus = string.Empty;
+            SelectedRunStatusTone = "inprogress";
+        }
+
+        UpdateDetailSubtitle();
+        PreviousPageCommand.NotifyCanExecuteChanged();
+        NextPageCommand.NotifyCanExecuteChanged();
     }
 
     public void RefreshTranslations()
     {
         HistoryTitle = _localizationService.TranslateText(LocalizationKey.gui_sidebar_log);
         HistorySubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_history_subtitle);
-        SearchDateWatermark = _localizationService.TranslateText(LocalizationKey.gui_log_search_date_watermark);
         SearchLogWatermark = _localizationService.TranslateText(LocalizationKey.gui_log_search_log_watermark);
 
         ColTime = _localizationService.TranslateText(LocalizationKey.gui_log_col_time);
-        ColName = _localizationService.TranslateText(LocalizationKey.backupjob_name);
+        ColBackupState = _localizationService.TranslateText(LocalizationKey.gui_log_col_backup_state);
         ColStatus = _localizationService.TranslateText(LocalizationKey.gui_log_col_status);
         ColSource = _localizationService.TranslateText(LocalizationKey.backupjob_source);
         ColDest = _localizationService.TranslateText(LocalizationKey.backupjob_destination);
         ColSize = _localizationService.TranslateText(LocalizationKey.gui_log_col_size);
         ColDuration = _localizationService.TranslateText(LocalizationKey.gui_log_col_duration);
         ColEncryption = _localizationService.TranslateText(LocalizationKey.gui_log_col_encryption);
-
-        ColBackupId = _localizationService.TranslateText(LocalizationKey.backupjob_id);
-        ColRuns = _localizationService.TranslateText(LocalizationKey.gui_log_col_runs);
         ColStart = _localizationService.TranslateText(LocalizationKey.gui_log_col_start);
         ColEnd = _localizationService.TranslateText(LocalizationKey.gui_log_col_end);
         ColTotalDuration = _localizationService.TranslateText(LocalizationKey.gui_log_col_total_duration);
         ColTotalSize = _localizationService.TranslateText(LocalizationKey.gui_log_col_total_size);
         ColFormat = _localizationService.TranslateText(LocalizationKey.gui_log_col_format);
+        ColRuns = _localizationService.TranslateText(LocalizationKey.gui_log_col_runs);
 
         StatusInProgress = _localizationService.TranslateText(LocalizationKey.gui_log_status_in_progress);
         StatusCompleted = _localizationService.TranslateText(LocalizationKey.gui_log_status_completed);
         StatusError = _localizationService.TranslateText(LocalizationKey.gui_log_status_error);
 
+        UpdateCalendarMonthTitle();
         UpdateDetailSubtitle();
+
+        if (_selectedDateValue.HasValue)
+        {
+            LoadBackupJobsForDate(_selectedDateValue.Value);
+        }
     }
 
     [RelayCommand]
-    private void SelectDate(string date)
+    private void LoadDates()
     {
-        CurrentPage = 1;
-        PageInputText = string.Empty;
-        SearchText = string.Empty;
+        _allAvailableDates.Clear();
+        _availableDateLookup.Clear();
 
-        SelectedDate = date;
-        IsDateSelected = true;
-        IsBackupJobSelected = false;
-        IsRunSelected = false;
-        SelectedBackupId = 0;
-        SelectedBackupName = string.Empty;
-        SelectedRunTitle = string.Empty;
+        foreach (var date in _logQueryService.GetAvailableDates())
+        {
+            _allAvailableDates.Add(date);
+            _availableDateLookup.Add(date);
+        }
 
-        LoadBackupJobsForDate(date);
+        var targetDate = _selectedDateValue;
+        if (!targetDate.HasValue || !_availableDateLookup.Contains(targetDate.Value))
+        {
+            targetDate = _allAvailableDates.FirstOrDefault();
+        }
+
+        if (!targetDate.HasValue || targetDate.Value == default)
+        {
+            _selectedDateValue = null;
+            SelectedDate = string.Empty;
+            _allBackupJobs.Clear();
+            BackupJobs.Clear();
+            IsRunSelected = false;
+            BuildCalendarDays();
+            UpdateDetailSubtitle();
+            return;
+        }
+
+        SelectDateInternal(targetDate.Value, true);
     }
 
     [RelayCommand]
-    private void SelectBackupJob(LogJobSummaryModel job)
+    private void PreviousMonth()
     {
-        if (job is null || string.IsNullOrWhiteSpace(SelectedDate))
+        _calendarMonth = _calendarMonth.AddMonths(-1);
+        BuildCalendarDays();
+    }
+
+    [RelayCommand]
+    private void NextMonth()
+    {
+        _calendarMonth = _calendarMonth.AddMonths(1);
+        BuildCalendarDays();
+    }
+
+    [RelayCommand]
+    private void SelectCalendarDay(LogCalendarDayModel? day)
+    {
+        if (day is null || !day.HasLogs)
         {
             return;
         }
 
-        CurrentPage = 1;
-        PageInputText = string.Empty;
-        SearchText = string.Empty;
-
-        SelectedBackupId = job.BackupId;
-        SelectedBackupName = job.BackupName;
-        IsBackupJobSelected = true;
-        IsRunSelected = false;
-        SelectedRunTitle = string.Empty;
-
-        LoadRunsForBackup(SelectedDate, job.BackupId);
+        SelectDateInternal(day.Date, true);
     }
 
     [RelayCommand]
-    private void SelectRun(LogRunSummaryModel run)
+    private void SelectRun(LogRunSummaryModel? run)
     {
-        if (run is null || string.IsNullOrWhiteSpace(SelectedDate))
+        if (run is null || !_selectedDateValue.HasValue)
         {
             return;
         }
 
-        CurrentPage = 1;
-        PageInputText = string.Empty;
-        SearchText = string.Empty;
+        _selectedRunId = run.RunId;
+        SelectedBackupName = run.BackupName;
+        SelectedRunTitle = $"{run.StartTime} -> {run.EndTime}";
+        SelectedRunFormat = run.Format;
+        SelectedRunStatus = run.Status;
+        SelectedRunStatusTone = run.StatusTone;
 
         IsRunSelected = true;
-        SelectedRunTitle = $"{run.StartTime} -> {run.EndTime}";
+        CurrentPage = 1;
+        PageInputText = string.Empty;
 
-        LoadEntriesForRun(SelectedDate, run.RunId);
+        LoadEntriesForRun(_selectedDateValue.Value, run.RunId);
     }
 
     [RelayCommand]
-    private void GoBack()
+    private void CloseRunDetails()
     {
-        if (IsRunSelected)
-        {
-            IsRunSelected = false;
-            SelectedRunTitle = string.Empty;
-            SearchText = string.Empty;
-            CurrentPage = 1;
-            PageInputText = string.Empty;
-            _allLogEntries.Clear();
-            Refresh();
-            return;
-        }
-
-        if (IsBackupJobSelected)
-        {
-            IsBackupJobSelected = false;
-            SelectedBackupId = 0;
-            SelectedBackupName = string.Empty;
-            SearchText = string.Empty;
-            _allRuns.Clear();
-            _allLogEntries.Clear();
-            Refresh();
-            return;
-        }
-
-        IsDateSelected = false;
-        SelectedDate = null;
-        SearchText = string.Empty;
-        PageInputText = string.Empty;
-        CurrentPage = 1;
-        _allBackupJobs.Clear();
-        _allRuns.Clear();
-        _allLogEntries.Clear();
-        Refresh();
+        IsRunSelected = false;
     }
 
     [RelayCommand(CanExecute = nameof(CanGoToPreviousPage))]
@@ -303,10 +291,10 @@ public partial class LogViewModel : ViewModelBase
         }
 
         CurrentPage--;
-        Refresh();
+        RefreshRunEntries();
     }
 
-    private bool CanGoToPreviousPage() => IsRunEntriesVisible && CurrentPage > 1;
+    private bool CanGoToPreviousPage() => IsRunDrawerVisible && CurrentPage > 1;
 
     [RelayCommand(CanExecute = nameof(CanGoToNextPage))]
     private void NextPage()
@@ -317,27 +305,27 @@ public partial class LogViewModel : ViewModelBase
         }
 
         CurrentPage++;
-        Refresh();
+        RefreshRunEntries();
     }
 
-    private bool CanGoToNextPage() => IsRunEntriesVisible && CurrentPage < TotalPages;
+    private bool CanGoToNextPage() => IsRunDrawerVisible && CurrentPage < TotalPages;
 
     [RelayCommand]
     private void GoToPage(int pageNumber)
     {
-        if (!IsRunEntriesVisible || pageNumber < 1 || pageNumber > TotalPages || pageNumber == CurrentPage)
+        if (!IsRunDrawerVisible || pageNumber < 1 || pageNumber > TotalPages || pageNumber == CurrentPage)
         {
             return;
         }
 
         CurrentPage = pageNumber;
-        Refresh();
+        RefreshRunEntries();
     }
 
     [RelayCommand]
     private void JumpToEnteredPage()
     {
-        if (!IsRunEntriesVisible)
+        if (!IsRunDrawerVisible)
         {
             return;
         }
@@ -356,98 +344,109 @@ public partial class LogViewModel : ViewModelBase
         }
 
         CurrentPage = page;
-        Refresh();
-    }
-
-    [RelayCommand]
-    private void LoadDates()
-    {
-        _allAvailableDates.Clear();
-        var dates = _logQueryService.GetAvailableDates();
-
-        foreach (var date in dates)
-        {
-            _allAvailableDates.Add(date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-        }
-
-        if (!_hasAppliedDefaultDateSelection && _allAvailableDates.Count > 0)
-        {
-            _hasAppliedDefaultDateSelection = true;
-            SelectDate(_allAvailableDates[0]);
-            return;
-        }
-
-        Refresh();
+        RefreshRunEntries();
     }
 
     public void SetOnLanguageChanged(Action onLanguageChanged)
     {
-        _onLanguageChanged = onLanguageChanged;
+        _ = onLanguageChanged;
     }
 
-    private void LoadBackupJobsForDate(string date)
+    private void SelectDateInternal(DateOnly date, bool reloadJobs)
     {
+        _selectedDateValue = date;
+        SelectedDate = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        _calendarMonth = date.AddDays(1 - date.Day);
+
+        BuildCalendarDays();
+
+        if (reloadJobs)
+        {
+            LoadBackupJobsForDate(date);
+        }
+    }
+
+    private void BuildCalendarDays()
+    {
+        CalendarDays.Clear();
+        UpdateCalendarMonthTitle();
+
+        var firstDayOfMonth = _calendarMonth;
+        var dayOffset = ((int)firstDayOfMonth.DayOfWeek + 6) % 7;
+        var gridStart = firstDayOfMonth.AddDays(-dayOffset);
+
+        for (var i = 0; i < 42; i++)
+        {
+            var date = gridStart.AddDays(i);
+            CalendarDays.Add(new LogCalendarDayModel
+            {
+                Date = date,
+                DayText = date.Day.ToString(CultureInfo.InvariantCulture),
+                IsCurrentMonth = date.Month == firstDayOfMonth.Month && date.Year == firstDayOfMonth.Year,
+                HasLogs = _availableDateLookup.Contains(date),
+                IsSelected = _selectedDateValue.HasValue && date == _selectedDateValue.Value
+            });
+        }
+    }
+
+    private void UpdateCalendarMonthTitle()
+    {
+        CalendarMonthTitle = _calendarMonth.ToDateTime(TimeOnly.MinValue).ToString("MMMM yyyy", CultureInfo.CurrentCulture);
+    }
+
+    private void LoadBackupJobsForDate(DateOnly date)
+    {
+        var previouslySelectedRunId = _selectedRunId;
+
         _allBackupJobs.Clear();
-        _allRuns.Clear();
-        _allLogEntries.Clear();
 
-        var parsedDate = DateOnly.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var jobs = _logNavigationService.GetJobsByDate(parsedDate);
-
+        var jobs = _logNavigationService.GetJobsByDate(date);
         foreach (var job in jobs)
         {
+            var mappedRuns = _logNavigationService
+                .GetRunsByDateAndBackupId(date, job.BackupId)
+                .Select(MapRun)
+                .ToList();
+
             _allBackupJobs.Add(new LogJobSummaryModel
             {
                 BackupId = job.BackupId,
                 BackupName = job.BackupName,
-                RunCount = job.RunCount
+                RunCount = mappedRuns.Count,
+                RunsSubtitle = BuildRunsSubtitle(mappedRuns.Count),
+                IsExpanded = false,
+                Runs = mappedRuns
             });
         }
 
+        RefreshJobs();
+        ReSelectRun(previouslySelectedRunId);
         UpdateDetailSubtitle();
-        Refresh();
     }
 
-    private void LoadRunsForBackup(string date, int backupId)
+    private void ReSelectRun(string runId)
     {
-        _allRuns.Clear();
-        _allLogEntries.Clear();
-
-        var parsedDate = DateOnly.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var runs = _logNavigationService.GetRunsByDateAndBackupId(parsedDate, backupId);
-
-        foreach (var run in runs)
+        if (string.IsNullOrWhiteSpace(runId))
         {
-            _allRuns.Add(new LogRunSummaryModel
-            {
-                RunId = run.RunId,
-                BackupId = run.BackupId,
-                BackupName = run.BackupName,
-                StartTime = run.StartTimestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
-                EndTime = run.EndTimestamp?.ToString("HH:mm:ss", CultureInfo.InvariantCulture) ?? StatusInProgress,
-                Status = GetRunStatusText(run.Status),
-                StatusTone = GetRunStatusTone(run.Status),
-                TotalDuration = GetRunTotalDurationText(run),
-                TotalSize = run.TotalSizeBytes.HasValue
-                    ? FormatFileSize(run.TotalSizeBytes.Value)
-                    : "-",
-                Format = run.Format.ToString().ToUpperInvariant(),
-                IsInProgress = run.Status == LogRunStatus.InProgress,
-                IsError = run.Status == LogRunStatus.Error
-            });
+            IsRunSelected = false;
+            return;
         }
 
-        UpdateDetailSubtitle();
-        Refresh();
+        var run = _allBackupJobs.SelectMany(static j => j.Runs).FirstOrDefault(r => r.RunId == runId);
+        if (run is null)
+        {
+            IsRunSelected = false;
+            return;
+        }
+
+        SelectRun(run);
     }
 
-    private void LoadEntriesForRun(string date, string runId)
+    private void LoadEntriesForRun(DateOnly date, string runId)
     {
         _allLogEntries.Clear();
 
-        var parsedDate = DateOnly.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
-        var entries = _logNavigationService.GetEntriesByRun(parsedDate, runId);
-
+        var entries = _logNavigationService.GetEntriesByRun(date, runId);
         foreach (var log in entries)
         {
             _allLogEntries.Add(new LogDisplayModel
@@ -463,139 +462,102 @@ public partial class LogViewModel : ViewModelBase
             });
         }
 
+        RefreshRunEntries();
         UpdateDetailSubtitle();
-        Refresh();
     }
 
-    private void Refresh()
+    private void RefreshJobs()
     {
-        RefreshDates();
-
         BackupJobs.Clear();
-        Runs.Clear();
-        LogEntries.Clear();
-
         var query = SearchText.Trim();
 
-        if (IsJobListVisible)
+        if (string.IsNullOrWhiteSpace(query))
         {
-            foreach (var job in _allBackupJobs.Where(job =>
-                         string.IsNullOrEmpty(query) ||
-                         job.BackupName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                         job.BackupId.ToString(CultureInfo.InvariantCulture).Contains(query, StringComparison.OrdinalIgnoreCase)))
+            foreach (var job in _allBackupJobs)
             {
                 BackupJobs.Add(job);
             }
 
-            FilteredLogsCount = 0;
-            PaginationItems.Clear();
             return;
         }
 
-        if (IsRunListVisible)
+        foreach (var job in _allBackupJobs)
         {
-            foreach (var run in _allRuns.Where(run =>
-                         string.IsNullOrEmpty(query) ||
-                         run.StartTime.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                         run.EndTime.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                         run.Status.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                         run.TotalDuration.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                         run.TotalSize.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                         run.Format.Contains(query, StringComparison.OrdinalIgnoreCase)))
+            var jobMatch =
+                job.BackupName.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                job.BackupId.ToString(CultureInfo.InvariantCulture).Contains(query, StringComparison.OrdinalIgnoreCase);
+
+            var matchingRuns = job.Runs.Where(run =>
+                    run.StartTime.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    run.EndTime.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    run.Status.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    run.TotalDuration.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+                    run.TotalSize.Contains(query, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (!jobMatch && matchingRuns.Count == 0)
             {
-                Runs.Add(run);
+                continue;
             }
 
-            FilteredLogsCount = 0;
-            PaginationItems.Clear();
-            return;
+            BackupJobs.Add(new LogJobSummaryModel
+            {
+                BackupId = job.BackupId,
+                BackupName = job.BackupName,
+                RunCount = job.RunCount,
+                RunsSubtitle = job.RunsSubtitle,
+                IsExpanded = true,
+                Runs = jobMatch ? job.Runs : matchingRuns
+            });
         }
-
-        if (IsRunEntriesVisible)
-        {
-            var filteredLogs = _allLogEntries.Where(l =>
-                string.IsNullOrEmpty(query) ||
-                l.Source.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                l.Destination.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                l.EventType.Contains(query, StringComparison.OrdinalIgnoreCase)).ToList();
-
-            FilteredLogsCount = filteredLogs.Count;
-
-            if (CurrentPage > TotalPages)
-            {
-                CurrentPage = TotalPages;
-            }
-            else if (CurrentPage < 1)
-            {
-                CurrentPage = 1;
-            }
-
-            var skipCount = (CurrentPage - 1) * PageSize;
-            foreach (var entry in filteredLogs.Skip(skipCount).Take(PageSize))
-            {
-                LogEntries.Add(entry);
-            }
-
-            RebuildPaginationItems();
-            return;
-        }
-
-        FilteredLogsCount = 0;
-        PaginationItems.Clear();
     }
 
-    private void RefreshDates()
+    private void RefreshRunEntries()
     {
-        AvailableDates.Clear();
-        var dateQuery = SearchTextDate.Trim();
-        var filteredDates = _allAvailableDates.Where(d =>
-            string.IsNullOrEmpty(dateQuery) || d.Contains(dateQuery, StringComparison.OrdinalIgnoreCase));
+        LogEntries.Clear();
 
-        foreach (var date in filteredDates)
+        if (!IsRunDrawerVisible)
         {
-            AvailableDates.Add(date);
+            FilteredLogsCount = 0;
+            PaginationItems.Clear();
+            return;
         }
+
+        FilteredLogsCount = _allLogEntries.Count;
+
+        if (CurrentPage > TotalPages)
+        {
+            CurrentPage = TotalPages;
+        }
+        else if (CurrentPage < 1)
+        {
+            CurrentPage = 1;
+        }
+
+        var skipCount = (CurrentPage - 1) * PageSize;
+        foreach (var entry in _allLogEntries.Skip(skipCount).Take(PageSize))
+        {
+            LogEntries.Add(entry);
+        }
+
+        RebuildPaginationItems();
     }
 
     private void UpdateDetailSubtitle()
     {
-        if (IsRunEntriesVisible)
+        if (string.IsNullOrWhiteSpace(SelectedDate))
+        {
+            LogDetailSubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_history_subtitle);
+            return;
+        }
+
+        if (IsRunDrawerVisible)
         {
             LogDetailSubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_entries_subtitle);
+            return;
         }
-        else if (IsRunListVisible)
-        {
-            LogDetailSubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_runs_subtitle);
-        }
-        else if (IsJobListVisible)
-        {
-            LogDetailSubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_jobs_subtitle);
-        }
-        else
-        {
-            LogDetailSubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_detail_subtitle);
-        }
-    }
 
-    partial void OnIsDateSelectedChanged(bool value)
-    {
-        UpdateDetailSubtitle();
-        PreviousPageCommand.NotifyCanExecuteChanged();
-        NextPageCommand.NotifyCanExecuteChanged();
-    }
-
-    partial void OnIsBackupJobSelectedChanged(bool value)
-    {
-        UpdateDetailSubtitle();
-        PreviousPageCommand.NotifyCanExecuteChanged();
-        NextPageCommand.NotifyCanExecuteChanged();
-    }
-
-    partial void OnIsRunSelectedChanged(bool value)
-    {
-        UpdateDetailSubtitle();
-        PreviousPageCommand.NotifyCanExecuteChanged();
-        NextPageCommand.NotifyCanExecuteChanged();
+        LogDetailSubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_runs_subtitle);
     }
 
     private void RebuildPaginationItems()
@@ -665,34 +627,30 @@ public partial class LogViewModel : ViewModelBase
         ];
     }
 
-    private string FormatEncryptionTime(long timeMs)
+    private LogRunSummaryModel MapRun(LogRunSummary run)
     {
-        if (timeMs == 0)
+        return new LogRunSummaryModel
         {
-            return "0 ms";
-        }
-
-        if (timeMs > 0)
-        {
-            return $"{timeMs} ms";
-        }
-
-        return "Error";
+            RunId = run.RunId,
+            BackupId = run.BackupId,
+            BackupName = run.BackupName,
+            StartTime = run.StartTimestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
+            EndTime = run.EndTimestamp?.ToString("HH:mm:ss", CultureInfo.InvariantCulture) ?? StatusInProgress,
+            Status = GetRunStatusText(run.Status),
+            StatusTone = GetRunStatusTone(run.Status),
+            TotalDuration = GetRunTotalDurationText(run),
+            TotalSize = run.Status == LogRunStatus.Completed && run.TotalSizeBytes.HasValue
+                ? FormatFileSize(run.TotalSizeBytes.Value)
+                : string.Empty,
+            Format = run.Format.ToString().ToUpperInvariant(),
+            IsInProgress = run.Status == LogRunStatus.InProgress,
+            IsError = run.Status == LogRunStatus.Error
+        };
     }
 
-    private static string FormatFileSize(long bytes)
+    private string BuildRunsSubtitle(int runCount)
     {
-        string[] units = ["B", "KB", "MB", "GB", "TB"];
-        double value = bytes;
-        int i = 0;
-
-        while (value >= 1024 && i < units.Length - 1)
-        {
-            value /= 1024;
-            i++;
-        }
-
-        return $"{value:0.##} {units[i]}";
+        return $"{runCount} {ColRuns.ToLowerInvariant()}";
     }
 
     private string GetRunStatusText(LogRunStatus status)
@@ -723,5 +681,35 @@ public partial class LogViewModel : ViewModelBase
             LogRunStatus.Error => "error",
             _ => "inprogress"
         };
+    }
+
+    private string FormatEncryptionTime(long timeMs)
+    {
+        if (timeMs == 0)
+        {
+            return "0 ms";
+        }
+
+        if (timeMs > 0)
+        {
+            return $"{timeMs} ms";
+        }
+
+        return "Error";
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        string[] units = ["B", "KB", "MB", "GB", "TB"];
+        double value = bytes;
+        var i = 0;
+
+        while (value >= 1024 && i < units.Length - 1)
+        {
+            value /= 1024;
+            i++;
+        }
+
+        return $"{value:0.##} {units[i]}";
     }
 }

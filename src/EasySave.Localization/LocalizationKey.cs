@@ -199,6 +199,7 @@ public enum LocalizationKey
     gui_log_detail_subtitle,
     gui_log_search_log_watermark,
     gui_log_col_time,
+    gui_log_col_backup_state,
     gui_log_col_status,
     gui_log_col_size,
     gui_log_col_duration,

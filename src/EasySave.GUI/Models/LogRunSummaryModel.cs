@@ -1,3 +1,5 @@
+using System;
+
 namespace EasySave.GUI.Models;
 
 public class LogRunSummaryModel
@@ -12,6 +14,7 @@ public class LogRunSummaryModel
     public string TotalDuration { get; set; } = string.Empty;
     public string TotalSize { get; set; } = string.Empty;
     public string Format { get; set; } = string.Empty;
+    public bool HasTotalSize => !string.IsNullOrWhiteSpace(TotalSize);
     public bool IsInProgress { get; set; }
     public bool IsError { get; set; }
 }
