@@ -2,6 +2,7 @@
 using EasySave.Application;
 using EasySave.Backup;
 using EasySave.Configuration;
+using EasySave.GUI.Services;
 using EasySave.GUI.ViewModels;
 using EasySave.Localization;
 using EasySave.Log;
@@ -15,8 +16,6 @@ namespace EasySave.GUI;
 
 sealed class Program
 {
-
-    private const string EasyLogDailyFileMutexName = "Global\\ProSoft_EasySave_EasyLog_DailyFile";
 
     // Initialization code. Don't use any Avalonia, third-party APIs or any
     // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
@@ -68,14 +67,15 @@ sealed class Program
         // Setup configuration providers
         services.AddSingleton<IPathProvider, DefaultPathProvider>();
         services.AddSingleton<IJobIdProvider, SequentialJobIdProvider>();
+        services.AddSingleton<IUserPreferencesRepository, JsonUserPreferencesRepository>();
+        services.AddSingleton<ReloadableLogger>();
 
         // Setup infrastructure
-        services.AddSingleton<ILogger>(sp =>
-            CreateLogger(sp.GetRequiredService<IPathProvider>()));
+        services.AddSingleton<ILogger>(sp => sp.GetRequiredService<ReloadableLogger>());
+        services.AddSingleton<ILoggerRuntimeReloader>(sp => sp.GetRequiredService<ReloadableLogger>());
         services.AddSingleton<GlobalState>();
         services.AddSingleton<IStateWriter, RealTimeStateWriter>();
         services.AddSingleton<IBackupJobRepository, JsonBackupJobRepository>();
-        services.AddSingleton<IUserPreferencesRepository, JsonUserPreferencesRepository>();
         services.AddSingleton<IFileSystem, DefaultFileSystem>();
         services.AddSingleton<ITransferService, DefaultTransferService>();
         services.AddSingleton<IEncryptionPolicyProvider, UserPreferencesEncryptionPolicyProvider>();
@@ -109,30 +109,5 @@ sealed class Program
         services.AddSingleton<SidebarViewModel>();
 
         return services.BuildServiceProvider();
-    }
-
-    private static ILogger CreateLogger(IPathProvider pathProvider)
-    {
-        try
-        {
-            var formatter = new EasyLog.JsonLogFormatter();
-            var logger = new EasyLog.DailyFileLogger(
-                formatter,
-                pathProvider,
-                EasyLogDailyFileMutexName);
-            return logger;
-        }
-        catch (Exception ex)
-        {
-            try
-            {
-                Console.Error.WriteLine($"EasyLog initialization failed: {ex}");
-            }
-            catch
-            {
-                // Best-effort logging only.
-            }
-            return new NoOpLogger();
-        }
     }
 }

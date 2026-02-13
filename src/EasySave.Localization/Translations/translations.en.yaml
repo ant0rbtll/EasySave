@@ -101,6 +101,7 @@ translations:
   gui_sidebar_config: "Settings"
   gui_config_title: "Settings"
   gui_config_language: "Language"
+  gui_config_log_format: "Log format"
   gui_config_log_directory: "Log directory"
   gui_config_log_directory_watermark: "Default (application folder)"
   gui_config_business_software: "Business software (process)"

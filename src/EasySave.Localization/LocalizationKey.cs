@@ -109,6 +109,7 @@ public enum LocalizationKey
     gui_sidebar_config,
     gui_config_title,
     gui_config_language,
+    gui_config_log_format,
     gui_config_log_directory,
     gui_config_log_directory_watermark,
     gui_config_business_software,

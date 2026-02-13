@@ -4,6 +4,43 @@
              xmlns:conv="using:Avalonia.Data.Converters"
              x:Class="EasySave.GUI.Views.ConfigView"
              x:DataType="vm:ConfigViewModel">
+    <UserControl.Styles>
+        <Style Selector="RadioButton.log-format">
+            <Setter Property="MinWidth" Value="96"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Background" Value="#1AFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#3AFFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <ControlTemplate>
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{TemplateBinding CornerRadius}"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                          RecognizesAccessKey="True"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter>
+        </Style>
+        <Style Selector="RadioButton.log-format:pointerover">
+            <Setter Property="Background" Value="#2AFFFFFF"/>
+        </Style>
+        <Style Selector="RadioButton.log-format:checked /template/ ContentPresenter">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+        <Style Selector="RadioButton.log-format:checked">
+            <Setter Property="Background" Value="#1976D2"/>
+            <Setter Property="BorderBrush" Value="#1976D2"/>
+        </Style>
+    </UserControl.Styles>
     <ScrollViewer Padding="32">
         <StackPanel Spacing="24" MaxWidth="500" HorizontalAlignment="Left">
 
@@ -16,6 +53,23 @@
                           SelectedValueBinding="{Binding Code}"
                           SelectedValue="{Binding SelectedLanguage}"
                           HorizontalAlignment="Stretch"/>
+            </StackPanel>
+
+            <!-- Format de logs -->
+            <StackPanel Spacing="8">
+                <TextBlock Text="{Binding LogFormatText}" FontWeight="SemiBold"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <RadioButton Classes="log-format"
+                                 GroupName="LogFormat"
+                                 Content="{Binding LogFormatJsonText}"
+                                 IsChecked="{Binding IsJsonLogFormatSelected, Mode=OneWay}"
+                                 Command="{Binding SelectJsonLogFormatCommand}"/>
+                    <RadioButton Classes="log-format"
+                                 GroupName="LogFormat"
+                                 Content="{Binding LogFormatXmlText}"
+                                 IsChecked="{Binding IsXmlLogFormatSelected, Mode=OneWay}"
+                                 Command="{Binding SelectXmlLogFormatCommand}"/>
+                </StackPanel>
             </StackPanel>
 
             <!-- Dossier de logs -->
