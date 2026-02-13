@@ -5,240 +5,240 @@
              x:Class="EasySave.GUI.Views.LogView"
              x:DataType="vm:LogViewModel">
 
-    <UserControl.Styles>
-        <Style Selector="Button.calendar-nav-btn">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Background" Value="#16FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#22FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="7"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.calendar-nav-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#22FFFFFF"/>
-        </Style>
-        <Style Selector="ComboBox.year-picker-combo">
-            <Setter Property="Width" Value="120"/>
-            <Setter Property="Height" Value="30"/>
-        </Style>
-        <Style Selector="Button.month-picker-btn">
-            <Setter Property="MinWidth" Value="56"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="Background" Value="#0BFFFFFF"/>
-            <Setter Property="BorderBrush" Value="#16FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Foreground" Value="#667F99"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-        <Style Selector="Button.month-picker-btn:disabled">
-            <Setter Property="Opacity" Value="0.5"/>
-        </Style>
-        <Style Selector="Button.month-picker-btn.available">
-            <Setter Property="BorderBrush" Value="#2A4A90D9"/>
-            <Setter Property="Foreground" Value="#D0E5FB"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.month-picker-btn.available:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1B2A4769"/>
-        </Style>
-        <Style Selector="Button.month-picker-btn.selected">
-            <Setter Property="Background" Value="#2A4A90D9"/>
-            <Setter Property="BorderBrush" Value="#7CB8E4FF"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-        </Style>
+	<UserControl.Styles>
+		<Style Selector="Button.calendar-nav-btn">
+			<Setter Property="Width" Value="30"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Background" Value="#16FFFFFF"/>
+			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="7"/>
+			<Setter Property="Cursor" Value="Hand"/>
+		</Style>
+		<Style Selector="Button.calendar-nav-btn:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+		</Style>
+		<Style Selector="ComboBox.year-picker-combo">
+			<Setter Property="Width" Value="120"/>
+			<Setter Property="Height" Value="30"/>
+		</Style>
+		<Style Selector="Button.month-picker-btn">
+			<Setter Property="MinWidth" Value="56"/>
+			<Setter Property="Height" Value="28"/>
+			<Setter Property="Padding" Value="8,0"/>
+			<Setter Property="Background" Value="#0BFFFFFF"/>
+			<Setter Property="BorderBrush" Value="#16FFFFFF"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Foreground" Value="#667F99"/>
+			<Setter Property="Cursor" Value="Arrow"/>
+		</Style>
+		<Style Selector="Button.month-picker-btn:disabled">
+			<Setter Property="Opacity" Value="0.5"/>
+		</Style>
+		<Style Selector="Button.month-picker-btn.available">
+			<Setter Property="BorderBrush" Value="#2A4A90D9"/>
+			<Setter Property="Foreground" Value="#D0E5FB"/>
+			<Setter Property="Cursor" Value="Hand"/>
+		</Style>
+		<Style Selector="Button.month-picker-btn.available:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#1B2A4769"/>
+		</Style>
+		<Style Selector="Button.month-picker-btn.selected">
+			<Setter Property="Background" Value="#2A4A90D9"/>
+			<Setter Property="BorderBrush" Value="#7CB8E4FF"/>
+			<Setter Property="Foreground" Value="#FFFFFF"/>
+		</Style>
 
-        <Style Selector="Button.calendar-day-btn">
-            <Setter Property="MinWidth" Value="42"/>
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Background" Value="#08FFFFFF"/>
-            <Setter Property="BorderBrush" Value="#11FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Foreground" Value="#8C9CB0"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-        <Style Selector="Button.calendar-day-btn:disabled">
-            <Setter Property="Opacity" Value="0.45"/>
-        </Style>
-        <Style Selector="Button.calendar-day-btn.current-month">
-            <Setter Property="Foreground" Value="#D2DEE9"/>
-        </Style>
-        <Style Selector="Button.calendar-day-btn.has-log">
-            <Setter Property="Background" Value="#13224459"/>
-            <Setter Property="BorderBrush" Value="#2A4A90D9"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#D9EBFF"/>
-        </Style>
-        <Style Selector="Button.calendar-day-btn.has-log:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#1E2E5F97"/>
-        </Style>
-        <Style Selector="Button.calendar-day-btn.selected">
-            <Setter Property="Background" Value="#2741A4FF"/>
-            <Setter Property="BorderBrush" Value="#6CA4DBFF"/>
-            <Setter Property="Foreground" Value="#FFFFFF"/>
-        </Style>
+		<Style Selector="Button.calendar-day-btn">
+			<Setter Property="MinWidth" Value="42"/>
+			<Setter Property="Height" Value="36"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Background" Value="#08FFFFFF"/>
+			<Setter Property="BorderBrush" Value="#11FFFFFF"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="8"/>
+			<Setter Property="Foreground" Value="#8C9CB0"/>
+			<Setter Property="Cursor" Value="Arrow"/>
+		</Style>
+		<Style Selector="Button.calendar-day-btn:disabled">
+			<Setter Property="Opacity" Value="0.45"/>
+		</Style>
+		<Style Selector="Button.calendar-day-btn.current-month">
+			<Setter Property="Foreground" Value="#D2DEE9"/>
+		</Style>
+		<Style Selector="Button.calendar-day-btn.has-log">
+			<Setter Property="Background" Value="#13224459"/>
+			<Setter Property="BorderBrush" Value="#2A4A90D9"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Foreground" Value="#D9EBFF"/>
+		</Style>
+		<Style Selector="Button.calendar-day-btn.has-log:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#1E2E5F97"/>
+		</Style>
+		<Style Selector="Button.calendar-day-btn.selected">
+			<Setter Property="Background" Value="#2741A4FF"/>
+			<Setter Property="BorderBrush" Value="#6CA4DBFF"/>
+			<Setter Property="Foreground" Value="#FFFFFF"/>
+		</Style>
 
-        <Style Selector="Border.job-card">
-            <Setter Property="BorderBrush" Value="#1CFFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
-            <Setter Property="Margin" Value="0,0,0,10"/>
-            <Setter Property="Background" Value="#08111F"/>
-        </Style>
+		<Style Selector="Border.job-card">
+			<Setter Property="BorderBrush" Value="#1CFFFFFF"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="10"/>
+			<Setter Property="Margin" Value="0,0,0,10"/>
+			<Setter Property="Background" Value="#08111F"/>
+		</Style>
 
-        <Style Selector="Border.run-status-badge">
-            <Setter Property="CornerRadius" Value="999"/>
-            <Setter Property="Padding" Value="10,4"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="MinWidth" Value="110"/>
-            <Setter Property="HorizontalAlignment" Value="Left"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="Border.run-status-badge TextBlock">
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="Border.run-status-badge[Tag=completed]">
-            <Setter Property="Background" Value="#1E2E7D32"/>
-            <Setter Property="BorderBrush" Value="#5A4CAF50"/>
-        </Style>
-        <Style Selector="Border.run-status-badge[Tag=completed] TextBlock">
-            <Setter Property="Foreground" Value="#9BE7A2"/>
-        </Style>
-        <Style Selector="Border.run-status-badge[Tag=inprogress]">
-            <Setter Property="Background" Value="#1F2E4A68"/>
-            <Setter Property="BorderBrush" Value="#5A64B5F6"/>
-        </Style>
-        <Style Selector="Border.run-status-badge[Tag=inprogress] TextBlock">
-            <Setter Property="Foreground" Value="#9FD3FF"/>
-        </Style>
-        <Style Selector="Border.run-status-badge[Tag=error]">
-            <Setter Property="Background" Value="#1F5A2323"/>
-            <Setter Property="BorderBrush" Value="#5AE57373"/>
-        </Style>
-        <Style Selector="Border.run-status-badge[Tag=error] TextBlock">
-            <Setter Property="Foreground" Value="#FFB3B3"/>
-        </Style>
+		<Style Selector="Border.run-status-badge">
+			<Setter Property="CornerRadius" Value="999"/>
+			<Setter Property="Padding" Value="10,4"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="MinWidth" Value="110"/>
+			<Setter Property="HorizontalAlignment" Value="Left"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="Border.run-status-badge TextBlock">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="FontWeight" Value="Bold"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=completed]">
+			<Setter Property="Background" Value="#1E2E7D32"/>
+			<Setter Property="BorderBrush" Value="#5A4CAF50"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=completed] TextBlock">
+			<Setter Property="Foreground" Value="#9BE7A2"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=inprogress]">
+			<Setter Property="Background" Value="#1F2E4A68"/>
+			<Setter Property="BorderBrush" Value="#5A64B5F6"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=inprogress] TextBlock">
+			<Setter Property="Foreground" Value="#9FD3FF"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=error]">
+			<Setter Property="Background" Value="#1F5A2323"/>
+			<Setter Property="BorderBrush" Value="#5AE57373"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=error] TextBlock">
+			<Setter Property="Foreground" Value="#FFB3B3"/>
+		</Style>
 
-        <Style Selector="Button.run-row-btn">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.run-row-btn:pointerover Border">
-            <Setter Property="Background" Value="#0FFFFFFF"/>
-        </Style>
+		<Style Selector="Button.run-row-btn">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="HorizontalAlignment" Value="Stretch"/>
+			<Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Cursor" Value="Hand"/>
+		</Style>
+		<Style Selector="Button.run-row-btn:pointerover Border">
+			<Setter Property="Background" Value="#0FFFFFFF"/>
+		</Style>
 
-        <Style Selector="Border.drawer-card">
-            <Setter Property="Background" Value="#0A111A"/>
-            <Setter Property="BorderBrush" Value="#1FFFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
-        </Style>
+		<Style Selector="Border.drawer-card">
+			<Setter Property="Background" Value="#0A111A"/>
+			<Setter Property="BorderBrush" Value="#1FFFFFFF"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="10"/>
+		</Style>
 
-        <Style Selector="TextBlock.meta-label">
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Foreground" Value="#8AA0B7"/>
-        </Style>
-        <Style Selector="TextBlock.meta-value">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#D5E2EF"/>
-        </Style>
+		<Style Selector="TextBlock.meta-label">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="Foreground" Value="#8AA0B7"/>
+		</Style>
+		<Style Selector="TextBlock.meta-value">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Foreground" Value="#D5E2EF"/>
+		</Style>
 
-        <Style Selector="Border.pagination-row">
-            <Setter Property="Background" Value="#0AFFFFFF"/>
-            <Setter Property="BorderBrush" Value="#11FFFFFF"/>
-            <Setter Property="BorderThickness" Value="0,1,0,0"/>
-        </Style>
-        <Style Selector="Button.page-nav-btn">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#22FFFFFF"/>
-            <Setter Property="Foreground" Value="#BBBBBB"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="0"/>
-        </Style>
-        <Style Selector="Button.page-nav-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#18FFFFFF"/>
-        </Style>
-        <Style Selector="Button.page-nav-btn:disabled">
-            <Setter Property="Opacity" Value="0.35"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-        <Style Selector="Button.page-item-btn">
-            <Setter Property="MinWidth" Value="28"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#22FFFFFF"/>
-            <Setter Property="Foreground" Value="#BBBBBB"/>
-            <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="12"/>
-        </Style>
-        <Style Selector="Button.page-item-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#18FFFFFF"/>
-        </Style>
-        <Style Selector="Button.page-item-btn.current">
-            <Setter Property="Background" Value="#1F42A5F5"/>
-            <Setter Property="BorderBrush" Value="#6042A5F5"/>
-            <Setter Property="Foreground" Value="#D3E9FF"/>
-        </Style>
-        <Style Selector="TextBlock.page-ellipsis">
-            <Setter Property="Foreground" Value="#7D8B99"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="2,0"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
-        <Style Selector="TextBlock.page-meta">
-            <Setter Property="Foreground" Value="#8FA3B8"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="TextBox.page-input">
-            <Setter Property="Width" Value="56"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="Button.page-go-btn">
-            <Setter Property="Width" Value="34"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="#18FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#22FFFFFF"/>
-            <Setter Property="Foreground" Value="#BBBBBB"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="0"/>
-        </Style>
-        <Style Selector="Button.page-go-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#22FFFFFF"/>
-        </Style>
-        <Style Selector="ComboBox.page-size">
-            <Setter Property="Width" Value="72"/>
-            <Setter Property="Height" Value="30"/>
-        </Style>
-    </UserControl.Styles>
+		<Style Selector="Border.pagination-row">
+			<Setter Property="Background" Value="#0AFFFFFF"/>
+			<Setter Property="BorderBrush" Value="#11FFFFFF"/>
+			<Setter Property="BorderThickness" Value="0,1,0,0"/>
+		</Style>
+		<Style Selector="Button.page-nav-btn">
+			<Setter Property="Width" Value="30"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#BBBBBB"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Padding" Value="0"/>
+		</Style>
+		<Style Selector="Button.page-nav-btn:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#18FFFFFF"/>
+		</Style>
+		<Style Selector="Button.page-nav-btn:disabled">
+			<Setter Property="Opacity" Value="0.35"/>
+			<Setter Property="Cursor" Value="Arrow"/>
+		</Style>
+		<Style Selector="Button.page-item-btn">
+			<Setter Property="MinWidth" Value="28"/>
+			<Setter Property="Height" Value="28"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#BBBBBB"/>
+			<Setter Property="Padding" Value="8,0"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="FontSize" Value="12"/>
+		</Style>
+		<Style Selector="Button.page-item-btn:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#18FFFFFF"/>
+		</Style>
+		<Style Selector="Button.page-item-btn.current">
+			<Setter Property="Background" Value="#1F42A5F5"/>
+			<Setter Property="BorderBrush" Value="#6042A5F5"/>
+			<Setter Property="Foreground" Value="#D3E9FF"/>
+		</Style>
+		<Style Selector="TextBlock.page-ellipsis">
+			<Setter Property="Foreground" Value="#7D8B99"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="Margin" Value="2,0"/>
+			<Setter Property="FontSize" Value="13"/>
+		</Style>
+		<Style Selector="TextBlock.page-meta">
+			<Setter Property="Foreground" Value="#8FA3B8"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="TextBox.page-input">
+			<Setter Property="Width" Value="56"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="Button.page-go-btn">
+			<Setter Property="Width" Value="34"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Background" Value="#18FFFFFF"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#BBBBBB"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Padding" Value="0"/>
+		</Style>
+		<Style Selector="Button.page-go-btn:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+		</Style>
+		<Style Selector="ComboBox.page-size">
+			<Setter Property="Width" Value="72"/>
+			<Setter Property="Height" Value="30"/>
+		</Style>
+	</UserControl.Styles>
 
-    <Grid Margin="24" RowDefinitions="Auto,*" RowSpacing="14">
-        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="{Binding HistoryTitle}" FontSize="24" FontWeight="Bold"/>
-                <TextBlock Text="{Binding LogDetailSubtitle}" FontSize="13" Foreground="#888"/>
-            </StackPanel>
+	<Grid Margin="24" RowDefinitions="Auto,*" RowSpacing="14">
+		<Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto" ColumnSpacing="12">
+			<StackPanel Grid.Column="0">
+				<TextBlock Text="{Binding HistoryTitle}" FontSize="24" FontWeight="Bold"/>
+				<TextBlock Text="{Binding LogDetailSubtitle}" FontSize="13" Foreground="#888"/>
+			</StackPanel>
 
 			<Button Grid.Column="1"
                     Classes="calendar-nav-btn"
@@ -246,83 +246,83 @@
 				<PathIcon Data="M17.65,6.35C16.2,4.9 14.21,4 12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20C15.73,20 18.84,17.45 19.73,14H17.65C16.83,16.33 14.61,18 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6C13.66,6 15.14,6.69 16.22,7.78L13,11H20V4L17.65,6.35Z"
                           Width="16" Height="16" Foreground="#7FC8FF"/>
 			</Button>
-            <TextBox Grid.Column="2"
+			<TextBox Grid.Column="2"
                      Width="250"
                      Text="{Binding SearchText}"
                      Watermark="{Binding SearchLogWatermark}"
                      VerticalAlignment="Center">
-                <TextBox.InnerLeftContent>
-                    <PathIcon Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"
+				<TextBox.InnerLeftContent>
+					<PathIcon Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"
                               Width="16" Height="16" Margin="10,0,0,0" Opacity="0.5"/>
-                </TextBox.InnerLeftContent>
-            </TextBox>
+				</TextBox.InnerLeftContent>
+			</TextBox>
 
-        </Grid>
+		</Grid>
 
-        <Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="14">
-            <Grid Grid.Column="0" RowDefinitions="Auto,*" RowSpacing="14">
-                <Border Grid.Row="0" Classes="drawer-card" Padding="14,12">
-                    <StackPanel Spacing="8">
-                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
-                            <TextBlock Grid.Column="0"
+		<Grid Grid.Row="1" ColumnDefinitions="*,*" ColumnSpacing="14">
+			<Grid Grid.Column="0" RowDefinitions="Auto,*" RowSpacing="14">
+				<Border Grid.Row="0" Classes="drawer-card" Padding="14,12">
+					<StackPanel Spacing="8">
+						<Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+							<TextBlock Grid.Column="0"
                                        Text="{Binding CalendarMonthTitle}"
                                        VerticalAlignment="Center"
                                        FontSize="18"
                                        FontWeight="Bold"/>
 
-                            <TextBlock Grid.Column="1"
+							<TextBlock Grid.Column="1"
                                        Text="{Binding SelectedDateDisplay}"
                                        VerticalAlignment="Center"
                                        Foreground="#9BB5CE"
                                        FontSize="12"/>
-                        </Grid>
+						</Grid>
 
-                        <ComboBox Classes="year-picker-combo"
+						<ComboBox Classes="year-picker-combo"
                                   ItemsSource="{Binding YearPickerItems}"
                                   DisplayMemberBinding="{Binding Year}"
                                   SelectedItem="{Binding SelectedYearItem}">
-                        </ComboBox>
+						</ComboBox>
 
-                        <ItemsControl ItemsSource="{Binding MonthPickerItems}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:LogMonthPickerItemModel">
-                                    <Button Margin="0,0,8,6"
+						<ItemsControl ItemsSource="{Binding MonthPickerItems}">
+							<ItemsControl.ItemsPanel>
+								<ItemsPanelTemplate>
+									<WrapPanel Orientation="Horizontal"/>
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+							<ItemsControl.ItemTemplate>
+								<DataTemplate x:DataType="models:LogMonthPickerItemModel">
+									<Button Margin="0,0,8,6"
                                             Classes="month-picker-btn"
                                             Classes.available="{Binding HasLogs}"
                                             Classes.selected="{Binding IsSelected}"
                                             IsEnabled="{Binding HasLogs}"
                                             Command="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).SelectMonthCommand}"
                                             CommandParameter="{Binding}">
-                                        <TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold"/>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+										<TextBlock Text="{Binding Label}" FontSize="11" FontWeight="SemiBold"/>
+									</Button>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
 
-                        <Grid ColumnDefinitions="*,*,*,*,*,*,*">
-                            <TextBlock Grid.Column="0" Text="{Binding WeekdayMonday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="1" Text="{Binding WeekdayTuesday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="2" Text="{Binding WeekdayWednesday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="3" Text="{Binding WeekdayThursday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="4" Text="{Binding WeekdayFriday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="5" Text="{Binding WeekdaySaturday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="6" Text="{Binding WeekdaySunday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                        </Grid>
+						<Grid ColumnDefinitions="*,*,*,*,*,*,*">
+							<TextBlock Grid.Column="0" Text="{Binding WeekdayMonday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+							<TextBlock Grid.Column="1" Text="{Binding WeekdayTuesday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+							<TextBlock Grid.Column="2" Text="{Binding WeekdayWednesday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+							<TextBlock Grid.Column="3" Text="{Binding WeekdayThursday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+							<TextBlock Grid.Column="4" Text="{Binding WeekdayFriday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+							<TextBlock Grid.Column="5" Text="{Binding WeekdaySaturday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+							<TextBlock Grid.Column="6" Text="{Binding WeekdaySunday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+						</Grid>
 
-                        <ItemsControl ItemsSource="{Binding CalendarDays}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <UniformGrid Columns="7"/>
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:LogCalendarDayModel">
-                                    <Button Classes="calendar-day-btn"
+						<ItemsControl ItemsSource="{Binding CalendarDays}">
+							<ItemsControl.ItemsPanel>
+								<ItemsPanelTemplate>
+									<UniformGrid Columns="7"/>
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+							<ItemsControl.ItemTemplate>
+								<DataTemplate x:DataType="models:LogCalendarDayModel">
+									<Button Classes="calendar-day-btn"
                                             Classes.current-month="{Binding IsCurrentMonth}"
                                             Classes.has-log="{Binding HasLogs}"
                                             Classes.selected="{Binding IsSelected}"
@@ -330,283 +330,283 @@
                                             Margin="2"
                                             Command="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).SelectCalendarDayCommand}"
                                             CommandParameter="{Binding}">
-                                        <TextBlock Text="{Binding DayText}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    </Button>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </StackPanel>
-                </Border>
+										<TextBlock Text="{Binding DayText}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+									</Button>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</StackPanel>
+				</Border>
 
-                <Border Grid.Row="1" Classes="drawer-card" Padding="12">
-                    <ScrollViewer>
-                        <ItemsControl ItemsSource="{Binding BackupJobs}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:LogJobSummaryModel">
-                                    <Border Classes="job-card">
-                                        <Expander IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
-                                            <Expander.Header>
-                                                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
-                                                    <Border Background="#163E6B9A" BorderBrush="#2C72A8DC" BorderThickness="1" CornerRadius="6" Padding="7,2">
-                                                        <TextBlock Text="{Binding BackupId}" FontWeight="Bold" Foreground="#9FD4FF"/>
-                                                    </Border>
+				<Border Grid.Row="1" Classes="drawer-card" Padding="12">
+					<ScrollViewer>
+						<ItemsControl ItemsSource="{Binding BackupJobs}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate x:DataType="models:LogJobSummaryModel">
+									<Border Classes="job-card">
+										<Expander IsExpanded="{Binding IsExpanded, Mode=TwoWay}">
+											<Expander.Header>
+												<Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+													<Border Background="#163E6B9A" BorderBrush="#2C72A8DC" BorderThickness="1" CornerRadius="6" Padding="7,2">
+														<TextBlock Text="{Binding BackupId}" FontWeight="Bold" Foreground="#9FD4FF"/>
+													</Border>
 
-                                                    <StackPanel Grid.Column="1">
-                                                        <TextBlock Text="{Binding BackupName}" FontSize="15" FontWeight="SemiBold"/>
-                                                        <TextBlock Text="{Binding RunsSubtitle}" FontSize="11" Foreground="#88A3BC"/>
-                                                    </StackPanel>
-                                                </Grid>
-                                            </Expander.Header>
+													<StackPanel Grid.Column="1">
+														<TextBlock Text="{Binding BackupName}" FontSize="15" FontWeight="SemiBold"/>
+														<TextBlock Text="{Binding RunsSubtitle}" FontSize="11" Foreground="#88A3BC"/>
+													</StackPanel>
+												</Grid>
+											</Expander.Header>
 
-                                            <StackPanel Margin="0,8,0,0" Spacing="6">
-                                                <Grid ColumnDefinitions="2.4*,1.2*,1.2*,1.5*,1.5*" ColumnSpacing="10" Margin="8,0,8,4">
-                                                    <TextBlock Grid.Column="0" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColBackupState}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColStart}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
-                                                    <TextBlock Grid.Column="2" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColEnd}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
-                                                    <TextBlock Grid.Column="3" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColTotalDuration}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
-                                                    <TextBlock Grid.Column="4" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColTotalSize}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
-                                                </Grid>
+											<StackPanel Margin="0,8,0,0" Spacing="6">
+												<Grid ColumnDefinitions="2.4*,1.2*,1.2*,1.5*,1.5*" ColumnSpacing="10" Margin="8,0,8,4">
+													<TextBlock Grid.Column="0" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColBackupState}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
+													<TextBlock Grid.Column="1" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColStart}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
+													<TextBlock Grid.Column="2" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColEnd}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
+													<TextBlock Grid.Column="3" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColTotalDuration}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
+													<TextBlock Grid.Column="4" Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColTotalSize}" Foreground="#7E96AE" FontSize="11" FontWeight="Bold"/>
+												</Grid>
 
-                                                <ItemsControl ItemsSource="{Binding Runs}" HorizontalAlignment="Stretch">
-                                                    <ItemsControl.ItemTemplate>
-                                                        <DataTemplate x:DataType="models:LogRunSummaryModel">
-                                                            <Button Classes="run-row-btn"
+												<ItemsControl ItemsSource="{Binding Runs}" HorizontalAlignment="Stretch">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate x:DataType="models:LogRunSummaryModel">
+															<Button Classes="run-row-btn"
                                                                     Command="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).SelectRunCommand}"
                                                                     CommandParameter="{Binding}">
-                                                                <Border BorderBrush="#11FFFFFF" BorderThickness="0,0,0,1" Padding="8,8">
-                                                                    <Grid ColumnDefinitions="2.4*,1.2*,1.2*,1.5*,1.5*" ColumnSpacing="10">
-                                                                        <Border Grid.Column="0" Classes="run-status-badge" Tag="{Binding StatusTone}">
-                                                                            <TextBlock Text="{Binding Status}"/>
-                                                                        </Border>
-                                                                        <TextBlock Grid.Column="1" Text="{Binding StartTime}" VerticalAlignment="Center"/>
-                                                                        <TextBlock Grid.Column="2" Text="{Binding EndTime}" VerticalAlignment="Center"/>
-                                                                        <TextBlock Grid.Column="3" Text="{Binding TotalDuration}" VerticalAlignment="Center"/>
-                                                                        <TextBlock Grid.Column="4"
+																<Border BorderBrush="#11FFFFFF" BorderThickness="0,0,0,1" Padding="8,8">
+																	<Grid ColumnDefinitions="2.4*,1.2*,1.2*,1.5*,1.5*" ColumnSpacing="10">
+																		<Border Grid.Column="0" Classes="run-status-badge" Tag="{Binding StatusTone}">
+																			<TextBlock Text="{Binding Status}"/>
+																		</Border>
+																		<TextBlock Grid.Column="1" Text="{Binding StartTime}" VerticalAlignment="Center"/>
+																		<TextBlock Grid.Column="2" Text="{Binding EndTime}" VerticalAlignment="Center"/>
+																		<TextBlock Grid.Column="3" Text="{Binding TotalDuration}" VerticalAlignment="Center"/>
+																		<TextBlock Grid.Column="4"
                                                                                    Text="{Binding TotalSize}"
                                                                                    VerticalAlignment="Center"
                                                                                    IsVisible="{Binding HasTotalSize}"/>
-                                                                        <TextBlock Grid.Column="4"
+																		<TextBlock Grid.Column="4"
                                                                                    Text="-"
                                                                                    Foreground="#667E95"
                                                                                    VerticalAlignment="Center"
                                                                                    IsVisible="{Binding !HasTotalSize}"/>
-                                                                    </Grid>
-                                                                </Border>
-                                                            </Button>
-                                                        </DataTemplate>
-                                                    </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
-                                            </StackPanel>
-                                        </Expander>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                </Border>
-            </Grid>
+																	</Grid>
+																</Border>
+															</Button>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</StackPanel>
+										</Expander>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
+				</Border>
+			</Grid>
 
-            <Border Grid.Column="1"
+			<Border Grid.Column="1"
                     Classes="drawer-card"
                     ClipToBounds="True"
                     VerticalAlignment="Stretch">
-                <Grid RowDefinitions="Auto,*,Auto">
-                    <Border Background="#0F1824"
+				<Grid RowDefinitions="Auto,*,Auto">
+					<Border Background="#0F1824"
                             BorderBrush="#16FFFFFF"
                             BorderThickness="0,0,0,1"
                             Padding="14,12"
                             IsVisible="{Binding IsRunDrawerVisible}">
-                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
-                            <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding SelectedBackupName}" FontSize="16" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
-                            <Button Grid.Row="0" Grid.Column="1"
+						<Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto" RowSpacing="4">
+							<TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding SelectedBackupName}" FontSize="16" FontWeight="Bold" TextTrimming="CharacterEllipsis"/>
+							<Button Grid.Row="0" Grid.Column="1"
                                     Classes="calendar-nav-btn"
                                     Command="{Binding CloseRunDetailsCommand}">
-                                <TextBlock Text="✕" FontSize="11"/>
-                            </Button>
+								<TextBlock Text="â" FontSize="11"/>
+							</Button>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedRunTitle}" Foreground="#9AB3CB" FontSize="12"/>
+							<TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding SelectedRunTitle}" Foreground="#9AB3CB" FontSize="12"/>
 
-                            <StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Spacing="8">
-                                <Border Classes="run-status-badge" Tag="{Binding SelectedRunStatusTone}">
-                                    <TextBlock Text="{Binding SelectedRunStatus}"/>
-                                </Border>
-                                <TextBlock Text="{Binding SelectedRunFormatDisplay}" VerticalAlignment="Center" Foreground="#8BA4BF" FontSize="12"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+							<StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal" Spacing="8">
+								<Border Classes="run-status-badge" Tag="{Binding SelectedRunStatusTone}">
+									<TextBlock Text="{Binding SelectedRunStatus}"/>
+								</Border>
+								<TextBlock Text="{Binding SelectedRunFormatDisplay}" VerticalAlignment="Center" Foreground="#8BA4BF" FontSize="12"/>
+							</StackPanel>
+						</Grid>
+					</Border>
 
-                    <ScrollViewer Grid.Row="1" IsVisible="{Binding IsRunDrawerVisible}">
-                        <ItemsControl ItemsSource="{Binding LogEntries}" HorizontalAlignment="Stretch">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="models:LogDisplayModel">
-                                    <Border BorderBrush="#11FFFFFF" BorderThickness="0,0,0,1" Padding="14,10" HorizontalAlignment="Stretch">
-                                        <StackPanel Spacing="6">
-                                            <Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8">
-                                                <TextBlock Grid.Column="0" Text="{Binding Timestamp}" FontSize="12" FontWeight="SemiBold" Foreground="#CAE5FF"/>
+					<ScrollViewer Grid.Row="1" IsVisible="{Binding IsRunDrawerVisible}">
+						<ItemsControl ItemsSource="{Binding LogEntries}" HorizontalAlignment="Stretch">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate x:DataType="models:LogDisplayModel">
+									<Border BorderBrush="#11FFFFFF" BorderThickness="0,0,0,1" Padding="14,10" HorizontalAlignment="Stretch">
+										<StackPanel Spacing="6">
+											<Grid ColumnDefinitions="Auto,Auto,*" ColumnSpacing="8">
+												<TextBlock Grid.Column="0" Text="{Binding Timestamp}" FontSize="12" FontWeight="SemiBold" Foreground="#CAE5FF"/>
 
-                                                <Border Grid.Column="1" CornerRadius="4" Padding="7,2" VerticalAlignment="Center">
-                                                    <Border.Styles>
-                                                        <Style Selector="Border[Tag=TransferFile]">
-                                                            <Setter Property="Background" Value="#224CAF50"/>
-                                                        </Style>
-                                                        <Style Selector="Border[Tag=TransferFile] TextBlock">
-                                                            <Setter Property="Foreground" Value="#81C784"/>
-                                                        </Style>
+												<Border Grid.Column="1" CornerRadius="4" Padding="7,2" VerticalAlignment="Center">
+													<Border.Styles>
+														<Style Selector="Border[Tag=TransferFile]">
+															<Setter Property="Background" Value="#224CAF50"/>
+														</Style>
+														<Style Selector="Border[Tag=TransferFile] TextBlock">
+															<Setter Property="Foreground" Value="#81C784"/>
+														</Style>
 
-                                                        <Style Selector="Border[Tag=CreateDirectory]">
-                                                            <Setter Property="Background" Value="#222196F3"/>
-                                                        </Style>
-                                                        <Style Selector="Border[Tag=CreateDirectory] TextBlock">
-                                                            <Setter Property="Foreground" Value="#64B5F6"/>
-                                                        </Style>
+														<Style Selector="Border[Tag=CreateDirectory]">
+															<Setter Property="Background" Value="#222196F3"/>
+														</Style>
+														<Style Selector="Border[Tag=CreateDirectory] TextBlock">
+															<Setter Property="Foreground" Value="#64B5F6"/>
+														</Style>
 
-                                                        <Style Selector="Border[Tag=Error]">
-                                                            <Setter Property="Background" Value="#22EF5350"/>
-                                                        </Style>
-                                                        <Style Selector="Border[Tag=Error] TextBlock">
-                                                            <Setter Property="Foreground" Value="#EF9A9A"/>
-                                                        </Style>
+														<Style Selector="Border[Tag=Error]">
+															<Setter Property="Background" Value="#22EF5350"/>
+														</Style>
+														<Style Selector="Border[Tag=Error] TextBlock">
+															<Setter Property="Foreground" Value="#EF9A9A"/>
+														</Style>
 
-                                                        <Style Selector="Border[Tag=StartBackup]">
-                                                            <Setter Property="Background" Value="#229C27B0"/>
-                                                        </Style>
-                                                        <Style Selector="Border[Tag=StartBackup] TextBlock">
-                                                            <Setter Property="Foreground" Value="#CE93D8"/>
-                                                        </Style>
+														<Style Selector="Border[Tag=StartBackup]">
+															<Setter Property="Background" Value="#229C27B0"/>
+														</Style>
+														<Style Selector="Border[Tag=StartBackup] TextBlock">
+															<Setter Property="Foreground" Value="#CE93D8"/>
+														</Style>
 
-                                                        <Style Selector="Border[Tag=EndBackup]">
-                                                            <Setter Property="Background" Value="#22009688"/>
-                                                        </Style>
-                                                        <Style Selector="Border[Tag=EndBackup] TextBlock">
-                                                            <Setter Property="Foreground" Value="#80CBC4"/>
-                                                        </Style>
-                                                    </Border.Styles>
+														<Style Selector="Border[Tag=EndBackup]">
+															<Setter Property="Background" Value="#22009688"/>
+														</Style>
+														<Style Selector="Border[Tag=EndBackup] TextBlock">
+															<Setter Property="Foreground" Value="#80CBC4"/>
+														</Style>
+													</Border.Styles>
 
-                                                    <Border.Tag>
-                                                        <Binding Path="EventType"/>
-                                                    </Border.Tag>
-                                                    <TextBlock Text="{Binding EventTypeLabel}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
-                                                </Border>
-                                            </Grid>
+													<Border.Tag>
+														<Binding Path="EventType"/>
+													</Border.Tag>
+													<TextBlock Text="{Binding EventTypeLabel}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
+												</Border>
+											</Grid>
 
-                                            <TextBlock Text="{Binding Source}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Source}" Classes="meta-value"/>
-                                            <TextBlock Text="{Binding Destination}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Destination}" Classes="meta-value"/>
+											<TextBlock Text="{Binding Source}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Source}" Classes="meta-value"/>
+											<TextBlock Text="{Binding Destination}" TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding Destination}" Classes="meta-value"/>
 
-                                            <Grid ColumnDefinitions="*,*,*" Margin="0,2,0,0">
-                                                <TextBlock Grid.Column="0"
+											<Grid ColumnDefinitions="*,*,*" Margin="0,2,0,0">
+												<TextBlock Grid.Column="0"
                                                            HorizontalAlignment="Left"
                                                            TextTrimming="CharacterEllipsis">
-                                                    <Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColSize}" />
-                                                    <Run Text=" : " />
-                                                    <Run Text="{Binding FileSize}" />
-                                                </TextBlock>
-                                                <TextBlock Grid.Column="1"
+													<Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColSize}" />
+													<Run Text=" : " />
+													<Run Text="{Binding FileSize}" />
+												</TextBlock>
+												<TextBlock Grid.Column="1"
                                                            HorizontalAlignment="Center"
                                                            TextTrimming="CharacterEllipsis">
-                                                    <Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColDuration}" />
-                                                    <Run Text=" : " />
-                                                    <Run Text="{Binding Duration}" />
-                                                </TextBlock>
-                                                <TextBlock Grid.Column="2"
+													<Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColDuration}" />
+													<Run Text=" : " />
+													<Run Text="{Binding Duration}" />
+												</TextBlock>
+												<TextBlock Grid.Column="2"
                                                            HorizontalAlignment="Right"
                                                            TextTrimming="CharacterEllipsis">
-                                                    <Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColEncryption}" />
-                                                    <Run Text=" : " />
-                                                    <Run Text="{Binding EncryptionTime}" />
-                                                </TextBlock>
-                                            </Grid>
-                                        </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+													<Run Text="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).ColEncryption}" />
+													<Run Text=" : " />
+													<Run Text="{Binding EncryptionTime}" />
+												</TextBlock>
+											</Grid>
+										</StackPanel>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
 
-                    <Grid Grid.Row="1" IsVisible="{Binding !IsRunDrawerVisible}">
-                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
-                            <TextBlock Text="{Binding LogDetailSubtitle}" Foreground="#91A6BD" FontSize="14" HorizontalAlignment="Center"/>
-                            <TextBlock Text="{Binding HistorySubtitle}" Foreground="#6F879F" FontSize="12" HorizontalAlignment="Center"/>
-                        </StackPanel>
-                    </Grid>
+					<Grid Grid.Row="1" IsVisible="{Binding !IsRunDrawerVisible}">
+						<StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="8">
+							<TextBlock Text="{Binding LogDetailSubtitle}" Foreground="#91A6BD" FontSize="14" HorizontalAlignment="Center"/>
+							<TextBlock Text="{Binding HistorySubtitle}" Foreground="#6F879F" FontSize="12" HorizontalAlignment="Center"/>
+						</StackPanel>
+					</Grid>
 
-                    <Border Grid.Row="2"
+					<Border Grid.Row="2"
                             Classes="pagination-row"
                             Padding="10,8"
                             IsVisible="{Binding IsPaginationVisible}">
-                        <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-                            <StackPanel Grid.Column="0"
+						<Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+							<StackPanel Grid.Column="0"
                                         Orientation="Horizontal"
                                         Spacing="6"
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
-                                <Button Classes="page-nav-btn" Command="{Binding PreviousPageCommand}">
-                                    <TextBlock Text="◀" FontSize="12"/>
-                                </Button>
+								<Button Classes="page-nav-btn" Command="{Binding PreviousPageCommand}">
+									<TextBlock Text="â" FontSize="12"/>
+								</Button>
 
-                                <ItemsControl ItemsSource="{Binding PaginationItems}">
-                                    <ItemsControl.ItemsPanel>
-                                        <ItemsPanelTemplate>
-                                            <StackPanel Orientation="Horizontal" Spacing="6"/>
-                                        </ItemsPanelTemplate>
-                                    </ItemsControl.ItemsPanel>
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate x:DataType="vm:PaginationItem">
-                                            <Grid>
-                                                <Button IsVisible="{Binding IsPage}"
+								<ItemsControl ItemsSource="{Binding PaginationItems}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<StackPanel Orientation="Horizontal" Spacing="6"/>
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+									<ItemsControl.ItemTemplate>
+										<DataTemplate x:DataType="vm:PaginationItem">
+											<Grid>
+												<Button IsVisible="{Binding IsPage}"
                                                         Classes="page-item-btn"
                                                         Classes.current="{Binding IsCurrent}"
                                                         IsEnabled="{Binding IsSelectable}"
                                                         Command="{Binding $parent[UserControl].((vm:LogViewModel)DataContext).GoToPageCommand}"
                                                         CommandParameter="{Binding PageNumber}">
-                                                    <TextBlock Text="{Binding Label}"/>
-                                                </Button>
-                                                <TextBlock IsVisible="{Binding IsEllipsis}"
+													<TextBlock Text="{Binding Label}"/>
+												</Button>
+												<TextBlock IsVisible="{Binding IsEllipsis}"
                                                            Text="{Binding Label}"
                                                            Classes="page-ellipsis"/>
-                                            </Grid>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+											</Grid>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
 
-                                <Button Classes="page-nav-btn" Command="{Binding NextPageCommand}">
-                                    <TextBlock Text="▶" FontSize="12"/>
-                                </Button>
-                            </StackPanel>
+								<Button Classes="page-nav-btn" Command="{Binding NextPageCommand}">
+									<TextBlock Text="â¶" FontSize="12"/>
+								</Button>
+							</StackPanel>
 
-                            <StackPanel Grid.Column="1"
+							<StackPanel Grid.Column="1"
                                         Orientation="Horizontal"
                                         Spacing="8"
                                         HorizontalAlignment="Right"
                                         VerticalAlignment="Center">
-                                <TextBlock Text="{Binding PageDisplay}" Classes="page-meta"/>
+								<TextBlock Text="{Binding PageDisplay}" Classes="page-meta"/>
 
-                                <TextBlock Text="|" Classes="page-meta"/>
+								<TextBlock Text="|" Classes="page-meta"/>
 
-                                <TextBox Classes="page-input"
+								<TextBox Classes="page-input"
                                          Text="{Binding PageInputText}"
                                          Watermark="{Binding PageJumpWatermark}">
-                                    <TextBox.KeyBindings>
-                                        <KeyBinding Gesture="Enter"
+									<TextBox.KeyBindings>
+										<KeyBinding Gesture="Enter"
                                                     Command="{Binding JumpToEnteredPageCommand}"/>
-                                    </TextBox.KeyBindings>
-                                </TextBox>
+									</TextBox.KeyBindings>
+								</TextBox>
 
-                                <Button Classes="page-go-btn" Command="{Binding JumpToEnteredPageCommand}">
-                                    <TextBlock Text="↵" FontSize="13"/>
-                                </Button>
+								<Button Classes="page-go-btn" Command="{Binding JumpToEnteredPageCommand}">
+									<TextBlock Text="âµ" FontSize="13"/>
+								</Button>
 
-                                <TextBlock Text="|" Classes="page-meta"/>
+								<TextBlock Text="|" Classes="page-meta"/>
 
-                                <ComboBox Classes="page-size"
+								<ComboBox Classes="page-size"
                                           ItemsSource="{Binding PageSizeOptions}"
                                           SelectedItem="{Binding SelectedPageSize}"/>
 
-                                <TextBlock Text="{Binding PageSuffix}" Classes="page-meta"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </Grid>
-            </Border>
-        </Grid>
-    </Grid>
+								<TextBlock Text="{Binding PageSuffix}" Classes="page-meta"/>
+							</StackPanel>
+						</Grid>
+					</Border>
+				</Grid>
+			</Border>
+		</Grid>
+	</Grid>
 </UserControl>

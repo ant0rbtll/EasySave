@@ -180,20 +180,19 @@
 									  HorizontalAlignment="Stretch"/>
 						</StackPanel>
 
-				<!-- BUTTONS -->
-				<StackPanel Orientation="Horizontal"
-							HorizontalAlignment="Right"
-							Spacing="12">
-					<Button Classes="btn-secondary"
-							Content="{Binding CancelButtonLabel}"
-							Command="{Binding CancelCommand}"/>
-					<Button Classes="btn-primary"
-							Content="{Binding CreateJobButtonLabel}"
-							Command="{Binding CreateJobCommand}"/>
-				</StackPanel>
+						<!-- BUTTONS -->
+						<StackPanel Orientation="Horizontal"
+									HorizontalAlignment="Right"
+									Spacing="12">
+							<Button Classes="btn-secondary"
+									Content="{Binding CancelButtonLabel}"
+									Command="{Binding CancelCommand}"/>
+							<Button Classes="btn-primary"
+									Content="{Binding CreateJobButtonLabel}"
+									Command="{Binding CreateJobCommand}"/>
+						</StackPanel>
 					</StackPanel>
 				</Border>
-
 			</StackPanel>
 		</StackPanel>
 	</StackPanel>
