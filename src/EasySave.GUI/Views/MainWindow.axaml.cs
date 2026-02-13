@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 
 namespace EasySave.GUI.Views;
@@ -9,6 +10,9 @@ public partial class MainWindow : Window
 {
     private const string MaximizePathData = "M4 4h16v16H4V4m2 2v12h12V6H6z";
     private const string RestorePathData = "M4 8h12v12H4V8m2 2v8h8v-8H6m4-6h10v10h-2V4H10V2z";
+
+    /// <summary>Épaisseur en pixels de la zone de redimensionnement sur les bords de la fenêtre.</summary>
+    private const int ResizeBorder = 6;
 
     public MainWindow()
     {
@@ -38,12 +42,17 @@ public partial class MainWindow : Window
 
     private void ConfigureLinux()
     {
+        ExtendClientAreaToDecorationsHint = false;
         SystemDecorations = SystemDecorations.BorderOnly;
         LinuxWindowButtons.IsVisible = true;
 
         MinimizeButton.Click += (_, _) => WindowState = WindowState.Minimized;
         MaximizeButton.Click += (_, _) => ToggleMaximize();
         CloseButton.Click += (_, _) => Close();
+
+        // Interception en tunnel des événements pointeur pour le redimensionnement custom sur les bords
+        AddHandler(PointerPressedEvent, OnEdgePointerPressed, RoutingStrategies.Tunnel);
+        AddHandler(PointerMovedEvent, OnEdgePointerMoved, RoutingStrategies.Tunnel);
 
         TitleBarGrid.PointerPressed += OnTitleBarPointerPressed;
 
@@ -83,5 +92,62 @@ public partial class MainWindow : Window
         }
 
         BeginMoveDrag(e);
+    }
+
+    /// <summary>
+    /// Détermine le bord de la fenêtre correspondant à la position du curseur.
+    /// Retourne <c>null</c> si le curseur n'est pas dans la zone de redimensionnement
+    /// ou si la fenêtre est maximisée.
+    /// </summary>
+    private WindowEdge? GetEdgeAtPosition(Point pos)
+    {
+        if (WindowState == WindowState.Maximized) return null;
+
+        var w = ClientSize.Width;
+        var h = ClientSize.Height;
+        var top = pos.Y < ResizeBorder;
+        var bottom = pos.Y > h - ResizeBorder;
+        var left = pos.X < ResizeBorder;
+        var right = pos.X > w - ResizeBorder;
+
+        if (top && left) return WindowEdge.NorthWest;
+        if (top && right) return WindowEdge.NorthEast;
+        if (bottom && left) return WindowEdge.SouthWest;
+        if (bottom && right) return WindowEdge.SouthEast;
+        if (top) return WindowEdge.North;
+        if (bottom) return WindowEdge.South;
+        if (left) return WindowEdge.West;
+        if (right) return WindowEdge.East;
+        return null;
+    }
+
+    /// <summary>
+    /// Lance le redimensionnement natif lorsque l'utilisateur clique sur un bord de la fenêtre.
+    /// </summary>
+    private void OnEdgePointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        var edge = GetEdgeAtPosition(e.GetPosition(this));
+        if (edge is null) return;
+
+        BeginResizeDrag(edge.Value, e);
+        e.Handled = true;
+    }
+
+    /// <summary>
+    /// Met à jour le curseur en fonction du bord survolé pour indiquer
+    /// visuellement la direction de redimensionnement possible.
+    /// </summary>
+    private void OnEdgePointerMoved(object? sender, PointerEventArgs e)
+    {
+        var edge = GetEdgeAtPosition(e.GetPosition(this));
+        Cursor = edge switch
+        {
+            WindowEdge.North or WindowEdge.South => new Cursor(StandardCursorType.SizeNorthSouth),
+            WindowEdge.West or WindowEdge.East => new Cursor(StandardCursorType.SizeWestEast),
+            WindowEdge.NorthWest or WindowEdge.SouthEast => new Cursor(StandardCursorType.TopLeftCorner),
+            WindowEdge.NorthEast or WindowEdge.SouthWest => new Cursor(StandardCursorType.TopRightCorner),
+            _ => Cursor.Default
+        };
     }
 }
