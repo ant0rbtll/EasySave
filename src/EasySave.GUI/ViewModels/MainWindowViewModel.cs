@@ -18,13 +18,6 @@ public partial class MainWindowViewModel : ViewModelBase
     public ViewModelBase? FixedPage => UseGlobalScroll ? null : CurrentPage;
 
     [ObservableProperty]
-    private bool useGlobalScroll;
-
-    public ViewModelBase? ScrollablePage => UseGlobalScroll ? CurrentPage : null;
-
-    public ViewModelBase? FixedPage => UseGlobalScroll ? null : CurrentPage;
-
-    [ObservableProperty]
     private string tooltipMinimize = string.Empty;
 
     [ObservableProperty]
