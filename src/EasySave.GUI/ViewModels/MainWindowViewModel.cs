@@ -10,7 +10,11 @@ public partial class MainWindowViewModel : ViewModelBase
     private ViewModelBase currentPage;
 
     [ObservableProperty]
-    private string pageVerticalScrollBarVisibility = "Auto";
+    private bool useGlobalScroll;
+
+    public ViewModelBase? ScrollablePage => UseGlobalScroll ? CurrentPage : null;
+
+    public ViewModelBase? FixedPage => UseGlobalScroll ? null : CurrentPage;
 
     private readonly HomeViewModel _homeViewModel;
     private readonly CreateViewModel _createViewModel;
@@ -63,9 +67,20 @@ public partial class MainWindowViewModel : ViewModelBase
 
     partial void OnCurrentPageChanged(ViewModelBase value)
     {
-        // Only ManageViewModel owns internal scroll regions (jobs list + editor modal),
-        // so we disable outer scrolling there to avoid nested-scroll conflicts.
-        // Other pages currently rely on the global page scroll.
-        PageVerticalScrollBarVisibility = value is ManageViewModel ? "Disabled" : "Auto";
+        // Keep global scroll only on long form pages.
+        // Other pages keep their own centered layout without a scroll container.
+        UseGlobalScroll = value is CreateViewModel or ConfigViewModel;
+        NotifyPageTargetsChanged();
+    }
+
+    partial void OnUseGlobalScrollChanged(bool value)
+    {
+        NotifyPageTargetsChanged();
+    }
+
+    private void NotifyPageTargetsChanged()
+    {
+        OnPropertyChanged(nameof(ScrollablePage));
+        OnPropertyChanged(nameof(FixedPage));
     }
 }
