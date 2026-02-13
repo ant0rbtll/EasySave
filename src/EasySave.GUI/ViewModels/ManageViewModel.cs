@@ -193,6 +193,15 @@ public partial class ManageViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(DeleteSelectedCommand))]
     private bool hasSelection;
 
+    [ObservableProperty]
+    private string emptyTitleText = string.Empty;
+
+    [ObservableProperty]
+    private string emptySubtitleText = string.Empty;
+
+    [ObservableProperty]
+    private bool hasJobs;
+
     private bool _updatingSelection;
     private readonly HashSet<int> _runningJobIds = [];
 
@@ -256,6 +265,8 @@ public partial class ManageViewModel : ViewModelBase
         RunSelectedText = _localizationService.TranslateText(LocalizationKey.gui_manage_run_selected);
         DeleteSelectedText = _localizationService.TranslateText(LocalizationKey.gui_manage_delete_selected);
         SelectAllTooltip = _localizationService.TranslateText(LocalizationKey.gui_manage_select_all);
+        EmptyTitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_title);
+        EmptySubtitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_subtitle);
 
         _idLabel = _localizationService.TranslateText(LocalizationKey.backupjob_id);
         _nameLabel = _localizationService.TranslateText(LocalizationKey.backupjob_name);
@@ -919,6 +930,7 @@ public partial class ManageViewModel : ViewModelBase
     {
         _allJobs.Clear();
         _allJobs.AddRange(jobs);
+        HasJobs = _allJobs.Count > 0;
         Refresh();
     }
 
