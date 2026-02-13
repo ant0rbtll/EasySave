@@ -271,7 +271,7 @@
                                        FontWeight="Bold"/>
 
                             <TextBlock Grid.Column="1"
-                                       Text="{Binding SelectedDate, StringFormat='Date: \{0\}'}"
+                                       Text="{Binding SelectedDateDisplay}"
                                        VerticalAlignment="Center"
                                        Foreground="#9BB5CE"
                                        FontSize="12"/>
@@ -305,13 +305,13 @@
                         </ItemsControl>
 
                         <Grid ColumnDefinitions="*,*,*,*,*,*,*">
-                            <TextBlock Grid.Column="0" Text="L" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="1" Text="M" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="2" Text="M" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="3" Text="J" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="4" Text="V" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="5" Text="S" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
-                            <TextBlock Grid.Column="6" Text="D" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="0" Text="{Binding WeekdayMonday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="1" Text="{Binding WeekdayTuesday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="2" Text="{Binding WeekdayWednesday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="3" Text="{Binding WeekdayThursday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="4" Text="{Binding WeekdayFriday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="5" Text="{Binding WeekdaySaturday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="6" Text="{Binding WeekdaySunday}" HorizontalAlignment="Center" Foreground="#7890AA" FontSize="11" FontWeight="Bold"/>
                         </Grid>
 
                         <ItemsControl ItemsSource="{Binding CalendarDays}">
@@ -430,7 +430,7 @@
                                 <Border Classes="run-status-badge" Tag="{Binding SelectedRunStatusTone}">
                                     <TextBlock Text="{Binding SelectedRunStatus}"/>
                                 </Border>
-                                <TextBlock Text="{Binding SelectedRunFormat, StringFormat='Format: \{0\}'}" VerticalAlignment="Center" Foreground="#8BA4BF" FontSize="12"/>
+                                <TextBlock Text="{Binding SelectedRunFormatDisplay}" VerticalAlignment="Center" Foreground="#8BA4BF" FontSize="12"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -451,7 +451,6 @@
                                                         </Style>
                                                         <Style Selector="Border[Tag=TransferFile] TextBlock">
                                                             <Setter Property="Foreground" Value="#81C784"/>
-                                                            <Setter Property="Text" Value="TRANSFERT"/>
                                                         </Style>
 
                                                         <Style Selector="Border[Tag=CreateDirectory]">
@@ -459,7 +458,6 @@
                                                         </Style>
                                                         <Style Selector="Border[Tag=CreateDirectory] TextBlock">
                                                             <Setter Property="Foreground" Value="#64B5F6"/>
-                                                            <Setter Property="Text" Value="DOSSIER"/>
                                                         </Style>
 
                                                         <Style Selector="Border[Tag=Error]">
@@ -467,7 +465,6 @@
                                                         </Style>
                                                         <Style Selector="Border[Tag=Error] TextBlock">
                                                             <Setter Property="Foreground" Value="#EF9A9A"/>
-                                                            <Setter Property="Text" Value="ERREUR"/>
                                                         </Style>
 
                                                         <Style Selector="Border[Tag=StartBackup]">
@@ -475,7 +472,6 @@
                                                         </Style>
                                                         <Style Selector="Border[Tag=StartBackup] TextBlock">
                                                             <Setter Property="Foreground" Value="#CE93D8"/>
-                                                            <Setter Property="Text" Value="DEBUT"/>
                                                         </Style>
 
                                                         <Style Selector="Border[Tag=EndBackup]">
@@ -483,14 +479,13 @@
                                                         </Style>
                                                         <Style Selector="Border[Tag=EndBackup] TextBlock">
                                                             <Setter Property="Foreground" Value="#80CBC4"/>
-                                                            <Setter Property="Text" Value="FIN"/>
                                                         </Style>
                                                     </Border.Styles>
 
                                                     <Border.Tag>
                                                         <Binding Path="EventType"/>
                                                     </Border.Tag>
-                                                    <TextBlock FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                                    <TextBlock Text="{Binding EventTypeLabel}" FontSize="10" FontWeight="Bold" HorizontalAlignment="Center"/>
                                                 </Border>
                                             </Grid>
 
@@ -606,7 +601,7 @@
                                           ItemsSource="{Binding PageSizeOptions}"
                                           SelectedItem="{Binding SelectedPageSize}"/>
 
-                                <TextBlock Text="/page" Classes="page-meta"/>
+                                <TextBlock Text="{Binding PageSuffix}" Classes="page-meta"/>
                             </StackPanel>
                         </Grid>
                     </Border>

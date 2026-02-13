@@ -4,6 +4,7 @@ using EasySave.Application;
 using EasySave.GUI.Helpers;
 using EasySave.GUI.Models;
 using EasySave.Localization;
+using EasySave.Log;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -41,7 +42,9 @@ public partial class LogViewModel : ViewModelBase
     public IReadOnlyList<int> PageSizeOptions { get; } = [15, 25, 50];
 
     [ObservableProperty] private string _searchText = string.Empty;
-    [ObservableProperty] private string _selectedDate = string.Empty;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedDateDisplay))]
+    private string _selectedDate = string.Empty;
     [ObservableProperty] private string _calendarMonthTitle = string.Empty;
     [ObservableProperty] private LogYearPickerItemModel? _selectedYearItem;
 
@@ -49,6 +52,15 @@ public partial class LogViewModel : ViewModelBase
     [ObservableProperty] private string _historySubtitle = string.Empty;
     [ObservableProperty] private string _searchLogWatermark = string.Empty;
     [ObservableProperty] private string _logDetailSubtitle = string.Empty;
+    [ObservableProperty] private string _datePrefix = string.Empty;
+    [ObservableProperty] private string _weekdayMonday = string.Empty;
+    [ObservableProperty] private string _weekdayTuesday = string.Empty;
+    [ObservableProperty] private string _weekdayWednesday = string.Empty;
+    [ObservableProperty] private string _weekdayThursday = string.Empty;
+    [ObservableProperty] private string _weekdayFriday = string.Empty;
+    [ObservableProperty] private string _weekdaySaturday = string.Empty;
+    [ObservableProperty] private string _weekdaySunday = string.Empty;
+    [ObservableProperty] private string _pageSuffix = string.Empty;
 
     [ObservableProperty] private string _colTime = string.Empty;
     [ObservableProperty] private string _colBackupState = string.Empty;
@@ -71,7 +83,9 @@ public partial class LogViewModel : ViewModelBase
 
     [ObservableProperty] private string _selectedBackupName = string.Empty;
     [ObservableProperty] private string _selectedRunTitle = string.Empty;
-    [ObservableProperty] private string _selectedRunFormat = string.Empty;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedRunFormatDisplay))]
+    private string _selectedRunFormat = string.Empty;
     [ObservableProperty] private string _selectedRunStatus = string.Empty;
     [ObservableProperty] private string _selectedRunStatusTone = "inprogress";
 
@@ -114,6 +128,8 @@ public partial class LogViewModel : ViewModelBase
     public string PageJumpWatermark => $"1-{TotalPages}";
     public bool IsRunDrawerVisible => IsRunSelected;
     public bool IsPaginationVisible => IsRunDrawerVisible && TotalPages > 1;
+    public string SelectedDateDisplay => string.IsNullOrWhiteSpace(SelectedDate) ? string.Empty : $"{DatePrefix}: {SelectedDate}";
+    public string SelectedRunFormatDisplay => string.IsNullOrWhiteSpace(SelectedRunFormat) ? string.Empty : $"{ColFormat}: {SelectedRunFormat}";
 
     public LogViewModel(
         ILogQueryService logQueryService,
@@ -182,6 +198,15 @@ public partial class LogViewModel : ViewModelBase
         HistoryTitle = _localizationService.TranslateText(LocalizationKey.gui_sidebar_log);
         HistorySubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_history_subtitle);
         SearchLogWatermark = _localizationService.TranslateText(LocalizationKey.gui_log_search_log_watermark);
+        DatePrefix = _localizationService.TranslateText(LocalizationKey.gui_log_date_prefix);
+        WeekdayMonday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_mon);
+        WeekdayTuesday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_tue);
+        WeekdayWednesday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_wed);
+        WeekdayThursday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_thu);
+        WeekdayFriday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_fri);
+        WeekdaySaturday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_sat);
+        WeekdaySunday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_sun);
+        PageSuffix = _localizationService.TranslateText(LocalizationKey.gui_log_page_suffix);
 
         ColTime = _localizationService.TranslateText(LocalizationKey.gui_log_col_time);
         ColBackupState = _localizationService.TranslateText(LocalizationKey.gui_log_col_backup_state);
@@ -201,6 +226,8 @@ public partial class LogViewModel : ViewModelBase
         StatusInProgress = _localizationService.TranslateText(LocalizationKey.gui_log_status_in_progress);
         StatusCompleted = _localizationService.TranslateText(LocalizationKey.gui_log_status_completed);
         StatusError = _localizationService.TranslateText(LocalizationKey.gui_log_status_error);
+        OnPropertyChanged(nameof(SelectedDateDisplay));
+        OnPropertyChanged(nameof(SelectedRunFormatDisplay));
 
         BuildYearPickerItems();
         BuildMonthPickerItems();
@@ -574,6 +601,7 @@ public partial class LogViewModel : ViewModelBase
                 Timestamp = log.Timestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
                 BackupName = log.BackupName,
                 EventType = log.EventType.ToString(),
+                EventTypeLabel = GetEventTypeLabel(log.EventType),
                 Source = log.SourcePathUNC,
                 Destination = log.DestinationPathUNC,
                 FileSize = LogValueFormatter.FormatFileSize(log.FileSizeBytes),
@@ -792,6 +820,20 @@ public partial class LogViewModel : ViewModelBase
             LogRunStatus.InProgress => StatusInProgress,
             LogRunStatus.Error => "-",
             _ => run.TotalDurationMs.HasValue ? LogValueFormatter.FormatDuration(run.TotalDurationMs.Value) : "-"
+        };
+    }
+
+    private string GetEventTypeLabel(LogEventType eventType)
+    {
+        return eventType switch
+        {
+            LogEventType.CreateDirectory => _localizationService.TranslateText(LocalizationKey.gui_log_event_create_directory),
+            LogEventType.TransferFile => _localizationService.TranslateText(LocalizationKey.gui_log_event_transfer_file),
+            LogEventType.Error => _localizationService.TranslateText(LocalizationKey.gui_log_event_error),
+            LogEventType.StartBackup => _localizationService.TranslateText(LocalizationKey.gui_log_event_start_backup),
+            LogEventType.EndBackup => _localizationService.TranslateText(LocalizationKey.gui_log_event_end_backup),
+            LogEventType.BusinessSoftwareDetected => _localizationService.TranslateText(LocalizationKey.gui_log_event_business_software_detected),
+            _ => eventType.ToString()
         };
     }
 
