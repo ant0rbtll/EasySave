@@ -9,6 +9,8 @@
         x:DataType="vm:MainWindowViewModel"
         Icon="/Assets/easysave-icon.png"
         Title="EasySave"
+        MinWidth="1280"
+        MinHeight="750"
         ExtendClientAreaToDecorationsHint="True"
         ExtendClientAreaChromeHints="PreferSystemChrome"
         ExtendClientAreaTitleBarHeightHint="40">
