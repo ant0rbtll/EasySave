@@ -11,7 +11,7 @@ public partial class MainWindow : Window
     private const string MaximizePathData = "M4 4h16v16H4V4m2 2v12h12V6H6z";
     private const string RestorePathData = "M4 8h12v12H4V8m2 2v8h8v-8H6m4-6h10v10h-2V4H10V2z";
 
-    /// <summary>Épaisseur en pixels de la zone de redimensionnement sur les bords de la fenêtre.</summary>
+    /// <summary>Thickness in pixels of the resize area along the window edges.</summary>
     private const int ResizeBorder = 6;
 
     public MainWindow()
@@ -50,7 +50,7 @@ public partial class MainWindow : Window
         MaximizeButton.Click += (_, _) => ToggleMaximize();
         CloseButton.Click += (_, _) => Close();
 
-        // Interception en tunnel des événements pointeur pour le redimensionnement custom sur les bords
+        // Tunnel pointer event interception for custom edge resizing
         AddHandler(PointerPressedEvent, OnEdgePointerPressed, RoutingStrategies.Tunnel);
         AddHandler(PointerMovedEvent, OnEdgePointerMoved, RoutingStrategies.Tunnel);
 
@@ -95,9 +95,9 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Détermine le bord de la fenêtre correspondant à la position du curseur.
-    /// Retourne <c>null</c> si le curseur n'est pas dans la zone de redimensionnement
-    /// ou si la fenêtre est maximisée.
+    /// Determines the window edge that matches the cursor position.
+    /// Returns <c>null</c> if the cursor is not in the resize area
+    /// or if the window is maximized.
     /// </summary>
     private WindowEdge? GetEdgeAtPosition(Point pos)
     {
@@ -122,7 +122,7 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Lance le redimensionnement natif lorsque l'utilisateur clique sur un bord de la fenêtre.
+    /// Starts native resizing when the user clicks a window edge.
     /// </summary>
     private void OnEdgePointerPressed(object? sender, PointerPressedEventArgs e)
     {
@@ -135,8 +135,8 @@ public partial class MainWindow : Window
     }
 
     /// <summary>
-    /// Met à jour le curseur en fonction du bord survolé pour indiquer
-    /// visuellement la direction de redimensionnement possible.
+    /// Updates the cursor based on the hovered edge to visually indicate
+    /// the possible resize direction.
     /// </summary>
     private void OnEdgePointerMoved(object? sender, PointerEventArgs e)
     {
