@@ -1,8 +1,6 @@
 using EasySave.Application;
-using EasySave.Configuration;
 using EasySave.Core;
 using EasySave.Localization;
-using EasySave.Persistence;
 using EasySave.UI.Menu;
 using EasySave.UI.Services;
 
@@ -63,54 +61,6 @@ public class ConsoleUI
         _inputService = inputService;
         _jobsFlowService = jobsFlowService;
         _settingsFlowService = settingsFlowService;
-    }
-
-    /// <summary>
-    /// Initializes the console UI and wires all flow services.
-    /// </summary>
-    /// <param name="backupApplicationService">Application service exposing backup use cases.</param>
-    /// <param name="preferencesRepository">Repository used to load and persist user preferences.</param>
-    /// <param name="pathProvider">Path provider used by settings flows.</param>
-    /// <param name="parser">Command-line parser for non-interactive execution.</param>
-    public ConsoleUI(
-        BackupApplicationService backupApplicationService,
-        IUserPreferencesRepository preferencesRepository,
-        IPathProvider pathProvider,
-        CommandLineParser parser)
-    {
-        _parser = parser;
-        _backupApplicationService = backupApplicationService;
-
-        LocalizationService = new LocalizationService();
-        _consoleAdapter = new SystemConsoleAdapter();
-        _menuService = new MenuService(LocalizationService, _consoleAdapter);
-        _menuFactory = new MenuFactory();
-
-        _messageService = new ConsoleMessageService(LocalizationService, new ErrorManager(), _consoleAdapter);
-        _inputService = new ConsoleInputService(_messageService, _consoleAdapter);
-
-        var userPreferences = preferencesRepository.Load();
-        _jobsFlowService = new JobsFlowService(
-            _backupApplicationService,
-            _menuService,
-            _menuFactory,
-            _messageService,
-            _inputService,
-            _consoleAdapter,
-            new JobEditSessionService());
-
-        _settingsFlowService = new SettingsFlowService(
-            preferencesRepository,
-            userPreferences,
-            pathProvider,
-            LocalizationService,
-            _menuService,
-            _menuFactory,
-            _messageService,
-            _inputService,
-            _consoleAdapter);
-
-        _settingsFlowService.InitializeCulture();
     }
 
     /// <summary>

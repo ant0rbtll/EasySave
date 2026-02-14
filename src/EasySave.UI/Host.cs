@@ -1,4 +1,9 @@
 ﻿using EasySave.Application;
+using EasySave.Core;
+using EasySave.Localization;
+using EasySave.Persistence;
+using EasySave.UI.Menu;
+using EasySave.UI.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 
@@ -17,7 +22,33 @@ namespace EasySave.UI
         public void ConfigureServices(IServiceCollection services, string[] args)
         {
             services.AddSingleton<CommandLineParser>();
-            services.AddSingleton<ConsoleUI>();
+            services.AddSingleton<IConsoleAdapter, SystemConsoleAdapter>();
+            services.AddSingleton<IMenuService, MenuService>();
+            services.AddSingleton<IMenuFactory, MenuFactory>();
+            services.AddSingleton<ErrorManager>();
+            services.AddSingleton<IConsoleMessageService, ConsoleMessageService>();
+            services.AddSingleton<IConsoleInputService, ConsoleInputService>();
+            services.AddSingleton<JobEditSessionService>();
+            services.AddSingleton<UserPreferences>(sp => sp.GetRequiredService<IUserPreferencesRepository>().Load());
+            services.AddSingleton<JobsFlowService>();
+            services.AddSingleton<SettingsFlowService>();
+            services.AddSingleton<ConsoleUI>(sp =>
+            {
+                var settingsFlowService = sp.GetRequiredService<SettingsFlowService>();
+                settingsFlowService.InitializeCulture();
+
+                return new ConsoleUI(
+                    sp.GetRequiredService<BackupApplicationService>(),
+                    sp.GetRequiredService<CommandLineParser>(),
+                    sp.GetRequiredService<ILocalizationService>(),
+                    sp.GetRequiredService<IConsoleAdapter>(),
+                    sp.GetRequiredService<IMenuService>(),
+                    sp.GetRequiredService<IMenuFactory>(),
+                    sp.GetRequiredService<IConsoleMessageService>(),
+                    sp.GetRequiredService<IConsoleInputService>(),
+                    sp.GetRequiredService<JobsFlowService>(),
+                    settingsFlowService);
+            });
         }
 
         /// <summary>
