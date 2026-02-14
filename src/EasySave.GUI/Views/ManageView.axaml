@@ -211,7 +211,7 @@
 							   VerticalAlignment="Center"
 							   HorizontalAlignment="Center"/>
 					<Button Grid.Column="1"
-							Content="â"
+							Content="X"
 							Command="{Binding DismissStatusBannerCommand}"
 							Background="Transparent"
 							BorderThickness="0"
@@ -238,7 +238,7 @@
 							   VerticalAlignment="Center"
 							   HorizontalAlignment="Center"/>
 					<Button Grid.Column="1"
-							Content="â"
+							Content="X"
 							Command="{Binding DismissStatusBannerCommand}"
 							Background="Transparent"
 							BorderThickness="0"
