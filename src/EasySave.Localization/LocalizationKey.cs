@@ -193,9 +193,7 @@ public enum LocalizationKey
 
     // Log - Log viewer
     gui_log_history_subtitle,
-    gui_log_search_date_watermark,
     gui_log_detail_subtitle,
-    gui_log_search_log_watermark,
     gui_log_col_time,
     gui_log_col_backup_state,
     gui_log_col_status,
@@ -247,6 +245,8 @@ public enum LocalizationKey
     gui_log_status_in_progress,
     gui_log_status_completed,
     gui_log_status_error,
+    gui_log_empty_title,
+    gui_log_empty_subtitle,
     gui_log_event_create_directory,
     gui_log_event_transfer_file,
     gui_log_event_error,

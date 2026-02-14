@@ -6,883 +6,890 @@
              x:Class="EasySave.GUI.Views.ManageView"
              x:DataType="vm:ManageViewModel">
 
-    <UserControl.Styles>
-        <!-- Style for the type badge -->
-        <Style Selector="Border.type-badge">
-            <Setter Property="Background" Value="#33FFFFFF"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="8,3"/>
-        </Style>
-        <Style Selector="Border.type-badge TextBlock">
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="Foreground" Value="#BBBBBB"/>
-        </Style>
+	<UserControl.Styles>
+		<!-- Style for the type badge -->
+		<Style Selector="Border.type-badge">
+			<Setter Property="Background" Value="#33FFFFFF"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="Padding" Value="8,3"/>
+		</Style>
+		<Style Selector="Border.type-badge TextBlock">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="Foreground" Value="#BBBBBB"/>
+		</Style>
 
-        <!-- Style for the ID badge -->
-        <Style Selector="Border.id-badge">
-            <Setter Property="Background" Value="#2200AAFF"/>
-            <Setter Property="CornerRadius" Value="4"/>
-            <Setter Property="Padding" Value="8,3"/>
-            <Setter Property="MinWidth" Value="36"/>
-        </Style>
-        <Style Selector="Border.id-badge TextBlock">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#66BBFF"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
+		<!-- Style for the ID badge -->
+		<Style Selector="Border.id-badge">
+			<Setter Property="Background" Value="#2200AAFF"/>
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="Padding" Value="8,3"/>
+			<Setter Property="MinWidth" Value="36"/>
+		</Style>
+		<Style Selector="Border.id-badge TextBlock">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Foreground" Value="#66BBFF"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+		</Style>
 
-        <!-- Row hover effect -->
-        <Style Selector="Border.job-row">
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
-        <Style Selector="Border.job-row:pointerover">
-            <Setter Property="Background" Value="#11FFFFFF"/>
-        </Style>
+		<!-- Row hover effect -->
+		<Style Selector="Border.job-row">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="Border.job-row:pointerover">
+			<Setter Property="Background" Value="#11FFFFFF"/>
+		</Style>
 
-        <!-- Path text style -->
-        <Style Selector="TextBlock.path-text">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#888888"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-        </Style>
+		<!-- Path text style -->
+		<Style Selector="TextBlock.path-text">
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="Foreground" Value="#888888"/>
+			<Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+		</Style>
 
-        <!-- Column header button style -->
-        <Style Selector="Button.col-header">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="Button.col-header:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="Transparent"/>
-        </Style>
-        <Style Selector="Button.col-header TextBlock">
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="#999"/>
-        </Style>
-        <Style Selector="Button.col-header:pointerover TextBlock">
-            <Setter Property="Foreground" Value="#CCC"/>
-        </Style>
+		<!-- Column header button style -->
+		<Style Selector="Button.col-header">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="Padding" Value="0"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="Button.col-header:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="Transparent"/>
+		</Style>
+		<Style Selector="Button.col-header TextBlock">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="Foreground" Value="#999"/>
+		</Style>
+		<Style Selector="Button.col-header:pointerover TextBlock">
+			<Setter Property="Foreground" Value="#CCC"/>
+		</Style>
 
-        <!-- Action button style -->
-        <Style Selector="Button.action-btn">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="CornerRadius" Value="4"/>
-        </Style>
-        <Style Selector="Button.action-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#22FFFFFF"/>
-        </Style>
-        <Style Selector="Button.action-btn PathIcon">
-            <Setter Property="Width" Value="14"/>
-            <Setter Property="Height" Value="14"/>
-        </Style>
-        <Style Selector="Button.action-btn:disabled">
-            <Setter Property="Opacity" Value="0.3"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-        <Style Selector="Button.run-selected-btn">
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.run-selected-btn:disabled">
-            <Setter Property="Opacity" Value="0.3"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
+		<!-- Action button style -->
+		<Style Selector="Button.action-btn">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="0"/>
+			<Setter Property="Padding" Value="6"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="CornerRadius" Value="4"/>
+		</Style>
+		<Style Selector="Button.action-btn:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+		</Style>
+		<Style Selector="Button.action-btn PathIcon">
+			<Setter Property="Width" Value="14"/>
+			<Setter Property="Height" Value="14"/>
+		</Style>
+		<Style Selector="Button.action-btn:disabled">
+			<Setter Property="Opacity" Value="0.3"/>
+			<Setter Property="Cursor" Value="Arrow"/>
+		</Style>
+		<Style Selector="Button.run-selected-btn">
+			<Setter Property="Cursor" Value="Hand"/>
+		</Style>
+		<Style Selector="Button.run-selected-btn:disabled">
+			<Setter Property="Opacity" Value="0.3"/>
+			<Setter Property="Cursor" Value="Arrow"/>
+		</Style>
 
-        <!-- Pagination style -->
-        <Style Selector="Border.pagination-row">
-            <Setter Property="Background" Value="#0AFFFFFF"/>
-            <Setter Property="BorderBrush" Value="#11FFFFFF"/>
-            <Setter Property="BorderThickness" Value="0,1,0,0"/>
-        </Style>
-        <Style Selector="Button.page-nav-btn">
-            <Setter Property="Width" Value="30"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#22FFFFFF"/>
-            <Setter Property="Foreground" Value="#BBBBBB"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="0"/>
-        </Style>
-        <Style Selector="Button.page-nav-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#18FFFFFF"/>
-        </Style>
-        <Style Selector="Button.page-nav-btn:disabled">
-            <Setter Property="Opacity" Value="0.35"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-        <Style Selector="Button.page-item-btn">
-            <Setter Property="MinWidth" Value="28"/>
-            <Setter Property="Height" Value="28"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#22FFFFFF"/>
-            <Setter Property="Foreground" Value="#BBBBBB"/>
-            <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="12"/>
-        </Style>
-        <Style Selector="Button.page-item-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#18FFFFFF"/>
-        </Style>
-        <Style Selector="Button.page-item-btn.current">
-            <Setter Property="Background" Value="#1F42A5F5"/>
-            <Setter Property="BorderBrush" Value="#6042A5F5"/>
-            <Setter Property="Foreground" Value="#D3E9FF"/>
-        </Style>
-        <Style Selector="TextBlock.page-ellipsis">
-            <Setter Property="Foreground" Value="#7D8B99"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="Margin" Value="2,0"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
-        <Style Selector="TextBlock.page-meta">
-            <Setter Property="Foreground" Value="#8FA3B8"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="TextBox.page-input">
-            <Setter Property="Width" Value="56"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-        </Style>
-        <Style Selector="Button.page-go-btn">
-            <Setter Property="Width" Value="34"/>
-            <Setter Property="Height" Value="30"/>
-            <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Background" Value="#18FFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#22FFFFFF"/>
-            <Setter Property="Foreground" Value="#BBBBBB"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Padding" Value="0"/>
-        </Style>
-        <Style Selector="Button.page-go-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#22FFFFFF"/>
-        </Style>
-        <Style Selector="ComboBox.page-size">
-            <Setter Property="Width" Value="72"/>
-            <Setter Property="Height" Value="30"/>
-        </Style>
-    </UserControl.Styles>
+		<!-- Pagination style -->
+		<Style Selector="Border.pagination-row">
+			<Setter Property="Background" Value="#0AFFFFFF"/>
+			<Setter Property="BorderBrush" Value="#11FFFFFF"/>
+			<Setter Property="BorderThickness" Value="0,1,0,0"/>
+		</Style>
+		<Style Selector="Button.page-nav-btn">
+			<Setter Property="Width" Value="30"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#BBBBBB"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Padding" Value="0"/>
+		</Style>
+		<Style Selector="Button.page-nav-btn:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#18FFFFFF"/>
+		</Style>
+		<Style Selector="Button.page-nav-btn:disabled">
+			<Setter Property="Opacity" Value="0.35"/>
+			<Setter Property="Cursor" Value="Arrow"/>
+		</Style>
+		<Style Selector="Button.page-item-btn">
+			<Setter Property="MinWidth" Value="28"/>
+			<Setter Property="Height" Value="28"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#BBBBBB"/>
+			<Setter Property="Padding" Value="8,0"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="FontSize" Value="12"/>
+		</Style>
+		<Style Selector="Button.page-item-btn:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#18FFFFFF"/>
+		</Style>
+		<Style Selector="Button.page-item-btn.current">
+			<Setter Property="Background" Value="#1F42A5F5"/>
+			<Setter Property="BorderBrush" Value="#6042A5F5"/>
+			<Setter Property="Foreground" Value="#D3E9FF"/>
+		</Style>
+		<Style Selector="TextBlock.page-ellipsis">
+			<Setter Property="Foreground" Value="#7D8B99"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+			<Setter Property="Margin" Value="2,0"/>
+			<Setter Property="FontSize" Value="13"/>
+		</Style>
+		<Style Selector="TextBlock.page-meta">
+			<Setter Property="Foreground" Value="#8FA3B8"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="VerticalAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="TextBox.page-input">
+			<Setter Property="Width" Value="56"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+		</Style>
+		<Style Selector="Button.page-go-btn">
+			<Setter Property="Width" Value="34"/>
+			<Setter Property="Height" Value="30"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Background" Value="#18FFFFFF"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#BBBBBB"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="Padding" Value="0"/>
+		</Style>
+		<Style Selector="Button.page-go-btn:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+		</Style>
+		<Style Selector="ComboBox.page-size">
+			<Setter Property="Width" Value="72"/>
+			<Setter Property="Height" Value="30"/>
+		</Style>
+	</UserControl.Styles>
 
-    <Panel>
-    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24">
+	<Panel>
+		<Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24">
 
-        <!-- Running banner -->
-        <Border Grid.Row="0"
-                Background="#1A42A5F5"
-                CornerRadius="6"
-                Padding="12,8"
-                Margin="0,0,0,12"
-                IsVisible="{Binding IsRunning}">
-            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                <TextBlock Text="{Binding RunningLabel}"
-                           Foreground="#42A5F5"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"/>
-                <TextBlock Text="{Binding RunningJobName}"
-                           Foreground="#42A5F5"
-                           FontWeight="Bold"
-                           VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
+			<!-- Running banner -->
+			<Border Grid.Row="0"
+					Background="#1A42A5F5"
+					CornerRadius="6"
+					Padding="12,8"
+					Margin="0,0,0,12"
+					IsVisible="{Binding IsRunning}">
+				<StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+					<TextBlock Text="{Binding RunningLabel}"
+							   Foreground="#42A5F5"
+							   FontWeight="SemiBold"
+							   VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding RunningJobName}"
+							   Foreground="#42A5F5"
+							   FontWeight="Bold"
+							   VerticalAlignment="Center"/>
+				</StackPanel>
+			</Border>
 
-        <!-- Status banner (success) -->
-        <Border Grid.Row="1"
-                Background="#1A66BB6A"
-                CornerRadius="6"
-                Padding="12,8"
-                Margin="0,0,0,12"
-                IsVisible="{Binding IsSuccessBannerVisible}">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0"
-                           Text="{Binding StatusMessage}"
-                           Foreground="#66BB6A"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
-                <Button Grid.Column="1"
-                        Content="✕"
-                        Command="{Binding DismissStatusBannerCommand}"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Foreground="#66BB6A"
-                        FontSize="14"
-                        Padding="4"
-                        Cursor="Hand"
-                        VerticalAlignment="Center"/>
-            </Grid>
-        </Border>
+			<!-- Status banner (success) -->
+			<Border Grid.Row="1"
+					Background="#1A66BB6A"
+					CornerRadius="6"
+					Padding="12,8"
+					Margin="0,0,0,12"
+					IsVisible="{Binding IsSuccessBannerVisible}">
+				<Grid ColumnDefinitions="*,Auto">
+					<TextBlock Grid.Column="0"
+							   Text="{Binding StatusMessage}"
+							   Foreground="#66BB6A"
+							   FontWeight="SemiBold"
+							   VerticalAlignment="Center"
+							   HorizontalAlignment="Center"/>
+					<Button Grid.Column="1"
+							Content="X"
+							Command="{Binding DismissStatusBannerCommand}"
+							Background="Transparent"
+							BorderThickness="0"
+							Foreground="#66BB6A"
+							FontSize="14"
+							Padding="4"
+							Cursor="Hand"
+							VerticalAlignment="Center"/>
+				</Grid>
+			</Border>
 
-        <!-- Status banner (error) -->
-        <Border Grid.Row="1"
-                Background="#1AEF5350"
-                CornerRadius="6"
-                Padding="12,8"
-                Margin="0,0,0,12"
-                IsVisible="{Binding IsErrorBannerVisible}">
-            <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Grid.Column="0"
-                           Text="{Binding StatusMessage}"
-                           Foreground="#EF5350"
-                           FontWeight="SemiBold"
-                           VerticalAlignment="Center"
-                           HorizontalAlignment="Center"/>
-                <Button Grid.Column="1"
-                        Content="✕"
-                        Command="{Binding DismissStatusBannerCommand}"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        Foreground="#EF5350"
-                        FontSize="14"
-                        Padding="4"
-                        Cursor="Hand"
-                        VerticalAlignment="Center"/>
-            </Grid>
-        </Border>
+			<!-- Status banner (error) -->
+			<Border Grid.Row="1"
+					Background="#1AEF5350"
+					CornerRadius="6"
+					Padding="12,8"
+					Margin="0,0,0,12"
+					IsVisible="{Binding IsErrorBannerVisible}">
+				<Grid ColumnDefinitions="*,Auto">
+					<TextBlock Grid.Column="0"
+							   Text="{Binding StatusMessage}"
+							   Foreground="#EF5350"
+							   FontWeight="SemiBold"
+							   VerticalAlignment="Center"
+							   HorizontalAlignment="Center"/>
+					<Button Grid.Column="1"
+							Content="X"
+							Command="{Binding DismissStatusBannerCommand}"
+							Background="Transparent"
+							BorderThickness="0"
+							Foreground="#EF5350"
+							FontSize="14"
+							Padding="4"
+							Cursor="Hand"
+							VerticalAlignment="Center"/>
+				</Grid>
+			</Border>
 
-        <!-- Header -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,16">
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="{Binding TitleText}"
-                           FontSize="22"
-                           FontWeight="Bold"
-                           Margin="0,0,0,4"/>
-                <TextBlock Text="{Binding SubtitleText}"
-                           FontSize="13"
-                           Foreground="#888"/>
-            </StackPanel>
+			<!-- Header -->
+			<Grid Grid.Row="2" ColumnDefinitions="*,Auto,Auto,Auto" Margin="0,0,0,16">
+				<StackPanel Grid.Column="0">
+					<TextBlock Text="{Binding TitleText}"
+							   FontSize="22"
+							   FontWeight="Bold"
+							   Margin="0,0,0,4"/>
+					<TextBlock Text="{Binding SubtitleText}"
+							   FontSize="13"
+							   Foreground="#888"/>
+				</StackPanel>
 
-            <Button Grid.Column="1"
-                    Classes="run-selected-btn"
-                    Command="{Binding RunSelectedCommand}"
-                    ToolTip.Tip="{Binding RunSelectedText}"
-                    VerticalAlignment="Center"
-                    Margin="0,0,12,0"
-                    Padding="10,6"
-                    Background="#1A66BB6A"
-                    BorderThickness="0"
-                    CornerRadius="6">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
-                    <TextBlock Text="{Binding RunSelectedText}"
-                               Foreground="#66BB6A"
-                               FontSize="13"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
+				<Button Grid.Column="1"
+						Classes="run-selected-btn"
+						Command="{Binding RunSelectedCommand}"
+						ToolTip.Tip="{Binding RunSelectedText}"
+						VerticalAlignment="Center"
+						Margin="0,0,12,0"
+						Padding="10,6"
+						Background="#1A66BB6A"
+						BorderThickness="0"
+						CornerRadius="6">
+					<StackPanel Orientation="Horizontal" Spacing="6">
+						<PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
+						<TextBlock Text="{Binding RunSelectedText}"
+								   Foreground="#66BB6A"
+								   FontSize="13"
+								   VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
 
-            <Button Grid.Column="2"
-                    Classes="run-selected-btn"
-                    Command="{Binding DeleteSelectedCommand}"
-                    ToolTip.Tip="{Binding DeleteSelectedText}"
-                    VerticalAlignment="Center"
-                    Margin="0,0,12,0"
-                    Padding="10,6"
-                    Background="#1AEF5350"
-                    BorderThickness="0"
-                    CornerRadius="6">
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350" Width="14" Height="14"/>
-                    <TextBlock Text="{Binding DeleteSelectedText}"
-                               Foreground="#EF5350"
-                               FontSize="13"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
+				<Button Grid.Column="2"
+						Classes="run-selected-btn"
+						Command="{Binding DeleteSelectedCommand}"
+						ToolTip.Tip="{Binding DeleteSelectedText}"
+						VerticalAlignment="Center"
+						Margin="0,0,12,0"
+						Padding="10,6"
+						Background="#1AEF5350"
+						BorderThickness="0"
+						CornerRadius="6">
+					<StackPanel Orientation="Horizontal" Spacing="6">
+						<PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350" Width="14" Height="14"/>
+						<TextBlock Text="{Binding DeleteSelectedText}"
+								   Foreground="#EF5350"
+								   FontSize="13"
+								   VerticalAlignment="Center"/>
+					</StackPanel>
+				</Button>
 
-            <TextBox Grid.Column="3"
-                     Text="{Binding SearchText}"
-                     Watermark="{Binding SearchWatermark}"
-                     Width="250"
-                     VerticalAlignment="Center">
-                <TextBox.InnerRightContent>
-                    <Button Command="{Binding ClearSearchCommand}"
-                            IsVisible="{Binding SearchText.Length}"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Padding="4"
-                            Cursor="Hand"
-                            VerticalAlignment="Center">
-                        <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
-                                  Width="12" Height="12"
-                                  Foreground="#888"/>
-                    </Button>
-                </TextBox.InnerRightContent>
-            </TextBox>
-        </Grid>
+				<TextBox Grid.Column="3"
+						 Text="{Binding SearchText}"
+						 Watermark="{Binding SearchWatermark}"
+						 Width="250"
+						 VerticalAlignment="Center">
+					<TextBox.InnerLeftContent>
+						<PathIcon Data="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z"
+								Width="16"
+								Height="16"
+								Margin="10,0,0,0"
+								Opacity="0.5"
+								VerticalAlignment="Center"/>
+					</TextBox.InnerLeftContent>
+					<TextBox.InnerRightContent>
+						<Button Command="{Binding ClearSearchCommand}"
+								IsVisible="{Binding SearchText.Length}"
+								Background="Transparent"
+								BorderThickness="0"
+								Padding="4"
+								Cursor="Hand"
+								VerticalAlignment="Center">
+							<PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
+									  Width="12" Height="12"
+									  Foreground="#888"/>
+						</Button>
+					</TextBox.InnerRightContent>
+				</TextBox>
+			</Grid>
 
-        <!-- Empty state -->
-        <Border Grid.Row="3"
-                BorderBrush="#22FFFFFF"
-                BorderThickness="1"
-                CornerRadius="8"
-                IsVisible="{Binding !HasJobs}">
-            <StackPanel HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Spacing="12"
-                        Margin="0,80">
-                <PathIcon Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"
-                          Foreground="#555"
-                          Width="48" Height="48"/>
-                <TextBlock Text="{Binding EmptyTitleText}"
-                           FontSize="18"
-                           FontWeight="SemiBold"
-                           Foreground="#AAAAAA"
-                           HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding EmptySubtitleText}"
-                           FontSize="13"
-                           Foreground="#777777"
-                           HorizontalAlignment="Center"
-                           TextAlignment="Center"
-                           MaxWidth="400"
-                           TextWrapping="Wrap"/>
-            </StackPanel>
-        </Border>
+			<!-- Empty state -->
+			<Border Grid.Row="3"
+					BorderBrush="#22FFFFFF"
+					BorderThickness="1"
+					CornerRadius="8"
+					IsVisible="{Binding !HasJobs}">
+				<StackPanel HorizontalAlignment="Center"
+							VerticalAlignment="Center"
+							Spacing="12"
+							Margin="0,80">
+					<PathIcon Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"
+							  Foreground="#555"
+							  Width="48" Height="48"/>
+					<TextBlock Text="{Binding EmptyTitleText}"
+							   FontSize="18"
+							   FontWeight="SemiBold"
+							   Foreground="#AAAAAA"
+							   HorizontalAlignment="Center"/>
+					<TextBlock Text="{Binding EmptySubtitleText}"
+							   FontSize="13"
+							   Foreground="#777777"
+							   HorizontalAlignment="Center"
+							   TextAlignment="Center"
+							   MaxWidth="400"
+							   TextWrapping="Wrap"/>
+				</StackPanel>
+			</Border>
 
-        <!-- Column headers + list -->
-        <Border Grid.Row="3"
-                BorderBrush="#22FFFFFF"
-                BorderThickness="1"
-                CornerRadius="8"
-                ClipToBounds="True"
-                IsVisible="{Binding HasJobs}">
-            <Grid RowDefinitions="Auto,*,Auto">
+			<!-- Column headers + list -->
+			<Border Grid.Row="3"
+					BorderBrush="#22FFFFFF"
+					BorderThickness="1"
+					CornerRadius="8"
+					ClipToBounds="True"
+					IsVisible="{Binding HasJobs}">
+				<Grid RowDefinitions="Auto,*,Auto">
 
-                <!-- Column headers -->
-                <Border Grid.Row="0"
-                        Background="#11FFFFFF"
-                        Padding="16,10">
-                    <Grid ColumnDefinitions="40,50,*,1.5*,1.5*,100,180,130">
-                        <CheckBox Grid.Column="0"
-                                  IsChecked="{Binding IsAllSelected}"
-                                  ToolTip.Tip="{Binding SelectAllTooltip}"
-                                  HorizontalAlignment="Center"
-                                  VerticalAlignment="Center"/>
-                        <Button Grid.Column="1" Classes="col-header"
-                                Command="{Binding SortByCommand}" CommandParameter="Id"
-                                HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding IdHeader}"/>
-                        </Button>
-                        <Button Grid.Column="2" Classes="col-header"
-                                Command="{Binding SortByCommand}" CommandParameter="Name"
-                                HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding NameHeader}"/>
-                        </Button>
-                        <Button Grid.Column="3" Classes="col-header"
-                                Command="{Binding SortByCommand}" CommandParameter="Source"
-                                HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding SourceHeader}"/>
-                        </Button>
-                        <Button Grid.Column="4" Classes="col-header"
-                                Command="{Binding SortByCommand}" CommandParameter="Destination"
-                                HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding DestinationHeader}"/>
-                        </Button>
-                        <Button Grid.Column="5" Classes="col-header"
-                                Command="{Binding SortByCommand}" CommandParameter="Type"
-                                HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding TypeHeader}"/>
-                        </Button>
-                        <Button Grid.Column="6" Classes="col-header"
-                                Command="{Binding SortByCommand}" CommandParameter="LastRun"
-                                HorizontalAlignment="Center">
-                            <TextBlock Text="{Binding LastRunHeader}"/>
-                        </Button>
-                        <Button Grid.Column="7" Classes="col-header"
-                                HorizontalAlignment="Center"
-                                IsHitTestVisible="False">
-                            <TextBlock Text="{Binding ActionsHeader}"/>
-                        </Button>
-                    </Grid>
-                </Border>
+					<!-- Column headers -->
+					<Border Grid.Row="0"
+							Background="#11FFFFFF"
+							Padding="16,10">
+						<Grid ColumnDefinitions="40,50,*,1.5*,1.5*,100,180,130">
+							<CheckBox Grid.Column="0"
+									  IsChecked="{Binding IsAllSelected}"
+									  ToolTip.Tip="{Binding SelectAllTooltip}"
+									  HorizontalAlignment="Center"
+									  VerticalAlignment="Center"/>
+							<Button Grid.Column="1" Classes="col-header"
+									Command="{Binding SortByCommand}" CommandParameter="Id"
+									HorizontalAlignment="Center">
+								<TextBlock Text="{Binding IdHeader}"/>
+							</Button>
+							<Button Grid.Column="2" Classes="col-header"
+									Command="{Binding SortByCommand}" CommandParameter="Name"
+									HorizontalAlignment="Center">
+								<TextBlock Text="{Binding NameHeader}"/>
+							</Button>
+							<Button Grid.Column="3" Classes="col-header"
+									Command="{Binding SortByCommand}" CommandParameter="Source"
+									HorizontalAlignment="Center">
+								<TextBlock Text="{Binding SourceHeader}"/>
+							</Button>
+							<Button Grid.Column="4" Classes="col-header"
+									Command="{Binding SortByCommand}" CommandParameter="Destination"
+									HorizontalAlignment="Center">
+								<TextBlock Text="{Binding DestinationHeader}"/>
+							</Button>
+							<Button Grid.Column="5" Classes="col-header"
+									Command="{Binding SortByCommand}" CommandParameter="Type"
+									HorizontalAlignment="Center">
+								<TextBlock Text="{Binding TypeHeader}"/>
+							</Button>
+							<Button Grid.Column="6" Classes="col-header"
+									Command="{Binding SortByCommand}" CommandParameter="LastRun"
+									HorizontalAlignment="Center">
+								<TextBlock Text="{Binding LastRunHeader}"/>
+							</Button>
+							<Button Grid.Column="7" Classes="col-header"
+									HorizontalAlignment="Center"
+									IsHitTestVisible="False">
+								<TextBlock Text="{Binding ActionsHeader}"/>
+							</Button>
+						</Grid>
+					</Border>
 
-                <!-- Job list -->
-                <ScrollViewer Grid.Row="1"
-                              HorizontalScrollBarVisibility="Disabled"
-                              VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding Jobs}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate x:DataType="models:BackupJob">
-                                <Border Classes="job-row"
-                                        BorderBrush="#11FFFFFF"
-                                        BorderThickness="0,0,0,1"
-                                        Padding="16,10">
-                                    <Grid ColumnDefinitions="40,50,*,1.5*,1.5*,100,180,130"
-                                          VerticalAlignment="Center">
+					<!-- Job list -->
+					<ScrollViewer Grid.Row="1"
+								  HorizontalScrollBarVisibility="Disabled"
+								  VerticalScrollBarVisibility="Auto">
+						<ItemsControl ItemsSource="{Binding Jobs}">
+							<ItemsControl.ItemTemplate>
+								<DataTemplate x:DataType="models:BackupJob">
+									<Border Classes="job-row"
+											BorderBrush="#11FFFFFF"
+											BorderThickness="0,0,0,1"
+											Padding="16,10">
+										<Grid ColumnDefinitions="40,50,*,1.5*,1.5*,100,180,130"
+											  VerticalAlignment="Center">
 
-                                        <!-- Checkbox -->
-                                        <CheckBox Grid.Column="0"
-                                                  IsChecked="{Binding IsSelected}"
-                                                  Click="JobCheckBox_Click"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"/>
+											<!-- Checkbox -->
+											<CheckBox Grid.Column="0"
+													  IsChecked="{Binding IsSelected}"
+													  Click="JobCheckBox_Click"
+													  HorizontalAlignment="Center"
+													  VerticalAlignment="Center"/>
 
-                                        <!-- ID -->
-                                        <Border Grid.Column="1" Classes="id-badge"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Id}"/>
-                                        </Border>
+											<!-- ID -->
+											<Border Grid.Column="1" Classes="id-badge"
+													HorizontalAlignment="Center"
+													VerticalAlignment="Center">
+												<TextBlock Text="{Binding Id}"/>
+											</Border>
 
-                                        <!-- Name + execution info -->
-                                        <StackPanel Grid.Column="2"
-                                                    Spacing="2"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center"
-                                                    MaxWidth="250">
-                                            <TextBlock Text="{Binding Name}"
-                                                       ToolTip.Tip="{Binding Name}"
-                                                       FontSize="13"
-                                                       FontWeight="SemiBold"
-                                                       HorizontalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       MaxWidth="250"/>
-                                        </StackPanel>
+											<!-- Name + execution info -->
+											<StackPanel Grid.Column="2"
+														Spacing="2"
+														HorizontalAlignment="Center"
+														VerticalAlignment="Center"
+														MaxWidth="250">
+												<TextBlock Text="{Binding Name}"
+														   ToolTip.Tip="{Binding Name}"
+														   FontSize="13"
+														   FontWeight="SemiBold"
+														   HorizontalAlignment="Center"
+														   TextTrimming="CharacterEllipsis"
+														   MaxWidth="250"/>
+											</StackPanel>
 
-                                        <!-- Source -->
-                                        <TextBlock Grid.Column="3"
-                                                   Text="{Binding Source}"
-                                                   ToolTip.Tip="{Binding Source}"
-                                                   Classes="path-text"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   MaxWidth="250"/>
+											<!-- Source -->
+											<TextBlock Grid.Column="3"
+													   Text="{Binding Source}"
+													   ToolTip.Tip="{Binding Source}"
+													   Classes="path-text"
+													   HorizontalAlignment="Center"
+													   VerticalAlignment="Center"
+													   MaxWidth="250"/>
 
-                                        <!-- Destination -->
-                                        <TextBlock Grid.Column="4"
-                                                   Text="{Binding Destination}"
-                                                   ToolTip.Tip="{Binding Destination}"
-                                                   Classes="path-text"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   MaxWidth="250"/>
+											<!-- Destination -->
+											<TextBlock Grid.Column="4"
+													   Text="{Binding Destination}"
+													   ToolTip.Tip="{Binding Destination}"
+													   Classes="path-text"
+													   HorizontalAlignment="Center"
+													   VerticalAlignment="Center"
+													   MaxWidth="250"/>
 
-                                        <!-- Type -->
-                                        <Border Grid.Column="5" Classes="type-badge"
-                                                HorizontalAlignment="Center"
-                                                VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Type}"/>
-                                        </Border>
+											<!-- Type -->
+											<Border Grid.Column="5" Classes="type-badge"
+													HorizontalAlignment="Center"
+													VerticalAlignment="Center">
+												<TextBlock Text="{Binding Type}"/>
+											</Border>
 
-                                        <!-- Last execution -->
-                                        <TextBlock Grid.Column="6"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   FontSize="12"
-                                                   Foreground="#8FA3B8"
-                                                   Text="{Binding LastExecutionDisplay}"/>
+											<!-- Last execution -->
+											<TextBlock Grid.Column="6"
+													   HorizontalAlignment="Center"
+													   VerticalAlignment="Center"
+													   FontSize="12"
+													   Foreground="#8FA3B8"
+													   Text="{Binding LastExecutionDisplay}"/>
 
-                                        <!-- Actions -->
-                                        <StackPanel Grid.Column="7"
-                                                    Orientation="Horizontal"
-                                                    Spacing="4"
-                                                    HorizontalAlignment="Center"
-                                                    VerticalAlignment="Center">
-                                            <Button Classes="action-btn"
-                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipRun}"
-                                                    Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).RunJobCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A"/>
-                                            </Button>
-                                            <Button Classes="action-btn"
-                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipModify}"
-                                                    Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ModifyJobCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" Foreground="#42A5F5"/>
-                                            </Button>
-                                            <Button Classes="action-btn"
-                                                    ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipDelete}"
-                                                    Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).DeleteJobCommand}"
-                                                    CommandParameter="{Binding}">
-                                                <PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350"/>
-                                            </Button>
-                                        </StackPanel>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
+											<!-- Actions -->
+											<StackPanel Grid.Column="7"
+														Orientation="Horizontal"
+														Spacing="4"
+														HorizontalAlignment="Center"
+														VerticalAlignment="Center">
+												<Button Classes="action-btn"
+														ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipRun}"
+														Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).RunJobCommand}"
+														CommandParameter="{Binding}">
+													<PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A"/>
+												</Button>
+												<Button Classes="action-btn"
+														ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipModify}"
+														Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ModifyJobCommand}"
+														CommandParameter="{Binding}">
+													<PathIcon Data="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" Foreground="#42A5F5"/>
+												</Button>
+												<Button Classes="action-btn"
+														ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipDelete}"
+														Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).DeleteJobCommand}"
+														CommandParameter="{Binding}">
+													<PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350"/>
+												</Button>
+											</StackPanel>
+										</Grid>
+									</Border>
+								</DataTemplate>
+							</ItemsControl.ItemTemplate>
+						</ItemsControl>
+					</ScrollViewer>
 
-                <!-- Pagination -->
-                <Border Grid.Row="2"
-                        Classes="pagination-row"
-                        Padding="12,8"
-                        IsVisible="{Binding IsPaginationVisible}">
-                    <Grid ColumnDefinitions="*,Auto"
-                          VerticalAlignment="Center">
-                        <StackPanel Grid.Column="0"
-                                    Orientation="Horizontal"
-                                    Spacing="6"
-                                    HorizontalAlignment="Center"
-                                    VerticalAlignment="Center">
-                            <Button Classes="page-nav-btn"
-                                    Command="{Binding PreviousPageCommand}">
-                                <TextBlock Text="&#9664;" FontSize="12"/>
-                            </Button>
+					<!-- Pagination -->
+					<Border Grid.Row="2"
+							Classes="pagination-row"
+							Padding="12,8"
+							IsVisible="{Binding IsPaginationVisible}">
+						<Grid ColumnDefinitions="*,Auto"
+							  VerticalAlignment="Center">
+							<StackPanel Grid.Column="0"
+										Orientation="Horizontal"
+										Spacing="6"
+										HorizontalAlignment="Center"
+										VerticalAlignment="Center">
+								<Button Classes="page-nav-btn"
+										Command="{Binding PreviousPageCommand}">
+									<TextBlock Text="&#9664;" FontSize="12"/>
+								</Button>
 
-                            <ItemsControl ItemsSource="{Binding PaginationItems}">
-                                <ItemsControl.ItemsPanel>
-                                    <ItemsPanelTemplate>
-                                        <StackPanel Orientation="Horizontal" Spacing="6"/>
-                                    </ItemsPanelTemplate>
-                                </ItemsControl.ItemsPanel>
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:PaginationItem">
-                                        <Grid>
-                                            <Button IsVisible="{Binding IsPage}"
-                                                    Classes="page-item-btn"
-                                                    Classes.current="{Binding IsCurrent}"
-                                                    IsEnabled="{Binding IsSelectable}"
-                                                    Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).GoToPageCommand}"
-                                                    CommandParameter="{Binding PageNumber}">
-                                                <TextBlock Text="{Binding Label}"/>
-                                            </Button>
-                                            <TextBlock IsVisible="{Binding IsEllipsis}"
-                                                       Text="{Binding Label}"
-                                                       Classes="page-ellipsis"/>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
+								<ItemsControl ItemsSource="{Binding PaginationItems}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<StackPanel Orientation="Horizontal" Spacing="6"/>
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+									<ItemsControl.ItemTemplate>
+										<DataTemplate x:DataType="vm:PaginationItem">
+											<Grid>
+												<Button IsVisible="{Binding IsPage}"
+														Classes="page-item-btn"
+														Classes.current="{Binding IsCurrent}"
+														IsEnabled="{Binding IsSelectable}"
+														Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).GoToPageCommand}"
+														CommandParameter="{Binding PageNumber}">
+													<TextBlock Text="{Binding Label}"/>
+												</Button>
+												<TextBlock IsVisible="{Binding IsEllipsis}"
+														   Text="{Binding Label}"
+														   Classes="page-ellipsis"/>
+											</Grid>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
 
-                            <Button Classes="page-nav-btn"
-                                    Command="{Binding NextPageCommand}">
-                                <TextBlock Text="&#9654;" FontSize="12"/>
-                            </Button>
-                        </StackPanel>
+								<Button Classes="page-nav-btn"
+										Command="{Binding NextPageCommand}">
+									<TextBlock Text="&#9654;" FontSize="12"/>
+								</Button>
+							</StackPanel>
 
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    Spacing="8"
-                                    HorizontalAlignment="Right"
-                                    VerticalAlignment="Center">
-                            <TextBlock Text="{Binding PageDisplay}"
-                                       Classes="page-meta"/>
+							<StackPanel Grid.Column="1"
+										Orientation="Horizontal"
+										Spacing="8"
+										HorizontalAlignment="Right"
+										VerticalAlignment="Center">
+								<TextBlock Text="{Binding PageDisplay}"
+										   Classes="page-meta"/>
 
-                            <TextBlock Text="|"
-                                       Classes="page-meta"/>
+								<TextBlock Text="|"
+										   Classes="page-meta"/>
 
-                            <TextBox Classes="page-input"
-                                     Text="{Binding PageInputText}"
-                                     Watermark="{Binding PageJumpWatermark}">
-                                <TextBox.KeyBindings>
-                                    <KeyBinding Gesture="Enter"
-                                                Command="{Binding JumpToEnteredPageCommand}"/>
-                                </TextBox.KeyBindings>
-                            </TextBox>
+								<TextBox Classes="page-input"
+										 Text="{Binding PageInputText}"
+										 Watermark="{Binding PageJumpWatermark}">
+									<TextBox.KeyBindings>
+										<KeyBinding Gesture="Enter"
+													Command="{Binding JumpToEnteredPageCommand}"/>
+									</TextBox.KeyBindings>
+								</TextBox>
 
-                            <Button Classes="page-go-btn"
-                                    Command="{Binding JumpToEnteredPageCommand}">
-                                <TextBlock Text="&#8629;" FontSize="13"/>
-                            </Button>
+								<Button Classes="page-go-btn"
+										Command="{Binding JumpToEnteredPageCommand}">
+									<TextBlock Text="&#8629;" FontSize="13"/>
+								</Button>
 
-                            <TextBlock Text="|"
-                                       Classes="page-meta"/>
+								<TextBlock Text="|"
+										   Classes="page-meta"/>
 
-                            <ComboBox Classes="page-size"
-                                      ItemsSource="{Binding PageSizeOptions}"
-                                      SelectedItem="{Binding SelectedPageSize}"/>
+								<ComboBox Classes="page-size"
+										  ItemsSource="{Binding PageSizeOptions}"
+										  SelectedItem="{Binding SelectedPageSize}"/>
 
-                            <TextBlock Text="/page"
-                                       Classes="page-meta"/>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-            </Grid>
-        </Border>
-    </Grid>
+								<TextBlock Text="/page"
+										   Classes="page-meta"/>
+							</StackPanel>
+						</Grid>
+					</Border>
+				</Grid>
+			</Border>
+		</Grid>
 
-    <!-- Confirmation overlay -->
-    <Border Background="#AA000000"
-            IsVisible="{Binding IsConfirmDialogOpen}">
-        <Border Background="#2D2D3D"
-                CornerRadius="10"
-                Padding="32,24"
-                MaxWidth="420"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BoxShadow="0 8 24 0 #60000000">
-            <StackPanel Spacing="20">
-                <TextBlock Text="{Binding ConfirmRunTitle}"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           HorizontalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Text="{Binding ConfirmRunMessage}"
-                               FontSize="14"
-                               Foreground="#BBBBBB"/>
-                    <TextBlock Text="{Binding PendingJob.Name}"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="White"/>
-                    <TextBlock Text="?"
-                               FontSize="14"
-                               Foreground="#BBBBBB"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal"
-                            Spacing="12"
-                            HorizontalAlignment="Center">
-                    <Button Content="{Binding BtnCancelText}"
-                            Command="{Binding CancelRunCommand}"
-                            Padding="20,8"
-                            Background="#44FFFFFF"
-                            Foreground="White"
-                            CornerRadius="6"/>
-                    <Button Content="{Binding BtnConfirmText}"
-                            Command="{Binding ConfirmRunCommand}"
-                            Padding="20,8"
-                            Background="#66BB6A"
-                            Foreground="White"
-                            FontWeight="SemiBold"
-                            CornerRadius="6"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-    </Border>
+		<!-- Confirmation overlay -->
+		<Border Background="#AA000000"
+				IsVisible="{Binding IsConfirmDialogOpen}">
+			<Border Background="#2D2D3D"
+					CornerRadius="10"
+					Padding="32,24"
+					MaxWidth="420"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center"
+					BoxShadow="0 8 24 0 #60000000">
+				<StackPanel Spacing="20">
+					<TextBlock Text="{Binding ConfirmRunTitle}"
+							   FontSize="18"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Center"/>
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+						<TextBlock Text="{Binding ConfirmRunMessage}"
+								   FontSize="14"
+								   Foreground="#BBBBBB"/>
+						<TextBlock Text="{Binding PendingJob.Name}"
+								   FontSize="14"
+								   FontWeight="SemiBold"
+								   Foreground="White"/>
+						<TextBlock Text="?"
+								   FontSize="14"
+								   Foreground="#BBBBBB"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal"
+								Spacing="12"
+								HorizontalAlignment="Center">
+						<Button Content="{Binding BtnCancelText}"
+								Command="{Binding CancelRunCommand}"
+								Padding="20,8"
+								Background="#44FFFFFF"
+								Foreground="White"
+								CornerRadius="6"/>
+						<Button Content="{Binding BtnConfirmText}"
+								Command="{Binding ConfirmRunCommand}"
+								Padding="20,8"
+								Background="#66BB6A"
+								Foreground="White"
+								FontWeight="SemiBold"
+								CornerRadius="6"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+		</Border>
 
-    <!-- Run selected confirmation overlay -->
-    <Border Background="#AA000000"
-            IsVisible="{Binding IsConfirmRunSelectedDialogOpen}">
-        <Border Background="#2D2D3D"
-                CornerRadius="10"
-                Padding="32,24"
-                MaxWidth="420"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BoxShadow="0 8 24 0 #60000000">
-            <StackPanel Spacing="20">
-                <TextBlock Text="{Binding ConfirmRunTitle}"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding ConfirmRunSelectedMessage}"
-                           FontSize="14"
-                           Foreground="#BBBBBB"
-                           HorizontalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal"
-                            Spacing="12"
-                            HorizontalAlignment="Center">
-                    <Button Content="{Binding BtnCancelText}"
-                            Command="{Binding CancelRunSelectedCommand}"
-                            Padding="20,8"
-                            Background="#44FFFFFF"
-                            Foreground="White"
-                            CornerRadius="6"/>
-                    <Button Content="{Binding BtnConfirmText}"
-                            Command="{Binding ConfirmRunSelectedCommand}"
-                            Padding="20,8"
-                            Background="#66BB6A"
-                            Foreground="White"
-                            FontWeight="SemiBold"
-                            CornerRadius="6"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-    </Border>
+		<!-- Run selected confirmation overlay -->
+		<Border Background="#AA000000"
+				IsVisible="{Binding IsConfirmRunSelectedDialogOpen}">
+			<Border Background="#2D2D3D"
+					CornerRadius="10"
+					Padding="32,24"
+					MaxWidth="420"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center"
+					BoxShadow="0 8 24 0 #60000000">
+				<StackPanel Spacing="20">
+					<TextBlock Text="{Binding ConfirmRunTitle}"
+							   FontSize="18"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Center"/>
+					<TextBlock Text="{Binding ConfirmRunSelectedMessage}"
+							   FontSize="14"
+							   Foreground="#BBBBBB"
+							   HorizontalAlignment="Center"/>
+					<StackPanel Orientation="Horizontal"
+								Spacing="12"
+								HorizontalAlignment="Center">
+						<Button Content="{Binding BtnCancelText}"
+								Command="{Binding CancelRunSelectedCommand}"
+								Padding="20,8"
+								Background="#44FFFFFF"
+								Foreground="White"
+								CornerRadius="6"/>
+						<Button Content="{Binding BtnConfirmText}"
+								Command="{Binding ConfirmRunSelectedCommand}"
+								Padding="20,8"
+								Background="#66BB6A"
+								Foreground="White"
+								FontWeight="SemiBold"
+								CornerRadius="6"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+		</Border>
 
-    <!-- Delete selected confirmation overlay -->
-    <Border Background="#AA000000"
-            IsVisible="{Binding IsConfirmDeleteSelectedDialogOpen}">
-        <Border Background="#2D2D3D"
-                CornerRadius="10"
-                Padding="32,24"
-                MaxWidth="420"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BoxShadow="0 8 24 0 #60000000">
-            <StackPanel Spacing="20">
-                <TextBlock Text="{Binding ConfirmDeleteTitle}"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           HorizontalAlignment="Center"/>
-                <TextBlock Text="{Binding ConfirmDeleteSelectedMessage}"
-                           FontSize="14"
-                           Foreground="#BBBBBB"
-                           HorizontalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal"
-                            Spacing="12"
-                            HorizontalAlignment="Center">
-                    <Button Content="{Binding BtnCancelText}"
-                            Command="{Binding CancelDeleteSelectedCommand}"
-                            Padding="20,8"
-                            Background="#44FFFFFF"
-                            Foreground="White"
-                            CornerRadius="6"/>
-                    <Button Content="{Binding BtnDeleteText}"
-                            Command="{Binding ConfirmDeleteSelectedCommand}"
-                            Padding="20,8"
-                            Background="#EF5350"
-                            Foreground="White"
-                            FontWeight="SemiBold"
-                            CornerRadius="6"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-    </Border>
+		<!-- Delete selected confirmation overlay -->
+		<Border Background="#AA000000"
+				IsVisible="{Binding IsConfirmDeleteSelectedDialogOpen}">
+			<Border Background="#2D2D3D"
+					CornerRadius="10"
+					Padding="32,24"
+					MaxWidth="420"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center"
+					BoxShadow="0 8 24 0 #60000000">
+				<StackPanel Spacing="20">
+					<TextBlock Text="{Binding ConfirmDeleteTitle}"
+							   FontSize="18"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Center"/>
+					<TextBlock Text="{Binding ConfirmDeleteSelectedMessage}"
+							   FontSize="14"
+							   Foreground="#BBBBBB"
+							   HorizontalAlignment="Center"/>
+					<StackPanel Orientation="Horizontal"
+								Spacing="12"
+								HorizontalAlignment="Center">
+						<Button Content="{Binding BtnCancelText}"
+								Command="{Binding CancelDeleteSelectedCommand}"
+								Padding="20,8"
+								Background="#44FFFFFF"
+								Foreground="White"
+								CornerRadius="6"/>
+						<Button Content="{Binding BtnDeleteText}"
+								Command="{Binding ConfirmDeleteSelectedCommand}"
+								Padding="20,8"
+								Background="#EF5350"
+								Foreground="White"
+								FontWeight="SemiBold"
+								CornerRadius="6"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+		</Border>
 
-    <!-- Delete confirmation overlay -->
-    <Border Background="#AA000000"
-            IsVisible="{Binding IsDeleteDialogOpen}">
-        <Border Background="#2D2D3D"
-                CornerRadius="10"
-                Padding="32,24"
-                MaxWidth="420"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BoxShadow="0 8 24 0 #60000000">
-            <StackPanel Spacing="20">
-                <TextBlock Text="{Binding ConfirmDeleteTitle}"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           HorizontalAlignment="Center"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
-                    <TextBlock Text="{Binding ConfirmDeleteMessage}"
-                               FontSize="14"
-                               Foreground="#BBBBBB"/>
-                    <TextBlock Text="{Binding PendingDeleteJob.Name}"
-                               FontSize="14"
-                               FontWeight="SemiBold"
-                               Foreground="White"/>
-                    <TextBlock Text="?"
-                               FontSize="14"
-                               Foreground="#BBBBBB"/>
-                </StackPanel>
-                <StackPanel Orientation="Horizontal"
-                            Spacing="12"
-                            HorizontalAlignment="Center">
-                    <Button Content="{Binding BtnCancelText}"
-                            Command="{Binding CancelDeleteCommand}"
-                            Padding="20,8"
-                            Background="#44FFFFFF"
-                            Foreground="White"
-                            CornerRadius="6"/>
-                    <Button Content="{Binding BtnDeleteText}"
-                            Command="{Binding ConfirmDeleteCommand}"
-                            Padding="20,8"
-                            Background="#EF5350"
-                            Foreground="White"
-                            FontWeight="SemiBold"
-                            CornerRadius="6"/>
-                </StackPanel>
-            </StackPanel>
-        </Border>
-    </Border>
+		<!-- Delete confirmation overlay -->
+		<Border Background="#AA000000"
+				IsVisible="{Binding IsDeleteDialogOpen}">
+			<Border Background="#2D2D3D"
+					CornerRadius="10"
+					Padding="32,24"
+					MaxWidth="420"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center"
+					BoxShadow="0 8 24 0 #60000000">
+				<StackPanel Spacing="20">
+					<TextBlock Text="{Binding ConfirmDeleteTitle}"
+							   FontSize="18"
+							   FontWeight="Bold"
+							   HorizontalAlignment="Center"/>
+					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
+						<TextBlock Text="{Binding ConfirmDeleteMessage}"
+								   FontSize="14"
+								   Foreground="#BBBBBB"/>
+						<TextBlock Text="{Binding PendingDeleteJob.Name}"
+								   FontSize="14"
+								   FontWeight="SemiBold"
+								   Foreground="White"/>
+						<TextBlock Text="?"
+								   FontSize="14"
+								   Foreground="#BBBBBB"/>
+					</StackPanel>
+					<StackPanel Orientation="Horizontal"
+								Spacing="12"
+								HorizontalAlignment="Center">
+						<Button Content="{Binding BtnCancelText}"
+								Command="{Binding CancelDeleteCommand}"
+								Padding="20,8"
+								Background="#44FFFFFF"
+								Foreground="White"
+								CornerRadius="6"/>
+						<Button Content="{Binding BtnDeleteText}"
+								Command="{Binding ConfirmDeleteCommand}"
+								Padding="20,8"
+								Background="#EF5350"
+								Foreground="White"
+								FontWeight="SemiBold"
+								CornerRadius="6"/>
+					</StackPanel>
+				</StackPanel>
+			</Border>
+		</Border>
 
-    <!-- Edit job overlay -->
-    <Border Background="#AA000000"
-            IsVisible="{Binding IsEditDialogOpen}">
-        <Border Background="#2D2D3D"
-                CornerRadius="10"
-                Padding="32,24"
-                MaxWidth="500"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Center"
-                BoxShadow="0 8 24 0 #60000000">
-            <ScrollViewer MaxHeight="600" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Spacing="18"
-                            DataContext="{Binding EditingJob}"
-                            x:DataType="vm:EditJobViewModel">
+		<!-- Edit job overlay -->
+		<Border Background="#AA000000"
+				IsVisible="{Binding IsEditDialogOpen}">
+			<Border Background="#2D2D3D"
+					CornerRadius="10"
+					Padding="32,24"
+					MaxWidth="500"
+					HorizontalAlignment="Center"
+					VerticalAlignment="Center"
+					BoxShadow="0 8 24 0 #60000000">
+				<ScrollViewer MaxHeight="600" HorizontalScrollBarVisibility="Disabled">
+					<StackPanel Spacing="18"
+								DataContext="{Binding EditingJob}"
+								x:DataType="vm:EditJobViewModel">
 
-                    <!-- Title -->
-                    <TextBlock Text="{Binding TitleText}"
-                               FontSize="18"
-                               FontWeight="Bold"
-                               HorizontalAlignment="Center"
-                               Margin="0,0,0,4"/>
+						<!-- Title -->
+						<TextBlock Text="{Binding TitleText}"
+								   FontSize="18"
+								   FontWeight="Bold"
+								   HorizontalAlignment="Center"
+								   Margin="0,0,0,4"/>
 
-                    <!-- Backup Name -->
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="{Binding NameLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
-                        <TextBox Text="{Binding Name}" LostFocus="EditName_LostFocus"/>
-                        <TextBlock Text="{Binding JobNameError}"
-                                   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
-                                   IsVisible="{Binding JobNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
-                    </StackPanel>
+						<!-- Backup Name -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="{Binding NameLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+							<TextBox Text="{Binding Name}" LostFocus="EditName_LostFocus"/>
+							<TextBlock Text="{Binding JobNameError}"
+									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+									   IsVisible="{Binding JobNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+						</StackPanel>
 
-                    <!-- Source Path -->
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="{Binding SourceLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBox Grid.Column="0"
-                                     Text="{Binding SourcePath}"
-                                     LostFocus="EditSource_LostFocus"/>
-                            <Button Grid.Column="1"
-                                    Content="{Binding BrowseButtonLabel}"
-                                    Click="EditBrowseSource_Click"
-                                    Background="#22FFFFFF" Foreground="#BBBBBB"
-                                    CornerRadius="6" Padding="14,8"
-                                    Cursor="Hand" BorderThickness="0"
-                                    Margin="8,0,0,0"/>
-                        </Grid>
-                        <TextBlock Text="{Binding SourcePathError}"
-                                   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
-                                   IsVisible="{Binding SourcePathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
-                    </StackPanel>
+						<!-- Source Path -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="{Binding SourceLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+							<Grid ColumnDefinitions="*,Auto">
+								<TextBox Grid.Column="0"
+										 Text="{Binding SourcePath}"
+										 LostFocus="EditSource_LostFocus"/>
+								<Button Grid.Column="1"
+										Content="{Binding BrowseButtonLabel}"
+										Click="EditBrowseSource_Click"
+										Background="#22FFFFFF" Foreground="#BBBBBB"
+										CornerRadius="6" Padding="14,8"
+										Cursor="Hand" BorderThickness="0"
+										Margin="8,0,0,0"/>
+							</Grid>
+							<TextBlock Text="{Binding SourcePathError}"
+									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+									   IsVisible="{Binding SourcePathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+						</StackPanel>
 
-                    <!-- Destination Path -->
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="{Binding DestinationLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
-                        <Grid ColumnDefinitions="*,Auto">
-                            <TextBox Grid.Column="0"
-                                     Text="{Binding DestinationPath}"
-                                     LostFocus="EditDestination_LostFocus"/>
-                            <Button Grid.Column="1"
-                                    Content="{Binding BrowseButtonLabel}"
-                                    Click="EditBrowseDestination_Click"
-                                    Background="#22FFFFFF" Foreground="#BBBBBB"
-                                    CornerRadius="6" Padding="14,8"
-                                    Cursor="Hand" BorderThickness="0"
-                                    Margin="8,0,0,0"/>
-                        </Grid>
-                        <TextBlock Text="{Binding DestinationPathError}"
-                                   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
-                                   IsVisible="{Binding DestinationPathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
-                    </StackPanel>
+						<!-- Destination Path -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="{Binding DestinationLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+							<Grid ColumnDefinitions="*,Auto">
+								<TextBox Grid.Column="0"
+										 Text="{Binding DestinationPath}"
+										 LostFocus="EditDestination_LostFocus"/>
+								<Button Grid.Column="1"
+										Content="{Binding BrowseButtonLabel}"
+										Click="EditBrowseDestination_Click"
+										Background="#22FFFFFF" Foreground="#BBBBBB"
+										CornerRadius="6" Padding="14,8"
+										Cursor="Hand" BorderThickness="0"
+										Margin="8,0,0,0"/>
+							</Grid>
+							<TextBlock Text="{Binding DestinationPathError}"
+									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+									   IsVisible="{Binding DestinationPathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+						</StackPanel>
 
-                    <!-- Backup Type -->
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="{Binding BackupTypeLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
-                        <ComboBox ItemsSource="{Binding BackupTypeOptions}"
-                                  SelectedValueBinding="{Binding Value}"
-                                  SelectedValue="{Binding SelectedBackupType}"
-                                  HorizontalAlignment="Stretch"/>
-                    </StackPanel>
+						<!-- Backup Type -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="{Binding BackupTypeLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+							<ComboBox ItemsSource="{Binding BackupTypeOptions}"
+									  SelectedValueBinding="{Binding Value}"
+									  SelectedValue="{Binding SelectedBackupType}"
+									  HorizontalAlignment="Stretch"/>
+						</StackPanel>
 
-                    <!-- Buttons -->
-                    <StackPanel Orientation="Horizontal"
-                                Spacing="12"
-                                HorizontalAlignment="Right"
-                                Margin="0,8,0,0">
-                        <Button Content="{Binding CancelButtonLabel}"
-                                Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).CancelEditCommand}"
-                                Padding="20,8"
-                                Background="#44FFFFFF"
-                                Foreground="White"
-                                CornerRadius="6"/>
-                        <Button Content="{Binding SaveButtonLabel}"
-                                Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ConfirmEditCommand}"
-                                Padding="20,8"
-                                Background="#42A5F5"
-                                Foreground="White"
-                                FontWeight="SemiBold"
-                                CornerRadius="6"/>
-                    </StackPanel>
+						<!-- Buttons -->
+						<StackPanel Orientation="Horizontal"
+									Spacing="12"
+									HorizontalAlignment="Right"
+									Margin="0,8,0,0">
+							<Button Content="{Binding CancelButtonLabel}"
+									Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).CancelEditCommand}"
+									Padding="20,8"
+									Background="#44FFFFFF"
+									Foreground="White"
+									CornerRadius="6"/>
+							<Button Content="{Binding SaveButtonLabel}"
+									Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ConfirmEditCommand}"
+									Padding="20,8"
+									Background="#42A5F5"
+									Foreground="White"
+									FontWeight="SemiBold"
+									CornerRadius="6"/>
+						</StackPanel>
 
-                </StackPanel>
-            </ScrollViewer>
-        </Border>
-    </Border>
-
-    </Panel>
+					</StackPanel>
+				</ScrollViewer>
+			</Border>
+		</Border>
+	</Panel>
 </UserControl>

@@ -80,6 +80,9 @@ public partial class LogViewModel : ViewModelBase
     [ObservableProperty] private string _statusInProgress = string.Empty;
     [ObservableProperty] private string _statusCompleted = string.Empty;
     [ObservableProperty] private string _statusError = string.Empty;
+    [ObservableProperty] private string _emptyTitle = string.Empty;
+    [ObservableProperty] private string _emptySubtitle = string.Empty;
+    [ObservableProperty] private bool _hasAvailableLogs;
 
     [ObservableProperty] private string _selectedBackupName = string.Empty;
     [ObservableProperty] private string _selectedRunTitle = string.Empty;
@@ -148,6 +151,12 @@ public partial class LogViewModel : ViewModelBase
 
     partial void OnSearchTextChanged(string value) => RefreshJobs();
 
+    [RelayCommand]
+    private void ClearSearch()
+    {
+        SearchText = string.Empty;
+    }
+
     partial void OnSelectedYearItemChanged(LogYearPickerItemModel? value)
     {
         if (_isUpdatingYearPicker || value is null)
@@ -197,7 +206,7 @@ public partial class LogViewModel : ViewModelBase
     {
         HistoryTitle = _localizationService.TranslateText(LocalizationKey.gui_sidebar_log);
         HistorySubtitle = _localizationService.TranslateText(LocalizationKey.gui_log_history_subtitle);
-        SearchLogWatermark = _localizationService.TranslateText(LocalizationKey.gui_log_search_log_watermark);
+        SearchLogWatermark = _localizationService.TranslateText(LocalizationKey.gui_manage_search);
         DatePrefix = _localizationService.TranslateText(LocalizationKey.gui_log_date_prefix);
         WeekdayMonday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_mon);
         WeekdayTuesday = _localizationService.TranslateText(LocalizationKey.gui_log_weekday_tue);
@@ -226,6 +235,11 @@ public partial class LogViewModel : ViewModelBase
         StatusInProgress = _localizationService.TranslateText(LocalizationKey.gui_log_status_in_progress);
         StatusCompleted = _localizationService.TranslateText(LocalizationKey.gui_log_status_completed);
         StatusError = _localizationService.TranslateText(LocalizationKey.gui_log_status_error);
+        EmptyTitle = _localizationService.TranslateText(LocalizationKey.gui_log_empty_title);
+        EmptySubtitle = string.Format(
+            CultureInfo.CurrentCulture,
+            _localizationService.TranslateText(LocalizationKey.gui_log_empty_subtitle),
+            _localizationService.TranslateText(LocalizationKey.gui_sidebar_manage));
         OnPropertyChanged(nameof(SelectedDateDisplay));
         OnPropertyChanged(nameof(SelectedRunFormatDisplay));
 
@@ -261,6 +275,7 @@ public partial class LogViewModel : ViewModelBase
 
         if (!targetDate.HasValue || targetDate.Value == default)
         {
+            HasAvailableLogs = false;
             _selectedDateValue = null;
             SelectedDate = string.Empty;
             _allBackupJobs.Clear();
@@ -273,6 +288,7 @@ public partial class LogViewModel : ViewModelBase
             return;
         }
 
+        HasAvailableLogs = true;
         SelectDateInternal(targetDate.Value, true);
     }
 
