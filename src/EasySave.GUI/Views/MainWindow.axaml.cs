@@ -18,17 +18,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
 
-        if (OperatingSystem.IsMacOS())
-        {
-            ExtendClientAreaTitleBarHeightHint = 32;
-            MainLayoutGrid.RowDefinitions = new RowDefinitions("32,*");
-            TitleBarLogo.IsVisible = false;
-            TitleBarBrand.Spacing = 0;
-            TitleBarBrand.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
-            TitleBarBrand.Margin = new Thickness(0, -2, 0, 0);
-            TitleBarBrand.SetValue(Grid.ColumnProperty, 0);
-            TitleBarBrand.SetValue(Grid.ColumnSpanProperty, 4);
-        }
         ConfigurePlatformTitleBar();
     }
 
@@ -37,7 +26,19 @@ public partial class MainWindow : Window
         if (OperatingSystem.IsLinux())
         {
             ConfigureLinux();
+            return;
         }
+        else if (OperatingSystem.IsMacOS())
+        {
+            ConfigureMacOS();
+            return;
+        }
+
+        // Keep native title bar on non-Unix platforms.
+        ExtendClientAreaToDecorationsHint = false;
+        SystemDecorations = SystemDecorations.Full;
+        TitleBarGrid.IsVisible = false;
+        MainLayoutGrid.RowDefinitions = new RowDefinitions("0,*");
     }
 
     private void ConfigureLinux()
@@ -63,6 +64,18 @@ public partial class MainWindow : Window
         };
 
         UpdateMaximizeIcon(WindowState);
+    }
+
+    private void ConfigureMacOS()
+    {
+        ExtendClientAreaTitleBarHeightHint = 32;
+        MainLayoutGrid.RowDefinitions = new RowDefinitions("32,*");
+        TitleBarLogo.IsVisible = false;
+        TitleBarBrand.Spacing = 0;
+        TitleBarBrand.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
+        TitleBarBrand.Margin = new Thickness(0, -2, 0, 0);
+        TitleBarBrand.SetValue(Grid.ColumnProperty, 0);
+        TitleBarBrand.SetValue(Grid.ColumnSpanProperty, 4);
     }
 
     private void ToggleMaximize()
