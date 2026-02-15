@@ -1,18 +1,16 @@
-# EasySave v1.1
+# EasySave v2.0
 
 ![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet)
 ![C#](https://img.shields.io/badge/C%23-12-239120?logo=csharp)
 ![License](https://img.shields.io/badge/license-ProSoft-blue)
 
-Logiciel professionnel de sauvegarde développé par ProSoft. Créez et gérez des sauvegardes complètes et différentielles avec une interface CLI multilingue.
+Logiciel professionnel de sauvegarde développé par ProSoft. EasySave 2.0 introduit une interface graphique Avalonia, conserve le mode console/CLI, et ajoute un pilotage avancé des logs, de l'état temps réel et du chiffrement.
 
-> Historique technique et détails d'implémentation : [CHANGELOG.md](CHANGELOG.md)
+> Historique technique : [CHANGELOG.md](CHANGELOG.md)
 
----
+## Table des matières
 
-## Table des Matières
-
-- [Démarrage Rapide](#démarrage-rapide)
+- [Démarrage rapide](#démarrage-rapide)
 - [Fonctionnalités](#fonctionnalités)
 - [Installation](#installation)
 - [Utilisation](#utilisation)
@@ -20,180 +18,168 @@ Logiciel professionnel de sauvegarde développé par ProSoft. Créez et gérez d
 - [Développement](#développement)
 - [Équipe](#équipe)
 
----
-
-## Démarrage Rapide
+## Démarrage rapide
 
 ```bash
-# Compilation
+# Build
 dotnet build
-dotnet run --project src/EasySave.UI
 
-# Docker
-docker compose up dev
+# Lancement GUI (par défaut)
+dotnet run --project src/EasySave.AppCommon
+
+# Lancement console/CLI
+dotnet run --project src/EasySave.AppCommon -- 1
 ```
-
----
 
 ## Fonctionnalités
 
-- Sauvegardes Complètes et Différentielles
-- Interface CLI multilingue (Français/Anglais)
-- Logs journaliers JSON/XML avec état temps réel
-- Gestion jusqu'à 5 travaux de sauvegarde
-- Multi-plateforme : Windows, Linux, macOS
-- Clean Architecture avec injection de dépendances
-- 100+ tests unitaires (>95% de couverture)
-
----
+- Double interface : GUI (Avalonia) et console/CLI (même cœur applicatif)
+- Sauvegardes complètes et différentielles
+- Exécution mono ou multi-jobs (`1`, `1;3;5`, `1-3`)
+- Logs journaliers JSON/XML + rechargement runtime du logger
+- Consultation des logs par date/job/run dans l'interface GUI
+- État temps réel (`state.json`) avec progression et statut
+- Chiffrement post-transfert par extensions configurables (`DotNet` intégré, `External` préparé)
+- Blocage de l'exécution si un logiciel métier surveillé est détecté
+- Internationalisation FR/EN (console + GUI)
+- 505 tests unitaires passants (`dotnet test`)
 
 ## Installation
 
 ### Prérequis
+
 - .NET 8.0 SDK ou runtime
 - Windows 10/11, Linux, ou macOS
 
-### Depuis les Releases
-1. Téléchargez depuis [Releases](../../releases)
-2. Lancez `EasySave.exe` (Windows) ou `./EasySave` (Linux/macOS)
-
 ### Avec Docker
+
 ```bash
 docker compose up dev  # Développement
 docker compose up test # Tests
 ```
 
 ### Compilation
+
 ```bash
 git clone https://github.com/ant0rbtll/easysave.git
 cd easysave
 dotnet restore
 dotnet build
-dotnet run --project src/EasySave.UI
+dotnet run --project src/EasySave.AppCommon
 ```
-
----
 
 ## Utilisation
 
-### Mode Interactif
-Lancez l'application sans arguments pour accéder au menu interactif :
+### Mode GUI (par défaut)
+
 ```bash
-./EasySave
+dotnet run --project src/EasySave.AppCommon
 ```
 
-**Navigation** : Utilisez les flèches haut/bas pour naviguer dans les menus, Entrée pour valider.
+Sections principales :
 
-**Actions disponibles** :
-- Créer un nouveau travail (nom, source, destination, type)
-- Lancer un ou plusieurs travaux
-- Consulter la liste des travaux
-- Modifier un travail existant
-- Supprimer un travail
-- Changer la langue (FR/EN)
+- Création de jobs
+- Gestion (recherche, tri, pagination, exécution, suppression, édition)
+- Historique des logs (calendrier, runs, détails)
+- Configuration (langue, format de log, dossier de logs, extensions chiffrées, logiciels métier)
 
-### Mode Ligne de Commande
-Exécutez des travaux directement sans interaction :
+### Mode console interactif
+
 ```bash
-./EasySave 1        # Exécute le travail ID 1
-./EasySave 1;3;5    # Exécute les travaux 1, 3 et 5
-./EasySave 1-3      # Exécute les travaux 1, 2 et 3
+EASYSAVE_HOST=console dotnet run --project src/EasySave.AppCommon
 ```
 
-### Exemple Complet
+### Mode ligne de commande
+
 ```bash
-# 1. Lancer en mode interactif
-./EasySave
-
-# 2. Créer un travail "Documents"
-#    - Source: C:\Users\John\Documents
-#    - Destination: D:\Backups\Documents
-#    - Type: Différentielle
-
-# 3. Exécuter via CLI
-./EasySave 1
+dotnet run --project src/EasySave.AppCommon -- 1
+dotnet run --project src/EasySave.AppCommon -- "1;3;5"
+dotnet run --project src/EasySave.AppCommon -- 1-3
 ```
 
-### Fichiers Générés
-- **Travaux** : `jobs.json` - Configuration des travaux
-- **Logs** : `logs/2026-02-05.json` ou `logs/2026-02-05.xml` - Historique journalier
-- **État** : `state.json` - Progression en temps réel
-- **Préférences** : `user-preferences.json` - Langue, format de logs et configuration
+### Fichiers générés
 
-**Emplacements** :
+- `jobs.json` : configuration des travaux
+- `state.json` : état temps réel
+- `user-preferences.json` : préférences utilisateur
+- `logs/YYYY-MM-DD.json|xml` : historique journalier
+
+### Emplacements par OS
+
 - Windows : `%APPDATA%/ProSoft/EasySave/`
 - Linux/macOS : `~/.config/ProSoft/EasySave/`
-
----
 
 ## Documentation
 
 ### Manuels
+
 - [Manuel Utilisateur (FR)](docs/manuals/Manuel_Utilisateur_EasySave.pdf) • [User Manual (EN)](docs/manuals/User_Manual_EasySave.pdf)
 - [Manuel Support (FR)](docs/manuals/Manuel_Support_EasySave.pdf) • [Support Manual (EN)](docs/manuals/Support_Manual_EasySave.pdf)
 
 ### Diagrammes UML
+
 - [Classes](docs/classes.puml) • [Séquence](docs/sequence.puml) • [Activité](docs/activity.puml) • [Cas d'utilisation](docs/usecase.puml)
 
 ### Changelog
-[CHANGELOG.md](CHANGELOG.md) - Historique technique des versions
 
----
+- [CHANGELOG.md](CHANGELOG.md)
 
 ## Développement
 
-### Structure du Projet
-```
-src/
-├── EasySave.Core/          # Entités métier
-├── EasySave.Application/   # Services applicatifs
-├── EasySave.Backup/        # Moteur de sauvegarde
-├── EasySave.Persistence/   # Repositories
-├── EasySave.State/         # Gestion d'état temps réel
-├── EasySave.Localization/  # Internationalisation
-├── EasySave.Log/           # Abstraction logging (implémente EasyLog si présent)
-├── EasySave.UI/            # Interface CLI
-└── EasyLog/                # Bibliothèque de logs (DLL)
+### Structure du projet
 
-tests/                      # Tests unitaires
-docs/                       # Documentation et UML
+```text
+src/
+├── EasySave.AppCommon/     # Entrée unique + DI + sélection host GUI/console
+├── EasySave.GUI/           # Interface graphique Avalonia (MVVM)
+├── EasySave.UI/            # Interface console + parser CLI
+├── EasySave.Application/   # Cas d'usage (jobs, état, logs)
+├── EasySave.Backup/        # Moteur de backup + chiffrement + garde d'exécution
+├── EasySave.Persistence/   # Repositories JSON (jobs + préférences)
+├── EasySave.State/         # Écriture état temps réel
+├── EasySave.Log/           # Contrats de log (abstraction)
+├── EasyLog/                # Logger journalier JSON/XML
+├── EasySave.Configuration/ # Résolution des chemins
+├── EasySave.Localization/  # Traductions FR/EN
+└── EasySave.System/        # Abstractions filesystem/transfert
+
+tests/                      # 10 projets de tests
+docs/                       # UML + guides + manuels
 ```
 
 ### Technologies
+
 - .NET 8.0 avec C# 12
 - Microsoft.Extensions.DependencyInjection
+- Avalonia 11, CommunityToolkit.Mvvm
 - YamlDotNet, System.Text.Json
 - xUnit, Moq
 
 ### Commandes
-```bash
-./clean.sh                  # Nettoyer
-dotnet restore              # Restaurer dépendances
-dotnet build                # Compiler
-dotnet test                 # Lancer tests
-```
 
----
+```bash
+./clean.sh
+dotnet restore
+dotnet build
+dotnet test
+dotnet run --project src/EasySave.AppCommon
+```
 
 ## Équipe
 
 Développé par l'équipe ProSoft - CESI :
 
-- **Antonin RABATEL** ([@ant0rbtll](https://github.com/ant0rbtll)) - Architecture, Persistence, Docker, Tests
-- **Romain TOUZE** ([@RomainTouze](https://github.com/RomainTouze)) - UI, Localization, Error Management
-- **Alexandre RIVET** ([@Gosyfrone](https://github.com/Gosyfrone)) - Architecture, Core, Backup Engine, State Management, CI/CD
-- **Youcef AFANE** ([@RezeGH](https://github.com/RezeGH)) - EasyLog.dll, Tests, Documentation
-- **Lisa ACHOUR** ([@achourl14](https://github.com/achourl14)) - Application Service, UI, Tests
-- **Thaïs VIANES** ([@thedarknessqueen](https://github.com/thedarknessqueen)) - ETR (État Temps Réel), State Writer
-
----
+- **Antonin RABATEL** ([@ant0rbtll](https://github.com/ant0rbtll))
+- **Romain TOUZE** ([@RomainTouze](https://github.com/RomainTouze))
+- **Alexandre RIVET** ([@Gosyfrone](https://github.com/Gosyfrone))
+- **Youcef AFANE** ([@RezeGH](https://github.com/RezeGH))
+- **Lisa ACHOUR** ([@achourl14](https://github.com/achourl14))
+- **Thaïs VIANES** ([@thedarknessqueen](https://github.com/thedarknessqueen))
 
 ## Support
 
 1. Consultez les [manuels](docs/manuals/)
 2. Vérifiez les [issues existantes](../../issues)
 3. Créez une [nouvelle issue](../../issues/new)
-
----
 
 © 2026 ProSoft - Tous droits réservés

@@ -1,58 +1,59 @@
-﻿@startuml
+@startuml
 left to right direction
 skinparam packageStyle rectangle
 skinparam shadowing false
 
 actor "Utilisateur" as User
 
-rectangle "EasySave 1.1" {
-  usecase "Naviguer dans les\nmenus interactifs" as UC_Interactive
+rectangle "EasySave 2.0" {
+  usecase "Lancer l'application" as UC_Start
+  usecase "Utiliser l'interface GUI" as UC_GUI
+  usecase "Executer un job\n(en une ligne CLI)" as UC_CLI_OneLine
 
-  usecase "Gerer les travaux\nde sauvegarde" as UC_ManageJobs
-  usecase "Creer un travail" as UC_Create
-  usecase "Lister les travaux" as UC_List
-  usecase "Voir le detail\nd'un travail" as UC_Details
-  usecase "Modifier un travail" as UC_Update
-  usecase "Supprimer un travail" as UC_Delete
-  usecase "Executer un travail" as UC_RunOne
+  usecase "Gerer les jobs" as UC_Manage
+  usecase "Creer un job" as UC_Create
+  usecase "Modifier un job" as UC_Update
+  usecase "Supprimer un job" as UC_Delete
+  usecase "Executer un job" as UC_RunOne
 
-  usecase "Gerer les modifs\nnon sauvegardees" as UC_Unsaved
+  usecase "Consulter les logs" as UC_Logs
+  usecase "Naviguer logs par date/job/run" as UC_LogNav
 
-  usecase "Executer via CLI" as UC_CLI
-  usecase "Executer plusieurs\ntravaux (IDs)" as UC_RunMany
+  usecase "Configurer l'application" as UC_Config
+  usecase "Configurer langue" as UC_Language
+  usecase "Configurer format de log" as UC_LogFormat
+  usecase "Configurer dossier de logs" as UC_LogDir
+  usecase "Configurer extensions chiffrees" as UC_EncExtensions
+  usecase "Configurer logiciels metier surveilles" as UC_BusinessProc
 
-  usecase "Configurer application" as UC_Settings
-  usecase "Changer la langue\n(FR/EN)" as UC_Lang
-  usecase "Changer dossier\ndes logs" as UC_LogDir
-  usecase "Changer format\ndes logs (JSON/XML)" as UC_LogFormat
-
-  usecase "Consulter etat\ntemps reel (state.json)" as UC_State
-  usecase "Consulter logs\njournaliers" as UC_Logs
+  usecase "Bloquer execution si logiciel metier detecte" as UC_BusinessGuard
+  usecase "Chiffrer fichiers selon policy" as UC_Encrypt
 }
 
-User --> UC_Interactive
-User --> UC_CLI
-User --> UC_State
-User --> UC_Logs
+User --> UC_Start
+User --> UC_CLI_OneLine
 
-UC_Interactive .> UC_ManageJobs : <<include>>
-UC_Interactive .> UC_Settings : <<include>>
+UC_Start .> UC_GUI : <<include>>
 
-UC_ManageJobs .> UC_Create : <<include>>
-UC_ManageJobs .> UC_List : <<include>>
-UC_ManageJobs .> UC_Details : <<include>>
+UC_GUI .> UC_Manage : <<include>>
+UC_GUI .> UC_Logs : <<include>>
+UC_GUI .> UC_Config : <<include>>
 
-UC_Details .> UC_Update : <<extend>>
-UC_Details .> UC_Delete : <<extend>>
-UC_Details .> UC_RunOne : <<extend>>
+UC_Manage .> UC_Create : <<include>>
+UC_Manage .> UC_Update : <<include>>
+UC_Manage .> UC_Delete : <<include>>
+UC_Manage .> UC_RunOne : <<include>>
 
-UC_Update .> UC_Unsaved : <<include>>
+UC_Logs .> UC_LogNav : <<include>>
 
-UC_Settings .> UC_Lang : <<include>>
-UC_Settings .> UC_LogDir : <<include>>
-UC_Settings .> UC_LogFormat : <<include>>
+UC_Config .> UC_Language : <<include>>
+UC_Config .> UC_LogFormat : <<include>>
+UC_Config .> UC_LogDir : <<include>>
+UC_Config .> UC_EncExtensions : <<include>>
+UC_Config .> UC_BusinessProc : <<include>>
 
-UC_CLI .> UC_RunMany : <<include>>
-UC_RunMany .> UC_RunOne : <<include>>
+UC_RunOne .> UC_BusinessGuard : <<include>>
+UC_RunOne .> UC_Encrypt : <<include>>
+UC_CLI_OneLine .> UC_RunOne : <<include>>
 
 @enduml
