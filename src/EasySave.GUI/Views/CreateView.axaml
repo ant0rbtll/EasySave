@@ -1,0 +1,199 @@
+<UserControl
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="clr-namespace:EasySave.GUI.ViewModels"
+    xmlns:conv="using:Avalonia.Data.Converters"
+    x:Class="EasySave.GUI.Views.CreateView"
+    x:DataType="vm:CreateViewModel">
+
+	<UserControl.Styles>
+		<!-- Browse button -->
+		<Style Selector="Button.btn-browse">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#51A2F2"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Padding" Value="14,8"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="BorderThickness" Value="0"/>
+		</Style>
+		<Style Selector="Button.btn-browse:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#33FFFFFF"/>
+		</Style>
+
+		<!-- Primary action button -->
+		<Style Selector="Button.btn-primary">
+			<Setter Property="Background" Value="#42A5F5"/>
+			<Setter Property="Foreground" Value="White"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Padding" Value="24,10"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="BorderThickness" Value="0"/>
+		</Style>
+		<Style Selector="Button.btn-primary:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#5BB1F7"/>
+		</Style>
+		<Style Selector="Button.btn-primary:disabled /template/ ContentPresenter">
+			<Setter Property="Background" Value="#1A42A5F5"/>
+			<Setter Property="Foreground" Value="#66FFFFFF"/>
+		</Style>
+
+		<!-- Secondary button -->
+		<Style Selector="Button.btn-secondary">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#51A2F2"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="Padding" Value="24,10"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="BorderThickness" Value="0"/>
+		</Style>
+		<Style Selector="Button.btn-secondary:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#33FFFFFF"/>
+		</Style>
+
+		<!-- Form field label -->
+		<Style Selector="TextBlock.field-label">
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="FontSize" Value="13"/>
+			<Setter Property="Foreground" Value="#CCCCCC"/>
+		</Style>
+
+		<!-- Error text -->
+		<Style Selector="TextBlock.field-error">
+			<Setter Property="Foreground" Value="#EF5350"/>
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="Margin" Value="2,2,0,0"/>
+		</Style>
+	</UserControl.Styles>
+
+	<StackPanel Spacing="20" MaxWidth="800" Margin="24">
+
+		<StackPanel>
+			<!-- HEADER -->
+			<Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
+				<StackPanel Spacing="4" Margin="0,0,0,4">
+					<TextBlock Text="{Binding Title}" FontSize="22" FontWeight="Bold"/>
+					<TextBlock Text="{Binding Subtitle}" FontSize="13" Foreground="#888"/>
+				</StackPanel>
+			</Grid>
+			<StackPanel Spacing="20" MaxWidth="800">
+
+				<!-- SUCCESS BANNER -->
+				<Border
+					IsVisible="{Binding IsSuccessMessageVisible}"
+					Background="#1A66BB6A"
+					BorderBrush="#66BB6A"
+					BorderThickness="1"
+					CornerRadius="6"
+					Padding="12,10">
+					<TextBlock
+						Text="{Binding SuccessMessage}"
+						Foreground="#66BB6A"
+						FontWeight="SemiBold"
+						TextAlignment="Center"/>
+				</Border>
+
+				<!-- ERROR BANNER -->
+				<Border
+					IsVisible="{Binding IsErrorMessageVisible}"
+					Background="#1AEF5350"
+					CornerRadius="6"
+					Padding="12,8">
+					<Grid ColumnDefinitions="*,Auto">
+						<TextBlock Grid.Column="0"
+								   Text="{Binding ErrorMessage}"
+								   Foreground="#EF5350"
+								   FontWeight="SemiBold"
+								   VerticalAlignment="Center"
+								   HorizontalAlignment="Center"/>
+						<Button Grid.Column="1"
+								Content="&#x2715;"
+								Command="{Binding DismissErrorCommand}"
+								Background="Transparent"
+								BorderThickness="0"
+								Foreground="#EF5350"
+								FontSize="14"
+								Padding="4"
+								Cursor="Hand"
+								VerticalAlignment="Center"/>
+					</Grid>
+				</Border>
+
+				<!-- FORM CARD -->
+				<Border
+					BorderBrush="#22FFFFFF"
+					BorderThickness="1"
+					CornerRadius="8"
+					Padding="24,20"
+					Background="#08FFFFFF">
+					<StackPanel Spacing="18">
+
+						<!-- Backup Name -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="{Binding BackupNameLabel}" Classes="field-label"/>
+							<TextBox Text="{Binding Name}" LostFocus="Name_LostFocus"/>
+							<TextBlock Text="{Binding JobNameError}" Classes="field-error"
+									   IsVisible="{Binding JobNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+						</StackPanel>
+
+						<!-- Source Path -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="{Binding SourceLabel}" Classes="field-label"/>
+							<Grid ColumnDefinitions="*,Auto">
+								<TextBox Grid.Column="0"
+										 Text="{Binding SourcePath}"
+										 LostFocus="Source_LostFocus"/>
+								<Button Grid.Column="1"
+										Classes="btn-browse"
+										Content="{Binding BrowseButtonLabel}"
+										Click="BrowseSource_Click"
+										Margin="8,0,0,0"/>
+							</Grid>
+							<TextBlock Text="{Binding SourcePathError}" Classes="field-error"
+									   IsVisible="{Binding SourcePathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+						</StackPanel>
+
+						<!-- Destination Path -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="{Binding DestinationLabel}" Classes="field-label"/>
+							<Grid ColumnDefinitions="*,Auto">
+								<TextBox Grid.Column="0"
+										 Text="{Binding DestinationPath}"
+										 LostFocus="Destination_LostFocus"/>
+								<Button Grid.Column="1"
+										Classes="btn-browse"
+										Content="{Binding BrowseButtonLabel}"
+										Click="BrowseDestination_Click"
+										Margin="8,0,0,0"/>
+							</Grid>
+							<TextBlock Text="{Binding DestinationPathError}" Classes="field-error"
+									   IsVisible="{Binding DestinationPathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+						</StackPanel>
+
+						<!-- Backup Type -->
+						<StackPanel Spacing="6">
+							<TextBlock Text="{Binding BackupTypeLabel}" Classes="field-label"/>
+							<ComboBox ItemsSource="{Binding BackupTypeOptions}"
+									  SelectedValueBinding="{Binding Value}"
+									  SelectedValue="{Binding SelectedBackupType}"
+									  IsEditable="False"
+									  HorizontalAlignment="Stretch"/>
+						</StackPanel>
+
+						<!-- BUTTONS -->
+						<StackPanel Orientation="Horizontal"
+									HorizontalAlignment="Right"
+									Spacing="12">
+							<Button Classes="btn-secondary"
+									Content="{Binding CancelButtonLabel}"
+									Command="{Binding CancelCommand}"/>
+							<Button Classes="btn-primary"
+									Content="{Binding CreateJobButtonLabel}"
+									Command="{Binding CreateJobCommand}"/>
+						</StackPanel>
+					</StackPanel>
+				</Border>
+			</StackPanel>
+		</StackPanel>
+	</StackPanel>
+</UserControl>

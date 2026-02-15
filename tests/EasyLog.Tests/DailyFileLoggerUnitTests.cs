@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Xml.Linq;
 using EasySave.Configuration;
 using LogEntry = EasySave.Log.LogEntry;
@@ -18,7 +19,10 @@ public class DailyFileLoggerUnitTests
         var expectedDate = expectedUtc.Date;
 
         var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var entry = new LogEntry(
             local,
@@ -47,7 +51,10 @@ public class DailyFileLoggerUnitTests
     {
         using var tempDir = new TempDirectory();
         var pathProvider = new TestPathProvider(tempDir.Path);
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         Assert.Throws<ArgumentNullException>(() => logger.Write(null!));
     }
@@ -64,7 +71,10 @@ public class DailyFileLoggerUnitTests
         // Create a proper empty JSON array
         File.WriteAllText(logPath, "[\n]");
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 9, 0, 0, DateTimeKind.Utc),
@@ -93,7 +103,10 @@ public class DailyFileLoggerUnitTests
         Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
         File.WriteAllText(logPath, string.Empty);
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 11, 0, 0, DateTimeKind.Utc),
@@ -132,7 +145,10 @@ public class DailyFileLoggerUnitTests
 
         File.WriteAllText(logPath, "[\n" + IndentBlock(SerializeEntry(first), 2) + "\n]\n");
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var second = first with { BackupName = "JobSecond", FileSizeBytes = 42 };
         logger.Write(second);
@@ -167,7 +183,10 @@ public class DailyFileLoggerUnitTests
         // Write a corrupted file (incomplete JSON array)
         File.WriteAllText(logPath, "[\n  {\"test\": \"data\"}\n");
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         // Should not throw - will append entry despite corruption
         logger.Write(entry);
@@ -186,7 +205,10 @@ public class DailyFileLoggerUnitTests
         var pathProvider = new TestPathProvider(tempDir.Path);
         var logPath = pathProvider.GetDailyLogPath(date);
 
-        using var logger = new DailyFileLogger(new JsonLogFormatter(), pathProvider);
+        using var logger = new DailyFileLogger(
+            new JsonLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}");
 
         var entry = new LogEntry(
             new DateTime(2026, 2, 5, 12, 0, 0, DateTimeKind.Utc),
@@ -212,7 +234,11 @@ public class DailyFileLoggerUnitTests
         var pathProvider = new TestPathProvider(tempDir.Path);
         var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
 
-        using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
+        using var logger = new DailyFileLogger(
+            new XmlLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}",
+            format: LogFormat.Xml);
         var entry = new LogEntry(
             new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
             "JobXml",
@@ -237,7 +263,11 @@ public class DailyFileLoggerUnitTests
         var pathProvider = new TestPathProvider(tempDir.Path);
         var logPath = pathProvider.GetDailyLogPath(date, LogFormat.Xml);
 
-        using var logger = new DailyFileLogger(new XmlLogFormatter(), pathProvider, format: LogFormat.Xml);
+        using var logger = new DailyFileLogger(
+            new XmlLogFormatter(),
+            pathProvider,
+            mutexName: $"EasyLogUnitTests_{Guid.NewGuid():N}",
+            format: LogFormat.Xml);
         var first = new LogEntry(
             new DateTime(2026, 2, 6, 8, 0, 0, DateTimeKind.Utc),
             "JobXml1",
@@ -266,7 +296,11 @@ public class DailyFileLoggerUnitTests
     private static List<LogEntry> ReadLogEntries(string path)
     {
         var json = File.ReadAllText(path);
-        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+        var options = new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false) }
+        };
         return JsonSerializer.Deserialize<List<LogEntry>>(json, options) ?? [];
     }
 
@@ -275,7 +309,8 @@ public class DailyFileLoggerUnitTests
         var options = new JsonSerializerOptions
         {
             WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters = { new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: false) }
         };
 
         return JsonSerializer.Serialize(entry, options);
@@ -323,6 +358,9 @@ public class DailyFileLoggerUnitTests
         {
             // Not used in tests.
         }
+
+        public string ResolveLogsDirectory()
+            => _root;
     }
 
     private sealed class TempDirectory : IDisposable

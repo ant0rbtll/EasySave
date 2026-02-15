@@ -30,24 +30,6 @@ public class MenuFactoryTests
     }
 
     [Fact]
-    public void CreateMainMenu_WhenAtMaxJobs_ExcludesCreateAndIncludesManage()
-    {
-        var factory = new MenuFactory();
-        var manageCalled = false;
-
-        var menu = factory.CreateMainMenu(
-            IBackupJobRepository.DefaultMaxJobs,
-            () => { },
-            () => manageCalled = true,
-            () => { },
-            () => { });
-
-        Assert.Equal(new[] { LocalizationKey.menu_manage_jobs, LocalizationKey.menu_params, LocalizationKey.menu_quit }, menu.Items);
-        menu.Actions[0]();
-        Assert.True(manageCalled);
-    }
-
-    [Fact]
     public void CreateLocaleMenu_SortsCulturesAndAddsBack()
     {
         var factory = new MenuFactory();

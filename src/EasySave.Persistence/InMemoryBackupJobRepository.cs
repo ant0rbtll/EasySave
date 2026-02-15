@@ -8,7 +8,6 @@ namespace EasySave.Persistence;
 /// </summary>
 public class InMemoryBackupJobRepository : IBackupJobRepository
 {
-    private readonly int _maxJobs = IBackupJobRepository.DefaultMaxJobs;
     private readonly Dictionary<int, BackupJob> _jobs = new();
     private readonly IJobIdProvider _idProvider;
 
@@ -27,14 +26,6 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     /// </exception>
     public void Add(BackupJob job)
     {
-        if (Count() >= _maxJobs) 
-        {
-            var e = new InvalidOperationException($"Cannot add more than {_maxJobs} jobs.");
-            e.Data["errorKey"] = "error_add_max";
-            e.Data["max_jobs"] = _maxJobs;
-            throw e;
-        }
-
         if (job.Id == 0)
         {
             job.Id = _idProvider.NextId(GetAll());
@@ -87,12 +78,6 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     public int Count()
     {
         return _jobs.Count;
-    }
-
-    /// <inheritdoc />
-    public int MaxJobs()
-    {
-        return _maxJobs;
     }
 
     /// <inheritdoc />

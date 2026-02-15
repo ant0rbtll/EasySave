@@ -19,12 +19,18 @@ public class BackupEngine(
     IFileSystem fileSystem,
     ITransferService transferService,
     IStateWriter stateWriter,
-    ILogger logger) : IBackupEngine
+    ILogger logger,
+    IEncryptionPolicyProvider? encryptionPolicyProvider = null,
+    IEncryptionProviderResolver? encryptionProviderResolver = null,
+    IBackupExecutionGuard? executionGuard = null) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
     private readonly IStateWriter _stateWriter = stateWriter;
     private readonly ILogger _logger = logger;
+    private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
+    private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
+    private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
 
     /// <summary>
     /// Executes a complete or differential backup.
@@ -33,9 +39,11 @@ public class BackupEngine(
     /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
     public void Execute(BackupJob job)
     {
+        long counterTimeMs = 0;
         try
         {
             var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
+            var encryptionPolicy = _encryptionPolicyProvider.GetPolicy();
 
             int totalFiles = files.Count;
             long totalSize = files.Sum(f => _fileSystem.GetFileSize(f));
@@ -44,7 +52,7 @@ public class BackupEngine(
             long remainingSize = totalSize;
 
             UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
-            Log(job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
+            Log(job.Id, job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
 
             foreach (var file in files)
             {
@@ -53,12 +61,15 @@ public class BackupEngine(
 
                 if (CanCopyFile(job.Type, file, destinationFile))
                 {
+                    _executionGuard.EnsureCanCopyNextFile();
+
                     var destinationDir = Path.GetDirectoryName(destinationFile)!;
 
                     if (!_fileSystem.DirectoryExists(destinationDir))
                     {
                         _fileSystem.CreateDirectory(destinationDir);
                         Log(
+                            job.Id,
                             job.Name,
                             LogEventType.CreateDirectory,
                             destinationDir,
@@ -80,13 +91,19 @@ public class BackupEngine(
                         e.Data["2_errorCode"] = result.ErrorCode;
                         throw e;
                     }
-                    Log(job.Name,
+
+                    long encryptionTimeMs = EncryptTransferredFileIfRequired(destinationFile, encryptionPolicy);
+
+                    Log(job.Id,
+                        job.Name,
                         LogEventType.TransferFile,
                         file,
                         destinationFile,
                         result.FileSizeBytes,
-                        result.TransferTimeMs
+                        result.TransferTimeMs,
+                        encryptionTimeMs
                     );
+                    counterTimeMs += result.TransferTimeMs + Math.Max(0, encryptionTimeMs);
 
                     remainingFiles--;
                     remainingSize -= result.FileSizeBytes;
@@ -100,19 +117,25 @@ public class BackupEngine(
             }
 
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
-            Log(job.Name, LogEventType.EndBackup, "", "", totalSize, 0);
+            Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, counterTimeMs);
             _stateWriter.MarkInactive(job.Id);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
+            string sourceContext = ex.Data["errorKey"]?.ToString() ?? ex.GetType().Name;
+            string destinationContext = ex.Data["0"]?.ToString() ?? ex.Message;
+            var eventType = sourceContext == "error_business_software_running"
+                ? LogEventType.BusinessSoftwareDetected
+                : LogEventType.Error;
             Log(
+                job.Id,
                 job.Name,
-                LogEventType.Error,
-                "",
-                "",
+                eventType,
+                sourceContext,
+                destinationContext,
                 0,
-                0
+                counterTimeMs
             );
             throw;
         }
@@ -170,30 +193,31 @@ public class BackupEngine(
     /// <param name="src">Current source file path.</param>
     /// <param name="dst">Current destination file path.</param>
     private void UpdateState(
-    BackupJob job,
-    BackupStatus status,
-    int totalFiles,
-    long totalSize,
-    int remainingFiles,
-    long remainingSize,
-    int progress,
-    string src,
-    string dst)
-{
-    _stateWriter.Update(new StateEntry {
-        BackupId = job.Id,
-        BackupName = job.Name,
-        Timestamp = DateTime.Now,
-        Status = status,
-        TotalFiles = totalFiles,
-        TotalSizeBytes = totalSize,
-        RemainingFiles = remainingFiles,
-        RemainingSizeBytes = remainingSize,
-        ProgressPercent = progress,
-        CurrentSourcePath = src,
-        CurrentDestinationPath = dst
-    });
-}
+        BackupJob job,
+        BackupStatus status,
+        int totalFiles,
+        long totalSize,
+        int remainingFiles,
+        long remainingSize,
+        int progress,
+        string src,
+        string dst)
+    {
+        _stateWriter.Update(new StateEntry
+        {
+            BackupId = job.Id,
+            BackupName = job.Name,
+            Timestamp = DateTime.Now,
+            Status = status,
+            TotalFiles = totalFiles,
+            TotalSizeBytes = totalSize,
+            RemainingFiles = remainingFiles,
+            RemainingSizeBytes = remainingSize,
+            ProgressPercent = progress,
+            CurrentSourcePath = src,
+            CurrentDestinationPath = dst
+        });
+    }
 
     /// <summary>
     /// Logs a backup operation entry.
@@ -204,24 +228,29 @@ public class BackupEngine(
     /// <param name="destinationPath">Destination file path.</param>
     /// <param name="fileSizeBytes">File size in bytes.</param>
     /// <param name="transferTimeMs">Transfer time in milliseconds.</param>
+    /// <param name="encryptionTimeMs">Encryption time in milliseconds.</param>
     private void Log(
+        int backupId,
         string backupName,
         LogEventType eventType,
         string sourcePath,
         string destinationPath,
         long fileSizeBytes,
-        long transferTimeMs)
+        long transferTimeMs,
+        long encryptionTimeMs = 0)
     {
         try
         {
             _logger.Write(new LogEntry(
                 DateTime.Now,
+                backupId,
                 backupName,
                 eventType,
                 sourcePath,
                 destinationPath,
                 fileSizeBytes,
-                transferTimeMs
+                transferTimeMs,
+                encryptionTimeMs
             )
             );
         }
@@ -231,5 +260,37 @@ public class BackupEngine(
         }
     }
 
+    private long EncryptTransferredFileIfRequired(string destinationFile, EncryptionPolicy policy)
+    {
+        if (!policy.ShouldEncrypt(destinationFile))
+        {
+            return 0;
+        }
+
+        var provider = _encryptionProviderResolver.Resolve(policy.ProviderName);
+        if (provider is null)
+        {
+            return -1;
+        }
+
+        try
+        {
+            // TODO v3.0: Refactor to async - Current sync-over-async pattern risks deadlock and blocks threads
+            var result = provider.EncryptAsync(destinationFile, policy).GetAwaiter().GetResult();
+            if (result.IsSuccess)
+            {
+                return Math.Max(0, result.EncryptionTimeMs);
+            }
+
+            return result.EncryptionTimeMs < 0
+                ? result.EncryptionTimeMs
+                : -Math.Max(1, result.EncryptionTimeMs);
+        }
+        catch (Exception)
+        {
+            // Encryption failures must not interrupt backup execution.
+            return -1;
+        }
+    }
 
 }

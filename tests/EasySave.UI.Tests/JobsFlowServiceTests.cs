@@ -127,6 +127,6 @@ public class JobsFlowServiceTests
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
         var backupEngine = new FakeBackupEngine();
-        return new BackupApplicationService(repository, backupEngine);
+        return new BackupApplicationService(repository, backupEngine, Moq.Mock.Of<IBackupJobStateService>());
     }
 }

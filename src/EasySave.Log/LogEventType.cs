@@ -28,5 +28,10 @@ public enum LogEventType
     /// <summary>
     /// The backup operation was completed successfully.
     /// </summary>
-    EndBackup = 4
+    EndBackup = 4,
+
+    /// <summary>
+    /// The backup operation was interrupted because business software was detected.
+    /// </summary>
+    BusinessSoftwareDetected = 5
 }

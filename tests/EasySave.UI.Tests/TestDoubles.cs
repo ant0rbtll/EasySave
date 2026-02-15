@@ -131,6 +131,8 @@ internal sealed class FakePathProvider : IPathProvider
     {
         LogDirectoryOverride = directory;
     }
+
+    public string ResolveLogsDirectory() => "logs";
 }
 
 internal sealed class FakeUserPreferencesRepository : IUserPreferencesRepository
