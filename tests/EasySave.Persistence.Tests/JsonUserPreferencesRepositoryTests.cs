@@ -162,6 +162,23 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         Assert.Null(preferences.LogDirectory);
     }
 
+    [Fact]
+    public void Load_WhenEncryptionSettingsAreMissing_UsesDefaults()
+    {
+        // Arrange
+        File.WriteAllText(_testFilePath, "{\"language\": \"en\"}");
+        var repo = CreateRepository();
+
+        // Act
+        var preferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(preferences);
+        Assert.Equal("DotNet", preferences.EncryptionProvider);
+        Assert.Empty(preferences.EncryptedExtensions);
+        Assert.Null(preferences.CryptoSoftExecutablePath);
+    }
+
     #endregion
 
     #region Save Tests
@@ -266,6 +283,71 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         // Assert
         Assert.NotNull(loadedPreferences);
         Assert.Equal("/tmp/easysave-logs", loadedPreferences.LogDirectory);
+    }
+
+    [Fact]
+    public void SaveAndLoad_PersistsEncryptionSettings()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        var preferences = new UserPreferences
+        {
+            Language = "en",
+            EncryptionProvider = "External",
+            CryptoSoftExecutablePath = "/tools/cryptosoft",
+            EncryptedExtensions = [".txt", ".docx"]
+        };
+
+        // Act
+        repo.Save(preferences);
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Equal("External", loadedPreferences.EncryptionProvider);
+        Assert.Equal("/tools/cryptosoft", loadedPreferences.CryptoSoftExecutablePath);
+        Assert.Equal([".txt", ".docx"], loadedPreferences.EncryptedExtensions);
+    }
+
+    [Fact]
+    public void SaveAndLoad_PersistsBusinessSoftwareProcessNames()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        var preferences = new UserPreferences
+        {
+            Language = "en",
+            BusinessSoftwareProcessNames = ["calc.exe", "excel"]
+        };
+
+        // Act
+        repo.Save(preferences);
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Equal(["calc", "excel"], loadedPreferences.BusinessSoftwareProcessNames);
+    }
+
+    [Fact]
+    public void Load_WithLegacyBusinessSoftwareProcessName_MigratesToProcessNamesList()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        const string legacyJson = """
+            {
+              "language": "en",
+              "businessSoftwareProcessName": "calc.exe, excel"
+            }
+            """;
+        File.WriteAllText(_testFilePath, legacyJson);
+
+        // Act
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.NotNull(loadedPreferences);
+        Assert.Equal(["calc", "excel"], loadedPreferences.BusinessSoftwareProcessNames);
     }
 
     [Fact]

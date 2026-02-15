@@ -59,7 +59,7 @@ namespace EasySave.Configuration
             _logDirectoryOverride = directory.Trim();
         }
 
-        private string ResolveLogsDirectory()
+        public string ResolveLogsDirectory()
         {
             if (string.IsNullOrWhiteSpace(_logDirectoryOverride))
             {

@@ -19,7 +19,6 @@ namespace EasySave.UI
             errors = new Dictionary<string, LocalizationKey>()
             {
                 { "error_default", LocalizationKey.error_default },
-                { "error_add_max", LocalizationKey.error_add_max },
                 { "error_add_exists", LocalizationKey.error_add_exists  },
                 { "error_parser_arg_null", LocalizationKey.error_parser_arg_null },
                 { "error_parser_arg_invalid", LocalizationKey.error_parser_arg_invalid },
@@ -31,7 +30,8 @@ namespace EasySave.UI
                 { "error_file_not_found", LocalizationKey.error_file_not_found },
                 { "error_directory_not_found", LocalizationKey.error_directory_not_found },
                 { "error_parts_empty", LocalizationKey.error_parts_empty },
-                { "error_parts_null", LocalizationKey.error_parts_null }
+                { "error_parts_null", LocalizationKey.error_parts_null },
+                { "error_business_software_running", LocalizationKey.error_business_software_running }
             };
         }
 

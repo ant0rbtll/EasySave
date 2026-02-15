@@ -1,11 +1,14 @@
 using System.Reflection;
+using EasySave.AppCommon;
+using EasySave.AppCommon.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace EasySave.UI.Tests;
 
 public class ProgramTests
 {
     [Fact]
-    public void Main_WithNoArgs_CallsConsoleMainMenu()
+    public void Host_Run_WithNoArgs_CallsConsoleMainMenu()
     {
         var app = CreateApplicationService(out _);
         var console = new FakeConsoleAdapter();
@@ -39,23 +42,19 @@ public class ProgramTests
             jobsFlow,
             settingsFlow);
 
-        var previousFactory = Program.ServiceProviderFactory;
-        Program.ServiceProviderFactory = () => new FakeServiceProvider(ui);
-        try
-        {
-            Program.Main([]);
-        }
-        finally
-        {
-            Program.ServiceProviderFactory = previousFactory;
-        }
+        var services = new ServiceCollection();
+        services.AddSingleton(ui);
+        var serviceProvider = services.BuildServiceProvider();
+
+        var host = new Host();
+        host.Run(serviceProvider, []);
 
         Assert.Single(menuService.ShownMenuConfigs);
         Assert.Equal(LocalizationKey.menu, menuService.ShownMenuConfigs[0].Label);
     }
 
     [Fact]
-    public void Main_WithArgs_CallsConsoleRunFromArgs()
+    public void Host_Run_WithArgs_CallsConsoleRunFromArgs()
     {
         var app = CreateApplicationService(out var engine);
         app.CreateJob("A", "S", "D", BackupType.Complete);
@@ -91,28 +90,31 @@ public class ProgramTests
             jobsFlow,
             settingsFlow);
 
-        var previousFactory = Program.ServiceProviderFactory;
-        Program.ServiceProviderFactory = () => new FakeServiceProvider(ui);
-        try
-        {
-            Program.Main(["1"]);
-        }
-        finally
-        {
-            Program.ServiceProviderFactory = previousFactory;
-        }
+        var services = new ServiceCollection();
+        services.AddSingleton(ui);
+        var serviceProvider = services.BuildServiceProvider();
+
+        var host = new Host();
+        host.Run(serviceProvider, ["1"]);
 
         Assert.Single(engine.ExecutedJobs);
         Assert.Equal(1, menuService.WaitCalls);
     }
 
     [Fact]
-    public void InitServices_ResolvesExpectedCoreServices()
+    public void ApplicationManager_ResolvesExpectedCoreServices()
     {
-        var initServices = typeof(Program).GetMethod("InitServices", BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(initServices);
+        var manager = new ApplicationManager([]);
 
-        var provider = (IServiceProvider)initServices!.Invoke(null, null)!;
+        // Use the Host to add UI-specific services, then verify core services resolve
+        var servicesField = typeof(ApplicationManager).GetField("_services", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(servicesField);
+
+        var services = (IServiceCollection)servicesField!.GetValue(manager)!;
+        var host = new Host();
+        host.ConfigureServices(services, []);
+
+        var provider = services.BuildServiceProvider();
         try
         {
             Assert.NotNull(provider.GetService(typeof(ConsoleUI)));
@@ -121,6 +123,8 @@ public class ProgramTests
             Assert.NotNull(provider.GetService(typeof(IBackupJobRepository)));
             Assert.NotNull(provider.GetService(typeof(IUserPreferencesRepository)));
             Assert.NotNull(provider.GetService(typeof(IStateWriter)));
+            Assert.NotNull(provider.GetService(typeof(IStateReader)));
+            Assert.NotNull(provider.GetService(typeof(IBackupJobStateService)));
         }
         finally
         {
@@ -132,24 +136,24 @@ public class ProgramTests
     }
 
     [Fact]
-    public void CreateLogger_WhenPathProviderThrows_ReturnsNoOpLogger()
+    public void ReloadableLogger_WhenPathProviderThrows_UsesNoOpFallback()
     {
-        var createLogger = typeof(Program).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(createLogger);
+        var logger = new ReloadableLogger(
+            new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Json } },
+            new ThrowingPathProvider());
 
-        var logger = (ILogger)createLogger!.Invoke(null, [new ThrowingPathProvider()])!;
+        logger.Write(new LogEntry(DateTime.UtcNow, "job", LogEventType.TransferFile, "src", "dst", 12, 34));
 
-        Assert.IsType<NoOpLogger>(logger);
+        Assert.IsType<NoOpLogger>(GetCurrentLogger(logger));
     }
 
     [Fact]
-    public void CreateLogger_WithXmlPreferences_UsesXmlFormatOnWrite()
+    public void ReloadableLogger_WithXmlPreferences_UsesXmlFormatOnWrite()
     {
-        var createLogger = typeof(Program).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(createLogger);
-
-        var pathProvider = new RecordingPathProvider(LogFormat.Xml);
-        var logger = (ILogger)createLogger!.Invoke(null, [pathProvider])!;
+        var pathProvider = new RecordingPathProvider();
+        using var logger = new ReloadableLogger(
+            new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Xml } },
+            pathProvider);
 
         logger.Write(new LogEntry(
             DateTime.UtcNow,
@@ -164,13 +168,12 @@ public class ProgramTests
     }
 
     [Fact]
-    public void CreateLogger_WithJsonPreferences_UsesJsonFormatOnWrite()
+    public void ReloadableLogger_WithJsonPreferences_UsesJsonFormatOnWrite()
     {
-        var createLogger = typeof(Program).GetMethod("CreateLogger", BindingFlags.NonPublic | BindingFlags.Static);
-        Assert.NotNull(createLogger);
-
-        var pathProvider = new RecordingPathProvider(LogFormat.Json);
-        var logger = (ILogger)createLogger!.Invoke(null, [pathProvider])!;
+        var pathProvider = new RecordingPathProvider();
+        using var logger = new ReloadableLogger(
+            new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Json } },
+            pathProvider);
 
         logger.Write(new LogEntry(
             DateTime.UtcNow,
@@ -184,6 +187,13 @@ public class ProgramTests
         Assert.Equal(LogFormat.Json, pathProvider.LastRequestedFormat);
     }
 
+    private static ILogger GetCurrentLogger(ReloadableLogger logger)
+    {
+        var field = typeof(ReloadableLogger).GetField("_currentLogger", BindingFlags.NonPublic | BindingFlags.Instance);
+        Assert.NotNull(field);
+        return Assert.IsAssignableFrom<ILogger>(field!.GetValue(logger));
+    }
+
     private sealed class ThrowingPathProvider : IPathProvider
     {
         public string GetDailyLogPath(DateTime date, LogFormat format = LogFormat.Json) => throw new InvalidOperationException("boom");
@@ -195,30 +205,19 @@ public class ProgramTests
         public string GetUserPreferencesPath() => throw new InvalidOperationException("boom");
 
         public void SetLogDirectoryOverride(string? directory) => throw new InvalidOperationException("boom");
+
+        public string ResolveLogsDirectory() => throw new InvalidOperationException("boom");
     }
 
     private sealed class RecordingPathProvider : IPathProvider
     {
-        private readonly string _rootDirectory;
-        private readonly string _preferencesPath;
+        private readonly string _rootDirectory = Path.Combine(Path.GetTempPath(), "easysave-ui-tests", Guid.NewGuid().ToString("N"));
 
         public LogFormat LastRequestedFormat { get; private set; } = LogFormat.Json;
 
-        public RecordingPathProvider(LogFormat storedPreference)
+        public RecordingPathProvider()
         {
-            _rootDirectory = Path.Combine(Path.GetTempPath(), "easysave-ui-tests", Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(_rootDirectory);
-
-            _preferencesPath = Path.Combine(_rootDirectory, "user-preferences.json");
-            File.WriteAllText(
-                _preferencesPath,
-                $$"""
-                {
-                  "language": "fr",
-                  "logDirectory": null,
-                  "logFormat": "{{storedPreference.ToString().ToLowerInvariant()}}"
-                }
-                """);
         }
 
         public string GetDailyLogPath(DateTime date, LogFormat format = LogFormat.Json)
@@ -234,30 +233,20 @@ public class ProgramTests
 
         public string GetJobsConfigPath() => Path.Combine(_rootDirectory, "jobs.json");
 
-        public string GetUserPreferencesPath() => _preferencesPath;
+        public string GetUserPreferencesPath() => Path.Combine(_rootDirectory, "prefs.json");
 
         public void SetLogDirectoryOverride(string? directory)
         {
         }
+
+        public string ResolveLogsDirectory()
+            => _rootDirectory;
     }
 
     private static BackupApplicationService CreateApplicationService(out FakeBackupEngine engine)
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
         engine = new FakeBackupEngine();
-        return new BackupApplicationService(repository, engine);
-    }
-
-    private sealed class FakeServiceProvider(ConsoleUI ui) : IServiceProvider
-    {
-        public object? GetService(Type serviceType)
-        {
-            if (serviceType == typeof(ConsoleUI))
-            {
-                return ui;
-            }
-
-            return null;
-        }
+        return new BackupApplicationService(repository, engine, Moq.Mock.Of<IBackupJobStateService>());
     }
 }

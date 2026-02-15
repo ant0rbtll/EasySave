@@ -30,6 +30,7 @@ public sealed class DailyFileLogger : ILogger, IDisposable
     /// <param name="layout">Optional file layout strategy. Defaults to formatter when it implements <see cref="ILogFileLayout"/>.</param>
     /// <exception cref="ArgumentNullException">Thrown when <paramref name="formatter"/> or <paramref name="pathProvider"/> is null.</exception>
     /// <exception cref="ArgumentException">Thrown when no file layout strategy can be resolved.</exception>
+    
     public DailyFileLogger(
         ILogFormatter formatter,
         IPathProvider pathProvider,

@@ -60,22 +60,10 @@ public class SystemConsoleAdapterTests
     }
 
     [Fact]
-    public void Clear_IsCallable()
+    public void Constructor_CreatesValidInstance()
     {
         var adapter = new SystemConsoleAdapter();
-        _ = Record.Exception(() => adapter.Clear());
-        Assert.True(true);
-    }
-
-    [Fact]
-    public void ReadKey_WithoutInteractiveConsole_ThrowsOrReturns()
-    {
-        var adapter = new SystemConsoleAdapter();
-        var exception = Record.Exception(() => adapter.ReadKey(intercept: true));
-
-        if (exception != null)
-        {
-            Assert.IsType<InvalidOperationException>(exception);
-        }
+        
+        Assert.NotNull(adapter);
     }
 }

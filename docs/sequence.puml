@@ -1,81 +1,80 @@
 @startuml
-title EasySave 1.1 - Sequence : mode interactif, configuration et execution
+title EasySave 2.0 - Sequence (GUI: config puis execution backup)
 
 actor Utilisateur as User
-participant "UI.Program" as Program
-participant "UI.ConsoleUI" as ConsoleUI
-participant "UI.SettingsFlowService" as SettingsFlow
+participant "AppCommon.Program" as Program
+participant "AppCommon.ApplicationManager" as AppManager
+participant "GUI.Host" as GuiHost
+participant "GUI.ConfigViewModel" as ConfigVM
 participant "Persistence.IUserPreferencesRepository" as PrefRepo
-participant "Configuration.IPathProvider" as PathProvider
-participant "UI.JobsFlowService" as JobsFlow
-participant "APP.BackupApplicationService" as App
-participant "Persistence.IBackupJobRepository" as Repo
+participant "Log.ReloadableLogger" as ReloadableLogger
+participant "GUI.ManageViewModel" as ManageVM
+participant "Application.BackupApplicationService" as AppService
+participant "Persistence.IBackupJobRepository" as JobRepo
+participant "System.IBackupExecutionGuard" as Guard
 participant "Backup.BackupEngine" as Engine
 participant "System.ITransferService" as Transfer
-participant "State.IStateWriter" as State
+participant "Backup.IEncryptionPolicyProvider" as EncPolicyProvider
+participant "Backup.IEncryptionProviderResolver" as EncResolver
+participant "Backup.IEncryptionProvider" as EncProvider
+participant "State.IStateWriter" as StateWriter
 participant "Log.ILogger" as Logger
-participant "UI.IConsoleMessageService" as Msg
 
 == Demarrage ==
-User -> Program : Main(args = [])
-Program -> ConsoleUI : MainMenu()
+User -> Program : Main(args=[])
+Program -> AppManager : RunHost(GuiHost)
+AppManager -> GuiHost : ConfigureServices(...)\nRun(...)
 
-== Parametres ==
-User -> ConsoleUI : Ouvre menu Parametres
-ConsoleUI -> SettingsFlow : ConfigureParams(MainMenu)
+== Configuration ==
+User -> ConfigVM : Save(language, logFormat, logDirectory, encryptedExtensions, businessSoftware)
+ConfigVM -> PrefRepo : Load()
+ConfigVM -> PrefRepo : Save(updatedPreferences)
+ConfigVM -> ReloadableLogger : Reload() (si format change)
 
-alt Changer langue
-  SettingsFlow -> PrefRepo : Save(UserPreferences.Language)
-else Changer dossier de logs
-  SettingsFlow -> PathProvider : SetLogDirectoryOverride(directory)
-  SettingsFlow -> PrefRepo : Save(UserPreferences.LogDirectory)
-else Changer format de logs (Json/Xml)
-  SettingsFlow -> PrefRepo : Save(UserPreferences.LogFormat)
-  note right: Le format actif change au prochain redemarrage
-end
+== Execution d'un job ==
+User -> ManageVM : RunJob(jobId)
+ManageVM -> AppService : RunJob(jobId)
+AppService -> Guard : EnsureCanCopyNextFile()
+AppService -> JobRepo : GetById(jobId)
+JobRepo --> AppService : job?
 
-== Gestion des travaux ==
-User -> ConsoleUI : Ouvre liste des travaux
-ConsoleUI -> JobsFlow : ShowJobsList(MainMenu)
-JobsFlow -> App : GetAllJobs()
-App -> Repo : GetAll()
-Repo --> App : List<BackupJob>
-App --> JobsFlow : List<BackupJob>
+alt job trouve
+  AppService -> Engine : Execute(job)
 
-User -> JobsFlow : Selectionne un travail puis Run
-JobsFlow -> App : RunJob(jobId)
-App -> Repo : GetById(jobId)
-Repo --> App : BackupJob?
-
-alt Travail trouve
-  App -> Engine : Execute(job)
-  Engine -> State : Update(status=Active, progress=0)
+  Engine -> EncPolicyProvider : GetPolicy()
+  Engine -> StateWriter : Update(status=Active)
   Engine -> Logger : Write(StartBackup)
 
-  loop Pour chaque fichier a copier
-    Engine -> Transfer : TransferFile(src, dst, overwrite=true)
+  loop pour chaque fichier
+    Engine -> Guard : EnsureCanCopyNextFile()
+    Engine -> Transfer : TransferFile(src,dst,true)
     Transfer --> Engine : TransferResult
 
-    alt TransferResult.IsSuccess
+    alt succes
+      Engine -> EncResolver : Resolve(policy.ProviderName)
+      EncResolver --> Engine : provider?
+      alt extension chiffree et provider trouve
+        Engine -> EncProvider : EncryptAsync(destinationFile, policy)
+        EncProvider --> Engine : EncryptionResult
+      end
       Engine -> Logger : Write(TransferFile)
-      Engine -> State : Update(progress)
-    else Erreur de transfert
-      Engine -> Logger : Write(Error)
-      Engine -> State : Update(status=Error)
-      Engine --> App : exception
-      App --> JobsFlow : exception
-      JobsFlow -> Msg : ShowError(exception)
+      Engine -> StateWriter : Update(progress)
+    else erreur transfert / guard
+      Engine -> Logger : Write(Error ou BusinessSoftwareDetected)
+      Engine -> StateWriter : Update(status=Error)
+      Engine --> AppService : throw
+      AppService --> ManageVM : throw
     end
   end
 
-  Engine -> State : Update(status=Done, progress=100)
-  Engine -> Logger : Write(EndBackup)
-  Engine -> State : MarkInactive(jobId)
-  App --> JobsFlow : retour
-else Travail absent
-  App --> JobsFlow : retour sans execution
+  alt execution complete
+    Engine -> Logger : Write(EndBackup)
+    Engine -> StateWriter : Update(status=Done)
+    Engine -> StateWriter : MarkInactive(jobId)
+    Engine --> AppService : ok
+  end
+else job absent
+  AppService --> ManageVM : retour sans execution
 end
-
-JobsFlow -> ConsoleUI : Retour menu
 
 @enduml

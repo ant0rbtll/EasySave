@@ -6,6 +6,71 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [2.0.0] - 2026-02-15
+
+Version majeure: passage a une architecture multi-host (GUI + console) et extension des capacites de supervision/execution.
+
+### Added
+
+#### Application / Hosting
+- Ajout de `EasySave.AppCommon` comme point d'entree unique (`EasySave`) avec selection dynamique du host:
+  - GUI par defaut (sans argument)
+  - Console/CLI si arguments, ou `EASYSAVE_HOST=console`
+- Ajout de `ApplicationManager` pour centraliser l'injection de dependances partagees.
+
+#### GUI (Avalonia)
+- Ajout d'un host GUI complet (`EasySave.GUI`) avec navigation par ViewModels:
+  - `CreateViewModel`: creation de jobs
+  - `ManageViewModel`: recherche, tri, pagination, execution, edition, suppression
+  - `LogViewModel`: exploration des logs par date/job/run avec details
+  - `ConfigViewModel`: preferences et configuration avancee
+- Ajout de la synchronisation de langue a chaud entre les ecrans GUI.
+
+#### Chiffrement
+- Ajout de `IEncryptionPolicyProvider` alimente par les preferences utilisateur.
+- Ajout de `DotNetAesEncryptionProvider` (chiffrement AES en flux, post-transfert).
+- Ajout de `ExternalEncryptionProvider` (contrat present, implementation reservee pour version future).
+- Ajout de `EncryptionProviderResolver` pour selectionner le fournisseur de chiffrement par nom.
+- Ajout des extensions chiffrables et du fournisseur dans `UserPreferences`.
+
+#### Protection logiciel metier
+- Ajout de `BusinessSoftwareBackupExecutionGuard`:
+  - blocage de la copie si un processus metier configure est detecte
+  - integration dans `BackupApplicationService` et `BackupEngine`
+- Ajout de l'evenement de log `BusinessSoftwareDetected`.
+
+#### Logs / Navigation
+- Ajout de `ILogQueryService` et `ILogNavigationService` pour navigation hierarchique des logs.
+- Ajout des lecteurs multi-format (`JsonLogReader`, `XmlLogReader`) avec index/cache journalier par date.
+- Ajout de `ReloadableLogger` (`ILoggerRuntimeReloader`) pour appliquer les changements de format de log sans redemarrage.
+
+### Changed
+
+#### Runtime et UX
+- `README.md` passe en version 2.0 et documente explicitement les modes GUI, console et CLI.
+- Le flux de configuration GUI permet:
+  - langue FR/EN
+  - format de logs JSON/XML
+  - dossier de logs
+  - extensions a chiffrer
+  - logiciels metier surveilles
+
+#### Domain model
+- `BackupJob` expose l'etat d'execution enrichi en runtime:
+  - `LastExecutionDate`
+  - `IsActive`
+
+### Fixed
+
+- Robustesse accrue lors du rechargement du logger (fallback `NoOpLogger` en cas d'erreur).
+- Compatibilite ascendante des preferences pour l'ancien champ unique `businessSoftwareProcessName`.
+
+### Tests
+
+- Suite complete validee avec `dotnet test`:
+  - 10 projets de tests
+  - 505 tests passes, 0 echec, 0 ignores
+
 ## [1.1.0] - 2026-02-09
 
 Evolution majeure de l'architecture UI/Logs et des preferences utilisateur.
@@ -240,4 +305,5 @@ Version initiale de production d'EasySave.
 - **Thaïs VIANES** (@thedarknessqueen) - ETR (État Temps Réel), State Writer
 
 [1.0.0]: https://github.com/ant0rbtll/easysave/releases/tag/v1.0.0
-[1.1.0]: https://github.com/ant0rbtll/easysave/compare/v1.0.0...HEAD
+[1.1.0]: https://github.com/ant0rbtll/easysave/compare/v1.0.0...v1.1.0
+[2.0.0]: https://github.com/ant0rbtll/easysave/compare/v1.1.0...HEAD

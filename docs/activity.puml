@@ -1,74 +1,61 @@
 @startuml
-title EasySave 1.1 - Activite : edition de travail avec gestion des modifications non sauvegardees
+title EasySave 2.0 - Activite : execution d'un backup avec garde metier et chiffrement
 
 start
 
-:ConsoleUI.MainMenu();
+:Charger le job;
+:Verifier les processus metier interdits (pre-check);
 
-if (Choix = Gerer les travaux ?) then (Oui)
-  :JobsFlowService.ShowJobsList();
-else (Non)
-  :Retour au menu principal;
+if (Processus metier detecte ?) then (Oui)
+  :Lever exception
+(error_business_software_running);
+  :Logger BusinessSoftwareDetected;
+  :Etat = Error;
   stop
 endif
 
-:Selection du travail;
-:Afficher details du travail;
-
-if (Choix = Modifier ?) then (Oui)
-  :JobsFlowService.UpdateJob(job);
-  :JobEditSessionService.BeginOrRefresh(job);
-else (Non)
-  :Retour details travail;
-  stop
-endif
+:Enumerer les fichiers source;
+:Charger la policy de chiffrement;
+:Etat = Active (0%);
+:Logger StartBackup;
 
 repeat
-  :Afficher menu de mise a jour;
+  :Determiner le fichier suivant;
 
-  if (Choix champ editable ?) then (Oui)
-    :MenuFactory envoie JobEditableField\n(Name/Source/Destination/Type);
-    :UpdateJobField(...);
-    :Saisie via ConsoleInputService;
+  if (Type Differential et fichier inchange ?) then (Oui)
+    :Passer au fichier suivant;
   else (Non)
-  endif
-
-  if (Choix = Sauvegarder ?) then (Oui)
-    :BackupApplicationService.UpdateJob(job);
-    :JobEditSessionService.Clear();
-    :Message succes;
-    :Retour liste des travaux;
-    stop
-  else (Non)
-  endif
-
-repeat while (Choix != Retour)
-
-if (Retour depuis edition) then (Oui)
-  if (Modifications en attente ?) then (Oui)
-    :Afficher menu "Unsaved Changes";
-
-    if (Save and quit) then (Oui)
-      :BackupApplicationService.UpdateJob(job);
-      :JobEditSessionService.Clear();
-      :Retour details travail;
+    :Verifier processus metier\navant copie du fichier;
+    if (Processus metier detecte ?) then (Oui)
+      :Lever exception\n(error_business_software_running);
+      :Logger BusinessSoftwareDetected;
+      :Etat = Error;
       stop
-    else (Non)
-      if (Discard and quit) then (Oui)
-        :JobEditSessionService.Restore(job);
-        :JobEditSessionService.Clear();
-        :Retour details travail;
-        stop
-      else (Back)
-        :Retour menu edition;
-      endif
     endif
-  else (Non)
-    :JobEditSessionService.Clear();
-    :Retour details travail;
-    stop
+
+    :Creer dossier destination si absent;
+    :Transferer le fichier;
+
+    if (Transfert OK ?) then (Oui)
+      if (Extension chiffree ?) then (Oui)
+        :Resoudre provider;
+        :Chiffrer le fichier transfere;
+      endif
+      :Logger TransferFile;
+      :Mettre a jour progression;
+      :Etat = Active;
+    else (Non)
+      :Logger Error;
+      :Etat = Error;
+      stop
+    endif
   endif
-endif
+
+repeat while (Fichiers restants ?)
+
+:Etat = Done (100%);
+:Logger EndBackup;
+:MarkInactive(jobId);
 
 stop
 @enduml

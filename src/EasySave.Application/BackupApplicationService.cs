@@ -1,6 +1,7 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
+using EasySave.System;
 
 namespace EasySave.Application;
 
@@ -9,10 +10,16 @@ namespace EasySave.Application;
 /// </summary>
 /// <param name="repo">The repository used for data persistence.</param>
 /// <param name="backupEngine">The engine responsible for executing backup jobs.</param>
-public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine backupEngine)
+public class BackupApplicationService(
+    IBackupJobRepository repo,
+    IBackupEngine backupEngine,
+    IBackupJobStateService backupJobStateService,
+    IBackupExecutionGuard? backupExecutionGuard = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
+    private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
+    private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -49,6 +56,8 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     /// <param name="id">Identifier of the job to run.</param>
     public void RunJob(int id)
     {
+        EnsureBusinessSoftwareIsNotRunning();
+
         var job = _repo.GetById(id);
         if (job != null) ExecuteJob(job);
     }
@@ -73,6 +82,7 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
         var jobs = _repo.GetAll();
         foreach (var job in jobs)
         {
+            EnsureBusinessSoftwareIsNotRunning();
             ExecuteJob(job);
         }
     }
@@ -83,7 +93,9 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     /// <returns>A list of <see cref="BackupJob"/> objects.</returns>
     public List<BackupJob> GetAllJobs()
     {
-        return _repo.GetAll();
+        var jobs = _repo.GetAll();
+        _backupJobStateService.ApplyState(jobs);
+        return jobs;
     }
 
     /// <summary>
@@ -93,7 +105,10 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
     /// <returns>The BackupJob if found, null otherwise.</returns>
     public BackupJob? GetJob(int id)
     {
-        return _repo.GetById(id);
+        var job = _repo.GetById(id);
+        if (job == null) return null;
+        _backupJobStateService.ApplyState(job);
+        return job;
     }
 
     /// <summary>
@@ -105,8 +120,17 @@ public class BackupApplicationService(IBackupJobRepository repo, IBackupEngine b
         _repo.Update(job);
     }
 
+    /// <summary>
+    /// Delegates job execution to the backup engine.
+    /// </summary>
+    /// <param name="job">The job instance to execute.</param>
     private void ExecuteJob(BackupJob job)
     {
         _engine.Execute(job);
+    }
+
+    private void EnsureBusinessSoftwareIsNotRunning()
+    {
+        _backupExecutionGuard.EnsureCanCopyNextFile();
     }
 }

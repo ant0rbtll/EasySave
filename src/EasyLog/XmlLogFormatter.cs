@@ -22,11 +22,13 @@ public sealed class XmlLogFormatter : ILogFormatter, ILogFileLayout
         var logEntry = new XElement("LogEntry",
             new XElement("Timestamp", entry.Timestamp.ToString("o")),
             new XElement("BackupName", entry.BackupName),
+            new XElement("BackupId", entry.BackupId),
             new XElement("EventType", entry.EventType.ToString()),
             new XElement("SourcePathUNC", entry.SourcePathUNC),
             new XElement("DestinationPathUNC", entry.DestinationPathUNC),
             new XElement("FileSizeBytes", entry.FileSizeBytes),
-            new XElement("TransferTimeMs", entry.TransferTimeMs)
+            new XElement("TransferTimeMs", entry.TransferTimeMs),
+            new XElement("EncryptionTimeMs", entry.EncryptionTimeMs)
         );
 
         var settings = new XmlWriterSettings

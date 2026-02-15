@@ -1,3 +1,5 @@
+using Microsoft.Extensions.DependencyInjection;
+
 namespace EasySave.UI.Tests;
 
 public class ConsoleUITests
@@ -76,30 +78,46 @@ public class ConsoleUITests
     }
 
     [Fact]
-    public void PublicConstructor_InitializesLocalizationFromPreferences()
+    public void HostConfigureServices_ResolvesConsoleUI_AndInitializesLocalizationFromPreferences()
     {
         var app = CreateApplicationService(out _);
         var repo = new FakeUserPreferencesRepository
         {
             Preferences = new UserPreferences { Language = "en", LogFormat = LogFormat.Json }
         };
+        var services = new ServiceCollection();
+        services.AddSingleton(app);
+        services.AddSingleton<IUserPreferencesRepository>(repo);
+        services.AddSingleton<IPathProvider>(new FakePathProvider());
+        services.AddSingleton<ILocalizationService, LocalizationService>();
 
-        var ui = new ConsoleUI(app, repo, new FakePathProvider(), new CommandLineParser());
+        var host = new Host();
+        host.ConfigureServices(services, []);
 
+        using var provider = services.BuildServiceProvider();
+        var ui = provider.GetRequiredService<ConsoleUI>();
         Assert.Equal("en", ui.LocalizationService.Culture);
     }
 
     [Fact]
-    public void PublicConstructor_WithInvalidLanguage_FallsBackToFrenchAndPersists()
+    public void HostConfigureServices_WithInvalidLanguage_FallsBackToFrenchAndPersists()
     {
         var app = CreateApplicationService(out _);
         var repo = new FakeUserPreferencesRepository
         {
             Preferences = new UserPreferences { Language = "zz", LogFormat = LogFormat.Json }
         };
+        var services = new ServiceCollection();
+        services.AddSingleton(app);
+        services.AddSingleton<IUserPreferencesRepository>(repo);
+        services.AddSingleton<IPathProvider>(new FakePathProvider());
+        services.AddSingleton<ILocalizationService, LocalizationService>();
 
-        var ui = new ConsoleUI(app, repo, new FakePathProvider(), new CommandLineParser());
+        var host = new Host();
+        host.ConfigureServices(services, []);
 
+        using var provider = services.BuildServiceProvider();
+        var ui = provider.GetRequiredService<ConsoleUI>();
         Assert.Equal("fr", ui.LocalizationService.Culture);
         Assert.Equal(1, repo.SaveCalls);
     }
@@ -108,7 +126,7 @@ public class ConsoleUITests
     public void RunFromArgs_WhenRunJobThrows_ShowsErrorAndWaits()
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
-        var app = new BackupApplicationService(repository, new ThrowingBackupEngine());
+        var app = new BackupApplicationService(repository, new ThrowingBackupEngine(), Moq.Mock.Of<IBackupJobStateService>());
         app.CreateJob("A", "S", "D", BackupType.Complete);
 
         var ui = CreateConsoleUiForRun(app, out var menuService, out var messageService);
@@ -161,7 +179,7 @@ public class ConsoleUITests
     {
         var repository = new InMemoryBackupJobRepository(new SequentialJobIdProvider());
         engine = new FakeBackupEngine();
-        return new BackupApplicationService(repository, engine);
+        return new BackupApplicationService(repository, engine, Moq.Mock.Of<IBackupJobStateService>());
     }
 
     private sealed class CapturingMainMenuFactory : IMenuFactory

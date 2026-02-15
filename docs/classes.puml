@@ -1,9 +1,35 @@
 @startuml
-title EasySave 1.1 - Diagramme de classes (architecture actuelle)
+title EasySave 2.0 - Diagramme de classes (vue architecture)
 
 skinparam packageStyle rectangle
 skinparam shadowing false
 hide empty members
+
+package "AppCommon" {
+  class Program {
+    +Main(args : string[]) : void
+  }
+
+  class ApplicationManager {
+    +RunHost(host : IApplicationHost) : void
+  }
+
+  interface IApplicationHost {
+    +ConfigureServices(services, args) : void
+    +Run(serviceProvider, args) : void
+  }
+
+  Program --> IApplicationHost : selection host
+  Program --> ApplicationManager
+}
+
+package "Hosts" {
+  class "UI.Host" as ConsoleHost
+  class "GUI.Host" as GuiHost
+
+  IApplicationHost <|.. ConsoleHost
+  IApplicationHost <|.. GuiHost
+}
 
 package "Core" {
   enum BackupType {
@@ -22,149 +48,41 @@ package "Core" {
     +Source : string
     +Destination : string
     +Type : BackupType
+    +LastExecutionDate : DateTime?
+    +IsActive : bool
   }
-
-  BackupJob --> BackupType
 }
 
 package "Application" {
   class BackupApplicationService {
-    +CreateJob(name : string, source : string, destination : string, type : BackupType) : void
-    +RemoveJob(id : int) : void
-    +UpdateJob(job : BackupJob) : void
+    +CreateJob(...) : void
     +RunJob(id : int) : void
     +RunJobs(ids : int[]) : void
     +RunAllJobs() : void
     +GetAllJobs() : List<BackupJob>
     +GetJob(id : int) : BackupJob?
-  }
-}
-
-package "Persistence" {
-  interface IBackupJobRepository {
-    +{static} DefaultMaxJobs : int = 5
-    +Add(job : BackupJob) : void
-    +Remove(id : int) : void
-    +GetById(id : int) : BackupJob?
-    +GetAll() : List<BackupJob>
-    +Count() : int
-    +MaxJobs() : int
-    +Update(job : BackupJob) : void
+    +UpdateJob(job : BackupJob) : void
+    +RemoveJob(id : int) : void
   }
 
-  class JsonBackupJobRepository
-  class InMemoryBackupJobRepository
+  interface ILogQueryService
+  class LogQueryService
+  interface ILogNavigationService
+  class LogNavigationService
 
-  interface IJobIdProvider {
-    +NextId(existing : IEnumerable<BackupJob>) : int
-  }
+  interface IBackupJobStateService
+  class BackupJobStateService
 
-  class SequentialJobIdProvider
+  class BusinessSoftwareBackupExecutionGuard
 
-  class UserPreferences {
-    +Language : string
-    +LogDirectory : string?
-    +LogFormat : LogFormat
-  }
-
-  interface IUserPreferencesRepository {
-    +Load() : UserPreferences
-    +Save(preferences : UserPreferences) : void
-  }
-
-  class JsonUserPreferencesRepository
-
-  IBackupJobRepository <|.. JsonBackupJobRepository
-  IBackupJobRepository <|.. InMemoryBackupJobRepository
-  IJobIdProvider <|.. SequentialJobIdProvider
-  IUserPreferencesRepository <|.. JsonUserPreferencesRepository
-
-  JsonBackupJobRepository --> IJobIdProvider
-  InMemoryBackupJobRepository --> IJobIdProvider
-  UserPreferences --> Core.LogFormat
-}
-
-package "Backup" {
-  interface IBackupEngine {
-    +Execute(job : BackupJob) : void
-  }
-
-  class BackupEngine {
-    +Execute(job : BackupJob) : void
-  }
-
-  IBackupEngine <|.. BackupEngine
-}
-
-package "System" {
-  interface IFileSystem
-  class DefaultFileSystem
-
-  interface ITransferService {
-    +TransferFile(sourcePath : string, destinationPath : string, overwrite : bool) : TransferResult
-  }
-
-  class DefaultTransferService
-
-  class TransferResult {
-    +FileSizeBytes : long
-    +TransferTimeMs : long
-    +ErrorCode : int
-    +IsSuccess : bool
-  }
-
-  IFileSystem <|.. DefaultFileSystem
-  ITransferService <|.. DefaultTransferService
-  DefaultTransferService --> IFileSystem
-  DefaultTransferService ..> TransferResult
-}
-
-package "State" {
-  enum BackupStatus {
-    Inactive
-    Active
-    Done
-    Error
-  }
-
-  class StateEntry {
-    +BackupId : int
-    +BackupName : string?
-    +Timestamp : DateTime
-    +Status : BackupStatus
-    +TotalFiles : int
-    +TotalSizeBytes : long
-    +RemainingFiles : int
-    +RemainingSizeBytes : long
-    +ProgressPercent : int
-    +CurrentSourcePath : string?
-    +CurrentDestinationPath : string?
-  }
-
-  class GlobalState {
-    +UpdatedAt : DateTime
-    +Entries : Dictionary<int, StateEntry>
-  }
-
-  interface IStateWriter {
-    +Update(entry : StateEntry) : void
-    +MarkInactive(backupId : int) : void
-  }
-
-  class RealTimeStateWriter
-
-  class StateSerializer {
-    +{static} ToPrettyJson(state : GlobalState) : string
-  }
-
-  IStateWriter <|.. RealTimeStateWriter
-  RealTimeStateWriter --> GlobalState
-  RealTimeStateWriter ..> StateSerializer
-  StateEntry --> BackupStatus
+  ILogQueryService <|.. LogQueryService
+  ILogNavigationService <|.. LogNavigationService
+  IBackupJobStateService <|.. BackupJobStateService
 }
 
 package "Configuration" {
   interface IPathProvider {
+    +ResolveLogsDirectory() : string
     +GetDailyLogPath(date : DateTime, format : LogFormat) : string
     +GetStatePath() : string
     +GetJobsConfigPath() : string
@@ -177,309 +95,158 @@ package "Configuration" {
   IPathProvider <|.. DefaultPathProvider
 }
 
-package "Localization" {
-  enum LocalizationKey
-
-  interface ILocalizationService {
-    +Culture : string
-    +AllCultures : Dictionary<string, LocalizationKey>
-    +TranslateText(key : string) : string
-    +TranslateText(key : LocalizationKey) : string
-    +TranslateTextWithParams(key : LocalizationKey, parameters : string[]) : string
+package "Backup" {
+  interface IBackupEngine {
+    +Execute(job : BackupJob) : void
   }
 
-  class LocalizationService
+  class BackupEngine
 
-  ILocalizationService <|.. LocalizationService
+  class EncryptionPolicy
+  interface IEncryptionPolicyProvider
+  class UserPreferencesEncryptionPolicyProvider
+  interface IEncryptionProvider
+  class DotNetAesEncryptionProvider
+  class ExternalEncryptionProvider
+  interface IEncryptionProviderResolver
+  class EncryptionProviderResolver
+
+  IBackupEngine <|.. BackupEngine
+  IEncryptionPolicyProvider <|.. UserPreferencesEncryptionPolicyProvider
+  IEncryptionProvider <|.. DotNetAesEncryptionProvider
+  IEncryptionProvider <|.. ExternalEncryptionProvider
+  IEncryptionProviderResolver <|.. EncryptionProviderResolver
+
+  BackupEngine --> IEncryptionPolicyProvider
+  BackupEngine --> IEncryptionProviderResolver
+}
+
+package "Persistence" {
+  interface IBackupJobRepository
+  class JsonBackupJobRepository
+
+  class UserPreferences {
+    +Language : string
+    +LogDirectory : string?
+    +LogFormat : LogFormat
+    +EncryptedExtensions : List<string>
+    +EncryptionProvider : string
+    +CryptoSoftExecutablePath : string?
+    +BusinessSoftwareProcessNames : List<string>
+  }
+
+  interface IUserPreferencesRepository
+  class JsonUserPreferencesRepository
+
+  IBackupJobRepository <|.. JsonBackupJobRepository
+  IUserPreferencesRepository <|.. JsonUserPreferencesRepository
+}
+
+package "State" {
+  enum BackupStatus
+  class StateEntry
+  class GlobalState
+  interface IStateWriter
+  class RealTimeStateWriter
+
+  IStateWriter <|.. RealTimeStateWriter
 }
 
 package "Log" {
   enum LogEventType {
-    CreateDirectory
-    TransferFile
-    Error
     StartBackup
     EndBackup
+    TransferFile
+    CreateDirectory
+    Error
+    BusinessSoftwareDetected
   }
 
-  class LogEntry <<record>> {
-    +Timestamp : DateTime
-    +BackupName : string
-    +EventType : LogEventType
-    +SourcePathUNC : string
-    +DestinationPathUNC : string
-    +FileSizeBytes : long
-    +TransferTimeMs : long
-  }
+  class LogEntry
+  interface ILogger
+  interface ILoggerRuntimeReloader
+  class ReloadableLogger
 
-  interface ILogger {
-    +Write(entry : LogEntry) : void
-  }
-
-  class NoOpLogger
-
-  ILogger <|.. NoOpLogger
-  LogEntry --> LogEventType
+  ILogger <|.. ReloadableLogger
+  ILoggerRuntimeReloader <|.. ReloadableLogger
 }
 
 package "EasyLog" {
-  interface ILogFormatter {
-    +Format(entry : Log.LogEntry) : string
-  }
-
-  interface ILogFileLayout {
-    +GetFileHeader() : string
-    +GetFileFooter() : string
-    +GetEntrySeparator() : string
-    +GetIndentSpaces() : int
-  }
-
+  interface ILogFormatter
   class JsonLogFormatter
   class XmlLogFormatter
-
-  class DailyFileLogger {
-    +Write(entry : Log.LogEntry) : void
-    +Dispose() : void
-  }
+  class DailyFileLogger
 
   ILogFormatter <|.. JsonLogFormatter
   ILogFormatter <|.. XmlLogFormatter
-  ILogFileLayout <|.. JsonLogFormatter
-  ILogFileLayout <|.. XmlLogFormatter
+  DailyFileLogger --> ILogFormatter
 }
 
-package "UI" {
-  enum JobEditableField {
-    Name
-    Source
-    Destination
-    Type
-  }
-
-  class Program {
-    +{static} Main(args[]) : void
-    -{static} InitServices() : IServiceProvider
-    -{static} CreateLogger(pathProvider) : ILogger
-  }
-
-  class ConsoleUI {
-    +LocalizationService : ILocalizationService
-    +MainMenu() : void
-    ~RunFromArgs(args[]) : void
-    +Quit() : void
-  }
-
-  class CommandLineParser {
-    +Parse(args[]) : int[]
-  }
-
-  class ErrorManager {
-    +TryGetMessage(message : string, key : LocalizationKey) : bool
-  }
-
-  interface IMenuService {
-    +ShowMenu(menuItems : LocalizationKey[], menuLabel : LocalizationKey, renderHeader : Action?) : int
-    +ShowMenu(menuItems : string[], menuLabel : LocalizationKey, renderHeader : Action?) : int
-    +ShowMenuWithActions(menuItems : LocalizationKey[], menuActions : Dictionary<int, Action>, menuLabel : LocalizationKey, renderHeader : Action?) : void
-    +ShowMenuWithActions(menuItems : string[], menuActions : Dictionary<int, Action>, menuLabel : LocalizationKey, renderHeader : Action?) : void
-    +ShowMenuWithActions(menuConfig : MenuConfig) : void
-    +DisplayLabel(key : LocalizationKey) : void
-    +WaitForUser(messageKey : LocalizationKey) : void
-  }
-
-  class MenuService {
-    +ShowMenu(menuItems : LocalizationKey[], menuLabel : LocalizationKey, renderHeader : Action?) : int
-    +ShowMenu(menuItems : string[], menuLabel : LocalizationKey, renderHeader : Action?) : int
-    +ShowMenuWithActions(menuItems : LocalizationKey[], menuActions : Dictionary<int, Action>, menuLabel : LocalizationKey, renderHeader : Action?) : void
-    +ShowMenuWithActions(menuItems : string[], menuActions : Dictionary<int, Action>, menuLabel : LocalizationKey, renderHeader : Action?) : void
-    +ShowMenuWithActions(menuConfig : MenuConfig) : void
-    +DisplayLabel(key : LocalizationKey) : void
-    +WaitForUser(messageKey : LocalizationKey) : void
-  }
-
-  interface IMenuFactory {
-    +CreateMainMenu(currentJobCount : int, onCreateJob : Action, onManageJobs : Action, onConfigureParams : Action, onQuit : Action) : MenuConfig
-    +CreateLocaleMenu(cultures : IReadOnlyDictionary<string, LocalizationKey>, onSelectLocale : Action<string>, onBack : Action, renderHeader : Action?) : MenuConfig
-    +CreateParamsMenu(onShowChangeLocale : Action, onShowChangeLogDirectory : Action, onShowChangeLogFormat : Action, onBack : Action, renderHeader : Action?) : MenuConfig
-    +CreateLogFormatMenu(jsonLabel : string, xmlLabel : string, backLabel : string, onJson : Action, onXml : Action, onBack : Action, renderHeader : Action?) : MenuConfig
-    +CreateJobsListMenu(jobs : IEnumerable<BackupJob>, backLabel : string, onSelectJob : Action<BackupJob>, onBack : Action) : MenuConfig
-    +CreateJobDetailsMenu(job : BackupJob, onRunJob : Action<BackupJob>, onUpdateJob : Action<BackupJob>, onDeleteJob : Action<BackupJob>, onBack : Action, renderHeader : Action?) : MenuConfig
-    +CreateJobUpdateMenu(job : BackupJob, onUpdateField : Action<BackupJob, JobEditableField>, onSave : Action<BackupJob>, onBack : Action<BackupJob>) : MenuConfig
-  }
-
-  class MenuFactory {
-    +CreateMainMenu(currentJobCount : int, onCreateJob : Action, onManageJobs : Action, onConfigureParams : Action, onQuit : Action) : MenuConfig
-    +CreateLocaleMenu(cultures : IReadOnlyDictionary<string, LocalizationKey>, onSelectLocale : Action<string>, onBack : Action, renderHeader : Action?) : MenuConfig
-    +CreateParamsMenu(onShowChangeLocale : Action, onShowChangeLogDirectory : Action, onShowChangeLogFormat : Action, onBack : Action, renderHeader : Action?) : MenuConfig
-    +CreateLogFormatMenu(jsonLabel : string, xmlLabel : string, backLabel : string, onJson : Action, onXml : Action, onBack : Action, renderHeader : Action?) : MenuConfig
-    +CreateJobsListMenu(jobs : IEnumerable<BackupJob>, backLabel : string, onSelectJob : Action<BackupJob>, onBack : Action) : MenuConfig
-    +CreateJobDetailsMenu(job : BackupJob, onRunJob : Action<BackupJob>, onUpdateJob : Action<BackupJob>, onDeleteJob : Action<BackupJob>, onBack : Action, renderHeader : Action?) : MenuConfig
-    +CreateJobUpdateMenu(job : BackupJob, onUpdateField : Action<BackupJob, JobEditableField>, onSave : Action<BackupJob>, onBack : Action<BackupJob>) : MenuConfig
-  }
-
-  class MenuConfig {
-    +Items : LocalizationKey[]?
-    +ItemsAsStrings : string[]?
-    +Actions : Dictionary<int, Action>
-    +Label : LocalizationKey
-    +RenderHeader : Action?
-  }
-
-  interface IConsoleAdapter {
-    +Clear() : void
-    +Write(value : string) : void
-    +WriteLine() : void
-    +WriteLine(value : string) : void
-    +ReadKey(intercept : bool) : ConsoleKeyInfo
-    +SetForegroundColor(color : ConsoleColor) : void
-    +ResetColor() : void
-    +WriteErrorLine(value : string) : void
-  }
-
-  class SystemConsoleAdapter {
-    +Clear() : void
-    +Write(value : string) : void
-    +WriteLine() : void
-    +WriteLine(value : string) : void
-    +ReadKey(intercept : bool) : ConsoleKeyInfo
-    +SetForegroundColor(color : ConsoleColor) : void
-    +ResetColor() : void
-    +WriteErrorLine(value : string) : void
-  }
-
-  interface IConsoleMessageService {
-    +Write(key : LocalizationKey, writeLine : bool) : void
-    +WriteWithParams(key : LocalizationKey, parameters : string[], writeLine : bool) : void
-    +Translate(key : LocalizationKey) : string
-    +ShowError(exception : Exception) : void
-  }
-
-  class ConsoleMessageService {
-    +Write(key : LocalizationKey, writeLine : bool) : void
-    +WriteWithParams(key : LocalizationKey, parameters : string[], writeLine : bool) : void
-    +Translate(key : LocalizationKey) : string
-    +ShowError(exception : Exception) : void
-  }
-
-  interface IConsoleInputService {
-    +AskString(key : LocalizationKey) : string?
-    +AskInt(key : LocalizationKey) : int?
-    +AskStringWithCurrentValue(key : LocalizationKey, currentValue : string) : string?
-    +AskIntWithCurrentValue(key : LocalizationKey, currentValue : int) : int?
-    +AskBackupType(key : LocalizationKey) : BackupType?
-    +AskBackupTypeWithCurrentValue(key : LocalizationKey, currentType : BackupType) : BackupType?
-  }
-
-  class ConsoleInputService {
-    +AskString(key : LocalizationKey) : string?
-    +AskInt(key : LocalizationKey) : int?
-    +AskStringWithCurrentValue(key : LocalizationKey, currentValue : string) : string?
-    +AskIntWithCurrentValue(key : LocalizationKey, currentValue : int) : int?
-    +AskBackupType(key : LocalizationKey) : BackupType?
-    +AskBackupTypeWithCurrentValue(key : LocalizationKey, currentType : BackupType) : BackupType?
-  }
-
-  class JobsFlowService {
-    +GetJobCount() : int
-    +CreateBackupJob(onBackToMainMenu : Action) : void
-    +ShowJobsList(onBackToMainMenu : Action) : void
-  }
-
-  class SettingsFlowService {
-    +InitializeCulture() : void
-    +ConfigureParams(onBackToMainMenu : Action) : void
-    +ChangeLocale(locale : string, onBackToMainMenu : Action) : void
-    +ChangeLogFormat(format : LogFormat, onBackToMainMenu : Action) : void
-  }
-
-  class JobEditSessionService {
-    +BeginOrRefresh(job : BackupJob) : void
-    +HasPendingChanges(job : BackupJob) : bool
-    +Clear() : void
-    +Restore(job : BackupJob) : void
-  }
-
-  IMenuService <|.. MenuService
-  IMenuFactory <|.. MenuFactory
-  IConsoleAdapter <|.. SystemConsoleAdapter
-  IConsoleMessageService <|.. ConsoleMessageService
-  IConsoleInputService <|.. ConsoleInputService
+package "System" {
+  interface IFileSystem
+  interface ITransferService
+  interface IBackupExecutionGuard
 }
 
-Application.BackupApplicationService --> Persistence.IBackupJobRepository
-Application.BackupApplicationService --> Backup.IBackupEngine
+package "GUI (MVVM)" {
+  class MainWindowViewModel
+  class CreateViewModel
+  class ManageViewModel
+  class LogViewModel
+  class ConfigViewModel
 
-Backup.BackupEngine --> System.IFileSystem
-Backup.BackupEngine --> System.ITransferService
-Backup.BackupEngine --> State.IStateWriter
-Backup.BackupEngine --> Log.ILogger
-Backup.BackupEngine ..> System.TransferResult
-Backup.BackupEngine ..> State.StateEntry
-Backup.BackupEngine ..> Log.LogEntry
+  MainWindowViewModel --> CreateViewModel
+  MainWindowViewModel --> ManageViewModel
+  MainWindowViewModel --> LogViewModel
+  MainWindowViewModel --> ConfigViewModel
+}
 
-Persistence.JsonBackupJobRepository --> Configuration.IPathProvider
-Persistence.JsonUserPreferencesRepository --> Configuration.IPathProvider
+CreateViewModel --> BackupApplicationService
+ManageViewModel --> BackupApplicationService
+LogViewModel --> ILogQueryService
+LogViewModel --> ILogNavigationService
+ConfigViewModel --> IUserPreferencesRepository
+ConfigViewModel --> IPathProvider
+ConfigViewModel --> ILoggerRuntimeReloader
+MainWindowViewModel --> ILocalizationService
 
-State.RealTimeStateWriter --> Configuration.IPathProvider
+BackupApplicationService --> IBackupJobRepository
+BackupApplicationService --> IBackupEngine
+BackupApplicationService --> IBackupJobStateService
+BackupApplicationService --> IBackupExecutionGuard
 
-EasyLog.DailyFileLogger --> EasyLog.ILogFormatter
-EasyLog.DailyFileLogger --> EasyLog.ILogFileLayout
-EasyLog.DailyFileLogger --> Configuration.IPathProvider
-Log.ILogger <|.. EasyLog.DailyFileLogger
-EasyLog.DailyFileLogger ..> Log.LogEntry
+BusinessSoftwareBackupExecutionGuard ..|> IBackupExecutionGuard
 
-UI.Program ..> UI.ConsoleUI
-UI.Program ..> Configuration.IPathProvider
-UI.Program ..> Persistence.JsonUserPreferencesRepository
-UI.Program ..> EasyLog.DailyFileLogger
-UI.Program ..> Log.NoOpLogger
+BackupEngine --> IFileSystem
+BackupEngine --> ITransferService
+BackupEngine --> IStateWriter
+BackupEngine --> ILogger
+BackupEngine --> IBackupExecutionGuard
 
-UI.ConsoleUI --> Application.BackupApplicationService
-UI.ConsoleUI --> Persistence.IUserPreferencesRepository
-UI.ConsoleUI --> Configuration.IPathProvider
-UI.ConsoleUI --> UI.CommandLineParser
-UI.ConsoleUI --> UI.IMenuService
-UI.ConsoleUI --> UI.IMenuFactory
-UI.ConsoleUI --> UI.IConsoleAdapter
-UI.ConsoleUI --> UI.IConsoleMessageService
-UI.ConsoleUI --> UI.IConsoleInputService
-UI.ConsoleUI --> UI.JobsFlowService
-UI.ConsoleUI --> UI.SettingsFlowService
-UI.ConsoleUI --> Localization.ILocalizationService
+UserPreferencesEncryptionPolicyProvider --> IUserPreferencesRepository
+BackupJobStateService --> IStateReader
 
-UI.JobsFlowService --> Application.BackupApplicationService
-UI.JobsFlowService --> UI.IMenuService
-UI.JobsFlowService --> UI.IMenuFactory
-UI.JobsFlowService --> UI.IConsoleMessageService
-UI.JobsFlowService --> UI.IConsoleInputService
-UI.JobsFlowService --> UI.IConsoleAdapter
-UI.JobsFlowService --> UI.JobEditSessionService
-UI.JobsFlowService ..> Core.BackupJob
+BusinessSoftwareBackupExecutionGuard --> IUserPreferencesRepository
+LogQueryService --> IPathProvider
+LogNavigationService --> IPathProvider
 
-UI.SettingsFlowService --> Persistence.IUserPreferencesRepository
-UI.SettingsFlowService --> Persistence.UserPreferences
-UI.SettingsFlowService --> Configuration.IPathProvider
-UI.SettingsFlowService --> Localization.ILocalizationService
-UI.SettingsFlowService --> UI.IMenuService
-UI.SettingsFlowService --> UI.IMenuFactory
-UI.SettingsFlowService --> UI.IConsoleMessageService
-UI.SettingsFlowService --> UI.IConsoleInputService
-UI.SettingsFlowService --> UI.IConsoleAdapter
-UI.SettingsFlowService ..> Core.LogFormat
+ReloadableLogger --> IUserPreferencesRepository
+ReloadableLogger --> IPathProvider
+ReloadableLogger --> DailyFileLogger
 
-UI.MenuService --> Localization.ILocalizationService
-UI.MenuService --> UI.IConsoleAdapter
-UI.MenuService --> UI.SystemConsoleAdapter
-UI.MenuFactory ..> Persistence.IBackupJobRepository : DefaultMaxJobs
-UI.MenuFactory ..> UI.MenuConfig
+package "Application Read Models" {
+  interface ILogReader
+  class JsonLogReader
+  class XmlLogReader
+  interface IStateReader
+  class JsonStateReader
 
-UI.ConsoleMessageService --> Localization.ILocalizationService
-UI.ConsoleMessageService --> UI.ErrorManager
-UI.ConsoleMessageService --> UI.IConsoleAdapter
+  ILogReader <|.. JsonLogReader
+  ILogReader <|.. XmlLogReader
+  IStateReader <|.. JsonStateReader
+}
 
-UI.ConsoleInputService --> UI.IConsoleMessageService
-UI.ConsoleInputService --> UI.IConsoleAdapter
-
-UI.JobEditSessionService ..> Core.BackupJob
+LogNavigationService --> ILogReader
+LogQueryService --> ILogReader
 
 @enduml
