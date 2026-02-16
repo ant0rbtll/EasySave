@@ -1,6 +1,7 @@
 using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
+using EasySave.State;
 using EasySave.System;
 
 namespace EasySave.Application;
@@ -14,11 +15,13 @@ public class BackupApplicationService(
     IBackupJobRepository repo,
     IBackupEngine backupEngine,
     IBackupJobStateService backupJobStateService,
+    IStateReader? stateReader = null,
     IBackupExecutionGuard? backupExecutionGuard = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
     private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
+    private readonly IStateReader? _stateReader = stateReader;
     private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
 
     /// <summary>
@@ -112,6 +115,37 @@ public class BackupApplicationService(
     }
 
     /// <summary>
+    /// Retrieves real-time progress information for active backup executions only.
+    /// </summary>
+    public IReadOnlyDictionary<int, BackupJobLiveProgressState> GetAllJobsLiveProgress()
+    {
+        var entries = _stateReader?.ReadEntries() ?? new Dictionary<int, StateEntry>();
+        var states = new Dictionary<int, BackupJobLiveProgressState>(entries.Count);
+        foreach (var entry in entries.Values)
+        {
+            if (entry.Status != BackupStatus.Active)
+            {
+                continue;
+            }
+
+            states[entry.BackupId] = new BackupJobLiveProgressState(
+                entry.BackupId,
+                entry.BackupName ?? string.Empty,
+                BackupJobStatus.Active,
+                ClampProgress(entry.ProgressPercent),
+                entry.TotalFiles,
+                entry.TotalSizeBytes,
+                entry.RemainingFiles,
+                entry.RemainingSizeBytes,
+                entry.CurrentSourcePath,
+                entry.CurrentDestinationPath,
+                entry.Timestamp);
+        }
+
+        return states;
+    }
+
+    /// <summary>
     /// Retrieves a specific backup job by ID.
     /// </summary>
     /// <param name="id">The job identifier.</param>
@@ -146,13 +180,18 @@ public class BackupApplicationService(
     {
         _backupExecutionGuard.EnsureCanCopyNextFile();
     }
-}
 
-/// <summary>
-/// Represents runtime metadata displayed in the manage view.
-/// </summary>
-public readonly record struct BackupJobRuntimeState(
-    int Id,
-    BackupJobStatus Status,
-    DateTime? LastExecutionDate,
-    bool IsActive);
+    private static BackupJobStatus MapStatus(BackupStatus status)
+    {
+        return status switch
+        {
+            BackupStatus.Inactive => BackupJobStatus.Inactive,
+            BackupStatus.Active => BackupJobStatus.Active,
+            BackupStatus.Done => BackupJobStatus.Done,
+            BackupStatus.Error => BackupJobStatus.Error,
+            _ => BackupJobStatus.Inactive
+        };
+    }
+
+    private static int ClampProgress(int progressPercent) => Math.Clamp(progressPercent, 0, 100);
+}

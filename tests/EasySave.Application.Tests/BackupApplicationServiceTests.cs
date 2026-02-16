@@ -2,6 +2,7 @@ using Moq;
 using EasySave.Backup;
 using EasySave.Persistence;
 using EasySave.Core;
+using EasySave.State;
 using EasySave.System;
 
 namespace EasySave.Application.Tests;
@@ -12,6 +13,7 @@ public class BackupApplicationServiceTests
     private readonly Mock<IBackupEngine> _engineMock;
     private readonly Mock<IBackupExecutionGuard> _backupExecutionGuardMock;
     private readonly Mock<IBackupJobStateService> _backupJobStateServiceMock;
+    private readonly Mock<IStateReader> _stateReaderMock;
     private readonly BackupApplicationService _service;
 
     public BackupApplicationServiceTests()
@@ -20,7 +22,9 @@ public class BackupApplicationServiceTests
         _engineMock = new Mock<IBackupEngine>();
         _backupExecutionGuardMock = new Mock<IBackupExecutionGuard>();
         _backupJobStateServiceMock = new Mock<IBackupJobStateService>();
-        _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object, _backupJobStateServiceMock.Object);
+        _stateReaderMock = new Mock<IStateReader>();
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>());
+        _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object, _backupJobStateServiceMock.Object, _stateReaderMock.Object);
     }
 
     /// <summary>
@@ -96,6 +100,70 @@ public class BackupApplicationServiceTests
         Assert.Equal(BackupJobStatus.Inactive, result[2].Status);
         Assert.False(result[2].IsActive);
         _backupJobStateServiceMock.Verify(s => s.ApplyState(It.IsAny<IEnumerable<BackupJob>>()), Times.Once);
+    }
+
+    [Fact]
+    public void GetAllJobsLiveProgress_ShouldReturnOnlyActiveEntries()
+    {
+        var timestamp = new DateTime(2026, 2, 16, 11, 45, 0, DateTimeKind.Utc);
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [1] = new()
+            {
+                BackupId = 1,
+                BackupName = "Job One",
+                Status = BackupStatus.Active,
+                ProgressPercent = 42,
+                TotalFiles = 100,
+                TotalSizeBytes = 1000,
+                RemainingFiles = 58,
+                RemainingSizeBytes = 580,
+                CurrentSourcePath = "/src/a.txt",
+                CurrentDestinationPath = "/dst/a.txt",
+                Timestamp = timestamp
+            },
+            [2] = new()
+            {
+                BackupId = 2,
+                BackupName = "Job Two",
+                Status = BackupStatus.Done,
+                ProgressPercent = 100
+            }
+        });
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Single(result);
+        Assert.Equal(BackupJobStatus.Active, result[1].Status);
+        Assert.Equal("Job One", result[1].Name);
+        Assert.Equal(42, result[1].ProgressPercent);
+        Assert.Equal(100, result[1].TotalFiles);
+        Assert.Equal(1000, result[1].TotalSizeBytes);
+        Assert.Equal(58, result[1].RemainingFiles);
+        Assert.Equal(580, result[1].RemainingSizeBytes);
+        Assert.Equal("/src/a.txt", result[1].CurrentSourcePath);
+        Assert.Equal("/dst/a.txt", result[1].CurrentDestinationPath);
+        Assert.Equal(timestamp, result[1].LastUpdateAt);
+        Assert.False(result.ContainsKey(2));
+    }
+
+    [Fact]
+    public void GetAllJobsLiveProgress_ShouldClampProgressPercent()
+    {
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [7] = new()
+            {
+                BackupId = 7,
+                BackupName = "Job Seven",
+                Status = BackupStatus.Active,
+                ProgressPercent = 140
+            }
+        });
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Equal(100, result[7].ProgressPercent);
     }
 
     /// <summary>
@@ -394,7 +462,7 @@ public class BackupApplicationServiceTests
             _repoMock.Object,
             _engineMock.Object,
             _backupJobStateServiceMock.Object,
-            _backupExecutionGuardMock.Object);
+            backupExecutionGuard: _backupExecutionGuardMock.Object);
 
         var exception = Assert.Throws<InvalidOperationException>(() => service.RunJob(1));
 
@@ -414,7 +482,7 @@ public class BackupApplicationServiceTests
             _repoMock.Object,
             _engineMock.Object,
             _backupJobStateServiceMock.Object,
-            _backupExecutionGuardMock.Object);
+            backupExecutionGuard: _backupExecutionGuardMock.Object);
 
         service.RunJob(1);
 
@@ -431,7 +499,7 @@ public class BackupApplicationServiceTests
             _repoMock.Object,
             _engineMock.Object,
             _backupJobStateServiceMock.Object,
-            _backupExecutionGuardMock.Object);
+            backupExecutionGuard: _backupExecutionGuardMock.Object);
 
         _engineMock
             .Setup(e => e.Execute(job))

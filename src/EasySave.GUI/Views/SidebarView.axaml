@@ -45,6 +45,13 @@
             </StackPanel>
         </Button>
         <Separator Margin="20,4"/>
+        <Button Classes="sidebar-item" Command="{Binding GoToProgressCommand}">
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <PathIcon Data="M3 13h2v8H3v-8zm8-6h2v14h-2V7zm8-4h2v18h-2V3z"/>
+                <TextBlock Text="{Binding ProgressLabel}" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Button>
+        <Separator Margin="20,4"/>
         <Button Classes="sidebar-item" Command="{Binding GoToLogCommand}">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <PathIcon Data="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>

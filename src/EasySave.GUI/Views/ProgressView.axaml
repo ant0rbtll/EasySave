@@ -1,7 +1,129 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:EasySave.GUI.ViewModels"
+             xmlns:models="using:EasySave.GUI.Models"
              x:Class="EasySave.GUI.Views.ProgressView"
              x:DataType="vm:ProgressViewModel">
-    <TextBlock Text="Page Progression" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+
+    <UserControl.Styles>
+        <Style Selector="Border.progress-card">
+            <Setter Property="Background" Value="#0FFFFFFF"/>
+            <Setter Property="BorderBrush" Value="#1EFFFFFF"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14"/>
+        </Style>
+        <Style Selector="TextBlock.meta-label">
+            <Setter Property="Foreground" Value="#8FA3B8"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+        <Style Selector="TextBlock.meta-value">
+            <Setter Property="Foreground" Value="#D3E4F6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+        <Style Selector="ProgressBar.active-progress">
+            <Setter Property="Height" Value="8"/>
+            <Setter Property="Minimum" Value="0"/>
+            <Setter Property="Maximum" Value="100"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,Auto,*" Margin="24">
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Text="{Binding TitleText}" FontSize="22" FontWeight="Bold"/>
+            <TextBlock Text="{Binding SubtitleText}" FontSize="13" Foreground="#8FA3B8"/>
+        </StackPanel>
+
+        <Border Grid.Row="2"
+                Margin="0,18,0,0"
+                BorderBrush="#22FFFFFF"
+                BorderThickness="1"
+                CornerRadius="8"
+                IsVisible="{Binding !HasActiveBackups}">
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="8"
+                        Margin="0,80">
+                <PathIcon Data="M3 13h2v8H3v-8zm8-6h2v14h-2V7zm8-4h2v18h-2V3z"
+                          Foreground="#5E7A95"
+                          Width="44"
+                          Height="44"/>
+                <TextBlock Text="{Binding EmptyTitleText}"
+                           FontSize="18"
+                           FontWeight="SemiBold"
+                           Foreground="#AAC0D3"
+                           HorizontalAlignment="Center"/>
+                <TextBlock Text="{Binding EmptySubtitleText}"
+                           FontSize="13"
+                           Foreground="#7E96AE"
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           MaxWidth="500"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <ScrollViewer Grid.Row="2"
+                      Margin="0,18,0,0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      IsVisible="{Binding HasActiveBackups}">
+            <ItemsControl ItemsSource="{Binding ActiveBackups}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="models:ActiveBackupProgressItem">
+                        <Border Classes="progress-card" Margin="0,0,0,10">
+                            <Grid RowDefinitions="Auto,Auto,Auto,Auto"
+                                  ColumnDefinitions="*,Auto"
+                                  RowSpacing="8"
+                                  ColumnSpacing="12">
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="0"
+                                           Text="{Binding Name}"
+                                           FontSize="15"
+                                           FontWeight="SemiBold"
+                                           Foreground="#E7F1FB"/>
+                                <TextBlock Grid.Row="0"
+                                           Grid.Column="1"
+                                           Text="{Binding ProgressDisplay}"
+                                           FontSize="13"
+                                           FontWeight="Bold"
+                                           Foreground="#74B3FF"/>
+
+                                <ProgressBar Grid.Row="1"
+                                             Grid.ColumnSpan="2"
+                                             Classes="active-progress"
+                                             Value="{Binding ProgressPercent}"/>
+
+                                <Grid Grid.Row="2"
+                                      Grid.ColumnSpan="2"
+                                      ColumnDefinitions="Auto,Auto,20,Auto,Auto,20,Auto,Auto">
+                                    <TextBlock Grid.Column="0" Classes="meta-label" Text="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).FilesLabelText}"/>
+                                    <TextBlock Grid.Column="1" Classes="meta-value" Text="{Binding FilesDisplay}" Margin="6,0,0,0"/>
+                                    <TextBlock Grid.Column="3" Classes="meta-label" Text="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).SizeLabelText}"/>
+                                    <TextBlock Grid.Column="4" Classes="meta-value" Text="{Binding SizeDisplay}" Margin="6,0,0,0"/>
+                                    <TextBlock Grid.Column="6" Classes="meta-label" Text="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).UpdatedAtLabelText}"/>
+                                    <TextBlock Grid.Column="7" Classes="meta-value" Text="{Binding UpdatedAtDisplay}" Margin="6,0,0,0"/>
+                                </Grid>
+
+                                <Grid Grid.Row="3"
+                                      Grid.ColumnSpan="2"
+                                      RowDefinitions="Auto,Auto"
+                                      RowSpacing="5">
+                                    <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Classes="meta-label" Text="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).CurrentSourceLabelText}"/>
+                                        <TextBlock Classes="meta-value" Text="{Binding CurrentSourcePath}" MaxWidth="780"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6">
+                                        <TextBlock Classes="meta-label" Text="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).CurrentDestinationLabelText}"/>
+                                        <TextBlock Classes="meta-value" Text="{Binding CurrentDestinationPath}" MaxWidth="780"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
 </UserControl>
