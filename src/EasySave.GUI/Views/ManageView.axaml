@@ -13,6 +13,43 @@
 			<Setter Property="CornerRadius" Value="4"/>
 			<Setter Property="Padding" Value="8,3"/>
 		</Style>
+
+		<!-- Style for status badges -->
+		<Style Selector="Border.status-badge">
+			<Setter Property="CornerRadius" Value="4"/>
+			<Setter Property="Padding" Value="8,3"/>
+			<Setter Property="MinWidth" Value="66"/>
+		</Style>
+		<Style Selector="Border.status-badge TextBlock">
+			<Setter Property="FontSize" Value="11"/>
+			<Setter Property="HorizontalAlignment" Value="Center"/>
+			<Setter Property="TextAlignment" Value="Center"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Inactive]">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Inactive] TextBlock">
+			<Setter Property="Foreground" Value="#9AA8B5"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Active]">
+			<Setter Property="Background" Value="#1A42A5F5"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Active] TextBlock">
+			<Setter Property="Foreground" Value="#7AB8FF"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Done]">
+			<Setter Property="Background" Value="#1A66BB6A"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Done] TextBlock">
+			<Setter Property="Foreground" Value="#66BB6A"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Error]">
+			<Setter Property="Background" Value="#1AEF5350"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Error] TextBlock">
+			<Setter Property="Foreground" Value="#EF5350"/>
+		</Style>
 		<Style Selector="Border.type-badge TextBlock">
 			<Setter Property="FontSize" Value="11"/>
 			<Setter Property="Foreground" Value="#BBBBBB"/>
@@ -370,7 +407,7 @@
 					<Border Grid.Row="0"
 							Background="#11FFFFFF"
 							Padding="16,10">
-						<Grid ColumnDefinitions="40,50,*,1.5*,1.5*,100,180,130">
+						<Grid ColumnDefinitions="40,50,90,*,1.5*,1.5*,100,180,130">
 							<CheckBox Grid.Column="0"
 									  IsChecked="{Binding IsAllSelected}"
 									  ToolTip.Tip="{Binding SelectAllTooltip}"
@@ -382,31 +419,36 @@
 								<TextBlock Text="{Binding IdHeader}"/>
 							</Button>
 							<Button Grid.Column="2" Classes="col-header"
+									Command="{Binding SortByCommand}" CommandParameter="Status"
+									HorizontalAlignment="Center">
+								<TextBlock Text="{Binding StatusHeader}"/>
+							</Button>
+							<Button Grid.Column="3" Classes="col-header"
 									Command="{Binding SortByCommand}" CommandParameter="Name"
 									HorizontalAlignment="Center">
 								<TextBlock Text="{Binding NameHeader}"/>
 							</Button>
-							<Button Grid.Column="3" Classes="col-header"
+							<Button Grid.Column="4" Classes="col-header"
 									Command="{Binding SortByCommand}" CommandParameter="Source"
 									HorizontalAlignment="Center">
 								<TextBlock Text="{Binding SourceHeader}"/>
 							</Button>
-							<Button Grid.Column="4" Classes="col-header"
+							<Button Grid.Column="5" Classes="col-header"
 									Command="{Binding SortByCommand}" CommandParameter="Destination"
 									HorizontalAlignment="Center">
 								<TextBlock Text="{Binding DestinationHeader}"/>
 							</Button>
-							<Button Grid.Column="5" Classes="col-header"
+							<Button Grid.Column="6" Classes="col-header"
 									Command="{Binding SortByCommand}" CommandParameter="Type"
 									HorizontalAlignment="Center">
 								<TextBlock Text="{Binding TypeHeader}"/>
 							</Button>
-							<Button Grid.Column="6" Classes="col-header"
+							<Button Grid.Column="7" Classes="col-header"
 									Command="{Binding SortByCommand}" CommandParameter="LastRun"
 									HorizontalAlignment="Center">
 								<TextBlock Text="{Binding LastRunHeader}"/>
 							</Button>
-							<Button Grid.Column="7" Classes="col-header"
+							<Button Grid.Column="8" Classes="col-header"
 									HorizontalAlignment="Center"
 									IsHitTestVisible="False">
 								<TextBlock Text="{Binding ActionsHeader}"/>
@@ -425,7 +467,7 @@
 											BorderBrush="#11FFFFFF"
 											BorderThickness="0,0,0,1"
 											Padding="16,10">
-										<Grid ColumnDefinitions="40,50,*,1.5*,1.5*,100,180,130"
+										<Grid ColumnDefinitions="40,50,90,*,1.5*,1.5*,100,180,130"
 											  VerticalAlignment="Center">
 
 											<!-- Checkbox -->
@@ -442,8 +484,17 @@
 												<TextBlock Text="{Binding Id}"/>
 											</Border>
 
+											<!-- Status -->
+											<Border Grid.Column="2"
+													Classes="status-badge"
+													Tag="{Binding Status}"
+													HorizontalAlignment="Center"
+													VerticalAlignment="Center">
+												<TextBlock Text="{Binding StatusDisplay}"/>
+											</Border>
+
 											<!-- Name + execution info -->
-											<StackPanel Grid.Column="2"
+											<StackPanel Grid.Column="3"
 														Spacing="2"
 														HorizontalAlignment="Center"
 														VerticalAlignment="Center"
@@ -458,7 +509,7 @@
 											</StackPanel>
 
 											<!-- Source -->
-											<TextBlock Grid.Column="3"
+											<TextBlock Grid.Column="4"
 													   Text="{Binding Source}"
 													   ToolTip.Tip="{Binding Source}"
 													   Classes="path-text"
@@ -467,7 +518,7 @@
 													   MaxWidth="250"/>
 
 											<!-- Destination -->
-											<TextBlock Grid.Column="4"
+											<TextBlock Grid.Column="5"
 													   Text="{Binding Destination}"
 													   ToolTip.Tip="{Binding Destination}"
 													   Classes="path-text"
@@ -476,14 +527,14 @@
 													   MaxWidth="250"/>
 
 											<!-- Type -->
-											<Border Grid.Column="5" Classes="type-badge"
+											<Border Grid.Column="6" Classes="type-badge"
 													HorizontalAlignment="Center"
 													VerticalAlignment="Center">
 												<TextBlock Text="{Binding Type}"/>
 											</Border>
 
 											<!-- Last execution -->
-											<TextBlock Grid.Column="6"
+											<TextBlock Grid.Column="7"
 													   HorizontalAlignment="Center"
 													   VerticalAlignment="Center"
 													   FontSize="12"
@@ -491,7 +542,7 @@
 													   Text="{Binding LastExecutionDisplay}"/>
 
 											<!-- Actions -->
-											<StackPanel Grid.Column="7"
+											<StackPanel Grid.Column="8"
 														Orientation="Horizontal"
 														Spacing="4"
 														HorizontalAlignment="Center"

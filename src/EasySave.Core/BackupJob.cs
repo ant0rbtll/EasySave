@@ -41,4 +41,10 @@ public class BackupJob
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Gets or sets the runtime status of the job.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public BackupJobStatus Status { get; set; } = BackupJobStatus.Inactive;
 }

@@ -18,6 +18,10 @@ public partial class ManageViewModel : ViewModelBase
     private readonly BackupApplicationService _applicationService;
     private readonly ILocalizationService _localizationService;
     private CancellationTokenSource? _dismissCts;
+    private CancellationTokenSource? _liveRefreshCts;
+    private Task? _liveRefreshTask;
+    private readonly SemaphoreSlim _runtimeRefreshGate = new(1, 1);
+    private const int LiveRefreshIntervalMs = 500;
     public int PageSize => Math.Max(1, SelectedPageSize);
 
     [ObservableProperty]
@@ -60,6 +64,7 @@ public partial class ManageViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IdHeader))]
+    [NotifyPropertyChangedFor(nameof(StatusHeader))]
     [NotifyPropertyChangedFor(nameof(NameHeader))]
     [NotifyPropertyChangedFor(nameof(SourceHeader))]
     [NotifyPropertyChangedFor(nameof(DestinationHeader))]
@@ -69,6 +74,7 @@ public partial class ManageViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IdHeader))]
+    [NotifyPropertyChangedFor(nameof(StatusHeader))]
     [NotifyPropertyChangedFor(nameof(NameHeader))]
     [NotifyPropertyChangedFor(nameof(SourceHeader))]
     [NotifyPropertyChangedFor(nameof(DestinationHeader))]
@@ -225,6 +231,7 @@ public partial class ManageViewModel : ViewModelBase
     }
 
     private string _idLabel = "ID";
+    private string _statusLabel = string.Empty;
     private string _nameLabel = string.Empty;
     private string _sourceLabel = string.Empty;
     private string _destinationLabel = string.Empty;
@@ -232,6 +239,7 @@ public partial class ManageViewModel : ViewModelBase
     private string _lastRunLabel = string.Empty;
 
     public string IdHeader => _idLabel + GetSortIndicator("Id");
+    public string StatusHeader => _statusLabel + GetSortIndicator("Status");
     public string NameHeader => _nameLabel + GetSortIndicator("Name");
     public string SourceHeader => _sourceLabel + GetSortIndicator("Source");
     public string DestinationHeader => _destinationLabel + GetSortIndicator("Destination");
@@ -243,6 +251,27 @@ public partial class ManageViewModel : ViewModelBase
         _applicationService = backupApplicationService;
         _localizationService = localizationService;
         RefreshTranslations();
+    }
+
+    public void StartLiveRefresh()
+    {
+        if (_liveRefreshCts is not null)
+            return;
+
+        _liveRefreshCts = new CancellationTokenSource();
+        _liveRefreshTask = RunLiveRefreshLoopAsync(_liveRefreshCts.Token);
+    }
+
+    public void StopLiveRefresh()
+    {
+        var cts = _liveRefreshCts;
+        if (cts is null)
+            return;
+
+        _liveRefreshCts = null;
+        cts.Cancel();
+        cts.Dispose();
+        _liveRefreshTask = null;
     }
 
     public void RefreshTranslations()
@@ -269,12 +298,14 @@ public partial class ManageViewModel : ViewModelBase
         EmptySubtitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_subtitle);
 
         _idLabel = _localizationService.TranslateText(LocalizationKey.backupjob_id);
+        _statusLabel = _localizationService.TranslateText(LocalizationKey.backupjob_status);
         _nameLabel = _localizationService.TranslateText(LocalizationKey.backupjob_name);
         _sourceLabel = _localizationService.TranslateText(LocalizationKey.backupjob_source);
         _destinationLabel = _localizationService.TranslateText(LocalizationKey.backupjob_destination);
         _typeLabel = _localizationService.TranslateText(LocalizationKey.backupjob_type);
         _lastRunLabel = _localizationService.TranslateText(LocalizationKey.backupjob_last_executed);
         OnPropertyChanged(nameof(IdHeader));
+        OnPropertyChanged(nameof(StatusHeader));
         OnPropertyChanged(nameof(NameHeader));
         OnPropertyChanged(nameof(SourceHeader));
         OnPropertyChanged(nameof(DestinationHeader));
@@ -354,6 +385,7 @@ public partial class ManageViewModel : ViewModelBase
                 Func<Models.BackupJob, object> keySelector = SortColumn switch
                 {
                     "Id" => j => j.Id,
+                    "Status" => j => j.Status,
                     "Name" => j => j.Name,
                     "Source" => j => j.Source,
                     "Destination" => j => j.Destination,
@@ -387,10 +419,108 @@ public partial class ManageViewModel : ViewModelBase
         _updatingSelection = false;
     }
 
+    private async Task RunLiveRefreshLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            await RefreshRuntimeStatesOnceAsync(cancellationToken);
+            await Task.Delay(LiveRefreshIntervalMs, cancellationToken);
+        }
+    }
+
+    private async Task RefreshRuntimeStatesOnceAsync(CancellationToken cancellationToken)
+    {
+        if (!await _runtimeRefreshGate.WaitAsync(0, cancellationToken))
+            return;
+
+        try
+        {
+            var runtimeStates = await Task.Run(
+                () => _applicationService.GetAllJobsRuntimeStates(),
+                cancellationToken);
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                ApplyRuntimeStates(runtimeStates);
+            });
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Polling stopped.
+        }
+        catch (Exception)
+        {
+            // Ignore transient state read issues during live refresh.
+        }
+        finally
+        {
+            _runtimeRefreshGate.Release();
+        }
+    }
+
+    private void ApplyRuntimeStates(IReadOnlyDictionary<int, BackupJobRuntimeState> runtimeStates)
+    {
+        if (_allJobs.Count == 0)
+            return;
+
+        if (runtimeStates.Count != _allJobs.Count || _allJobs.Any(j => !runtimeStates.ContainsKey(j.Id)))
+        {
+            ApplyJobs(FetchJobs());
+            return;
+        }
+
+        var runtimeChanged = false;
+        foreach (var job in _allJobs)
+        {
+            var state = runtimeStates[job.Id];
+            var statusDisplay = FormatStatus(state.Status);
+            var lastExecutionDisplay = FormatLastExecution(state.LastExecutionDate);
+
+            if (job.Status != state.Status)
+            {
+                job.Status = state.Status;
+                runtimeChanged = true;
+            }
+
+            if (job.IsActive != state.IsActive)
+            {
+                job.IsActive = state.IsActive;
+                runtimeChanged = true;
+            }
+
+            if (job.LastExecutionDate != state.LastExecutionDate)
+            {
+                job.LastExecutionDate = state.LastExecutionDate;
+                runtimeChanged = true;
+            }
+
+            if (!string.Equals(job.StatusDisplay, statusDisplay, StringComparison.Ordinal))
+            {
+                job.StatusDisplay = statusDisplay;
+                runtimeChanged = true;
+            }
+
+            if (!string.Equals(job.LastExecutionDisplay, lastExecutionDisplay, StringComparison.Ordinal))
+            {
+                job.LastExecutionDisplay = lastExecutionDisplay;
+                runtimeChanged = true;
+            }
+        }
+
+        if (!runtimeChanged)
+            return;
+
+        if (!string.IsNullOrWhiteSpace(SearchText) || SortColumn is "Status" or "LastRun")
+        {
+            Refresh();
+        }
+    }
+
     private static bool MatchesSearch(Models.BackupJob job, string query)
     {
         return job.Id.ToString().Contains(query, StringComparison.OrdinalIgnoreCase)
             || job.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || job.StatusDisplay.Contains(query, StringComparison.OrdinalIgnoreCase)
             || job.Source.Contains(query, StringComparison.OrdinalIgnoreCase)
             || job.Destination.Contains(query, StringComparison.OrdinalIgnoreCase)
             || job.Type.ToString().Contains(query, StringComparison.OrdinalIgnoreCase)
@@ -896,7 +1026,9 @@ public partial class ManageViewModel : ViewModelBase
                     Type = job.Type,
                     LastExecutionDate = job.LastExecutionDate,
                     LastExecutionDisplay = FormatLastExecution(job.LastExecutionDate),
-                    IsActive = job.IsActive
+                    IsActive = job.IsActive,
+                    Status = job.Status,
+                    StatusDisplay = FormatStatus(job.Status)
                 })];
         }
         catch (Exception)
@@ -924,6 +1056,17 @@ public partial class ManageViewModel : ViewModelBase
         }
 
         return lastExecutionDate.Value.ToString("g", culture);
+    }
+
+    private string FormatStatus(Core.BackupJobStatus status)
+    {
+        return status switch
+        {
+            Core.BackupJobStatus.Active => _localizationService.TranslateText(LocalizationKey.backupjob_active),
+            Core.BackupJobStatus.Done => _localizationService.TranslateText(LocalizationKey.backupjob_done),
+            Core.BackupJobStatus.Error => _localizationService.TranslateText(LocalizationKey.backupjob_error),
+            _ => _localizationService.TranslateText(LocalizationKey.backupjob_inactive)
+        };
     }
 
     private void ApplyJobs(List<Models.BackupJob> jobs)

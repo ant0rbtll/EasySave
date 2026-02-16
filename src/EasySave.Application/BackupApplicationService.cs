@@ -99,6 +99,19 @@ public class BackupApplicationService(
     }
 
     /// <summary>
+    /// Retrieves runtime state for all backup jobs keyed by job identifier.
+    /// </summary>
+    public IReadOnlyDictionary<int, BackupJobRuntimeState> GetAllJobsRuntimeStates()
+    {
+        var jobs = _repo.GetAll();
+        _backupJobStateService.ApplyState(jobs);
+
+        return jobs.ToDictionary(
+            j => j.Id,
+            j => new BackupJobRuntimeState(j.Id, j.Status, j.LastExecutionDate, j.IsActive));
+    }
+
+    /// <summary>
     /// Retrieves a specific backup job by ID.
     /// </summary>
     /// <param name="id">The job identifier.</param>
@@ -134,3 +147,12 @@ public class BackupApplicationService(
         _backupExecutionGuard.EnsureCanCopyNextFile();
     }
 }
+
+/// <summary>
+/// Represents runtime metadata displayed in the manage view.
+/// </summary>
+public readonly record struct BackupJobRuntimeState(
+    int Id,
+    BackupJobStatus Status,
+    DateTime? LastExecutionDate,
+    bool IsActive);

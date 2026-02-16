@@ -78,6 +78,26 @@ public class BackupApplicationServiceTests
         _backupJobStateServiceMock.Verify(s => s.ApplyState(It.IsAny<IEnumerable<BackupJob>>()), Times.Once);
     }
 
+    [Fact]
+    public void GetAllJobsRuntimeStates_ShouldReturnStateForEachJob()
+    {
+        var jobs = new List<BackupJob>
+        {
+            new() { Id = 1, Status = BackupJobStatus.Active, IsActive = true },
+            new() { Id = 2, Status = BackupJobStatus.Inactive, IsActive = false }
+        };
+        _repoMock.Setup(r => r.GetAll()).Returns(jobs);
+
+        var result = _service.GetAllJobsRuntimeStates();
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal(BackupJobStatus.Active, result[1].Status);
+        Assert.True(result[1].IsActive);
+        Assert.Equal(BackupJobStatus.Inactive, result[2].Status);
+        Assert.False(result[2].IsActive);
+        _backupJobStateServiceMock.Verify(s => s.ApplyState(It.IsAny<IEnumerable<BackupJob>>()), Times.Once);
+    }
+
     /// <summary>
     /// Verifies that GetJob retrieves the expected job when a valid ID is provided.
     /// </summary>

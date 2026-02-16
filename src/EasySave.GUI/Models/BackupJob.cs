@@ -62,6 +62,22 @@ namespace EasySave.GUI.Models
 			set { isActive = value; OnNotifyPropertyChanged(nameof(IsActive)); }
 		}
 
+		private BackupJobStatus status = BackupJobStatus.Inactive;
+
+		public BackupJobStatus Status
+		{
+			get { return status; }
+			set { status = value; OnNotifyPropertyChanged(nameof(Status)); }
+		}
+
+		private string statusDisplay = string.Empty;
+
+		public string StatusDisplay
+		{
+			get { return statusDisplay; }
+			set { statusDisplay = value; OnNotifyPropertyChanged(nameof(StatusDisplay)); }
+		}
+
 		private bool isSelected;
 
 		public bool IsSelected
