@@ -12,6 +12,7 @@ public partial class ProgressViewModel : ViewModelBase
     private readonly BackupApplicationService _applicationService;
     private readonly ILocalizationService _localizationService;
     private CancellationTokenSource? _liveRefreshCts;
+    private Task? _liveRefreshTask;
     private readonly SemaphoreSlim _refreshGate = new(1, 1);
     private const int LiveRefreshIntervalMs = 500;
     private string _lastSnapshotSignature = string.Empty;
@@ -69,7 +70,7 @@ public partial class ProgressViewModel : ViewModelBase
             return;
 
         _liveRefreshCts = new CancellationTokenSource();
-        _ = RunLiveRefreshLoopAsync(_liveRefreshCts.Token);
+        _liveRefreshTask = RunLiveRefreshLoopAsync(_liveRefreshCts.Token);
     }
 
     public void StopLiveRefresh()
@@ -81,14 +82,22 @@ public partial class ProgressViewModel : ViewModelBase
         _liveRefreshCts = null;
         cts.Cancel();
         cts.Dispose();
+        _liveRefreshTask = null;
     }
 
     private async Task RunLiveRefreshLoopAsync(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            await RefreshOnceAsync(cancellationToken);
-            await Task.Delay(LiveRefreshIntervalMs, cancellationToken);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await RefreshOnceAsync(cancellationToken);
+                await Task.Delay(LiveRefreshIntervalMs, cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Expected when polling is stopped.
         }
     }
 

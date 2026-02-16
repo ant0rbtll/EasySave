@@ -166,6 +166,32 @@ public class BackupApplicationServiceTests
         Assert.Equal(100, result[7].ProgressPercent);
     }
 
+    [Fact]
+    public void GetAllJobsLiveProgress_ShouldUseDictionaryKeyAsId_AndResolveNonEmptyName()
+    {
+        _repoMock.Setup(r => r.GetAll()).Returns(
+        [
+            new BackupJob { Id = 10, Name = "Repo Name" }
+        ]);
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [10] = new()
+            {
+                BackupId = 0,
+                BackupName = "",
+                Status = BackupStatus.Active,
+                ProgressPercent = 12
+            }
+        });
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Single(result);
+        Assert.True(result.ContainsKey(10));
+        Assert.Equal(10, result[10].Id);
+        Assert.Equal("Repo Name", result[10].Name);
+    }
+
     /// <summary>
     /// Verifies that GetJob retrieves the expected job when a valid ID is provided.
     /// </summary>
