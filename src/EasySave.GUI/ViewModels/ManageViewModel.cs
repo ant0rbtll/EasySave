@@ -4,6 +4,7 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
+using EasySave.Backup;
 using EasySave.GUI.Helpers;
 using EasySave.Localization;
 
@@ -16,6 +17,7 @@ public partial class ManageViewModel : ViewModelBase
     public IReadOnlyList<int> PageSizeOptions { get; } = [15, 25, 50];
     private readonly List<Models.BackupJob> _allJobs = [];
     private readonly BackupApplicationService _applicationService;
+    private readonly IBackupExecutionController _backupExecutionController;
     private readonly ILocalizationService _localizationService;
     private CancellationTokenSource? _dismissCts;
     private CancellationTokenSource? _liveRefreshCts;
@@ -88,10 +90,18 @@ public partial class ManageViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(DeleteSelectedCommand))]
     [NotifyCanExecuteChangedFor(nameof(ModifyJobCommand))]
     [NotifyCanExecuteChangedFor(nameof(DeleteJobCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PauseRunningCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PlayRunningCommand))]
+    [NotifyCanExecuteChangedFor(nameof(StopRunningCommand))]
     private bool isRunning;
 
     [ObservableProperty]
     private string runningJobName = string.Empty;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(PauseRunningCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PlayRunningCommand))]
+    private bool isPaused;
 
     [ObservableProperty]
     private bool isConfirmDialogOpen;
@@ -174,6 +184,24 @@ public partial class ManageViewModel : ViewModelBase
     private string tooltipDelete = string.Empty;
 
     [ObservableProperty]
+    private string playText = string.Empty;
+
+    [ObservableProperty]
+    private string pauseText = string.Empty;
+
+    [ObservableProperty]
+    private string stopText = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipPlay = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipPause = string.Empty;
+
+    [ObservableProperty]
+    private string tooltipStop = string.Empty;
+
+    [ObservableProperty]
     private string runSelectedText = string.Empty;
 
     [ObservableProperty]
@@ -246,9 +274,13 @@ public partial class ManageViewModel : ViewModelBase
     public string TypeHeader => _typeLabel + GetSortIndicator("Type");
     public string LastRunHeader => _lastRunLabel + GetSortIndicator("LastRun");
 
-    public ManageViewModel(BackupApplicationService backupApplicationService, ILocalizationService localizationService)
+    public ManageViewModel(
+        BackupApplicationService backupApplicationService,
+        IBackupExecutionController backupExecutionController,
+        ILocalizationService localizationService)
     {
         _applicationService = backupApplicationService;
+        _backupExecutionController = backupExecutionController;
         _localizationService = localizationService;
         RefreshTranslations();
     }
@@ -291,6 +323,12 @@ public partial class ManageViewModel : ViewModelBase
         TooltipRun = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_run);
         TooltipModify = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_modify);
         TooltipDelete = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_delete);
+        PlayText = _localizationService.TranslateText(LocalizationKey.gui_manage_play);
+        PauseText = _localizationService.TranslateText(LocalizationKey.gui_manage_pause);
+        StopText = _localizationService.TranslateText(LocalizationKey.gui_manage_stop);
+        TooltipPlay = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_play);
+        TooltipPause = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_pause);
+        TooltipStop = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_stop);
         RunSelectedText = _localizationService.TranslateText(LocalizationKey.gui_manage_run_selected);
         DeleteSelectedText = _localizationService.TranslateText(LocalizationKey.gui_manage_delete_selected);
         SelectAllTooltip = _localizationService.TranslateText(LocalizationKey.gui_manage_select_all);
@@ -592,10 +630,34 @@ public partial class ManageViewModel : ViewModelBase
         IsConfirmDialogOpen = true;
     }
 
-    private bool CanRunJob(Models.BackupJob job)
+    private bool CanRunJob(Models.BackupJob job) => !IsRunning;
+
+    [RelayCommand(CanExecute = nameof(CanPauseRunning))]
+    private void PauseRunning()
     {
-        return !_runningJobIds.Contains(job.Id) && job.Status != Core.BackupJobStatus.Active;
+        _backupExecutionController.Pause();
+        IsPaused = true;
     }
+
+    private bool CanPauseRunning() => IsRunning && !IsPaused;
+
+    [RelayCommand(CanExecute = nameof(CanPlayRunning))]
+    private void PlayRunning()
+    {
+        _backupExecutionController.Resume();
+        IsPaused = false;
+    }
+
+    private bool CanPlayRunning() => IsRunning && IsPaused;
+
+    [RelayCommand(CanExecute = nameof(CanStopRunning))]
+    private void StopRunning()
+    {
+        _backupExecutionController.RequestStop();
+        IsPaused = false;
+    }
+
+    private bool CanStopRunning() => IsRunning;
 
     public void OnJobSelectionChanged()
     {
@@ -644,11 +706,13 @@ public partial class ManageViewModel : ViewModelBase
 
         IsConfirmDialogOpen = false;
         _runningJobIds.Add(job.Id);
+        IsPaused = false;
         RunJobCommand.NotifyCanExecuteChanged();
         RefreshRunningState(job.Name);
         IsStatusBannerVisible = false;
 
         bool success = false;
+        bool stoppedByUser = false;
         string errorMessage = string.Empty;
 
         try
@@ -666,7 +730,8 @@ public partial class ManageViewModel : ViewModelBase
             }
             else
             {
-                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+                stoppedByUser = IsStoppedByUser(ex);
+            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
             }
         }
         finally
@@ -675,6 +740,9 @@ public partial class ManageViewModel : ViewModelBase
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
+                IsRunning = false;
+                IsPaused = false;
+                RunningJobName = string.Empty;
                 PendingJob = null;
                 _runningJobIds.Remove(job.Id);
                 RefreshRunningState();
@@ -689,13 +757,13 @@ public partial class ManageViewModel : ViewModelBase
                 else
                 {
                     StatusMessage = errorMessage;
-                    IsStatusError = true;
+                    IsStatusError = !stoppedByUser;
                 }
                 IsStatusBannerVisible = true;
             });
         }
 
-        if (success)
+        if (success || stoppedByUser)
         {
             _ = AutoDismissBannerAsync();
         }
@@ -758,11 +826,13 @@ public partial class ManageViewModel : ViewModelBase
             _runningJobIds.Add(j.Id);
         RunJobCommand.NotifyCanExecuteChanged();
         RefreshRunningState(selectedJobs.Count.ToString(CultureInfo.InvariantCulture));
+        IsPaused = false;
 
         IsStatusBannerVisible = false;
 
         int total = selectedJobs.Count;
         bool success = true;
+        bool stoppedByUser = false;
         string errorMessage = string.Empty;
 
         var selectedIds = selectedJobs.Select(j => j.Id).ToArray();
@@ -773,6 +843,7 @@ public partial class ManageViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
+                stoppedByUser = IsStoppedByUser(ex);
             errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
             success = false;
         }
@@ -785,6 +856,7 @@ public partial class ManageViewModel : ViewModelBase
             {
                 _runningJobIds.Remove(j.Id);
             }
+            IsPaused = false;
             RefreshRunningState();
             ApplyJobs(jobs);
             RunJobCommand.NotifyCanExecuteChanged();
@@ -800,12 +872,12 @@ public partial class ManageViewModel : ViewModelBase
             else
             {
                 StatusMessage = errorMessage;
-                IsStatusError = true;
+                IsStatusError = !stoppedByUser;
             }
             IsStatusBannerVisible = true;
         });
 
-        if (success)
+        if (success || stoppedByUser)
         {
             _ = AutoDismissBannerAsync();
         }
@@ -1158,6 +1230,14 @@ public partial class ManageViewModel : ViewModelBase
             PaginationItem.Ellipsis(),
             PaginationItem.Page(totalPages, currentPage == totalPages)
         ];
+    }
+
+    private static bool IsStoppedByUser(Exception ex)
+    {
+        return string.Equals(
+            ex.Data["errorKey"]?.ToString(),
+            nameof(LocalizationKey.error_backup_stopped_by_user),
+            StringComparison.Ordinal);
     }
 }
 

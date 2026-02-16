@@ -519,10 +519,16 @@
 														<Style Selector="Border[Tag=EndBackup]">
 															<Setter Property="Background" Value="#22009688"/>
 														</Style>
-														<Style Selector="Border[Tag=EndBackup] TextBlock">
-															<Setter Property="Foreground" Value="#80CBC4"/>
-														</Style>
-													</Border.Styles>
+															<Style Selector="Border[Tag=EndBackup] TextBlock">
+																<Setter Property="Foreground" Value="#80CBC4"/>
+															</Style>
+															<Style Selector="Border[Tag=Action]">
+																<Setter Property="Background" Value="#22FFB74D"/>
+															</Style>
+															<Style Selector="Border[Tag=Action] TextBlock">
+																<Setter Property="Foreground" Value="#FFD180"/>
+															</Style>
+														</Border.Styles>
 
 													<Border.Tag>
 														<Binding Path="EventType"/>

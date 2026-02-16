@@ -23,7 +23,8 @@ public class BackupEngine(
     ILogger logger,
     IEncryptionPolicyProvider? encryptionPolicyProvider = null,
     IEncryptionProviderResolver? encryptionProviderResolver = null,
-    IBackupExecutionGuard? executionGuard = null) : IBackupEngine
+    IBackupExecutionGuard? executionGuard = null,
+    IBackupExecutionController? executionController = null) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
@@ -32,6 +33,7 @@ public class BackupEngine(
     private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
+    private readonly IBackupExecutionController _executionController = executionController ?? new NoOpBackupExecutionController();
 
     /// <summary>
     /// Executes a complete or differential backup.
@@ -67,6 +69,8 @@ public class BackupEngine(
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                LogPendingUserActions(job);
+                _executionController.WaitIfPausedOrThrowIfStopped();
                 var relativePath = Path.GetRelativePath(job.Source, file);
                 var destinationFile = Path.Combine(job.Destination, relativePath);
 
@@ -142,7 +146,15 @@ public class BackupEngine(
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
             string sourceContext = ex.Data["errorKey"]?.ToString() ?? ex.GetType().Name;
             string destinationContext = ex.Data["0"]?.ToString() ?? ex.Message;
-            var eventType = sourceContext == "error_business_software_running"
+            if (sourceContext == "error_backup_stopped_by_user")
+            {
+                sourceContext = ex.Data["actionKey"]?.ToString() ?? "action_backup_stopped_by_user";
+                destinationContext = string.Empty;
+            }
+
+            var eventType = sourceContext == "error_backup_stopped_by_user" || sourceContext == "action_backup_stopped_by_user"
+                ? LogEventType.Action
+                : sourceContext == "error_business_software_running"
                 ? LogEventType.BusinessSoftwareDetected
                 : LogEventType.Error;
             Log(
@@ -155,6 +167,10 @@ public class BackupEngine(
                 totalDurationMs
             );
             throw;
+        }
+        finally
+        {
+            _executionController.EndJob(job.Id);
         }
     }
 
@@ -274,6 +290,21 @@ public class BackupEngine(
         catch (Exception)
         {
             // Logging failures must not interrupt backup execution.
+        }
+    }
+
+    private void LogPendingUserActions(BackupJob job)
+    {
+        while (_executionController.TryDequeueAction(out var actionKey))
+        {
+            Log(
+                job.Id,
+                job.Name,
+                LogEventType.Action,
+                actionKey,
+                string.Empty,
+                0,
+                0);
         }
     }
 

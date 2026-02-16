@@ -455,6 +455,105 @@ public class BackupEngineTests
     }
 
     [Fact]
+    public void Execute_WhenPauseActionIsPending_LogsActionEventWithActionKey()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        var executionControllerMock = new Mock<IBackupExecutionController>();
+        executionControllerMock
+            .SetupSequence(c => c.TryDequeueAction(out It.Ref<string>.IsAny))
+            .Returns((out string actionKey) =>
+            {
+                actionKey = "action_backup_paused_by_user";
+                return true;
+            })
+            .Returns((out string actionKey) =>
+            {
+                actionKey = string.Empty;
+                return false;
+            });
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionControllerMock.Object);
+
+        engine.Execute(job);
+
+        _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
+            le.EventType == LogEventType.Action &&
+            le.SourcePathUNC == "action_backup_paused_by_user")), Times.Once);
+    }
+
+    [Fact]
+    public void Execute_WhenStoppedByUser_LogsActionEventWithStopActionKey()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var executionControllerMock = new Mock<IBackupExecutionController>();
+        executionControllerMock
+            .Setup(c => c.TryDequeueAction(out It.Ref<string>.IsAny))
+            .Returns((out string actionKey) =>
+            {
+                actionKey = string.Empty;
+                return false;
+            });
+        executionControllerMock
+            .Setup(c => c.WaitIfPausedOrThrowIfStopped())
+            .Throws(() =>
+            {
+                var ex = new InvalidOperationException("error_backup_stopped_by_user");
+                ex.Data["errorKey"] = "error_backup_stopped_by_user";
+                ex.Data["actionKey"] = "action_backup_stopped_by_user";
+                return ex;
+            });
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionControllerMock.Object);
+
+        var exThrown = Assert.Throws<InvalidOperationException>(() => engine.Execute(job));
+        Assert.Equal("error_backup_stopped_by_user", exThrown.Message);
+
+        _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
+            le.EventType == LogEventType.Action &&
+            le.SourcePathUNC == "action_backup_stopped_by_user")), Times.Once);
+    }
+
+    [Fact]
     public async Task Execute_UnsupportedBackupType_ThrowsNotSupportedException()
     {
         // Arrange

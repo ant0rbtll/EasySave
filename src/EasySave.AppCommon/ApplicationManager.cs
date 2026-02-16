@@ -57,6 +57,7 @@ namespace EasySave.AppCommon
             _services.AddSingleton<IEncryptionProvider, ExternalEncryptionProvider>();
             _services.AddSingleton<IEncryptionProviderResolver, EncryptionProviderResolver>();
             _services.AddTransient<IBackupEngine, BackupEngine>();
+            _services.AddSingleton<IBackupExecutionController, BackupExecutionController>();
             _services.AddSingleton<IBackupRunCoordinator, InMemoryBackupRunCoordinator>();
             _services.AddSingleton<ILocalizationService, LocalizationService>();
             _services.AddSingleton<ILogReader, JsonLogReader>();
@@ -64,6 +65,7 @@ namespace EasySave.AppCommon
             _services.AddSingleton<IStateReader, JsonStateReader>();
             _services.AddSingleton<IBackupJobStateService, BackupJobStateService>();
             _services.AddSingleton<IBackupExecutionGuard, BusinessSoftwareBackupExecutionGuard>();
+            _services.AddSingleton<IBackupExecutionControlService, BackupExecutionControlService>();
 
             // Setup application service
             _services.AddSingleton<BackupApplicationService>();

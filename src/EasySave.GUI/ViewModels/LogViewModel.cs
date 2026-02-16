@@ -888,6 +888,7 @@ public partial class LogViewModel : ViewModelBase
             LogEventType.StartBackup => _localizationService.TranslateText(LocalizationKey.gui_log_event_start_backup),
             LogEventType.EndBackup => _localizationService.TranslateText(LocalizationKey.gui_log_event_end_backup),
             LogEventType.BusinessSoftwareDetected => _localizationService.TranslateText(LocalizationKey.gui_log_event_business_software_detected),
+            LogEventType.Action => _localizationService.TranslateText(LocalizationKey.gui_log_event_action),
             _ => eventType.ToString()
         };
     }

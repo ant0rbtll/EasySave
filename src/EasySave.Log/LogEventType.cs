@@ -33,5 +33,10 @@ public enum LogEventType
     /// <summary>
     /// The backup operation was interrupted because business software was detected.
     /// </summary>
-    BusinessSoftwareDetected = 5
+    BusinessSoftwareDetected = 5,
+
+    /// <summary>
+    /// A user-driven runtime action was triggered (pause/stop).
+    /// </summary>
+    Action = 6
 }
