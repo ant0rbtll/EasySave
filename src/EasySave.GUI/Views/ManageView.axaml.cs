@@ -6,9 +6,40 @@ namespace EasySave.GUI.Views;
 
 public partial class ManageView : UserControl
 {
+    private ManageViewModel? _activeViewModel;
+
     public ManageView()
     {
         InitializeComponent();
+        AttachedToVisualTree += OnAttachedToVisualTree;
+        DetachedFromVisualTree += OnDetachedFromVisualTree;
+        DataContextChanged += OnDataContextChanged;
+    }
+
+    private void OnAttachedToVisualTree(object? sender, Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        SwitchPollingViewModel(DataContext as ManageViewModel);
+    }
+
+    private void OnDetachedFromVisualTree(object? sender, Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        SwitchPollingViewModel(null);
+    }
+
+    private void OnDataContextChanged(object? sender, EventArgs e)
+    {
+        if (VisualRoot is not null)
+            SwitchPollingViewModel(DataContext as ManageViewModel);
+    }
+
+    private void SwitchPollingViewModel(ManageViewModel? next)
+    {
+        if (ReferenceEquals(_activeViewModel, next))
+            return;
+
+        _activeViewModel?.StopLiveRefresh();
+        _activeViewModel = next;
+        _activeViewModel?.StartLiveRefresh();
     }
 
     private async void EditBrowseSource_Click(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

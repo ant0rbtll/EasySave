@@ -26,6 +26,7 @@ public class BackupJobStateServiceTests
 
         Assert.Equal(timestamp, job.LastExecutionDate);
         Assert.True(job.IsActive);
+        Assert.Equal(BackupJobStatus.Active, job.Status);
     }
 
     [Fact]
@@ -44,6 +45,7 @@ public class BackupJobStateServiceTests
 
         Assert.Null(job.LastExecutionDate);
         Assert.False(job.IsActive);
+        Assert.Equal(BackupJobStatus.Inactive, job.Status);
     }
 
     [Fact]
@@ -70,7 +72,9 @@ public class BackupJobStateServiceTests
 
         Assert.Equal(1, reader.ReadEntriesCalls);
         Assert.True(jobs[0].IsActive);
+        Assert.Equal(BackupJobStatus.Active, jobs[0].Status);
         Assert.False(jobs[1].IsActive);
+        Assert.Equal(BackupJobStatus.Inactive, jobs[1].Status);
         Assert.Null(jobs[1].LastExecutionDate);
     }
 
