@@ -2,6 +2,7 @@ using EasySave.Core;
 using EasySave.Log;
 using EasySave.System;
 using EasySave.State;
+using System.Diagnostics;
 
 namespace EasySave.Backup;
 
@@ -39,7 +40,8 @@ public class BackupEngine(
     /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
     public void Execute(BackupJob job)
     {
-        long counterTimeMs = 0;
+        long totalDurationMs = 0;
+        Stopwatch? backupLoopTimer = null;
         try
         {
             var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
@@ -54,6 +56,7 @@ public class BackupEngine(
             UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
             Log(job.Id, job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
 
+            backupLoopTimer = Stopwatch.StartNew();
             foreach (var file in files)
             {
                 var relativePath = Path.GetRelativePath(job.Source, file);
@@ -103,7 +106,6 @@ public class BackupEngine(
                         result.TransferTimeMs,
                         encryptionTimeMs
                     );
-                    counterTimeMs += result.TransferTimeMs + Math.Max(0, encryptionTimeMs);
 
                     remainingFiles--;
                     remainingSize -= result.FileSizeBytes;
@@ -115,13 +117,20 @@ public class BackupEngine(
                     UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, file, destinationFile);
                 }
             }
+            backupLoopTimer.Stop();
+            totalDurationMs = backupLoopTimer.ElapsedMilliseconds;
 
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
-            Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, counterTimeMs);
+            Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, totalDurationMs);
             _stateWriter.MarkInactive(job.Id);
         }
         catch (Exception ex)
         {
+            if (backupLoopTimer is not null)
+            {
+                totalDurationMs = backupLoopTimer.ElapsedMilliseconds;
+            }
+
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
             string sourceContext = ex.Data["errorKey"]?.ToString() ?? ex.GetType().Name;
             string destinationContext = ex.Data["0"]?.ToString() ?? ex.Message;
@@ -135,7 +144,7 @@ public class BackupEngine(
                 sourceContext,
                 destinationContext,
                 0,
-                counterTimeMs
+                totalDurationMs
             );
             throw;
         }
