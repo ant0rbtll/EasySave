@@ -421,10 +421,17 @@ public partial class ManageViewModel : ViewModelBase
 
     private async Task RunLiveRefreshLoopAsync(CancellationToken cancellationToken)
     {
-        while (!cancellationToken.IsCancellationRequested)
+        try
         {
-            await RefreshRuntimeStatesOnceAsync(cancellationToken);
-            await Task.Delay(LiveRefreshIntervalMs, cancellationToken);
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await RefreshRuntimeStatesOnceAsync(cancellationToken);
+                await Task.Delay(LiveRefreshIntervalMs, cancellationToken);
+            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Expected when polling is stopped.
         }
     }
 

@@ -120,17 +120,20 @@ public class BackupApplicationService(
     public IReadOnlyDictionary<int, BackupJobLiveProgressState> GetAllJobsLiveProgress()
     {
         var entries = _stateReader?.ReadEntries() ?? new Dictionary<int, StateEntry>();
+        var jobNamesById = (_repo.GetAll() ?? [])
+            .ToDictionary(j => j.Id, j => j.Name);
         var states = new Dictionary<int, BackupJobLiveProgressState>(entries.Count);
-        foreach (var entry in entries.Values)
+        foreach (var (jobId, entry) in entries)
         {
             if (entry.Status != BackupStatus.Active)
             {
                 continue;
             }
 
-            states[entry.BackupId] = new BackupJobLiveProgressState(
-                entry.BackupId,
-                entry.BackupName ?? string.Empty,
+            var jobName = ResolveNonEmptyJobName(entry.BackupName, jobId, jobNamesById);
+            states[jobId] = new BackupJobLiveProgressState(
+                jobId,
+                jobName,
                 BackupJobStatus.Active,
                 ClampProgress(entry.ProgressPercent),
                 entry.TotalFiles,
@@ -143,6 +146,22 @@ public class BackupApplicationService(
         }
 
         return states;
+    }
+
+    private static string ResolveNonEmptyJobName(string? stateName, int jobId, IReadOnlyDictionary<int, string> jobNamesById)
+    {
+        if (!string.IsNullOrWhiteSpace(stateName))
+        {
+            return stateName;
+        }
+
+        if (jobNamesById.TryGetValue(jobId, out var repositoryName)
+            && !string.IsNullOrWhiteSpace(repositoryName))
+        {
+            return repositoryName;
+        }
+
+        return $"Job #{jobId}";
     }
 
     /// <summary>
