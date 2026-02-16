@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Configuration;
@@ -12,10 +13,12 @@ namespace EasySave.GUI.ViewModels;
 
 public partial class ConfigViewModel : ViewModelBase
 {
+    private const int SavedMessageDurationMs = 3000;
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly ILocalizationService _localizationService;
     private readonly IPathProvider _pathProvider;
     private readonly ILoggerRuntimeReloader _loggerRuntimeReloader;
+    private CancellationTokenSource? _statusMessageCts;
     private static readonly char[] ExtensionSeparators = [',', ' '];
     private static readonly char[] BusinessSoftwareSeparators = [',', ';'];
     private Action _onLanguageChanged = static() => {};
@@ -98,6 +101,9 @@ public partial class ConfigViewModel : ViewModelBase
             EncryptedExtensions.Add(normalized!);
         }
 
+        EncryptedExtensions.CollectionChanged += OnConfigCollectionChanged;
+        BusinessSoftwareProcesses.CollectionChanged += OnConfigCollectionChanged;
+
         RefreshTranslations();
     }
 
@@ -108,6 +114,7 @@ public partial class ConfigViewModel : ViewModelBase
 
     partial void OnLogDirectoryChanged(string? value)
     {
+        ClearStatusMessage();
         ValidatePath();
     }
 
@@ -150,8 +157,14 @@ public partial class ConfigViewModel : ViewModelBase
 
     partial void OnSelectedLogFormatChanged(LogFormat value)
     {
+        ClearStatusMessage();
         OnPropertyChanged(nameof(IsJsonLogFormatSelected));
         OnPropertyChanged(nameof(IsXmlLogFormatSelected));
+    }
+
+    partial void OnSelectedLanguageChanged(string value)
+    {
+        ClearStatusMessage();
     }
 
     [RelayCommand]
@@ -191,6 +204,7 @@ public partial class ConfigViewModel : ViewModelBase
         _onLanguageChanged();
 
         StatusMessage = _localizationService.TranslateText(LocalizationKey.gui_config_saved);
+        RestartStatusMessageAutoClear();
     }
 
     private bool CanSave() => PathError is null;
@@ -244,12 +258,14 @@ public partial class ConfigViewModel : ViewModelBase
         }
 
         NewExtensionInput = null;
+        ClearStatusMessage();
     }
 
     [RelayCommand]
     private void RemoveExtension(string extension)
     {
         EncryptedExtensions.Remove(extension);
+        ClearStatusMessage();
     }
 
     [RelayCommand]
@@ -276,12 +292,52 @@ public partial class ConfigViewModel : ViewModelBase
         }
 
         NewBusinessSoftwareInput = null;
+        ClearStatusMessage();
     }
 
     [RelayCommand]
     private void RemoveBusinessSoftware(string processName)
     {
         BusinessSoftwareProcesses.Remove(processName);
+        ClearStatusMessage();
+    }
+
+    private void OnConfigCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        ClearStatusMessage();
+    }
+
+    private void RestartStatusMessageAutoClear()
+    {
+        _statusMessageCts?.Cancel();
+        _statusMessageCts?.Dispose();
+        _statusMessageCts = new CancellationTokenSource();
+
+        _ = ClearStatusMessageAfterDelayAsync(_statusMessageCts.Token);
+    }
+
+    private async Task ClearStatusMessageAfterDelayAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(SavedMessageDurationMs, cancellationToken);
+            StatusMessage = null;
+        }
+        catch (OperationCanceledException)
+        {
+            // The delay is cancelled when a new save or edit occurs.
+        }
+    }
+
+    private void ClearStatusMessage()
+    {
+        if (StatusMessage is null)
+            return;
+
+        _statusMessageCts?.Cancel();
+        _statusMessageCts?.Dispose();
+        _statusMessageCts = null;
+        StatusMessage = null;
     }
 
     private static string? NormalizeExtensionForDisplay(string? extension)
