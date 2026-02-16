@@ -23,6 +23,7 @@ namespace EasySave.GUI
             services.AddSingleton<HomeViewModel>();
             services.AddSingleton<CreateViewModel>();
             services.AddSingleton<ManageViewModel>();
+            services.AddSingleton<ProgressViewModel>();
             services.AddSingleton<LogViewModel>();
             services.AddSingleton<ConfigViewModel>();
             services.AddSingleton<SidebarViewModel>();

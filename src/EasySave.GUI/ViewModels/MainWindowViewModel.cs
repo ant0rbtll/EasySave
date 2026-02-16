@@ -30,6 +30,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private readonly HomeViewModel _homeViewModel;
     private readonly CreateViewModel _createViewModel;
     private readonly ManageViewModel _manageViewModel;
+    private readonly ProgressViewModel _progressViewModel;
     private readonly LogViewModel _logViewModel;
     private readonly ConfigViewModel _configViewModel;
 
@@ -39,6 +40,7 @@ public partial class MainWindowViewModel : ViewModelBase
     public MainWindowViewModel(
         CreateViewModel createViewModel,
         ManageViewModel manageViewModel,
+        ProgressViewModel progressViewModel,
         LogViewModel logViewModel,
         ConfigViewModel configViewModel,
         SidebarViewModel sidebarViewModel,
@@ -48,6 +50,7 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         _createViewModel = createViewModel;
         _manageViewModel = manageViewModel;
+        _progressViewModel = progressViewModel;
         _logViewModel = logViewModel;
         _logViewModel.SetOnLanguageChanged(OnLanguageChanged);
         _configViewModel = configViewModel;
@@ -86,6 +89,7 @@ public partial class MainWindowViewModel : ViewModelBase
         _logViewModel.RefreshTranslations();
         _homeViewModel.RefreshTranslations();
         _manageViewModel.RefreshTranslations();
+        _progressViewModel.RefreshTranslations();
         _createViewModel.RefreshTranslations();
     }
     public void Navigate(string page)
@@ -94,6 +98,7 @@ public partial class MainWindowViewModel : ViewModelBase
         {
             "creation" => _createViewModel,
             "manage" => _manageViewModel,
+            "progress" => _progressViewModel,
             "log" => _logViewModel,
             "conf" => _configViewModel,
             _ => CurrentPage

@@ -109,6 +109,7 @@ public enum LocalizationKey
     // GUI
     gui_sidebar_create,
     gui_sidebar_manage,
+    gui_sidebar_progress,
     gui_sidebar_log,
     gui_sidebar_config,
     gui_config_title,
@@ -188,6 +189,15 @@ public enum LocalizationKey
     // Manage - Empty state
     gui_manage_empty_title,
     gui_manage_empty_subtitle,
+    gui_progress_title,
+    gui_progress_subtitle,
+    gui_progress_empty_title,
+    gui_progress_empty_subtitle,
+    gui_progress_label_files,
+    gui_progress_label_size,
+    gui_progress_label_current_source,
+    gui_progress_label_current_destination,
+    gui_progress_label_updated_at,
 
     // Window controls
     gui_window_minimize,
