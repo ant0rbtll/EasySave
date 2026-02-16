@@ -8,8 +8,9 @@ namespace EasySave.Backup;
 public interface IBackupEngine
 {
     /// <summary>
-    /// Executes the specified backup job.
+    /// Executes the specified backup job asynchronously.
     /// </summary>
     /// <param name="job">The backup job to execute.</param>
-    void Execute(BackupJob job);
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task Execute(BackupJob job, CancellationToken cancellationToken = default);
 }

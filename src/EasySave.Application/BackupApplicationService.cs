@@ -16,12 +16,14 @@ public class BackupApplicationService(
     IBackupEngine backupEngine,
     IBackupJobStateService backupJobStateService,
     IStateReader? stateReader = null,
+    IBackupRunCoordinator? backupRunCoordinator = null,
     IBackupExecutionGuard? backupExecutionGuard = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
     private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
     private readonly IStateReader? _stateReader = stateReader;
+    private readonly IBackupRunCoordinator _backupRunCoordinator = backupRunCoordinator ?? new InMemoryBackupRunCoordinator();
     private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
 
     /// <summary>
@@ -57,37 +59,39 @@ public class BackupApplicationService(
     /// Executes a specific backup job by its identifier.
     /// </summary>
     /// <param name="id">Identifier of the job to run.</param>
-    public void RunJob(int id)
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task RunJob(int id, CancellationToken cancellationToken = default)
     {
         EnsureBusinessSoftwareIsNotRunning();
 
         var job = _repo.GetById(id);
-        if (job != null) ExecuteJob(job);
+        if (job is null)
+        {
+            return;
+        }
+
+        await RunJobInternalAsync(job, cancellationToken);
     }
 
     /// <summary>
     /// Executes a specific list of backup jobs.
     /// </summary>
     /// <param name="ids">Array of job identifiers to launch.</param>
-    public void RunJobs(int[] ids)
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task RunJobs(int[] ids, CancellationToken cancellationToken = default)
     {
-        foreach (int id in ids)
-        {
-            RunJob(id);
-        }
+        ArgumentNullException.ThrowIfNull(ids);
+        await Task.WhenAll(ids.Select(id => RunJob(id, cancellationToken)));
     }
 
     /// <summary>
     /// Retrieves and executes all registered backup jobs.
     /// </summary>
-    public void RunAllJobs()
+    /// <param name="cancellationToken">Cancellation token.</param>
+    public async Task RunAllJobs(CancellationToken cancellationToken = default)
     {
         var jobs = _repo.GetAll();
-        foreach (var job in jobs)
-        {
-            EnsureBusinessSoftwareIsNotRunning();
-            ExecuteJob(job);
-        }
+        await Task.WhenAll(jobs.Select(job => RunJobInternalAsync(job, cancellationToken)));
     }
 
     /// <summary>
@@ -186,30 +190,17 @@ public class BackupApplicationService(
         _repo.Update(job);
     }
 
-    /// <summary>
-    /// Delegates job execution to the backup engine.
-    /// </summary>
-    /// <param name="job">The job instance to execute.</param>
-    private void ExecuteJob(BackupJob job)
+    private Task RunJobInternalAsync(BackupJob job, CancellationToken cancellationToken)
     {
-        _engine.Execute(job);
+        return _backupRunCoordinator.RunExclusiveAsync(
+            job.Id,
+            ct => _engine.Execute(job, ct),
+            cancellationToken);
     }
 
     private void EnsureBusinessSoftwareIsNotRunning()
     {
         _backupExecutionGuard.EnsureCanCopyNextFile();
-    }
-
-    private static BackupJobStatus MapStatus(BackupStatus status)
-    {
-        return status switch
-        {
-            BackupStatus.Inactive => BackupJobStatus.Inactive,
-            BackupStatus.Active => BackupJobStatus.Active,
-            BackupStatus.Done => BackupJobStatus.Done,
-            BackupStatus.Error => BackupJobStatus.Error,
-            _ => BackupJobStatus.Inactive
-        };
     }
 
     private static int ClampProgress(int progressPercent) => Math.Clamp(progressPercent, 0, 100);

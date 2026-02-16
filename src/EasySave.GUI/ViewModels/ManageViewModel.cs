@@ -635,7 +635,7 @@ public partial class ManageViewModel : ViewModelBase
             }
             else
             {
-                await Task.Run(() => _applicationService.RunJob(job.Id));
+                await _applicationService.RunJob(job.Id);
                 success = true;
             }
         }
@@ -735,38 +735,20 @@ public partial class ManageViewModel : ViewModelBase
         IsStatusBannerVisible = false;
 
         int total = selectedJobs.Count;
-        int completed = 0;
         bool success = true;
         string errorMessage = string.Empty;
 
-        RunningJobName = $"0/{total}";
+        RunningJobName = $"{total}";
+        var selectedIds = selectedJobs.Select(j => j.Id).ToArray();
 
-        foreach (var job in selectedJobs)
+        try
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                RunningJobName = $"{completed}/{total} — {job.Name}";
-            });
-
-            try
-            {
-                var existingJob = await Task.Run(() => _applicationService.GetJob(job.Id));
-                if (existingJob is null)
-                {
-                    errorMessage = _localizationService.TranslateText(LocalizationKey.error_job_not_found);
-                    success = false;
-                    break;
-                }
-
-                await Task.Run(() => _applicationService.RunJob(job.Id));
-                completed++;
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
-                success = false;
-                break;
-            }
+            await _applicationService.RunJobs(selectedIds);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            success = false;
         }
 
         var jobs = await Task.Run(FetchJobs);

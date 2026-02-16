@@ -155,7 +155,7 @@ public class ConsoleUI
         ShowMessage(LocalizationKey.backupjob_running);
         try
         {
-            _backupApplicationService.RunJob(job.Id);
+            _backupApplicationService.RunJob(job.Id).GetAwaiter().GetResult();
             ShowMessage(LocalizationKey.backupjob_completed);
         }
         catch (Exception ex)
@@ -275,7 +275,7 @@ public class ConsoleUI
         try
         {
             var jobs = _parser.Parse(args);
-            _backupApplicationService.RunJobs(jobs);
+            _backupApplicationService.RunJobs(jobs).GetAwaiter().GetResult();
         }
         catch (Exception exception)
         {

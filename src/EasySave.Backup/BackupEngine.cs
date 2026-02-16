@@ -38,7 +38,13 @@ public class BackupEngine(
     /// </summary>
     /// <param name="job">Backup job to execute.</param>
     /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
-    public void Execute(BackupJob job)
+    /// <inheritdoc />
+    public Task Execute(BackupJob job, CancellationToken cancellationToken = default)
+    {
+        return Task.Run(() => ExecuteCore(job, cancellationToken), cancellationToken);
+    }
+
+    private void ExecuteCore(BackupJob job, CancellationToken cancellationToken)
     {
         long totalDurationMs = 0;
         Stopwatch? backupLoopTimer = null;
@@ -59,6 +65,8 @@ public class BackupEngine(
             backupLoopTimer = Stopwatch.StartNew();
             foreach (var file in files)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 var relativePath = Path.GetRelativePath(job.Source, file);
                 var destinationFile = Path.Combine(job.Destination, relativePath);
 
@@ -284,7 +292,7 @@ public class BackupEngine(
 
         try
         {
-            // TODO v3.0: Refactor to async - Current sync-over-async pattern risks deadlock and blocks threads
+            // Encryption is intentionally serialized/synchronous due to product constraints on the provider.
             var result = provider.EncryptAsync(destinationFile, policy).GetAwaiter().GetResult();
             if (result.IsSuccess)
             {

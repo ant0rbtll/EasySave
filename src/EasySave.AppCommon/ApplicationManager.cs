@@ -56,7 +56,8 @@ namespace EasySave.AppCommon
             _services.AddSingleton<IEncryptionProvider, DotNetAesEncryptionProvider>();
             _services.AddSingleton<IEncryptionProvider, ExternalEncryptionProvider>();
             _services.AddSingleton<IEncryptionProviderResolver, EncryptionProviderResolver>();
-            _services.AddSingleton<IBackupEngine, BackupEngine>();
+            _services.AddTransient<IBackupEngine, BackupEngine>();
+            _services.AddSingleton<IBackupRunCoordinator, InMemoryBackupRunCoordinator>();
             _services.AddSingleton<ILocalizationService, LocalizationService>();
             _services.AddSingleton<ILogReader, JsonLogReader>();
             _services.AddSingleton<ILogReader, XmlLogReader>();
