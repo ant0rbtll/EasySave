@@ -151,7 +151,7 @@ internal class JobsFlowService(
         _messageService.Write(LocalizationKey.backupjob_running);
         try
         {
-            _backupApplicationService.RunJob(job.Id);
+            _backupApplicationService.RunJob(job.Id).GetAwaiter().GetResult();
             _messageService.WriteWithParams(LocalizationKey.backupjob_completed_named, [job.Name]);
         }
         catch (Exception ex)

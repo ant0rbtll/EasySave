@@ -61,7 +61,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination"), Times.Once);
@@ -101,7 +101,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 0, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _fileSystemMock.Verify(fs => fs.DirectoryExists("/destination"), Times.Once);
@@ -148,7 +148,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 0, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/new.txt", "/destination/new.txt", true), Times.Once);
@@ -184,7 +184,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 0, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination"), Times.Once);
@@ -218,7 +218,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 0, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination/folder"), Times.Once);
@@ -242,7 +242,7 @@ public class BackupEngineTests
             .Returns(new List<string>());
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Never);
@@ -276,7 +276,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => 
@@ -323,7 +323,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 50, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le => 
@@ -361,7 +361,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le => 
@@ -372,7 +372,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public void Execute_WhenExceptionThrown_UpdatesStateToError()
+    public async Task Execute_WhenExceptionThrown_UpdatesStateToError()
     {
         // Arrange
         var job = new BackupJob
@@ -388,7 +388,7 @@ public class BackupEngineTests
             .Throws(new Exception("Test exception"));
 
         // Act & Assert
-        Assert.Throws<Exception>(() => _backupEngine.Execute(job));
+        await Assert.ThrowsAsync<Exception>(() => _backupEngine.Execute(job));
 
         _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se =>
             se.Status == BackupStatus.Error
@@ -400,7 +400,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public void Execute_WhenBusinessSoftwareDetectedDuringFileLoop_StopsAndLogsReason()
+    public async Task Execute_WhenBusinessSoftwareDetectedDuringFileLoop_StopsAndLogsReason()
     {
         var job = new BackupJob
         {
@@ -442,7 +442,7 @@ public class BackupEngineTests
             _loggerMock.Object,
             executionGuard: guardMock.Object);
 
-        var exThrown = Assert.Throws<InvalidOperationException>(() => engine.Execute(job));
+        var exThrown = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job));
         Assert.Equal("error_business_software_running", exThrown.Message);
 
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/file1.txt", "/destination/file1.txt", true), Times.Once);
@@ -455,7 +455,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public void Execute_UnsupportedBackupType_ThrowsNotSupportedException()
+    public async Task Execute_UnsupportedBackupType_ThrowsNotSupportedException()
     {
         // Arrange
         var job = new BackupJob
@@ -473,11 +473,11 @@ public class BackupEngineTests
             .Returns(1000);
 
         // Act & Assert
-        Assert.Throws<NotSupportedException>(() => _backupEngine.Execute(job));
+        await Assert.ThrowsAsync<NotSupportedException>(() => _backupEngine.Execute(job));
     }
 
     [Fact]
-    public void Execute_TransferFails_ThrowsInvalidOperationException()
+    public async Task Execute_TransferFails_ThrowsInvalidOperationException()
     {
         // Arrange
         var job = new BackupJob
@@ -500,7 +500,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 0, TransferTimeMs: 0, ErrorCode: 1)); // Error code != 0
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => _backupEngine.Execute(job));
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _backupEngine.Execute(job));
         Assert.Contains("File transfer failed", ex.Message);
         Assert.Contains("error code 1", ex.Message);
 
@@ -530,7 +530,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
@@ -553,14 +553,14 @@ public class BackupEngineTests
             .Returns(new List<string>());
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _stateWriterMock.Verify(sw => sw.MarkInactive(2), Times.Once);
     }
 
     [Fact]
-    public void Execute_WhenExceptionThrown_DoesNotCallMarkInactive()
+    public async Task Execute_WhenExceptionThrown_DoesNotCallMarkInactive()
     {
         // Arrange
         var job = new BackupJob
@@ -576,7 +576,7 @@ public class BackupEngineTests
             .Throws(new Exception("Test exception"));
 
         // Act & Assert
-        Assert.Throws<Exception>(() => _backupEngine.Execute(job));
+        await Assert.ThrowsAsync<Exception>(() => _backupEngine.Execute(job));
 
         _stateWriterMock.Verify(sw => sw.MarkInactive(It.IsAny<int>()), Times.Never);
     }
@@ -605,7 +605,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 0, TransferTimeMs: 1, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/empty.txt", "/destination/empty.txt", true), Times.Once);
@@ -636,7 +636,7 @@ public class BackupEngineTests
             .Returns(1000);
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()), Times.Never);
@@ -668,7 +668,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/newfile.txt", "/destination/newfile.txt", true), Times.Once);
@@ -698,7 +698,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
 
         // Act
-        _backupEngine.Execute(job);
+        _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert - Check that progress updates happened
         // Note: 100% is called twice (after last file + final Done state)
@@ -710,7 +710,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public void Execute_TransferFails_UpdatesStateToError()
+    public async Task Execute_TransferFails_UpdatesStateToError()
     {
         // Arrange
         var job = new BackupJob
@@ -733,7 +733,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 0, TransferTimeMs: 0, ErrorCode: 5));
 
         // Act & Assert
-        Assert.Throws<InvalidOperationException>(() => _backupEngine.Execute(job));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _backupEngine.Execute(job));
 
         _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Once);
     }

@@ -56,7 +56,7 @@ public class BackupEngineEncryptionTests
             _policyProviderMock.Object,
             _providerResolverMock.Object);
 
-        engine.Execute(job);
+        engine.Execute(job).GetAwaiter().GetResult();
 
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(entry =>
             entry.EventType == LogEventType.TransferFile &&
@@ -99,7 +99,7 @@ public class BackupEngineEncryptionTests
             _policyProviderMock.Object,
             _providerResolverMock.Object);
 
-        engine.Execute(job);
+        engine.Execute(job).GetAwaiter().GetResult();
 
         _providerResolverMock.Verify(r => r.Resolve(It.IsAny<string>()), Times.Never);
         _encryptionProviderMock.Verify(
@@ -147,7 +147,7 @@ public class BackupEngineEncryptionTests
             _policyProviderMock.Object,
             _providerResolverMock.Object);
 
-        engine.Execute(job);
+        engine.Execute(job).GetAwaiter().GetResult();
 
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(entry =>
             entry.EventType == LogEventType.TransferFile &&
@@ -195,7 +195,7 @@ public class BackupEngineEncryptionTests
             _policyProviderMock.Object,
             _providerResolverMock.Object);
 
-        engine.Execute(job);
+        engine.Execute(job).GetAwaiter().GetResult();
 
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(entry =>
             entry.EventType == LogEventType.TransferFile &&

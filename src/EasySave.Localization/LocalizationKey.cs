@@ -143,6 +143,7 @@ public enum LocalizationKey
     gui_manage_tooltip_modify,
     gui_manage_tooltip_delete,
     gui_manage_run_success,
+    gui_manage_error_job_not_found_named,
     gui_manage_delete_success,
     gui_create_add_success,
     gui_create_subtitle,

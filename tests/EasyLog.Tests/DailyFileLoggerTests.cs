@@ -61,7 +61,7 @@ public class DailyFileLoggerTests
 
         var today = DateTime.UtcNow.Date;
 
-        engine.Execute(job);
+        engine.Execute(job).GetAwaiter().GetResult();
 
         var logPath = pathProvider.GetDailyLogPath(today);
         var items = ReadLogEntries(logPath)

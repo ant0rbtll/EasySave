@@ -6,6 +6,8 @@ public class RealTimeStateWriter(
     IPathProvider pathProvider,
     GlobalState state) : IStateWriter
 {
+    private readonly object _sync = new();
+
     /// <summary>
     /// Writes the state entry to the real-time state file.
     /// </summary>
@@ -14,9 +16,11 @@ public class RealTimeStateWriter(
     {
         ArgumentNullException.ThrowIfNull(entry);
 
-        state.Entries[entry.BackupId] = entry;
-
-        WriteStateFile();
+        lock (_sync)
+        {
+            state.Entries[entry.BackupId] = entry;
+            WriteStateFileLocked();
+        }
     }
     #endregion
 
@@ -26,21 +30,27 @@ public class RealTimeStateWriter(
     #region MarkInactive
     public void MarkInactive(int backupId)
     {
-        if (!state.Entries.TryGetValue(backupId, out var entry))
-            return;
+        lock (_sync)
+        {
+            if (!state.Entries.TryGetValue(backupId, out var entry))
+                return;
 
-        entry.Status = BackupStatus.Inactive;
-        entry.Timestamp = DateTime.Now;
+            entry.Status = BackupStatus.Inactive;
+            entry.Timestamp = DateTime.Now;
 
-        WriteStateFile();
+            WriteStateFileLocked();
+        }
     }
     #endregion
 
-    private void WriteStateFile()
+    private void WriteStateFileLocked()
     {
         state.UpdatedAt = DateTime.Now;
         string json = StateSerializer.ToPrettyJson(state);
         string path = pathProvider.GetStatePath();
-        File.WriteAllText(path, json);
+        var tempPath = path + ".tmp";
+
+        File.WriteAllText(tempPath, json);
+        File.Move(tempPath, path, overwrite: true);
     }
 }

@@ -592,7 +592,10 @@ public partial class ManageViewModel : ViewModelBase
         IsConfirmDialogOpen = true;
     }
 
-    private bool CanRunJob(Models.BackupJob job) => !IsRunning;
+    private bool CanRunJob(Models.BackupJob job)
+    {
+        return !_runningJobIds.Contains(job.Id) && job.Status != Core.BackupJobStatus.Active;
+    }
 
     public void OnJobSelectionChanged()
     {
@@ -610,15 +613,39 @@ public partial class ManageViewModel : ViewModelBase
         HasSelection = _allJobs.Any(j => j.IsSelected);
     }
 
-    [RelayCommand]
+    private void RefreshRunningState(string? runningLabel = null)
+    {
+        var runningCount = _runningJobIds.Count;
+        IsRunning = runningCount > 0;
+
+        if (runningCount == 0)
+        {
+            RunningJobName = string.Empty;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(runningLabel))
+        {
+            RunningJobName = runningLabel;
+            return;
+        }
+
+        if (runningCount > 1)
+        {
+            RunningJobName = runningCount.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
+    [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task ConfirmRun()
     {
         if (PendingJob is not { } job)
             return;
 
         IsConfirmDialogOpen = false;
-        IsRunning = true;
-        RunningJobName = job.Name;
+        _runningJobIds.Add(job.Id);
+        RunJobCommand.NotifyCanExecuteChanged();
+        RefreshRunningState(job.Name);
         IsStatusBannerVisible = false;
 
         bool success = false;
@@ -626,22 +653,21 @@ public partial class ManageViewModel : ViewModelBase
 
         try
         {
-            // Ensure the job still exists before attempting to run it so we don't report success for a no-op.
-            var existingJob = await Task.Run(() => _applicationService.GetJob(job.Id));
-            if (existingJob is null)
-            {
-                // Use a specific, localized error when the job cannot be found.
-                errorMessage = _localizationService.TranslateText(LocalizationKey.error_job_not_found);
-            }
-            else
-            {
-                await Task.Run(() => _applicationService.RunJob(job.Id));
-                success = true;
-            }
+            await _applicationService.RunJob(job.Id);
+            success = true;
         }
         catch (Exception ex)
         {
-            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            if (ex.Data["errorKey"]?.ToString() == "error_job_not_found")
+            {
+                errorMessage = _localizationService.TranslateTextWithParams(
+                    LocalizationKey.gui_manage_error_job_not_found_named,
+                    [job.Name]);
+            }
+            else
+            {
+                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            }
         }
         finally
         {
@@ -649,10 +675,11 @@ public partial class ManageViewModel : ViewModelBase
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                IsRunning = false;
-                RunningJobName = string.Empty;
                 PendingJob = null;
+                _runningJobIds.Remove(job.Id);
+                RefreshRunningState();
                 ApplyJobs(jobs);
+                RunJobCommand.NotifyCanExecuteChanged();
 
                 if (success)
                 {
@@ -727,56 +754,40 @@ public partial class ManageViewModel : ViewModelBase
         if (selectedJobs.Count == 0) return;
 
         IsConfirmRunSelectedDialogOpen = false;
-        _runningJobIds.Clear();
         foreach (var j in selectedJobs)
             _runningJobIds.Add(j.Id);
-        IsRunning = true;
+        RunJobCommand.NotifyCanExecuteChanged();
+        RefreshRunningState(selectedJobs.Count.ToString(CultureInfo.InvariantCulture));
 
         IsStatusBannerVisible = false;
 
         int total = selectedJobs.Count;
-        int completed = 0;
         bool success = true;
         string errorMessage = string.Empty;
 
-        RunningJobName = $"0/{total}";
+        var selectedIds = selectedJobs.Select(j => j.Id).ToArray();
 
-        foreach (var job in selectedJobs)
+        try
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                RunningJobName = $"{completed}/{total} — {job.Name}";
-            });
-
-            try
-            {
-                var existingJob = await Task.Run(() => _applicationService.GetJob(job.Id));
-                if (existingJob is null)
-                {
-                    errorMessage = _localizationService.TranslateText(LocalizationKey.error_job_not_found);
-                    success = false;
-                    break;
-                }
-
-                await Task.Run(() => _applicationService.RunJob(job.Id));
-                completed++;
-            }
-            catch (Exception ex)
-            {
-                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
-                success = false;
-                break;
-            }
+            await _applicationService.RunJobs(selectedIds);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            success = false;
         }
 
         var jobs = await Task.Run(FetchJobs);
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            _runningJobIds.Clear();
-            IsRunning = false;
-            RunningJobName = string.Empty;
+            foreach (var j in selectedJobs)
+            {
+                _runningJobIds.Remove(j.Id);
+            }
+            RefreshRunningState();
             ApplyJobs(jobs);
+            RunJobCommand.NotifyCanExecuteChanged();
             UpdateHasSelection();
             IsAllSelected = false;
 
@@ -1082,6 +1093,7 @@ public partial class ManageViewModel : ViewModelBase
         _allJobs.AddRange(jobs);
         HasJobs = _allJobs.Count > 0;
         Refresh();
+        RunJobCommand.NotifyCanExecuteChanged();
     }
 
     private void RebuildPaginationItems()
