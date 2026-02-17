@@ -23,20 +23,20 @@ public class BackupEngine(
     ITransferService transferService,
     IStateWriter stateWriter,
     ILogger logger,
+    IUserPreferencesRepository? preferencesRepository = null,
     IEncryptionPolicyProvider? encryptionPolicyProvider = null,
     IEncryptionProviderResolver? encryptionProviderResolver = null,
     IBackupExecutionGuard? executionGuard = null,
-    IBackupExecutionController? executionController = null,
-    IUserPreferencesRepository? preferencesRepository = null) : IBackupEngine
+    IBackupExecutionController? executionController = null) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
     private readonly IStateWriter _stateWriter = stateWriter;
     private readonly ILogger _logger = logger;
+    private readonly IUserPreferencesRepository _preferencesRepository = preferencesRepository;
     private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
-    private readonly IUserPreferencesRepository _preferencesRepository = preferencesRepository;
     private readonly IBackupExecutionController _executionController = executionController ?? new NoOpBackupExecutionController();
     private const string BusinessSoftwareErrorKey = BackupRuntimeKeys.ErrorBusinessSoftwareRunning;
     private const int BusinessSoftwareRetryDelayMs = 500;
@@ -59,7 +59,7 @@ public class BackupEngine(
         _executionController.BeginJob(job.Id);
         try
         {
-            var priorityExtensions = _preferencesRepository.Load().PriorityExtensions;
+            var priorityExtensions = _preferencesRepository?.Load()?.PriorityExtensions ?? new List<string>();
             var files = _fileSystem.EnumerateFilesRecursive(job.Source, priorityExtensions).ToList();
             var encryptionPolicy = _encryptionPolicyProvider.GetPolicy();
 

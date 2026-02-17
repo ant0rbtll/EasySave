@@ -1,5 +1,6 @@
 using EasySave.Core;
 using EasySave.Log;
+using EasySave.Persistence;
 using EasySave.State;
 using EasySave.System;
 using Moq;
@@ -12,6 +13,7 @@ public class BackupEngineEncryptionTests
     private readonly Mock<ITransferService> _transferServiceMock = new();
     private readonly Mock<IStateWriter> _stateWriterMock = new();
     private readonly Mock<ILogger> _loggerMock = new();
+    private readonly Mock<IUserPreferencesRepository> _userPreferencesMock = new();
     private readonly Mock<IEncryptionPolicyProvider> _policyProviderMock = new();
     private readonly Mock<IEncryptionProviderResolver> _providerResolverMock = new();
     private readonly Mock<IEncryptionProvider> _encryptionProviderMock = new();
@@ -28,9 +30,7 @@ public class BackupEngineEncryptionTests
             Type = BackupType.Complete
         };
 
-        var priorityExtensions = new List<string> { ".txt" };
-
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, priorityExtensions))
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, It.IsAny<IEnumerable<string>>()))
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
@@ -55,6 +55,7 @@ public class BackupEngineEncryptionTests
             _transferServiceMock.Object,
             _stateWriterMock.Object,
             _loggerMock.Object,
+            _userPreferencesMock.Object,
             _policyProviderMock.Object,
             _providerResolverMock.Object);
 
@@ -80,9 +81,7 @@ public class BackupEngineEncryptionTests
             Type = BackupType.Complete
         };
 
-        var priorityExtensions = new List<string> { ".txt" };
-
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, priorityExtensions))
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, It.IsAny<IEnumerable<string>>()))
             .Returns(["/source/image.png"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
@@ -100,6 +99,7 @@ public class BackupEngineEncryptionTests
             _transferServiceMock.Object,
             _stateWriterMock.Object,
             _loggerMock.Object,
+            _userPreferencesMock.Object,
             _policyProviderMock.Object,
             _providerResolverMock.Object);
 
@@ -127,9 +127,7 @@ public class BackupEngineEncryptionTests
             Type = BackupType.Complete
         };
 
-        var priorityExtensions = new List<string> { ".txt" };
-
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, priorityExtensions))
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, It.IsAny<IEnumerable<string>>()))
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
@@ -150,6 +148,7 @@ public class BackupEngineEncryptionTests
             _transferServiceMock.Object,
             _stateWriterMock.Object,
             _loggerMock.Object,
+            _userPreferencesMock.Object,
             _policyProviderMock.Object,
             _providerResolverMock.Object);
 
@@ -173,9 +172,7 @@ public class BackupEngineEncryptionTests
             Type = BackupType.Complete
         };
 
-        var priorityExtensions = new List<string> { ".txt" };
-
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, priorityExtensions))
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, It.IsAny<IEnumerable<string>>()))
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
@@ -200,6 +197,7 @@ public class BackupEngineEncryptionTests
             _transferServiceMock.Object,
             _stateWriterMock.Object,
             _loggerMock.Object,
+            _userPreferencesMock.Object,
             _policyProviderMock.Object,
             _providerResolverMock.Object);
 
