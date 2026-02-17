@@ -613,6 +613,29 @@ public partial class ManageViewModel : ViewModelBase
         HasSelection = _allJobs.Any(j => j.IsSelected);
     }
 
+    private void RefreshRunningState(string? runningLabel = null)
+    {
+        var runningCount = _runningJobIds.Count;
+        IsRunning = runningCount > 0;
+
+        if (runningCount == 0)
+        {
+            RunningJobName = string.Empty;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(runningLabel))
+        {
+            RunningJobName = runningLabel;
+            return;
+        }
+
+        if (runningCount > 1)
+        {
+            RunningJobName = runningCount.ToString(CultureInfo.InvariantCulture);
+        }
+    }
+
     [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task ConfirmRun()
     {
@@ -622,8 +645,7 @@ public partial class ManageViewModel : ViewModelBase
         IsConfirmDialogOpen = false;
         _runningJobIds.Add(job.Id);
         RunJobCommand.NotifyCanExecuteChanged();
-        IsRunning = true;
-        RunningJobName = job.Name;
+        RefreshRunningState(job.Name);
         IsStatusBannerVisible = false;
 
         bool success = false;
@@ -653,10 +675,9 @@ public partial class ManageViewModel : ViewModelBase
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                IsRunning = false;
-                RunningJobName = string.Empty;
                 PendingJob = null;
                 _runningJobIds.Remove(job.Id);
+                RefreshRunningState();
                 ApplyJobs(jobs);
                 RunJobCommand.NotifyCanExecuteChanged();
 
@@ -733,11 +754,10 @@ public partial class ManageViewModel : ViewModelBase
         if (selectedJobs.Count == 0) return;
 
         IsConfirmRunSelectedDialogOpen = false;
-        _runningJobIds.Clear();
         foreach (var j in selectedJobs)
             _runningJobIds.Add(j.Id);
         RunJobCommand.NotifyCanExecuteChanged();
-        IsRunning = true;
+        RefreshRunningState(selectedJobs.Count.ToString(CultureInfo.InvariantCulture));
 
         IsStatusBannerVisible = false;
 
@@ -745,7 +765,6 @@ public partial class ManageViewModel : ViewModelBase
         bool success = true;
         string errorMessage = string.Empty;
 
-        RunningJobName = $"{total}";
         var selectedIds = selectedJobs.Select(j => j.Id).ToArray();
 
         try
@@ -762,9 +781,11 @@ public partial class ManageViewModel : ViewModelBase
 
         await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            _runningJobIds.Clear();
-            IsRunning = false;
-            RunningJobName = string.Empty;
+            foreach (var j in selectedJobs)
+            {
+                _runningJobIds.Remove(j.Id);
+            }
+            RefreshRunningState();
             ApplyJobs(jobs);
             RunJobCommand.NotifyCanExecuteChanged();
             UpdateHasSelection();
