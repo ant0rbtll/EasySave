@@ -28,7 +28,9 @@ public class BackupEngineEncryptionTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, priorityExtensions))
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
@@ -78,7 +80,9 @@ public class BackupEngineEncryptionTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, priorityExtensions))
             .Returns(["/source/image.png"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
@@ -123,7 +127,9 @@ public class BackupEngineEncryptionTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, priorityExtensions))
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
@@ -167,7 +173,9 @@ public class BackupEngineEncryptionTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive(job.Source, priorityExtensions))
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);

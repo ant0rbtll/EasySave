@@ -49,7 +49,9 @@ public class BackupEngineTests
             "/source/folder/subfolder/file3.txt"
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(files);
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
@@ -89,7 +91,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file.txt" });
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
@@ -122,7 +126,9 @@ public class BackupEngineTests
             Type = BackupType.Differential
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/new.txt", "/source/modified.txt", "/source/unchanged.txt" });
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
@@ -172,7 +178,9 @@ public class BackupEngineTests
             Type = BackupType.Differential
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file.txt" });
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
@@ -204,7 +212,9 @@ public class BackupEngineTests
             Type = BackupType.Differential
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/folder/file.txt" });
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination/folder"))
@@ -238,7 +248,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string>());
 
         // Act
@@ -264,7 +276,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file1.txt", "/source/file2.txt" });
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
@@ -311,7 +325,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file.txt" });
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
@@ -349,7 +365,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/folder/file.txt" });
 
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
@@ -384,7 +402,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Throws(new Exception("Test exception"));
 
         // Act & Assert
@@ -411,7 +431,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file1.txt", "/source/file2.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(true);
@@ -623,7 +645,9 @@ public class BackupEngineTests
             Type = (BackupType)999 // Unsupported type
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file.txt" });
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(1000);
@@ -702,7 +726,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(true);
@@ -732,7 +758,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(true);
@@ -762,7 +790,9 @@ public class BackupEngineTests
             Type = BackupType.Differential
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string>());
 
         // Act
@@ -785,7 +815,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Throws(new Exception("Test exception"));
 
         // Act & Assert
@@ -807,7 +839,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/empty.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(true);
@@ -837,7 +871,9 @@ public class BackupEngineTests
             Type = BackupType.Differential
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
             .Returns(true);
@@ -868,7 +904,9 @@ public class BackupEngineTests
             Type = BackupType.Differential
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/newfile.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
             .Returns(true);
@@ -900,7 +938,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file1.txt", "/source/file2.txt", "/source/file3.txt", "/source/file4.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(true);
@@ -935,7 +975,9 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        var priorityExtensions = new List<string> { ".txt" };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", priorityExtensions))
             .Returns(new List<string> { "/source/file.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(true);
