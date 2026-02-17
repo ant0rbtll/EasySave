@@ -35,7 +35,7 @@ public class BackupEngine(
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
     private readonly IBackupExecutionController _executionController = executionController ?? new NoOpBackupExecutionController();
-    private const string BusinessSoftwareErrorKey = "error_business_software_running";
+    private const string BusinessSoftwareErrorKey = BackupRuntimeKeys.ErrorBusinessSoftwareRunning;
     private const int BusinessSoftwareRetryDelayMs = 500;
 
     /// <summary>
@@ -160,17 +160,17 @@ public class BackupEngine(
 
             string sourceContext = ex.Data["errorKey"]?.ToString() ?? ex.GetType().Name;
             string destinationContext = ex.Data["0"]?.ToString() ?? ex.Message;
-            if (sourceContext == "error_backup_stopped_by_user")
+            if (sourceContext == BackupRuntimeKeys.ErrorBackupStoppedByUser)
             {
-                sourceContext = ex.Data["actionKey"]?.ToString() ?? "action_backup_stopped_by_user";
+                sourceContext = ex.Data["actionKey"]?.ToString() ?? BackupRuntimeKeys.ActionBackupStoppedByUser;
                 destinationContext = string.Empty;
             }
 
             UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, sourceContext, destinationContext);
 
-            var eventType = sourceContext == "error_backup_stopped_by_user" || sourceContext == "action_backup_stopped_by_user"
+            var eventType = sourceContext == BackupRuntimeKeys.ErrorBackupStoppedByUser || sourceContext == BackupRuntimeKeys.ActionBackupStoppedByUser
                 ? LogEventType.Action
-                : sourceContext == "error_business_software_running"
+                : sourceContext == BackupRuntimeKeys.ErrorBusinessSoftwareRunning
                 ? LogEventType.BusinessSoftwareDetected
                 : LogEventType.Error;
             Log(

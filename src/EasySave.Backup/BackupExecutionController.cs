@@ -7,8 +7,8 @@ namespace EasySave.Backup;
 /// </summary>
 public sealed class BackupExecutionController : IBackupExecutionController, IDisposable
 {
-    private const string PauseActionKey = "action_backup_paused_by_user";
-    private const string StopActionKey = "action_backup_stopped_by_user";
+    private const string PauseActionKey = BackupRuntimeKeys.ActionBackupPausedByUser;
+    private const string StopActionKey = BackupRuntimeKeys.ActionBackupStoppedByUser;
 
     private readonly object _gate = new();
     private readonly ManualResetEventSlim _resumeEvent = new(initialState: true);
@@ -174,8 +174,8 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
 
     private static Exception CreateStoppedByUserException()
     {
-        var exception = new InvalidOperationException("error_backup_stopped_by_user");
-        exception.Data["errorKey"] = "error_backup_stopped_by_user";
+        var exception = new InvalidOperationException(BackupRuntimeKeys.ErrorBackupStoppedByUser);
+        exception.Data["errorKey"] = BackupRuntimeKeys.ErrorBackupStoppedByUser;
         exception.Data["actionKey"] = StopActionKey;
         return exception;
     }

@@ -2,7 +2,6 @@ using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
 using EasySave.State;
-using EasySave.System;
 
 namespace EasySave.Application;
 
@@ -164,7 +163,7 @@ public class BackupApplicationService(
         if (entry.Status != BackupStatus.Error)
             return false;
 
-        if (!string.Equals(entry.CurrentSourcePath, "error_business_software_running", StringComparison.Ordinal))
+        if (!string.Equals(entry.CurrentSourcePath, BackupRuntimeKeys.ErrorBusinessSoftwareRunning, StringComparison.Ordinal))
             return false;
 
         var age = DateTime.Now - entry.Timestamp;

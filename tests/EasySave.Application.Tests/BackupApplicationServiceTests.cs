@@ -494,8 +494,7 @@ public class BackupApplicationServiceTests
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            _backupJobStateServiceMock.Object,
-            backupExecutionGuard: _backupExecutionGuardMock.Object);
+            _backupJobStateServiceMock.Object);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunJob(1));
 
@@ -514,8 +513,7 @@ public class BackupApplicationServiceTests
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            _backupJobStateServiceMock.Object,
-            backupExecutionGuard: _backupExecutionGuardMock.Object);
+            _backupJobStateServiceMock.Object);
 
         await service.RunJob(1);
 
@@ -531,8 +529,13 @@ public class BackupApplicationServiceTests
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            _backupJobStateServiceMock.Object,
+            _backupJobStateServiceMock.Object);
             backupExecutionGuard: _backupExecutionGuardMock.Object);
+
+
+        var simulatedEngineException = new InvalidOperationException("error_business_software_running");
+        simulatedEngineException.Data["errorKey"] = "error_business_software_running";
+        simulatedEngineException.Data["0"] = "calc";
 
         var simulatedEngineException = new InvalidOperationException("error_business_software_running");
         simulatedEngineException.Data["errorKey"] = "error_business_software_running";

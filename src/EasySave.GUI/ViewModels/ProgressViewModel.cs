@@ -207,7 +207,7 @@ public partial class ProgressViewModel : ViewModelBase
 
     private Models.ActiveBackupProgressItem MapItem(BackupJobLiveProgressState state)
     {
-        if (string.Equals(state.CurrentSourcePath, "error_business_software_running", StringComparison.Ordinal))
+        if (string.Equals(state.CurrentSourcePath, BackupRuntimeKeys.ErrorBusinessSoftwareRunning, StringComparison.Ordinal))
         {
             return new Models.ActiveBackupProgressItem
             {

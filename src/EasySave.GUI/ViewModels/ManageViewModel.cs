@@ -238,6 +238,7 @@ public partial class ManageViewModel : ViewModelBase
 
     private bool _updatingSelection;
     private readonly HashSet<int> _runningJobIds = [];
+    private int? _currentControlJobId;
 
     private bool _isAllSelected;
     public bool IsAllSelected
@@ -553,7 +554,10 @@ public partial class ManageViewModel : ViewModelBase
         }
 
         if (!runtimeChanged)
+        {
+            RefreshPauseStateFromController();
             return;
+        }
 
         if (!string.IsNullOrWhiteSpace(SearchText) || SortColumn is "Status" or "LastRun")
         {
@@ -635,8 +639,12 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanPauseRunning))]
     private void PauseRunning()
     {
-        _backupExecutionController.Pause();
-        IsPaused = true;
+        if (TryGetCurrentControlJobId(out var jobId))
+            _backupExecutionController.PauseForJob(jobId);
+        else
+            _backupExecutionController.Pause();
+
+        RefreshPauseStateFromController();
     }
 
     private bool CanPauseRunning() => IsRunning && !IsPaused;
@@ -644,8 +652,12 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanPlayRunning))]
     private void PlayRunning()
     {
-        _backupExecutionController.Resume();
-        IsPaused = false;
+        if (TryGetCurrentControlJobId(out var jobId))
+            _backupExecutionController.ResumeForJob(jobId);
+        else
+            _backupExecutionController.Resume();
+
+        RefreshPauseStateFromController();
     }
 
     private bool CanPlayRunning() => IsRunning && IsPaused;
@@ -653,8 +665,12 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanStopRunning))]
     private void StopRunning()
     {
-        _backupExecutionController.RequestStop();
-        IsPaused = false;
+        if (TryGetCurrentControlJobId(out var jobId))
+            _backupExecutionController.RequestStopForJob(jobId);
+        else
+            _backupExecutionController.RequestStop();
+
+        RefreshPauseStateFromController();
     }
 
     private bool CanStopRunning() => IsRunning;
@@ -742,6 +758,7 @@ public partial class ManageViewModel : ViewModelBase
             {
                 IsRunning = false;
                 IsPaused = false;
+                _currentControlJobId = null;
                 RunningJobName = string.Empty;
                 PendingJob = null;
                 _runningJobIds.Remove(job.Id);
@@ -827,6 +844,7 @@ public partial class ManageViewModel : ViewModelBase
         RunJobCommand.NotifyCanExecuteChanged();
         RefreshRunningState(selectedJobs.Count.ToString(CultureInfo.InvariantCulture));
         IsPaused = false;
+        _currentControlJobId = null;
 
         IsStatusBannerVisible = false;
 
@@ -1232,12 +1250,39 @@ public partial class ManageViewModel : ViewModelBase
         ];
     }
 
+    private bool TryGetCurrentControlJobId(out int jobId)
+    {
+        if (_currentControlJobId.HasValue)
+        {
+            jobId = _currentControlJobId.Value;
+            return true;
+        }
+
+        if (PendingJob is not null)
+        {
+            jobId = PendingJob.Id;
+            return true;
+        }
+
+        jobId = default;
+        return false;
+    }
+
+    private void RefreshPauseStateFromController()
+    {
+        if (!TryGetCurrentControlJobId(out var jobId))
+            return;
+
+        if (!_backupExecutionController.TryGetCurrentJobControlState(jobId, out var controlState))
+            return;
+
+        IsPaused = controlState == BackupJobControlState.Paused;
+    }
+
     private static bool IsStoppedByUser(Exception ex)
     {
-        return string.Equals(
-            ex.Data["errorKey"]?.ToString(),
-            nameof(LocalizationKey.error_backup_stopped_by_user),
-            StringComparison.Ordinal);
+        return string.Equals(ex.Data["errorKey"]?.ToString(), BackupRuntimeKeys.ErrorBackupStoppedByUser, StringComparison.Ordinal)
+            || string.Equals(ex.Data["actionKey"]?.ToString(), BackupRuntimeKeys.ActionBackupStoppedByUser, StringComparison.Ordinal);
     }
 }
 

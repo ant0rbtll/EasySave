@@ -16,9 +16,7 @@ public class BackupExecutionControllerTests
         Assert.Equal("action_backup_paused_by_user", actionKey);
 
         var waitTask = Task.Run(() => controller.WaitIfPausedOrThrowIfStopped());
-        Thread.Sleep(100);
-
-        Assert.False(waitTask.IsCompleted);
+        Assert.False(waitTask.Wait(TimeSpan.FromMilliseconds(150)));
 
         controller.Resume();
         var completed = waitTask.Wait(TimeSpan.FromSeconds(2));
