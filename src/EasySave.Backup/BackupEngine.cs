@@ -27,6 +27,8 @@ public class BackupEngine(
     IEncryptionPolicyProvider? encryptionPolicyProvider = null,
     IEncryptionProviderResolver? encryptionProviderResolver = null,
     IBackupExecutionGuard? executionGuard = null,
+    IPriorityFilesBarrier? priorityFilesBarrier = null,
+    IBackupFilePlanner? filePlanner = null,
     IBackupExecutionController? executionController = null) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
@@ -37,6 +39,8 @@ public class BackupEngine(
     private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
+    private readonly IPriorityFilesBarrier _priorityFilesBarrier = priorityFilesBarrier ?? new NoOpPriorityFilesBarrier();
+    private readonly IBackupFilePlanner _filePlanner = filePlanner ?? new DefaultBackupFilePlanner(fileSystem);
     private readonly IBackupExecutionController _executionController = executionController ?? new NoOpBackupExecutionController();
     private const string BusinessSoftwareErrorKey = BackupRuntimeKeys.ErrorBusinessSoftwareRunning;
     private const int BusinessSoftwareRetryDelayMs = 500;
@@ -57,14 +61,14 @@ public class BackupEngine(
         long totalDurationMs = 0;
         Stopwatch? backupLoopTimer = null;
         _executionController.BeginJob(job.Id);
+        bool barrierRegistered = false;
         try
         {
-            var priorityExtensions = _preferencesRepository?.Load()?.PriorityExtensions ?? new List<string>();
-            var files = _fileSystem.EnumerateFilesRecursive(job.Source, priorityExtensions).ToList();
-            var encryptionPolicy = _encryptionPolicyProvider.GetPolicy();
+            var plannedFiles = _filePlanner.BuildPlans(job, _preferencesRepository?.Load()?.PriorityExtensions);
+            var encryptionPolicy = _encryptionPolicyProvider.GetPolicy() ?? EncryptionPolicy.Disabled;
 
-            int totalFiles = files.Count;
-            long totalSize = files.Sum(f => _fileSystem.GetFileSize(f));
+            int totalFiles = plannedFiles.Count;
+            long totalSize = plannedFiles.Sum(f => _fileSystem.GetFileSize(f.SourceFile));
 
             int remainingFiles = totalFiles;
             long remainingSize = totalSize;
@@ -72,50 +76,89 @@ public class BackupEngine(
             UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
             Log(job.Id, job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
 
+            _priorityFilesBarrier.RegisterJob(job.Id, plannedFiles.Count(f => f.ShouldCopy && f.IsPriority));
+            barrierRegistered = true;
+
             backupLoopTimer = Stopwatch.StartNew();
-            foreach (var file in files)
+            foreach (var planned in plannedFiles)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
                 LogPendingUserActions(job);
-                var relativePath = Path.GetRelativePath(job.Source, file);
-                var destinationFile = Path.Combine(job.Destination, relativePath);
+
                 WaitForRuntimeControlAndSyncState(
                     job,
                     totalFiles,
                     totalSize,
                     remainingFiles,
                     remainingSize,
-                    file,
-                    destinationFile);
+                    planned.SourceFile,
+                    planned.DestinationFile);
 
-                if (CanCopyFile(job.Type, file, destinationFile))
+
+                if (!planned.ShouldCopy)
                 {
-                    WaitUntilBusinessSoftwareAllowsCopy(
+                    continue;
+                }
+
+                if (!planned.IsPriority)
+                {
+                    var waitTask = _priorityFilesBarrier.WaitUntilNoPriorityPendingAsync(cancellationToken);
+                    var hasWaited = !waitTask.IsCompleted;
+                    if (hasWaited)
+                    {
+                        UpdateState(
+                            job,
+                            BackupStatus.Waiting,
+                            totalFiles,
+                            totalSize,
+                            remainingFiles,
+                            remainingSize,
+                            totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
+                            planned.SourceFile,
+                            planned.DestinationFile);
+                    }
+
+                    waitTask.GetAwaiter().GetResult();
+                    if (hasWaited)
+                    {
+                        UpdateState(
+                            job,
+                            BackupStatus.Active,
+                            totalFiles,
+                            totalSize,
+                            remainingFiles,
+                            remainingSize,
+                            totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
+                            planned.SourceFile,
+                            planned.DestinationFile);
+                    }
+                }
+                _executionGuard.EnsureCanCopyNextFile();
+                WaitUntilBusinessSoftwareAllowsCopy(
                         job,
-                        file,
-                        destinationFile,
+                        planned.SourceFile,
+                        planned.DestinationFile,
                         totalFiles,
                         totalSize,
                         remainingFiles,
                         remainingSize,
                         cancellationToken);
 
-                    var destinationDir = Path.GetDirectoryName(destinationFile)!;
+                var destinationDir = Path.GetDirectoryName(planned.DestinationFile)!;
 
-                    if (!_fileSystem.DirectoryExists(destinationDir))
-                    {
-                        _fileSystem.CreateDirectory(destinationDir);
-                        Log(
-                            job.Id,
-                            job.Name,
-                            LogEventType.CreateDirectory,
-                            destinationDir,
-                            destinationDir,
-                            0,
-                            0
-                        );
-                    }
+                if (!_fileSystem.DirectoryExists(destinationDir))
+                {
+                    _fileSystem.CreateDirectory(destinationDir);
+                    Log(
+                        job.Id,
+                        job.Name,
+                        LogEventType.CreateDirectory,
+                        destinationDir,
+                        destinationDir,
+                        0,
+                        0
+                    );
+                }
 
                     // Check pause/stop one more time right before transfer.
                     // This narrows the race window where pause could be requested
@@ -126,42 +169,47 @@ public class BackupEngine(
                         totalSize,
                         remainingFiles,
                         remainingSize,
-                        file,
-                        destinationFile);
+                        planned.SourceFile,
+                        planned.DestinationFile);
 
-                    TransferResult result = _transferService.TransferFile(file, destinationFile, true);
+                    TransferResult result = _transferService.TransferFile(planned.SourceFile, planned.DestinationFile, true);
 
-                    if (!result.IsSuccess)
-                    {
-                        var message = $"File transfer failed from {file} to {destinationFile} with error code {result.ErrorCode}";
-                        var e = new InvalidOperationException(message);
-                        e.Data["errorKey"] = "error_file_transfer_failed";
-                        e.Data["0_from"] = file;
-                        e.Data["1_destination"] = destinationFile;
-                        e.Data["2_errorCode"] = result.ErrorCode;
-                        throw e;
-                    }
+                if (!result.IsSuccess)
+                {
+                    var message = $"File transfer failed from {planned.SourceFile} to {planned.DestinationFile} with error code {result.ErrorCode}";
+                    var e = new InvalidOperationException(message);
+                    e.Data["errorKey"] = "error_file_transfer_failed";
+                    e.Data["0_from"] = planned.SourceFile;
+                    e.Data["1_destination"] = planned.DestinationFile;
+                    e.Data["2_errorCode"] = result.ErrorCode;
+                    throw e;
+                }
 
-                    long encryptionTimeMs = EncryptTransferredFileIfRequired(destinationFile, encryptionPolicy);
+                long encryptionTimeMs = EncryptTransferredFileIfRequired(planned.DestinationFile, encryptionPolicy);
 
-                    Log(job.Id,
-                        job.Name,
-                        LogEventType.TransferFile,
-                        file,
-                        destinationFile,
-                        result.FileSizeBytes,
-                        result.TransferTimeMs,
-                        encryptionTimeMs
-                    );
+                Log(job.Id,
+                    job.Name,
+                    LogEventType.TransferFile,
+                    planned.SourceFile,
+                    planned.DestinationFile,
+                    result.FileSizeBytes,
+                    result.TransferTimeMs,
+                    encryptionTimeMs
+                );
 
-                    remainingFiles--;
-                    remainingSize -= result.FileSizeBytes;
+                if (planned.IsPriority)
+                {
+                    _priorityFilesBarrier.MarkPriorityFileCompleted(job.Id);
+                }
 
-                    int progress = totalFiles > 0
-                        ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles)
-                        : 0;
+                remainingFiles--;
+                remainingSize -= result.FileSizeBytes;
 
-                    UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, file, destinationFile);
+                int progress = totalFiles > 0
+                    ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles)
+                    : 0;
+
+                UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, planned.SourceFile, planned.DestinationFile);
                     LogPendingUserActions(job);
                     WaitForRuntimeControlAndSyncState(
                         job,
@@ -169,9 +217,8 @@ public class BackupEngine(
                         totalSize,
                         remainingFiles,
                         remainingSize,
-                        file,
-                        destinationFile);
-                }
+                        planned.SourceFile,
+                        planned.DestinationFile);
             }
             backupLoopTimer.Stop();
             totalDurationMs = backupLoopTimer.ElapsedMilliseconds;
@@ -231,45 +278,11 @@ public class BackupEngine(
         finally
         {
             _executionController.EndJob(job.Id);
-        }
-    }
 
-    /// <summary>
-    /// Determines if a file should be copied based on the backup type.
-    /// </summary>
-    /// <param name="type">Backup type (complete or differential).</param>
-    /// <param name="sourceFile">Source file path.</param>
-    /// <param name="destinationFile">Destination file path.</param>
-    /// <returns>True if the file should be copied, otherwise false.</returns>
-    /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
-    private bool CanCopyFile(BackupType type, string sourceFile, string destinationFile)
-    {
-        if (type == BackupType.Complete)
-        {
-            return true;
-        }
-        else if (type == BackupType.Differential)
-        {
-            var destinationDir = Path.GetDirectoryName(destinationFile)!;
-            if (!_fileSystem.DirectoryExists(destinationDir))
+            if (barrierRegistered)
             {
-                return true;
+                _priorityFilesBarrier.UnregisterJob(job.Id);
             }
-            if (!_fileSystem.FileExists(destinationFile))
-            {
-                return true;
-            }
-
-            var sourceSize = _fileSystem.GetFileSize(sourceFile);
-            var destSize = _fileSystem.GetFileSize(destinationFile);
-
-            return sourceSize != destSize;
-        }
-        else
-        {
-            var e = new NotSupportedException("error_backup_type_invalid");
-            e.Data["0_type"] = type;
-            throw e;
         }
     }
 

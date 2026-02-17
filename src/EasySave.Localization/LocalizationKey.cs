@@ -61,6 +61,7 @@ public enum LocalizationKey
     backupjob_inactive,
     backupjob_done,
     backupjob_error,
+    backupjob_waiting,
     backupjob_never,
     input_number_invalid,
     input_backuptype_invalid,

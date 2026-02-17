@@ -55,6 +55,7 @@ translations:
   backupjob_inactive: "Inactif"
   backupjob_done: "Terminé"
   backupjob_error: "Erreur"
+  backupjob_waiting: "En attente"
   backupjob_never: "jamais"
   input_number_invalid: "Veuillez saisir un nombre valide"
   input_backuptype_invalid: "Veuillez sélectionner un type de sauvegarde valide"

@@ -60,6 +60,7 @@ public sealed class BackupJobStateService(IStateReader stateReader) : IBackupJob
         {
             BackupStatus.Inactive => BackupJobStatus.Inactive,
             BackupStatus.Active => BackupJobStatus.Active,
+            BackupStatus.Waiting => BackupJobStatus.Waiting,
             BackupStatus.Done => BackupJobStatus.Done,
             BackupStatus.Error => BackupJobStatus.Error,
             BackupStatus.Paused => BackupJobStatus.Paused,

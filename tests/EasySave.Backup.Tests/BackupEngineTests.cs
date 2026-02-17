@@ -29,6 +29,9 @@ public class BackupEngineTests
         _encrytionResolverProviderMock = new Mock<IEncryptionProviderResolver>();
         _backupUpExecutionGuardMock = new Mock<IBackupExecutionGuard>();
         _userPreferencesMock = new Mock<IUserPreferencesRepository>();
+        _encryptionPolicyProviderMock
+            .Setup(p => p.GetPolicy())
+            .Returns(EncryptionPolicy.Disabled);
 
         _backupEngine = new BackupEngine(
             _fileSystemMock.Object,

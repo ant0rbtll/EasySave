@@ -16,6 +16,11 @@ public enum BackupStatus
     Active,
 
     /// <summary>
+    /// The backup is waiting for global priority files to finish.
+    /// </summary>
+    Waiting,
+
+    /// <summary>
     /// The backup completed successfully.
     /// </summary>
     Done,
