@@ -2,6 +2,7 @@ using EasySave.Core;
 using EasySave.Log;
 using EasySave.System;
 using EasySave.State;
+using EasySave.Persistence;
 using System.Diagnostics;
 using System.Threading;
 
@@ -22,6 +23,7 @@ public class BackupEngine(
     ITransferService transferService,
     IStateWriter stateWriter,
     ILogger logger,
+    IUserPreferencesRepository? preferencesRepository,
     IEncryptionPolicyProvider? encryptionPolicyProvider = null,
     IEncryptionProviderResolver? encryptionProviderResolver = null,
     IBackupExecutionGuard? executionGuard = null,
@@ -34,6 +36,7 @@ public class BackupEngine(
     private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
+    private readonly IUserPreferencesRepository _preferencesRepository = preferencesRepository;
     private readonly IBackupExecutionController _executionController = executionController ?? new NoOpBackupExecutionController();
     private const string BusinessSoftwareErrorKey = BackupRuntimeKeys.ErrorBusinessSoftwareRunning;
     private const int BusinessSoftwareRetryDelayMs = 500;
@@ -56,7 +59,8 @@ public class BackupEngine(
         _executionController.BeginJob(job.Id);
         try
         {
-            var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
+            var priorityExtensions = _preferencesRepository.Load().PriorityExtensions;
+            var files = _fileSystem.EnumerateFilesRecursive(job.Source, priorityExtensions).ToList();
             var encryptionPolicy = _encryptionPolicyProvider.GetPolicy();
 
             int totalFiles = files.Count;

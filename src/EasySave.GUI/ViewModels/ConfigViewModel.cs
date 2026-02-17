@@ -63,9 +63,15 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string logModeLocalAndCentralizedText = "";
     [ObservableProperty] private string logServerUrlText = "";
     [ObservableProperty] private string logServerUrlWatermark = "";
+    [ObservableProperty] private string? newPriorityExtensionInput;
+    [ObservableProperty] private string priorityExtensionsText = "";
+    [ObservableProperty] private string priorityExtensionsWatermark = "";
+    [ObservableProperty] private string priorityExtensionsAddText = "";
+    [ObservableProperty] private string priorityExtensionsEmptyText = "";
 
     public ObservableCollection<string> EncryptedExtensions { get; } = [];
     public ObservableCollection<string> BusinessSoftwareProcesses { get; } = [];
+    public ObservableCollection<string> PriorityExtensions { get; } = [];
 
     public bool IsJsonLogFormatSelected => SelectedLogFormat == LogFormat.Json;
     public bool IsXmlLogFormatSelected => SelectedLogFormat == LogFormat.Xml;
@@ -117,8 +123,16 @@ public partial class ConfigViewModel : ViewModelBase
             EncryptedExtensions.Add(normalized!);
         }
 
+        foreach (var normalized in preferences.PriorityExtensions
+                .Select(NormalizeExtensionForDisplay)
+                .Where(n => n is not null))
+        {
+            PriorityExtensions.Add(normalized!);
+        }
+
         EncryptedExtensions.CollectionChanged += OnConfigCollectionChanged;
         BusinessSoftwareProcesses.CollectionChanged += OnConfigCollectionChanged;
+        PriorityExtensions.CollectionChanged += OnConfigCollectionChanged;
 
         RefreshTranslations();
     }
@@ -188,6 +202,10 @@ public partial class ConfigViewModel : ViewModelBase
         LogModeLocalAndCentralizedText = _localizationService.TranslateText(LocalizationKey.log_mode_local_and_centralized);
         LogServerUrlText = _localizationService.TranslateText(LocalizationKey.gui_config_log_server_url);
         LogServerUrlWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_log_server_url_watermark);
+        PriorityExtensionsText = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions);
+        PriorityExtensionsWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_watermark);
+        PriorityExtensionsAddText = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_add);
+        PriorityExtensionsEmptyText = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_empty);
         ValidatePath();
     }
 
@@ -248,6 +266,7 @@ public partial class ConfigViewModel : ViewModelBase
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
         preferences.BusinessSoftwareProcessNames = [..BusinessSoftwareProcesses];
         preferences.EncryptedExtensions = [..EncryptedExtensions];
+        preferences.PriorityExtensions = [.. PriorityExtensions];
         _preferencesRepository.Save(preferences);
 
         _localizationService.Culture = language;
@@ -451,6 +470,33 @@ public partial class ConfigViewModel : ViewModelBase
     {
         var normalized = NormalizeBusinessSoftwareForDisplay(processName);
         return normalized ?? string.Empty;
+    }
+
+    [RelayCommand]
+    private void AddPriorityExtension()
+    {
+        if (string.IsNullOrWhiteSpace(NewPriorityExtensionInput))
+            return;
+
+        var extensions = NewPriorityExtensionInput
+            .Split(ExtensionSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Select(NormalizeExtensionForDisplay)
+            .Where(n => n is not null && !PriorityExtensions.Contains(n));
+
+        foreach (var ext in extensions)
+        {
+            PriorityExtensions.Add(ext!);
+        }
+
+        NewPriorityExtensionInput = null;
+        ClearStatusMessage();
+    }
+
+    [RelayCommand]
+    private void RemovePriorityExtension(string extension)
+    {
+        PriorityExtensions.Remove(extension);
+        ClearStatusMessage();
     }
 
 }

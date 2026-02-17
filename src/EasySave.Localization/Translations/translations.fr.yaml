@@ -279,3 +279,7 @@ translations:
   gui_log_event_business_software_detected: "BLOQUE"
   gui_log_event_action: "ACTION"
   gui_log_event_stopped: "ARRETE"
+  gui_config_priority_extensions: "Extensions de fichiers prioritaires"
+  gui_config_priority_extensions_watermark: ".pdf, .docx, ..."
+  gui_config_priority_extensions_add: "Ajouter"
+  gui_config_priority_extensions_empty: "Aucune extension prioritaire configurée"

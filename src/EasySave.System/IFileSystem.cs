@@ -51,7 +51,7 @@ public interface IFileSystem
     /// </summary>
     /// <param name="rootPath">The root directory to search.</param>
     /// <returns>An enumerable of file paths.</returns>
-    IEnumerable<string> EnumerateFilesRecursive(string rootPath);
+    IEnumerable<string> EnumerateFilesRecursive(string rootPath, IEnumerable<string>? priorityExtensions);
 
     /// <summary>
     /// Enumerates all subdirectories recursively under the specified directory.
