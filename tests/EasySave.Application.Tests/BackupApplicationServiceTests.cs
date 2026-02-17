@@ -254,15 +254,18 @@ public class BackupApplicationServiceTests
     }
 
     /// <summary>
-    /// Verifies that attempting to run a non-existent job by ID does not cause an application crash.
+    /// Verifies that attempting to run a non-existent job by ID throws a localized not-found error.
     /// </summary>
     [Fact]
-    public void RunJob_WhenJobDoesNotExist_ShouldNotCallEngine()
+    public void RunJob_WhenJobDoesNotExist_ShouldThrowNotFoundError()
     {
         _repoMock.Setup(r => r.GetById(888)).Returns((BackupJob?)null);
 
-        _service.RunJob(888).GetAwaiter().GetResult();
+        var exception = Assert.Throws<InvalidOperationException>(() => _service.RunJob(888).GetAwaiter().GetResult());
 
+        Assert.Equal("error_job_not_found", exception.Message);
+        Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
+        Assert.Equal("888", exception.Data["0"]);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -296,7 +299,8 @@ public class BackupApplicationServiceTests
     public void RunJobs_ShouldCallRepositoryForEachId()
     {
         int[] ids = { 1, 2, 3 };
-        _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((BackupJob?)null);
+        _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((int id) =>
+            new BackupJob { Id = id, Name = $"Job{id}", Source = "/src", Destination = "/dst", Type = BackupType.Complete });
 
         _service.RunJobs(ids).GetAwaiter().GetResult();
 
@@ -343,16 +347,19 @@ public class BackupApplicationServiceTests
     }
 
     /// <summary>
-    /// Ensures that RunJobs gracefully ignores IDs that are not found in the repository.
+    /// Ensures that RunJobs propagates not-found errors when one of the IDs does not exist.
     /// </summary>
     [Fact]
-    public void RunJobs_WithMixedValidAndInvalidIds_ShouldContinueProcessing()
+    public void RunJobs_WithMixedValidAndInvalidIds_ShouldThrowNotFoundError()
     {
-        _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((BackupJob?)null);
+        _repoMock.Setup(r => r.GetById(1)).Returns(new BackupJob { Id = 1, Name = "Job1", Source = "/src1", Destination = "/dst1", Type = BackupType.Complete });
+        _repoMock.Setup(r => r.GetById(99)).Returns((BackupJob?)null);
 
-        var exception = Record.Exception(() => _service.RunJobs(new int[] { 1, 99 }).GetAwaiter().GetResult());
+        var exception = Assert.Throws<InvalidOperationException>(() => _service.RunJobs(new int[] { 1, 99 }).GetAwaiter().GetResult());
 
-        Assert.Null(exception);
+        Assert.Equal("error_job_not_found", exception.Message);
+        Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
+        Assert.Equal("99", exception.Data["0"]);
         _repoMock.Verify(r => r.GetById(1), Times.Once);
         _repoMock.Verify(r => r.GetById(99), Times.Once);
     }
@@ -384,15 +391,18 @@ public class BackupApplicationServiceTests
     }
 
     /// <summary>
-    /// Ensures that RunJob does not call any engine logic if the job returned by repository is null.
+    /// Ensures that RunJob throws not-found when the repository returns null.
     /// </summary>
     [Fact]
-    public void RunJob_WithNullResultFromRepo_ShouldNotCallEngine()
+    public void RunJob_WithNullResultFromRepo_ShouldThrowNotFoundError()
     {
         _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((BackupJob?)null);
 
-        _service.RunJob(99).GetAwaiter().GetResult();
+        var exception = Assert.Throws<InvalidOperationException>(() => _service.RunJob(99).GetAwaiter().GetResult());
 
+        Assert.Equal("error_job_not_found", exception.Message);
+        Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
+        Assert.Equal("99", exception.Data["0"]);
         _repoMock.Verify(r => r.GetById(99), Times.Once);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -433,12 +443,15 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
-    public void RunJob_WithMissingJob_ShouldNotCallEngineExecute()
+    public void RunJob_WithMissingJob_ShouldThrowNotFoundError()
     {
         _repoMock.Setup(r => r.GetById(1)).Returns((BackupJob?)null);
 
-        _service.RunJob(1).GetAwaiter().GetResult();
+        var exception = Assert.Throws<InvalidOperationException>(() => _service.RunJob(1).GetAwaiter().GetResult());
 
+        Assert.Equal("error_job_not_found", exception.Message);
+        Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
+        Assert.Equal("1", exception.Data["0"]);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 

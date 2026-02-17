@@ -631,22 +631,21 @@ public partial class ManageViewModel : ViewModelBase
 
         try
         {
-            // Ensure the job still exists before attempting to run it so we don't report success for a no-op.
-            var existingJob = await Task.Run(() => _applicationService.GetJob(job.Id));
-            if (existingJob is null)
-            {
-                // Use a specific, localized error when the job cannot be found.
-                errorMessage = _localizationService.TranslateText(LocalizationKey.error_job_not_found);
-            }
-            else
-            {
-                await _applicationService.RunJob(job.Id);
-                success = true;
-            }
+            await _applicationService.RunJob(job.Id);
+            success = true;
         }
         catch (Exception ex)
         {
-            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            if (ex.Data["errorKey"]?.ToString() == "error_job_not_found")
+            {
+                errorMessage = _localizationService.TranslateTextWithParams(
+                    LocalizationKey.gui_manage_error_job_not_found_named,
+                    [job.Name]);
+            }
+            else
+            {
+                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            }
         }
         finally
         {

@@ -67,7 +67,10 @@ public class BackupApplicationService(
         var job = _repo.GetById(id);
         if (job is null)
         {
-            return;
+            var exception = new InvalidOperationException("error_job_not_found");
+            exception.Data["errorKey"] = "error_job_not_found";
+            exception.Data["0"] = id.ToString();
+            throw exception;
         }
 
         await RunJobInternalAsync(job, cancellationToken);

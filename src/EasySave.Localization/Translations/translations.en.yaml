@@ -135,6 +135,7 @@ translations:
   gui_manage_tooltip_modify: "Edit"
   gui_manage_tooltip_delete: "Delete"
   gui_manage_run_success: "Job {0} completed successfully"
+  gui_manage_error_job_not_found_named: "Job {0} does not exist"
   gui_manage_delete_success: "Job {0} deleted successfully"
   gui_create_add_success: "Backup job created successfully"
   gui_create_subtitle: "Create your backup job"
