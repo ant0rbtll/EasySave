@@ -592,7 +592,10 @@ public partial class ManageViewModel : ViewModelBase
         IsConfirmDialogOpen = true;
     }
 
-    private bool CanRunJob(Models.BackupJob job) => !IsRunning;
+    private bool CanRunJob(Models.BackupJob job)
+    {
+        return !_runningJobIds.Contains(job.Id) && job.Status != Core.BackupJobStatus.Active;
+    }
 
     public void OnJobSelectionChanged()
     {
@@ -610,13 +613,15 @@ public partial class ManageViewModel : ViewModelBase
         HasSelection = _allJobs.Any(j => j.IsSelected);
     }
 
-    [RelayCommand]
+    [RelayCommand(AllowConcurrentExecutions = true)]
     private async Task ConfirmRun()
     {
         if (PendingJob is not { } job)
             return;
 
         IsConfirmDialogOpen = false;
+        _runningJobIds.Add(job.Id);
+        RunJobCommand.NotifyCanExecuteChanged();
         IsRunning = true;
         RunningJobName = job.Name;
         IsStatusBannerVisible = false;
@@ -652,7 +657,9 @@ public partial class ManageViewModel : ViewModelBase
                 IsRunning = false;
                 RunningJobName = string.Empty;
                 PendingJob = null;
+                _runningJobIds.Remove(job.Id);
                 ApplyJobs(jobs);
+                RunJobCommand.NotifyCanExecuteChanged();
 
                 if (success)
                 {
@@ -730,6 +737,7 @@ public partial class ManageViewModel : ViewModelBase
         _runningJobIds.Clear();
         foreach (var j in selectedJobs)
             _runningJobIds.Add(j.Id);
+        RunJobCommand.NotifyCanExecuteChanged();
         IsRunning = true;
 
         IsStatusBannerVisible = false;
@@ -759,6 +767,7 @@ public partial class ManageViewModel : ViewModelBase
             IsRunning = false;
             RunningJobName = string.Empty;
             ApplyJobs(jobs);
+            RunJobCommand.NotifyCanExecuteChanged();
             UpdateHasSelection();
             IsAllSelected = false;
 
@@ -1064,6 +1073,7 @@ public partial class ManageViewModel : ViewModelBase
         _allJobs.AddRange(jobs);
         HasJobs = _allJobs.Count > 0;
         Refresh();
+        RunJobCommand.NotifyCanExecuteChanged();
     }
 
     private void RebuildPaginationItems()
