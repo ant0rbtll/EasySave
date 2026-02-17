@@ -191,6 +191,8 @@ translations:
   gui_progress_status_paused: "Paused"
   gui_progress_status_stopping: "Stop requested"
   gui_progress_status_blocked_business: "Blocked (business software)"
+  gui_progress_confirm_stop_title: "Confirm stop"
+  gui_progress_confirm_stop_message: "Do you want to stop the backup"
   gui_log_history_subtitle: "Select a date to view activity logs"
   gui_log_detail_subtitle: "Details of operations performed"
   gui_log_col_time: "Time"

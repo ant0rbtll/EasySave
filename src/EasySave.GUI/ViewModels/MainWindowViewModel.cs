@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
 using EasySave.Backup;
 using EasySave.Localization;
@@ -28,6 +29,21 @@ public partial class MainWindowViewModel : ViewModelBase
     [ObservableProperty]
     private string tooltipClose = string.Empty;
 
+    [ObservableProperty]
+    private bool isCloseDialogOpen;
+
+    [ObservableProperty]
+    private string closeDialogTitle = string.Empty;
+
+    [ObservableProperty]
+    private string closeDialogMessage = string.Empty;
+
+    [ObservableProperty]
+    private string closeDialogConfirmText = string.Empty;
+
+    [ObservableProperty]
+    private string closeDialogCancelText = string.Empty;
+
     private readonly ILocalizationService _localizationService;
     private readonly BackupApplicationService _backupApplicationService;
     private readonly IBackupExecutionController _backupExecutionController;
@@ -40,6 +56,8 @@ public partial class MainWindowViewModel : ViewModelBase
 
     private string _tooltipMaximizeText = string.Empty;
     private string _tooltipRestoreText = string.Empty;
+
+    public event EventHandler? CloseConfirmed;
 
     public MainWindowViewModel(
         CreateViewModel createViewModel,
@@ -82,6 +100,10 @@ public partial class MainWindowViewModel : ViewModelBase
         _tooltipRestoreText = _localizationService.TranslateText(LocalizationKey.gui_window_restore);
         TooltipClose = _localizationService.TranslateText(LocalizationKey.gui_window_close);
         TooltipMaximize = _tooltipMaximizeText;
+        CloseDialogTitle = _localizationService.TranslateText(LocalizationKey.gui_close_confirm_title);
+        CloseDialogMessage = _localizationService.TranslateText(LocalizationKey.gui_close_confirm_message);
+        CloseDialogConfirmText = _localizationService.TranslateText(LocalizationKey.gui_close_confirm_confirm);
+        CloseDialogCancelText = _localizationService.TranslateText(LocalizationKey.gui_close_confirm_cancel);
     }
 
     public void UpdateMaximizeTooltip(bool isMaximized)
@@ -163,12 +185,22 @@ public partial class MainWindowViewModel : ViewModelBase
         _backupExecutionController.RequestStop();
     }
 
-    public (string Title, string Message, string ConfirmText, string CancelText) GetCloseConfirmationTexts()
+    public void OpenCloseConfirmationDialog()
     {
-        return (
-            _localizationService.TranslateText(LocalizationKey.gui_close_confirm_title),
-            _localizationService.TranslateText(LocalizationKey.gui_close_confirm_message),
-            _localizationService.TranslateText(LocalizationKey.gui_close_confirm_confirm),
-            _localizationService.TranslateText(LocalizationKey.gui_close_confirm_cancel));
+        IsCloseDialogOpen = true;
+    }
+
+    [RelayCommand]
+    private void CancelCloseDialog()
+    {
+        IsCloseDialogOpen = false;
+    }
+
+    [RelayCommand]
+    private void ConfirmCloseDialog()
+    {
+        StopAllBackups();
+        IsCloseDialogOpen = false;
+        CloseConfirmed?.Invoke(this, EventArgs.Empty);
     }
 }

@@ -178,5 +178,55 @@
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
         </ScrollViewer>
+
+        <Border Grid.RowSpan="2"
+                Background="#AA000000"
+                IsVisible="{Binding IsStopDialogOpen}">
+            <Border Background="#2D2D3D"
+                    CornerRadius="10"
+                    Padding="32,24"
+                    MaxWidth="420"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    BoxShadow="0 8 24 0 #60000000">
+                <StackPanel Spacing="20">
+                    <TextBlock Text="{Binding ConfirmStopTitleText}"
+                               FontSize="18"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center"/>
+                    <StackPanel Orientation="Horizontal"
+                                HorizontalAlignment="Center"
+                                Spacing="4">
+                        <TextBlock Text="{Binding ConfirmStopMessageText}"
+                                   FontSize="14"
+                                   Foreground="#BBBBBB"/>
+                        <TextBlock Text="{Binding PendingStopJobName}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"/>
+                        <TextBlock Text="?"
+                                   FontSize="14"
+                                   Foreground="#BBBBBB"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal"
+                                Spacing="12"
+                                HorizontalAlignment="Center">
+                        <Button Content="{Binding CancelText}"
+                                Command="{Binding CancelStopJobCommand}"
+                                Padding="20,8"
+                                Background="#44FFFFFF"
+                                Foreground="White"
+                                CornerRadius="6"/>
+                        <Button Content="{Binding StopText}"
+                                Command="{Binding ConfirmStopJobCommand}"
+                                Padding="20,8"
+                                Background="#EF5350"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                CornerRadius="6"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
     </Grid>
 </UserControl>

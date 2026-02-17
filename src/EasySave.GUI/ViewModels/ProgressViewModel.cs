@@ -23,6 +23,15 @@ public partial class ProgressViewModel : ViewModelBase
 
     public ObservableCollection<Models.ActiveBackupProgressItem> ActiveBackups { get; } = [];
 
+    [ObservableProperty]
+    private bool isStopDialogOpen;
+
+    [ObservableProperty]
+    private int? pendingStopJobId;
+
+    [ObservableProperty]
+    private string pendingStopJobName = string.Empty;
+
     public string TitleText { get; private set; } = string.Empty;
     public string SubtitleText { get; private set; } = string.Empty;
     public string EmptyTitleText { get; private set; } = string.Empty;
@@ -36,6 +45,7 @@ public partial class ProgressViewModel : ViewModelBase
     public string PlayText { get; private set; } = string.Empty;
     public string PauseText { get; private set; } = string.Empty;
     public string StopText { get; private set; } = string.Empty;
+    public string CancelText { get; private set; } = string.Empty;
     public string TooltipPlay { get; private set; } = string.Empty;
     public string TooltipPause { get; private set; } = string.Empty;
     public string TooltipStop { get; private set; } = string.Empty;
@@ -43,6 +53,8 @@ public partial class ProgressViewModel : ViewModelBase
     public string StatusPausedText { get; private set; } = string.Empty;
     public string StatusStopRequestedText { get; private set; } = string.Empty;
     public string StatusBlockedBusinessText { get; private set; } = string.Empty;
+    public string ConfirmStopTitleText { get; private set; } = string.Empty;
+    public string ConfirmStopMessageText { get; private set; } = string.Empty;
 
     public bool HasActiveBackups => ActiveBackups.Count > 0;
 
@@ -72,6 +84,7 @@ public partial class ProgressViewModel : ViewModelBase
         PlayText = _localizationService.TranslateText(LocalizationKey.gui_manage_play);
         PauseText = _localizationService.TranslateText(LocalizationKey.gui_manage_pause);
         StopText = _localizationService.TranslateText(LocalizationKey.gui_manage_stop);
+        CancelText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_cancel);
         TooltipPlay = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_play);
         TooltipPause = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_pause);
         TooltipStop = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_stop);
@@ -79,6 +92,8 @@ public partial class ProgressViewModel : ViewModelBase
         StatusPausedText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_paused);
         StatusStopRequestedText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_stopping);
         StatusBlockedBusinessText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_blocked_business);
+        ConfirmStopTitleText = _localizationService.TranslateText(LocalizationKey.gui_progress_confirm_stop_title);
+        ConfirmStopMessageText = _localizationService.TranslateText(LocalizationKey.gui_progress_confirm_stop_message);
 
         OnPropertyChanged(nameof(TitleText));
         OnPropertyChanged(nameof(SubtitleText));
@@ -93,6 +108,7 @@ public partial class ProgressViewModel : ViewModelBase
         OnPropertyChanged(nameof(PlayText));
         OnPropertyChanged(nameof(PauseText));
         OnPropertyChanged(nameof(StopText));
+        OnPropertyChanged(nameof(CancelText));
         OnPropertyChanged(nameof(TooltipPlay));
         OnPropertyChanged(nameof(TooltipPause));
         OnPropertyChanged(nameof(TooltipStop));
@@ -100,6 +116,8 @@ public partial class ProgressViewModel : ViewModelBase
         OnPropertyChanged(nameof(StatusPausedText));
         OnPropertyChanged(nameof(StatusStopRequestedText));
         OnPropertyChanged(nameof(StatusBlockedBusinessText));
+        OnPropertyChanged(nameof(ConfirmStopTitleText));
+        OnPropertyChanged(nameof(ConfirmStopMessageText));
 
         // Rebuild textual formatting when language/culture changes.
         _lastSnapshotSignature = string.Empty;
@@ -118,9 +136,27 @@ public partial class ProgressViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private void StopJob(int jobId)
+    private void AskStopJob(int jobId)
     {
+        PendingStopJobId = jobId;
+        PendingStopJobName = ResolveStopTargetName(jobId);
+        IsStopDialogOpen = true;
+    }
+
+    [RelayCommand]
+    private void ConfirmStopJob()
+    {
+        if (PendingStopJobId is not int jobId)
+            return;
+
         _backupExecutionController.RequestStopForJob(jobId);
+        CloseStopDialog();
+    }
+
+    [RelayCommand]
+    private void CancelStopJob()
+    {
+        CloseStopDialog();
     }
 
     public void StartLiveRefresh()
@@ -187,6 +223,13 @@ public partial class ProgressViewModel : ViewModelBase
                 ActiveBackups.Clear();
                 foreach (var item in items)
                     ActiveBackups.Add(item);
+
+                if (IsStopDialogOpen
+                    && PendingStopJobId is int pendingStopId
+                    && !items.Any(item => item.Id == pendingStopId))
+                {
+                    CloseStopDialog();
+                }
 
                 OnPropertyChanged(nameof(HasActiveBackups));
             });
@@ -295,5 +338,32 @@ public partial class ProgressViewModel : ViewModelBase
                 var controlState = ResolveControlState(s.Id);
                 return $"{s.Id}:{s.Status}:{s.ProgressPercent}:{s.RemainingFiles}:{s.RemainingSizeBytes}:{s.CurrentSourcePath}:{s.CurrentDestinationPath}:{s.LastUpdateAt:O}:{controlState}";
             }));
+    }
+
+    private void CloseStopDialog()
+    {
+        IsStopDialogOpen = false;
+        PendingStopJobId = null;
+        PendingStopJobName = string.Empty;
+    }
+
+    private string ResolveStopTargetName(int jobId)
+    {
+        var item = ActiveBackups.FirstOrDefault(active => active.Id == jobId);
+        if (item is not null && !string.IsNullOrWhiteSpace(item.Name))
+            return item.Name;
+
+        try
+        {
+            var liveStates = _applicationService.GetAllJobsLiveProgress();
+            if (liveStates.TryGetValue(jobId, out var state) && !string.IsNullOrWhiteSpace(state.Name))
+                return state.Name;
+        }
+        catch (Exception)
+        {
+            // Ignore transient state read errors and fallback to id.
+        }
+
+        return $"#{jobId.ToString(CultureInfo.InvariantCulture)}";
     }
 }

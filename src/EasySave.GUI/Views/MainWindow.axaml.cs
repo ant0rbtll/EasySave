@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using Avalonia.Layout;
 using Avalonia.Media;
 using EasySave.GUI.ViewModels;
 
@@ -16,6 +15,7 @@ public partial class MainWindow : Window
     /// <summary>Thickness in pixels of the resize area along the window edges.</summary>
     private const int ResizeBorder = 6;
     private bool _isCloseConfirmed;
+    private MainWindowViewModel? _subscribedViewModel;
 
     public MainWindow()
     {
@@ -23,6 +23,7 @@ public partial class MainWindow : Window
 
         ConfigurePlatformTitleBar();
         Closing += OnWindowClosing;
+        DataContextChanged += OnDataContextChanged;
     }
 
     private void ConfigurePlatformTitleBar()
@@ -168,7 +169,7 @@ public partial class MainWindow : Window
         };
     }
 
-    private async void OnWindowClosing(object? sender, WindowClosingEventArgs e)
+    private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
     {
         if (_isCloseConfirmed)
             return;
@@ -181,73 +182,32 @@ public partial class MainWindow : Window
 
         e.Cancel = true;
 
-        var shouldClose = await ShowCloseConfirmationDialogAsync(viewModel);
-        if (!shouldClose)
+        viewModel.OpenCloseConfirmationDialog();
+    }
+
+    private void OnDataContextChanged(object? sender, EventArgs e)
+    {
+        if (ReferenceEquals(_subscribedViewModel, DataContext))
             return;
 
-        viewModel.StopAllBackups();
+        if (_subscribedViewModel is not null)
+            _subscribedViewModel.CloseConfirmed -= OnCloseConfirmed;
+
+        _subscribedViewModel = DataContext as MainWindowViewModel;
+        if (_subscribedViewModel is not null)
+            _subscribedViewModel.CloseConfirmed += OnCloseConfirmed;
+    }
+
+    private void OnCloseConfirmed(object? sender, EventArgs e)
+    {
         _isCloseConfirmed = true;
         Close();
     }
 
-    private async Task<bool> ShowCloseConfirmationDialogAsync(MainWindowViewModel viewModel)
+    protected override void OnClosed(EventArgs e)
     {
-        var (title, message, confirmText, cancelText) = viewModel.GetCloseConfirmationTexts();
-
-        var dialog = new Window
-        {
-            Title = title,
-            Width = 520,
-            CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            SystemDecorations = SystemDecorations.BorderOnly
-        };
-
-        var messageBlock = new TextBlock
-        {
-            Text = message,
-            TextWrapping = TextWrapping.Wrap,
-            Margin = new Thickness(0, 0, 0, 16)
-        };
-
-        var confirmButton = new Button
-        {
-            Content = confirmText,
-            MinWidth = 130,
-            HorizontalAlignment = HorizontalAlignment.Right
-        };
-        confirmButton.Click += (_, _) => dialog.Close(true);
-
-        var cancelButton = new Button
-        {
-            Content = cancelText,
-            MinWidth = 90,
-            Margin = new Thickness(8, 0, 0, 0),
-            HorizontalAlignment = HorizontalAlignment.Right
-        };
-        cancelButton.Click += (_, _) => dialog.Close(false);
-
-        dialog.Content = new StackPanel
-        {
-            Margin = new Thickness(20),
-            Spacing = 8,
-            Children =
-            {
-                messageBlock,
-                new StackPanel
-                {
-                    Orientation = Orientation.Horizontal,
-                    HorizontalAlignment = HorizontalAlignment.Right,
-                    Children =
-                    {
-                        confirmButton,
-                        cancelButton
-                    }
-                }
-            }
-        };
-
-        var result = await dialog.ShowDialog<bool>(this);
-        return result;
+        base.OnClosed(e);
+        if (_subscribedViewModel is not null)
+            _subscribedViewModel.CloseConfirmed -= OnCloseConfirmed;
     }
 }

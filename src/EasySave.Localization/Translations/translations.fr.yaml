@@ -193,6 +193,8 @@ translations:
   gui_progress_status_paused: "En pause"
   gui_progress_status_stopping: "Arrêt demandé"
   gui_progress_status_blocked_business: "Bloqué (logiciel métier)"
+  gui_progress_confirm_stop_title: "Confirmer l'arrêt"
+  gui_progress_confirm_stop_message: "Voulez-vous arrêter la sauvegarde"
   gui_window_minimize: "Réduire"
   gui_window_maximize: "Agrandir"
   gui_window_restore: "Restaurer"

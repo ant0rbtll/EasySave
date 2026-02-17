@@ -70,7 +70,7 @@ public partial class ProgressView : UserControl
             && TryGetJobId(button.CommandParameter, out var jobId)
             && ResolveViewModel() is { } viewModel)
         {
-            viewModel.StopJobCommand.Execute(jobId);
+            viewModel.AskStopJobCommand.Execute(jobId);
         }
     }
 
