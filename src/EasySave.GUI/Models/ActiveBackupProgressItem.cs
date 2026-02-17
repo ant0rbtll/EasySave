@@ -59,4 +59,46 @@ public class ActiveBackupProgressItem : ModelBase
         get => updatedAtDisplay;
         set { updatedAtDisplay = value; OnNotifyPropertyChanged(nameof(UpdatedAtDisplay)); }
     }
+
+    private string runtimeStatusText = string.Empty;
+    public string RuntimeStatusText
+    {
+        get => runtimeStatusText;
+        set { runtimeStatusText = value; OnNotifyPropertyChanged(nameof(RuntimeStatusText)); }
+    }
+
+    private string runtimeStatusBackground = "#224A90E2";
+    public string RuntimeStatusBackground
+    {
+        get => runtimeStatusBackground;
+        set { runtimeStatusBackground = value; OnNotifyPropertyChanged(nameof(RuntimeStatusBackground)); }
+    }
+
+    private string runtimeStatusForeground = "#CFE8FF";
+    public string RuntimeStatusForeground
+    {
+        get => runtimeStatusForeground;
+        set { runtimeStatusForeground = value; OnNotifyPropertyChanged(nameof(RuntimeStatusForeground)); }
+    }
+
+    private bool canPlay;
+    public bool CanPlay
+    {
+        get => canPlay;
+        set { canPlay = value; OnNotifyPropertyChanged(nameof(CanPlay)); }
+    }
+
+    private bool canPause = true;
+    public bool CanPause
+    {
+        get => canPause;
+        set { canPause = value; OnNotifyPropertyChanged(nameof(CanPause)); }
+    }
+
+    private bool canStop = true;
+    public bool CanStop
+    {
+        get => canStop;
+        set { canStop = value; OnNotifyPropertyChanged(nameof(CanStop)); }
+    }
 }

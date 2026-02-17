@@ -130,20 +130,6 @@
 			<Setter Property="Opacity" Value="0.3"/>
 			<Setter Property="Cursor" Value="Arrow"/>
 		</Style>
-		<Style Selector="Button.runtime-control-btn">
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="0"/>
-			<Setter Property="Padding" Value="6"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="CornerRadius" Value="4"/>
-		</Style>
-		<Style Selector="Button.runtime-control-btn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#22FFFFFF"/>
-		</Style>
-		<Style Selector="Button.runtime-control-btn:disabled">
-			<Setter Property="Opacity" Value="0.35"/>
-			<Setter Property="Cursor" Value="Arrow"/>
-		</Style>
 
 		<!-- Pagination style -->
 		<Style Selector="Border.pagination-row">
@@ -235,50 +221,16 @@
 					Padding="12,8"
 					Margin="0,0,0,12"
 					IsVisible="{Binding IsRunning}">
-				<Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
-					<StackPanel Grid.Column="0"
-								Orientation="Horizontal"
-								Spacing="8"
-								HorizontalAlignment="Center">
-						<TextBlock Text="{Binding RunningLabel}"
-								   Foreground="#42A5F5"
-								   FontWeight="SemiBold"
-								   VerticalAlignment="Center"/>
-						<TextBlock Text="{Binding RunningJobName}"
-								   Foreground="#42A5F5"
-								   FontWeight="Bold"
-								   VerticalAlignment="Center"/>
-					</StackPanel>
-					<StackPanel Grid.Column="1"
-								Orientation="Horizontal"
-								Spacing="4"
-								HorizontalAlignment="Right">
-						<Button Classes="runtime-control-btn"
-								ToolTip.Tip="{Binding TooltipPlay}"
-								Command="{Binding PlayRunningCommand}">
-							<StackPanel Orientation="Horizontal" Spacing="6">
-								<PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
-								<TextBlock Text="{Binding PlayText}" Foreground="#66BB6A" FontSize="12"/>
-							</StackPanel>
-						</Button>
-						<Button Classes="runtime-control-btn"
-								ToolTip.Tip="{Binding TooltipPause}"
-								Command="{Binding PauseRunningCommand}">
-							<StackPanel Orientation="Horizontal" Spacing="6">
-								<PathIcon Data="M6 5h4v14H6zM14 5h4v14h-4z" Foreground="#FFB74D" Width="14" Height="14"/>
-								<TextBlock Text="{Binding PauseText}" Foreground="#FFB74D" FontSize="12"/>
-							</StackPanel>
-						</Button>
-						<Button Classes="runtime-control-btn"
-								ToolTip.Tip="{Binding TooltipStop}"
-								Command="{Binding StopRunningCommand}">
-							<StackPanel Orientation="Horizontal" Spacing="6">
-								<PathIcon Data="M6 6h12v12H6z" Foreground="#EF5350" Width="14" Height="14"/>
-								<TextBlock Text="{Binding StopText}" Foreground="#EF5350" FontSize="12"/>
-							</StackPanel>
-						</Button>
-					</StackPanel>
-				</Grid>
+				<StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+					<TextBlock Text="{Binding RunningLabel}"
+							   Foreground="#42A5F5"
+							   FontWeight="SemiBold"
+							   VerticalAlignment="Center"/>
+					<TextBlock Text="{Binding RunningJobName}"
+							   Foreground="#42A5F5"
+							   FontWeight="Bold"
+							   VerticalAlignment="Center"/>
+				</StackPanel>
 			</Border>
 
 			<!-- Status banner (success) -->

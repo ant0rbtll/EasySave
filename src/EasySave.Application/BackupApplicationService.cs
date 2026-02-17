@@ -19,6 +19,7 @@ public class BackupApplicationService(
     IBackupRunCoordinator? backupRunCoordinator = null,
     IBackupExecutionGuard? backupExecutionGuard = null)
 {
+    private static readonly TimeSpan BusinessSoftwareBlockedDisplayDuration = TimeSpan.FromSeconds(20);
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
     private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
@@ -62,8 +63,6 @@ public class BackupApplicationService(
     /// <param name="cancellationToken">Cancellation token.</param>
     public async Task RunJob(int id, CancellationToken cancellationToken = default)
     {
-        EnsureBusinessSoftwareIsNotRunning();
-
         var job = _repo.GetById(id);
         if (job is null)
         {
@@ -134,7 +133,10 @@ public class BackupApplicationService(
         var states = new Dictionary<int, BackupJobLiveProgressState>(entries.Count);
         foreach (var (jobId, entry) in entries)
         {
-            if (entry.Status != BackupStatus.Active)
+            var shouldInclude = entry.Status == BackupStatus.Active
+                || IsRecentBusinessSoftwareBlockedEntry(entry);
+
+            if (!shouldInclude)
             {
                 continue;
             }
@@ -143,7 +145,7 @@ public class BackupApplicationService(
             states[jobId] = new BackupJobLiveProgressState(
                 jobId,
                 jobName,
-                BackupJobStatus.Active,
+                MapStatus(entry.Status),
                 ClampProgress(entry.ProgressPercent),
                 entry.TotalFiles,
                 entry.TotalSizeBytes,
@@ -155,6 +157,18 @@ public class BackupApplicationService(
         }
 
         return states;
+    }
+
+    private static bool IsRecentBusinessSoftwareBlockedEntry(StateEntry entry)
+    {
+        if (entry.Status != BackupStatus.Error)
+            return false;
+
+        if (!string.Equals(entry.CurrentSourcePath, "error_business_software_running", StringComparison.Ordinal))
+            return false;
+
+        var age = DateTime.Now - entry.Timestamp;
+        return age >= TimeSpan.Zero && age <= BusinessSoftwareBlockedDisplayDuration;
     }
 
     private static string ResolveNonEmptyJobName(string? stateName, int jobId, IReadOnlyDictionary<int, string> jobNamesById)

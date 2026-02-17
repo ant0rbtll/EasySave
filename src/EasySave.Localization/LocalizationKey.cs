@@ -206,6 +206,10 @@ public enum LocalizationKey
     gui_progress_label_current_source,
     gui_progress_label_current_destination,
     gui_progress_label_updated_at,
+    gui_progress_status_running,
+    gui_progress_status_paused,
+    gui_progress_status_stopping,
+    gui_progress_status_blocked_business,
 
     // Window controls
     gui_window_minimize,

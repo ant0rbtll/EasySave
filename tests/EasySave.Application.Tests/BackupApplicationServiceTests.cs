@@ -490,15 +490,6 @@ public class BackupApplicationServiceTests
     {
         var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job);
-        _backupExecutionGuardMock
-            .Setup(g => g.EnsureCanCopyNextFile())
-            .Throws(() =>
-            {
-                var ex = new InvalidOperationException("error_business_software_running");
-                ex.Data["errorKey"] = "error_business_software_running";
-                ex.Data["0"] = "calc";
-                return ex;
-            });
 
         var service = new BackupApplicationService(
             _repoMock.Object,

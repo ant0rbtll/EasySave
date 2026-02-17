@@ -48,9 +48,14 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
 
     public void Pause()
     {
+        PauseForJob(-1);
+    }
+
+    public void PauseForJob(int jobId)
+    {
         lock (_gate)
         {
-            if (_currentJobId is null || _stopRequested)
+            if (!IsCurrentJobTargeted(jobId) || _stopRequested)
                 return;
 
             if (_isPaused)
@@ -64,9 +69,14 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
 
     public void Resume()
     {
+        ResumeForJob(-1);
+    }
+
+    public void ResumeForJob(int jobId)
+    {
         lock (_gate)
         {
-            if (_currentJobId is null)
+            if (!IsCurrentJobTargeted(jobId))
                 return;
 
             _isPaused = false;
@@ -76,9 +86,14 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
 
     public void RequestStop()
     {
+        RequestStopForJob(-1);
+    }
+
+    public void RequestStopForJob(int jobId)
+    {
         lock (_gate)
         {
-            if (_currentJobId is null)
+            if (!IsCurrentJobTargeted(jobId))
                 return;
 
             _stopRequested = true;
@@ -125,6 +140,29 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
         }
     }
 
+    public bool TryGetCurrentJobControlState(int jobId, out BackupJobControlState controlState)
+    {
+        lock (_gate)
+        {
+            if (!IsCurrentJobTargeted(jobId))
+            {
+                controlState = default;
+                return false;
+            }
+
+            if (_stopRequested)
+            {
+                controlState = BackupJobControlState.StopRequested;
+                return true;
+            }
+
+            controlState = _isPaused
+                ? BackupJobControlState.Paused
+                : BackupJobControlState.Running;
+            return true;
+        }
+    }
+
     public void Dispose()
     {
         if (_disposed)
@@ -140,5 +178,13 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
         exception.Data["errorKey"] = "error_backup_stopped_by_user";
         exception.Data["actionKey"] = StopActionKey;
         return exception;
+    }
+
+    private bool IsCurrentJobTargeted(int jobId)
+    {
+        if (_currentJobId is null)
+            return false;
+
+        return jobId < 0 || _currentJobId == jobId;
     }
 }

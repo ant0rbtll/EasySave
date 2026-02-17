@@ -1,7 +1,10 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
+using EasySave.Backup;
 using EasySave.GUI.Helpers;
 using EasySave.Localization;
 
@@ -10,6 +13,7 @@ namespace EasySave.GUI.ViewModels;
 public partial class ProgressViewModel : ViewModelBase
 {
     private readonly BackupApplicationService _applicationService;
+    private readonly IBackupExecutionController _backupExecutionController;
     private readonly ILocalizationService _localizationService;
     private CancellationTokenSource? _liveRefreshCts;
     private Task? _liveRefreshTask;
@@ -28,12 +32,27 @@ public partial class ProgressViewModel : ViewModelBase
     public string CurrentSourceLabelText { get; private set; } = string.Empty;
     public string CurrentDestinationLabelText { get; private set; } = string.Empty;
     public string UpdatedAtLabelText { get; private set; } = string.Empty;
+    public string RuntimeActionsLabelText { get; private set; } = string.Empty;
+    public string PlayText { get; private set; } = string.Empty;
+    public string PauseText { get; private set; } = string.Empty;
+    public string StopText { get; private set; } = string.Empty;
+    public string TooltipPlay { get; private set; } = string.Empty;
+    public string TooltipPause { get; private set; } = string.Empty;
+    public string TooltipStop { get; private set; } = string.Empty;
+    public string StatusRunningText { get; private set; } = string.Empty;
+    public string StatusPausedText { get; private set; } = string.Empty;
+    public string StatusStopRequestedText { get; private set; } = string.Empty;
+    public string StatusBlockedBusinessText { get; private set; } = string.Empty;
 
     public bool HasActiveBackups => ActiveBackups.Count > 0;
 
-    public ProgressViewModel(BackupApplicationService applicationService, ILocalizationService localizationService)
+    public ProgressViewModel(
+        BackupApplicationService applicationService,
+        IBackupExecutionController backupExecutionController,
+        ILocalizationService localizationService)
     {
         _applicationService = applicationService;
+        _backupExecutionController = backupExecutionController;
         _localizationService = localizationService;
         RefreshTranslations();
     }
@@ -49,6 +68,17 @@ public partial class ProgressViewModel : ViewModelBase
         CurrentSourceLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_current_source);
         CurrentDestinationLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_current_destination);
         UpdatedAtLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_updated_at);
+        RuntimeActionsLabelText = _localizationService.TranslateText(LocalizationKey.gui_manage_running);
+        PlayText = _localizationService.TranslateText(LocalizationKey.gui_manage_play);
+        PauseText = _localizationService.TranslateText(LocalizationKey.gui_manage_pause);
+        StopText = _localizationService.TranslateText(LocalizationKey.gui_manage_stop);
+        TooltipPlay = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_play);
+        TooltipPause = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_pause);
+        TooltipStop = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_stop);
+        StatusRunningText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_running);
+        StatusPausedText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_paused);
+        StatusStopRequestedText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_stopping);
+        StatusBlockedBusinessText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_blocked_business);
 
         OnPropertyChanged(nameof(TitleText));
         OnPropertyChanged(nameof(SubtitleText));
@@ -59,9 +89,38 @@ public partial class ProgressViewModel : ViewModelBase
         OnPropertyChanged(nameof(CurrentSourceLabelText));
         OnPropertyChanged(nameof(CurrentDestinationLabelText));
         OnPropertyChanged(nameof(UpdatedAtLabelText));
+        OnPropertyChanged(nameof(RuntimeActionsLabelText));
+        OnPropertyChanged(nameof(PlayText));
+        OnPropertyChanged(nameof(PauseText));
+        OnPropertyChanged(nameof(StopText));
+        OnPropertyChanged(nameof(TooltipPlay));
+        OnPropertyChanged(nameof(TooltipPause));
+        OnPropertyChanged(nameof(TooltipStop));
+        OnPropertyChanged(nameof(StatusRunningText));
+        OnPropertyChanged(nameof(StatusPausedText));
+        OnPropertyChanged(nameof(StatusStopRequestedText));
+        OnPropertyChanged(nameof(StatusBlockedBusinessText));
 
         // Rebuild textual formatting when language/culture changes.
         _lastSnapshotSignature = string.Empty;
+    }
+
+    [RelayCommand]
+    private void PauseJob(int jobId)
+    {
+        _backupExecutionController.PauseForJob(jobId);
+    }
+
+    [RelayCommand]
+    private void PlayJob(int jobId)
+    {
+        _backupExecutionController.ResumeForJob(jobId);
+    }
+
+    [RelayCommand]
+    private void StopJob(int jobId)
+    {
+        _backupExecutionController.RequestStopForJob(jobId);
     }
 
     public void StartLiveRefresh()
@@ -148,6 +207,36 @@ public partial class ProgressViewModel : ViewModelBase
 
     private Models.ActiveBackupProgressItem MapItem(BackupJobLiveProgressState state)
     {
+        if (string.Equals(state.CurrentSourcePath, "error_business_software_running", StringComparison.Ordinal))
+        {
+            return new Models.ActiveBackupProgressItem
+            {
+                Id = state.Id,
+                Name = state.Name,
+                ProgressPercent = state.ProgressPercent,
+                ProgressDisplay = $"{state.ProgressPercent}%",
+                FilesDisplay = $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
+                SizeDisplay = $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes))}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes))}",
+                CurrentSourcePath = state.CurrentSourcePath ?? "-",
+                CurrentDestinationPath = state.CurrentDestinationPath ?? "-",
+                UpdatedAtDisplay = FormatUpdatedAt(state.LastUpdateAt),
+                RuntimeStatusText = StatusBlockedBusinessText,
+                RuntimeStatusBackground = "#2AAF3A3A",
+                RuntimeStatusForeground = "#FFC8C8",
+                CanPlay = false,
+                CanPause = false,
+                CanStop = false
+            };
+        }
+
+        var controlState = ResolveControlState(state.Id);
+        var (statusText, statusBackground, statusForeground, canPlay, canPause, canStop) = controlState switch
+        {
+            BackupJobControlState.Paused => (StatusPausedText, "#2A8B5A2B", "#FFD59A", true, false, true),
+            BackupJobControlState.StopRequested => (StatusStopRequestedText, "#2AAF3A3A", "#FFC8C8", false, false, false),
+            _ => (StatusRunningText, "#224A90E2", "#CFE8FF", false, true, true)
+        };
+
         return new Models.ActiveBackupProgressItem
         {
             Id = state.Id,
@@ -158,8 +247,22 @@ public partial class ProgressViewModel : ViewModelBase
             SizeDisplay = $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes))}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes))}",
             CurrentSourcePath = state.CurrentSourcePath ?? "-",
             CurrentDestinationPath = state.CurrentDestinationPath ?? "-",
-            UpdatedAtDisplay = FormatUpdatedAt(state.LastUpdateAt)
+            UpdatedAtDisplay = FormatUpdatedAt(state.LastUpdateAt),
+            RuntimeStatusText = statusText,
+            RuntimeStatusBackground = statusBackground,
+            RuntimeStatusForeground = statusForeground,
+            CanPlay = canPlay,
+            CanPause = canPause,
+            CanStop = canStop
         };
+    }
+
+    private BackupJobControlState ResolveControlState(int jobId)
+    {
+        if (_backupExecutionController.TryGetCurrentJobControlState(jobId, out var controlState))
+            return controlState;
+
+        return BackupJobControlState.Running;
     }
 
     private string FormatUpdatedAt(DateTime? updatedAt)

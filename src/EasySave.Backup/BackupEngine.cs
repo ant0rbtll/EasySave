@@ -3,6 +3,7 @@ using EasySave.Log;
 using EasySave.System;
 using EasySave.State;
 using System.Diagnostics;
+using System.Threading;
 
 namespace EasySave.Backup;
 
@@ -34,6 +35,8 @@ public class BackupEngine(
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
     private readonly IBackupExecutionController _executionController = executionController ?? new NoOpBackupExecutionController();
+    private const string BusinessSoftwareErrorKey = "error_business_software_running";
+    private const int BusinessSoftwareRetryDelayMs = 500;
 
     /// <summary>
     /// Executes a complete or differential backup.
@@ -50,6 +53,7 @@ public class BackupEngine(
     {
         long totalDurationMs = 0;
         Stopwatch? backupLoopTimer = null;
+        _executionController.BeginJob(job.Id);
         try
         {
             var files = _fileSystem.EnumerateFilesRecursive(job.Source).ToList();
@@ -76,7 +80,14 @@ public class BackupEngine(
 
                 if (CanCopyFile(job.Type, file, destinationFile))
                 {
-                    _executionGuard.EnsureCanCopyNextFile();
+                    WaitUntilBusinessSoftwareAllowsCopy(
+                        job,
+                        file,
+                        destinationFile,
+                        totalFiles,
+                        totalSize,
+                        remainingFiles,
+                        remainingSize);
 
                     var destinationDir = Path.GetDirectoryName(destinationFile)!;
 
@@ -127,11 +138,15 @@ public class BackupEngine(
                         : 0;
 
                     UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, file, destinationFile);
+                    LogPendingUserActions(job);
+                    _executionController.WaitIfPausedOrThrowIfStopped();
                 }
             }
             backupLoopTimer.Stop();
             totalDurationMs = backupLoopTimer.ElapsedMilliseconds;
 
+            LogPendingUserActions(job);
+            _executionController.WaitIfPausedOrThrowIfStopped();
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
             Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, totalDurationMs);
             _stateWriter.MarkInactive(job.Id);
@@ -143,7 +158,6 @@ public class BackupEngine(
                 totalDurationMs = backupLoopTimer.ElapsedMilliseconds;
             }
 
-            UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, "", "");
             string sourceContext = ex.Data["errorKey"]?.ToString() ?? ex.GetType().Name;
             string destinationContext = ex.Data["0"]?.ToString() ?? ex.Message;
             if (sourceContext == "error_backup_stopped_by_user")
@@ -151,6 +165,8 @@ public class BackupEngine(
                 sourceContext = ex.Data["actionKey"]?.ToString() ?? "action_backup_stopped_by_user";
                 destinationContext = string.Empty;
             }
+
+            UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, sourceContext, destinationContext);
 
             var eventType = sourceContext == "error_backup_stopped_by_user" || sourceContext == "action_backup_stopped_by_user"
                 ? LogEventType.Action
@@ -306,6 +322,65 @@ public class BackupEngine(
                 0,
                 0);
         }
+    }
+
+    private void WaitUntilBusinessSoftwareAllowsCopy(
+        BackupJob job,
+        string sourceFile,
+        string destinationFile,
+        int totalFiles,
+        long totalSize,
+        int remainingFiles,
+        long remainingSize)
+    {
+        var blockedLogged = false;
+        while (true)
+        {
+            LogPendingUserActions(job);
+            _executionController.WaitIfPausedOrThrowIfStopped();
+
+            try
+            {
+                _executionGuard.EnsureCanCopyNextFile();
+                return;
+            }
+            catch (Exception ex) when (IsBusinessSoftwareBlocked(ex))
+            {
+                var blockedProcess = ex.Data["0"]?.ToString() ?? string.Empty;
+
+                // Keep the backup active and expose the temporary block in live state.
+                UpdateState(
+                    job,
+                    BackupStatus.Active,
+                    totalFiles,
+                    totalSize,
+                    remainingFiles,
+                    remainingSize,
+                    totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
+                    BusinessSoftwareErrorKey,
+                    blockedProcess);
+
+                if (!blockedLogged)
+                {
+                    blockedLogged = true;
+                    Log(
+                        job.Id,
+                        job.Name,
+                        LogEventType.BusinessSoftwareDetected,
+                        BusinessSoftwareErrorKey,
+                        blockedProcess,
+                        0,
+                        0);
+                }
+
+                Thread.Sleep(BusinessSoftwareRetryDelayMs);
+            }
+        }
+    }
+
+    private static bool IsBusinessSoftwareBlocked(Exception ex)
+    {
+        return string.Equals(ex.Data["errorKey"]?.ToString(), BusinessSoftwareErrorKey, StringComparison.Ordinal);
     }
 
     private long EncryptTransferredFileIfRequired(string destinationFile, EncryptionPolicy policy)

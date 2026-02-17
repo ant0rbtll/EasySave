@@ -27,15 +27,29 @@
             <Setter Property="Minimum" Value="0"/>
             <Setter Property="Maximum" Value="100"/>
         </Style>
+        <Style Selector="Button.runtime-control-btn">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="Button.runtime-control-btn:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#22FFFFFF"/>
+        </Style>
+        <Style Selector="Button.runtime-control-btn:disabled">
+            <Setter Property="Opacity" Value="0.35"/>
+            <Setter Property="Cursor" Value="Arrow"/>
+        </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,Auto,*" Margin="24">
+    <Grid RowDefinitions="Auto,*" Margin="24">
         <StackPanel Grid.Row="0" Spacing="4">
             <TextBlock Text="{Binding TitleText}" FontSize="22" FontWeight="Bold"/>
             <TextBlock Text="{Binding SubtitleText}" FontSize="13" Foreground="#8FA3B8"/>
         </StackPanel>
 
-        <Border Grid.Row="2"
+        <Border Grid.Row="1"
                 Margin="0,18,0,0"
                 BorderBrush="#22FFFFFF"
                 BorderThickness="1"
@@ -64,7 +78,7 @@
             </StackPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="2"
+        <ScrollViewer Grid.Row="1"
                       Margin="0,18,0,0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
@@ -83,12 +97,51 @@
                                            FontSize="15"
                                            FontWeight="SemiBold"
                                            Foreground="#E7F1FB"/>
-                                <TextBlock Grid.Row="0"
-                                           Grid.Column="1"
-                                           Text="{Binding ProgressDisplay}"
-                                           FontSize="13"
-                                           FontWeight="Bold"
-                                           Foreground="#74B3FF"/>
+                                <StackPanel Grid.Row="0"
+                                            Grid.Column="1"
+                                            Orientation="Horizontal"
+                                            Spacing="6"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center">
+                                    <Border Background="{Binding RuntimeStatusBackground}"
+                                            CornerRadius="999"
+                                            Padding="8,2"
+                                            VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding RuntimeStatusText}"
+                                                   Foreground="{Binding RuntimeStatusForeground}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="{Binding ProgressDisplay}"
+                                               FontSize="13"
+                                               FontWeight="Bold"
+                                               Foreground="#74B3FF"
+                                               VerticalAlignment="Center"/>
+                                    <Button Classes="runtime-control-btn"
+                                            ToolTip.Tip="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).TooltipPlay}"
+                                            Click="PlayJob_Click"
+                                            IsEnabled="{Binding CanPlay}"
+                                            CommandParameter="{Binding Id}">
+                                        <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
+                                    </Button>
+                                    <Button Classes="runtime-control-btn"
+                                            ToolTip.Tip="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).TooltipPause}"
+                                            Click="PauseJob_Click"
+                                            IsEnabled="{Binding CanPause}"
+                                            CommandParameter="{Binding Id}">
+                                        <PathIcon Data="M6 5h4v14H6zM14 5h4v14h-4z" Foreground="#FFB74D" Width="14" Height="14"/>
+                                    </Button>
+                                    <Button Classes="runtime-control-btn"
+                                            ToolTip.Tip="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).TooltipStop}"
+                                            Click="StopJob_Click"
+                                            IsEnabled="{Binding CanStop}"
+                                            CommandParameter="{Binding Id}">
+                                        <PathIcon Data="M6 6h12v12H6z" Foreground="#EF5350" Width="14" Height="14"/>
+                                    </Button>
+                                </StackPanel>
 
                                 <ProgressBar Grid.Row="1"
                                              Grid.ColumnSpan="2"
