@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using EasySave.Application;
 using EasySave.Backup;
+using EasySave.Core;
 using EasySave.Application.Services;
 using EasySave.GUI.Helpers;
 using EasySave.GUI.Models;

@@ -1,7 +1,7 @@
 ﻿namespace EasySave.Core.Exceptions
 {
     public class EncodingFailedException : EasysaveDefaultException
-    {
+    { 
         public EncodingFailedException(
             string details = ""
             )
@@ -58,7 +58,7 @@
             )
             : base("error_directory_not_found",
                   new List<string>(),
-                  details.ToString()
+                  details
             )
         {
         }
