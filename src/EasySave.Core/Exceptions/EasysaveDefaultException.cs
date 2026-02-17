@@ -11,8 +11,9 @@ namespace EasySave.Core.Exceptions
     public class EasysaveDefaultException : SystemException
     {
         protected string _errorKey = string.Empty;
-        protected List<string> _options = new();
+        protected List<string> _options;
         protected string _details = "";
+
 
         public EasysaveDefaultException(string errorKey, List<string> options, string details = "")
         {
