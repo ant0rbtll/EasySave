@@ -1,5 +1,6 @@
 using System.Globalization;
 using EasySave.Core;
+using EasySave.Core.Exceptions;
 
 namespace EasySave.Application;
 
@@ -18,7 +19,7 @@ internal static class LogFileNaming
         {
             LogFormat.Json => "json",
             LogFormat.Xml => "xml",
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported log format.")
+            _ => throw new UnsupportedLogFormatException(format.ToString())
         };
     }
 
