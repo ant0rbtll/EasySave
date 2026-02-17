@@ -546,5 +546,38 @@ public class BackupApplicationServiceTests
         _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
     }
 
+    [Fact]
+    public void RunAllJobs_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
+    {
+        var jobs = new List<BackupJob>
+        {
+            new BackupJob { Id = 1, Name = "Job1", Source = "/src1", Destination = "/dst1", Type = BackupType.Complete },
+            new BackupJob { Id = 2, Name = "Job2", Source = "/src2", Destination = "/dst2", Type = BackupType.Complete }
+        };
+        _repoMock.Setup(r => r.GetAll()).Returns(jobs);
+        _backupExecutionGuardMock
+            .Setup(g => g.EnsureCanCopyNextFile())
+            .Throws(() =>
+            {
+                var ex = new InvalidOperationException("error_business_software_running");
+                ex.Data["errorKey"] = "error_business_software_running";
+                ex.Data["0"] = "calc";
+                return ex;
+            });
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            backupExecutionGuard: _backupExecutionGuardMock.Object);
+
+        var exception = Assert.Throws<InvalidOperationException>(() => service.RunAllJobs().GetAwaiter().GetResult());
+
+        Assert.Equal("error_business_software_running", exception.Message);
+        Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
+        Assert.Equal("calc", exception.Data["0"]);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+    }
+
     #endregion
 }

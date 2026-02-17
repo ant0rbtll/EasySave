@@ -90,6 +90,8 @@ public class BackupApplicationService(
     /// <param name="cancellationToken">Cancellation token.</param>
     public async Task RunAllJobs(CancellationToken cancellationToken = default)
     {
+        EnsureBusinessSoftwareIsNotRunning();
+
         var jobs = _repo.GetAll();
         await Task.WhenAll(jobs.Select(job => RunJobInternalAsync(job, cancellationToken)));
     }
