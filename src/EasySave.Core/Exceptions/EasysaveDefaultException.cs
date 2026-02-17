@@ -9,17 +9,14 @@ namespace EasySave.Core.Exceptions
     public class EasysaveDefaultException : SystemException
     {
         protected string _errorKey = string.Empty;
-        protected int _errorCode = 0;
-        protected string _message = string.Empty;
-        protected string[] _options = [];
+        protected List<string> _options = new();
+        protected string _details = "";
 
-        public EasysaveDefaultException(string message,string errorKey, int errorCode ,string[] options)
+        public EasysaveDefaultException(string errorKey, List<string> options, string details = "")
         {
             _errorKey = errorKey;
-            _errorCode = errorCode;
-           _message = message;
             _options = options;
-
+            _details = details;
         }
 
         public string getTranslatedTexte()
