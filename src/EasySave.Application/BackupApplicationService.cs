@@ -2,6 +2,7 @@ using EasySave.Persistence;
 using EasySave.Backup;
 using EasySave.Core;
 using EasySave.State;
+using EasySave.System;
 
 namespace EasySave.Application;
 
@@ -219,6 +220,18 @@ public class BackupApplicationService(
     private void EnsureBusinessSoftwareIsNotRunning()
     {
         _backupExecutionGuard.EnsureCanCopyNextFile();
+    }
+
+    private static BackupJobStatus MapStatus(BackupStatus status)
+    {
+        return status switch
+        {
+            BackupStatus.Inactive => BackupJobStatus.Inactive,
+            BackupStatus.Active => BackupJobStatus.Active,
+            BackupStatus.Done => BackupJobStatus.Done,
+            BackupStatus.Error => BackupJobStatus.Error,
+            _ => BackupJobStatus.Inactive
+        };
     }
 
     private static int ClampProgress(int progressPercent) => Math.Clamp(progressPercent, 0, 100);

@@ -486,22 +486,23 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
-    public async Task RunJob_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
+    public async Task RunJob_WhenBusinessSoftwareIsRunningInGuard_ShouldStillExecuteEngine()
     {
         var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job);
+        _backupExecutionGuardMock
+            .Setup(g => g.EnsureCanCopyNextFile())
+            .Throws(new InvalidOperationException("error_business_software_running"));
 
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            _backupJobStateServiceMock.Object);
+            _backupJobStateServiceMock.Object,
+            backupExecutionGuard: _backupExecutionGuardMock.Object);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunJob(1));
+        await service.RunJob(1);
 
-        Assert.Equal("error_business_software_running", exception.Message);
-        Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
-        Assert.Equal("calc", exception.Data["0"]);
-        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -529,13 +530,9 @@ public class BackupApplicationServiceTests
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            _backupJobStateServiceMock.Object);
+            _backupJobStateServiceMock.Object,
             backupExecutionGuard: _backupExecutionGuardMock.Object);
 
-
-        var simulatedEngineException = new InvalidOperationException("error_business_software_running");
-        simulatedEngineException.Data["errorKey"] = "error_business_software_running";
-        simulatedEngineException.Data["0"] = "calc";
 
         var simulatedEngineException = new InvalidOperationException("error_business_software_running");
         simulatedEngineException.Data["errorKey"] = "error_business_software_running";

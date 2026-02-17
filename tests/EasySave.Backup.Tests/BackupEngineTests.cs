@@ -400,7 +400,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public async Task Execute_WhenBusinessSoftwareDetectedDuringFileLoop_StopsAndLogsReason()
+    public async Task Execute_WhenBusinessSoftwareDetectedDuringFileLoop_WaitsThenContinuesAndLogsReason()
     {
         var job = new BackupJob
         {
@@ -442,8 +442,7 @@ public class BackupEngineTests
             _loggerMock.Object,
             executionGuard: guardMock.Object);
 
-        var exThrown = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job));
-        Assert.Equal("error_business_software_running", exThrown.Message);
+        await engine.Execute(job);
 
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/file1.txt", "/destination/file1.txt", true), Times.Once);
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/file2.txt", "/destination/file2.txt", true), Times.Once);
@@ -456,7 +455,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public void Execute_WhenPauseActionIsPending_LogsActionEventWithActionKey()
+    public async Task Execute_WhenPauseActionIsPending_LogsActionEventWithActionKey()
     {
         var job = new BackupJob
         {
@@ -486,7 +485,7 @@ public class BackupEngineTests
             _loggerMock.Object,
             executionController: executionController);
 
-        engine.Execute(job);
+        await engine.Execute(job);
 
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
             le.EventType == LogEventType.Action &&
@@ -494,7 +493,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public void Execute_WhenStoppedByUser_LogsActionEventWithStopActionKey()
+    public async Task Execute_WhenStoppedByUser_LogsActionEventWithStopActionKey()
     {
         var job = new BackupJob
         {
@@ -522,7 +521,7 @@ public class BackupEngineTests
             _loggerMock.Object,
             executionController: executionController);
 
-        var exThrown = Assert.Throws<InvalidOperationException>(() => engine.Execute(job));
+        var exThrown = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job));
         Assert.Equal("error_backup_stopped_by_user", exThrown.Message);
 
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
@@ -551,54 +550,6 @@ public class BackupEngineTests
         // Act & Assert
         
         await Assert.ThrowsAsync<NotSupportedException>(() => _backupEngine.Execute(job));
-    }
-
-    private sealed class StubExecutionController(
-        IEnumerable<string>? actions = null,
-        Exception? waitException = null) : IBackupExecutionController
-    {
-        private readonly Queue<string> _actions = new(actions ?? []);
-        private readonly Exception? _waitException = waitException;
-
-        public void BeginJob(int jobId) { }
-
-        public void EndJob(int jobId) { }
-
-        public void Pause() { }
-
-        public void PauseForJob(int jobId) { }
-
-        public void Resume() { }
-
-        public void ResumeForJob(int jobId) { }
-
-        public void RequestStop() { }
-
-        public void RequestStopForJob(int jobId) { }
-
-        public void WaitIfPausedOrThrowIfStopped()
-        {
-            if (_waitException is not null)
-                throw _waitException;
-        }
-
-        public bool TryDequeueAction(out string actionKey)
-        {
-            if (_actions.Count == 0)
-            {
-                actionKey = string.Empty;
-                return false;
-            }
-
-            actionKey = _actions.Dequeue();
-            return true;
-        }
-
-        public bool TryGetCurrentJobControlState(int jobId, out BackupJobControlState controlState)
-        {
-            controlState = default;
-            return false;
-        }
     }
 
     private sealed class StubExecutionController(

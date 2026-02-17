@@ -37,4 +37,34 @@ public class BackupExecutionControllerTests
         Assert.Equal("error_backup_stopped_by_user", ex.Data["errorKey"]);
         Assert.Equal("action_backup_stopped_by_user", ex.Data["actionKey"]);
     }
+
+    [Fact]
+    public void PauseForJob_WhenMultipleJobsRunning_ShouldPauseOnlyTargetJob()
+    {
+        using var controller = new BackupExecutionController();
+        controller.BeginJob(1);
+        controller.BeginJob(2);
+
+        controller.PauseForJob(1);
+
+        Assert.True(controller.TryGetCurrentJobControlState(1, out var job1State));
+        Assert.True(controller.TryGetCurrentJobControlState(2, out var job2State));
+        Assert.Equal(BackupJobControlState.Paused, job1State);
+        Assert.Equal(BackupJobControlState.Running, job2State);
+    }
+
+    [Fact]
+    public void RequestStopForJob_WhenMultipleJobsRunning_ShouldStopOnlyTargetJob()
+    {
+        using var controller = new BackupExecutionController();
+        controller.BeginJob(1);
+        controller.BeginJob(2);
+
+        controller.RequestStopForJob(1);
+
+        Assert.True(controller.TryGetCurrentJobControlState(1, out var job1State));
+        Assert.True(controller.TryGetCurrentJobControlState(2, out var job2State));
+        Assert.Equal(BackupJobControlState.StopRequested, job1State);
+        Assert.Equal(BackupJobControlState.Running, job2State);
+    }
 }
