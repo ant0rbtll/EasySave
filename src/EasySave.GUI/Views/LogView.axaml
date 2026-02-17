@@ -528,6 +528,12 @@
 															<Style Selector="Border[Tag=Action] TextBlock">
 																<Setter Property="Foreground" Value="#FFD180"/>
 															</Style>
+															<Style Selector="Border[Tag=Stopped]">
+																<Setter Property="Background" Value="#22FF7043"/>
+															</Style>
+															<Style Selector="Border[Tag=Stopped] TextBlock">
+																<Setter Property="Foreground" Value="#FFCCBC"/>
+															</Style>
 														</Border.Styles>
 
 													<Border.Tag>

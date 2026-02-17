@@ -283,7 +283,9 @@ public sealed class LogNavigationService : ILogNavigationService
                 continue;
             }
 
-            if (entry.EventType == LogEventType.Error || entry.EventType == LogEventType.BusinessSoftwareDetected)
+            if (entry.EventType == LogEventType.Error
+                || entry.EventType == LogEventType.BusinessSoftwareDetected
+                || entry.EventType == LogEventType.Stopped)
             {
                 if (openRuns.TryGetValue(backupId, out var open))
                 {

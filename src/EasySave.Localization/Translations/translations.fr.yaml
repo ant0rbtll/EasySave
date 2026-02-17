@@ -259,3 +259,4 @@ translations:
   gui_log_event_end_backup: "FIN"
   gui_log_event_business_software_detected: "BLOQUE"
   gui_log_event_action: "ACTION"
+  gui_log_event_stopped: "ARRETE"

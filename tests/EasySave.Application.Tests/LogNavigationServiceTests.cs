@@ -99,6 +99,30 @@ public class LogNavigationServiceTests
     }
 
     [Fact]
+    public void GetRunsByDateAndBackupId_MarksErrorWhenTerminalEventIsStopped()
+    {
+        using var temp = new TempDirectory();
+        var date = new DateOnly(2026, 2, 12);
+
+        WriteJson(Path.Combine(temp.LogsDirectory, "2026-02-12.json"),
+        [
+            CreateEntry("2026-02-12T10:00:00Z", 4, "job-4", LogEventType.StartBackup),
+            CreateEntry("2026-02-12T10:00:01Z", 4, "job-4", LogEventType.TransferFile),
+            CreateEntry("2026-02-12T10:00:02Z", 4, "job-4", LogEventType.Stopped)
+        ]);
+
+        var service = CreateService(temp.LogsDirectory);
+
+        var runs = service.GetRunsByDateAndBackupId(date, 4);
+
+        var run = Assert.Single(runs);
+        Assert.Equal(LogRunStatus.Error, run.Status);
+        Assert.NotNull(run.EndTimestamp);
+        Assert.Null(run.TotalDurationMs);
+        Assert.Null(run.TotalSizeBytes);
+    }
+
+    [Fact]
     public void GetEntriesByRun_FiltersByBackupId_WhenLogsAreInterleaved()
     {
         using var temp = new TempDirectory();

@@ -455,6 +455,48 @@ public class BackupEngineTests
     }
 
     [Fact]
+    public async Task Execute_WhenCancelledDuringBusinessSoftwareWait_ShouldThrowOperationCanceledException()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var guardMock = new Mock<IBackupExecutionGuard>();
+        guardMock.Setup(g => g.EnsureCanCopyNextFile())
+            .Throws(() =>
+            {
+                var ex = new InvalidOperationException("error_business_software_running");
+                ex.Data["errorKey"] = "error_business_software_running";
+                ex.Data["0"] = "calc";
+                return ex;
+            });
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionGuard: guardMock.Object);
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMilliseconds(80));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => engine.Execute(job, cts.Token));
+
+        _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Never);
+    }
+
+    [Fact]
     public async Task Execute_WhenPauseActionIsPending_LogsActionEventWithActionKey()
     {
         var job = new BackupJob
@@ -493,7 +535,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public async Task Execute_WhenStoppedByUser_LogsActionEventWithStopActionKey()
+    public async Task Execute_WhenStoppedByUser_MarksInactiveAndLogsStoppedEvent()
     {
         var job = new BackupJob
         {
@@ -524,8 +566,10 @@ public class BackupEngineTests
         var exThrown = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job));
         Assert.Equal("error_backup_stopped_by_user", exThrown.Message);
 
+        _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Never);
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
-            le.EventType == LogEventType.Action &&
+            le.EventType == LogEventType.Stopped &&
             le.SourcePathUNC == "action_backup_stopped_by_user")), Times.Once);
     }
 

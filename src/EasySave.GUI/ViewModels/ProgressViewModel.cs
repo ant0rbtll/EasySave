@@ -283,7 +283,7 @@ public partial class ProgressViewModel : ViewModelBase
         return updatedAt.Value.ToString("T", culture);
     }
 
-    private static string BuildSignature(IReadOnlyDictionary<int, BackupJobLiveProgressState> states)
+    private string BuildSignature(IReadOnlyDictionary<int, BackupJobLiveProgressState> states)
     {
         if (states.Count == 0)
             return "empty";
@@ -292,7 +292,8 @@ public partial class ProgressViewModel : ViewModelBase
             states.OrderBy(kvp => kvp.Key).Select(kvp =>
             {
                 var s = kvp.Value;
-                return $"{s.Id}:{s.ProgressPercent}:{s.RemainingFiles}:{s.RemainingSizeBytes}:{s.CurrentSourcePath}:{s.CurrentDestinationPath}:{s.LastUpdateAt:O}";
+                var controlState = ResolveControlState(s.Id);
+                return $"{s.Id}:{s.Status}:{s.ProgressPercent}:{s.RemainingFiles}:{s.RemainingSizeBytes}:{s.CurrentSourcePath}:{s.CurrentDestinationPath}:{s.LastUpdateAt:O}:{controlState}";
             }));
     }
 }

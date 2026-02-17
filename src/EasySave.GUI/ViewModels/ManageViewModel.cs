@@ -238,7 +238,6 @@ public partial class ManageViewModel : ViewModelBase
 
     private bool _updatingSelection;
     private readonly HashSet<int> _runningJobIds = [];
-    private int? _currentControlJobId;
 
     private bool _isAllSelected;
     public bool IsAllSelected
@@ -511,6 +510,7 @@ public partial class ManageViewModel : ViewModelBase
 
         if (runtimeStates.Count != _allJobs.Count || _allJobs.Any(j => !runtimeStates.ContainsKey(j.Id)))
         {
+            SyncRunningJobsFromRuntimeStates(runtimeStates);
             ApplyJobs(FetchJobs());
             return;
         }
@@ -553,6 +553,8 @@ public partial class ManageViewModel : ViewModelBase
             }
         }
 
+        runtimeChanged |= SyncRunningJobsFromRuntimeStates(runtimeStates);
+
         if (!runtimeChanged)
         {
             RefreshPauseStateFromController();
@@ -563,6 +565,8 @@ public partial class ManageViewModel : ViewModelBase
         {
             Refresh();
         }
+
+        RefreshPauseStateFromController();
     }
 
     private static bool MatchesSearch(Models.BackupJob job, string query)
@@ -630,11 +634,14 @@ public partial class ManageViewModel : ViewModelBase
     [RelayCommand(CanExecute = nameof(CanRunJob))]
     private void RunJob(Models.BackupJob job)
     {
+        if (!CanRunJob(job))
+            return;
+
         PendingJob = job;
         IsConfirmDialogOpen = true;
     }
 
-    private bool CanRunJob(Models.BackupJob job) => !IsRunning;
+    private bool CanRunJob(Models.BackupJob job) => IsJobRunnable(job);
 
     [RelayCommand(CanExecute = nameof(CanPauseRunning))]
     private void PauseRunning()
@@ -647,7 +654,18 @@ public partial class ManageViewModel : ViewModelBase
         RefreshPauseStateFromController();
     }
 
-    private bool CanPauseRunning() => IsRunning && !IsPaused;
+    private bool CanPauseRunning()
+    {
+        if (!IsRunning)
+            return false;
+
+        if (TryGetCurrentControlJobId(out var jobId))
+            return TryGetRuntimeControlState(jobId, out var state) && state == BackupJobControlState.Running;
+
+        return _runningJobIds.Any(id =>
+            TryGetRuntimeControlState(id, out var state)
+            && state == BackupJobControlState.Running);
+    }
 
     [RelayCommand(CanExecute = nameof(CanPlayRunning))]
     private void PlayRunning()
@@ -660,7 +678,18 @@ public partial class ManageViewModel : ViewModelBase
         RefreshPauseStateFromController();
     }
 
-    private bool CanPlayRunning() => IsRunning && IsPaused;
+    private bool CanPlayRunning()
+    {
+        if (!IsRunning)
+            return false;
+
+        if (TryGetCurrentControlJobId(out var jobId))
+            return TryGetRuntimeControlState(jobId, out var state) && state == BackupJobControlState.Paused;
+
+        return _runningJobIds.Any(id =>
+            TryGetRuntimeControlState(id, out var state)
+            && state == BackupJobControlState.Paused);
+    }
 
     [RelayCommand(CanExecute = nameof(CanStopRunning))]
     private void StopRunning()
@@ -673,7 +702,18 @@ public partial class ManageViewModel : ViewModelBase
         RefreshPauseStateFromController();
     }
 
-    private bool CanStopRunning() => IsRunning;
+    private bool CanStopRunning()
+    {
+        if (!IsRunning)
+            return false;
+
+        if (TryGetCurrentControlJobId(out var jobId))
+            return TryGetRuntimeControlState(jobId, out var state) && state != BackupJobControlState.StopRequested;
+
+        return _runningJobIds.Any(id =>
+            TryGetRuntimeControlState(id, out var state)
+            && state != BackupJobControlState.StopRequested);
+    }
 
     public void OnJobSelectionChanged()
     {
@@ -699,12 +739,22 @@ public partial class ManageViewModel : ViewModelBase
         if (runningCount == 0)
         {
             RunningJobName = string.Empty;
+            IsPaused = false;
             return;
         }
 
         if (!string.IsNullOrWhiteSpace(runningLabel))
         {
             RunningJobName = runningLabel;
+            RefreshPauseStateFromController();
+            return;
+        }
+
+        if (runningCount == 1)
+        {
+            var singleJobId = _runningJobIds.First();
+            RunningJobName = ResolveRunningJobLabel(singleJobId);
+            RefreshPauseStateFromController();
             return;
         }
 
@@ -712,6 +762,8 @@ public partial class ManageViewModel : ViewModelBase
         {
             RunningJobName = runningCount.ToString(CultureInfo.InvariantCulture);
         }
+
+        RefreshPauseStateFromController();
     }
 
     [RelayCommand(AllowConcurrentExecutions = true)]
@@ -724,6 +776,7 @@ public partial class ManageViewModel : ViewModelBase
         _runningJobIds.Add(job.Id);
         IsPaused = false;
         RunJobCommand.NotifyCanExecuteChanged();
+        RunSelectedCommand.NotifyCanExecuteChanged();
         RefreshRunningState(job.Name);
         IsStatusBannerVisible = false;
 
@@ -747,7 +800,7 @@ public partial class ManageViewModel : ViewModelBase
             else
             {
                 stoppedByUser = IsStoppedByUser(ex);
-            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
             }
         }
         finally
@@ -756,15 +809,13 @@ public partial class ManageViewModel : ViewModelBase
 
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                IsRunning = false;
                 IsPaused = false;
-                _currentControlJobId = null;
-                RunningJobName = string.Empty;
                 PendingJob = null;
                 _runningJobIds.Remove(job.Id);
                 RefreshRunningState();
                 ApplyJobs(jobs);
                 RunJobCommand.NotifyCanExecuteChanged();
+                RunSelectedCommand.NotifyCanExecuteChanged();
 
                 if (success)
                 {
@@ -825,6 +876,9 @@ public partial class ManageViewModel : ViewModelBase
     private void RunSelected()
     {
         var count = _allJobs.Count(j => j.IsSelected);
+        if (count == 0)
+            return;
+
         ConfirmRunSelectedMessage = _localizationService.TranslateTextWithParams(
             LocalizationKey.gui_manage_confirm_run_selected_message, [count.ToString()]);
         IsConfirmRunSelectedDialogOpen = true;
@@ -842,9 +896,9 @@ public partial class ManageViewModel : ViewModelBase
         foreach (var j in selectedJobs)
             _runningJobIds.Add(j.Id);
         RunJobCommand.NotifyCanExecuteChanged();
+        RunSelectedCommand.NotifyCanExecuteChanged();
         RefreshRunningState(selectedJobs.Count.ToString(CultureInfo.InvariantCulture));
         IsPaused = false;
-        _currentControlJobId = null;
 
         IsStatusBannerVisible = false;
 
@@ -861,7 +915,7 @@ public partial class ManageViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-                stoppedByUser = IsStoppedByUser(ex);
+            stoppedByUser = IsStoppedByUser(ex);
             errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
             success = false;
         }
@@ -878,6 +932,7 @@ public partial class ManageViewModel : ViewModelBase
             RefreshRunningState();
             ApplyJobs(jobs);
             RunJobCommand.NotifyCanExecuteChanged();
+            RunSelectedCommand.NotifyCanExecuteChanged();
             UpdateHasSelection();
             IsAllSelected = false;
 
@@ -1184,6 +1239,7 @@ public partial class ManageViewModel : ViewModelBase
         HasJobs = _allJobs.Count > 0;
         Refresh();
         RunJobCommand.NotifyCanExecuteChanged();
+        RunSelectedCommand.NotifyCanExecuteChanged();
     }
 
     private void RebuildPaginationItems()
@@ -1252,13 +1308,13 @@ public partial class ManageViewModel : ViewModelBase
 
     private bool TryGetCurrentControlJobId(out int jobId)
     {
-        if (_currentControlJobId.HasValue)
+        if (_runningJobIds.Count == 1)
         {
-            jobId = _currentControlJobId.Value;
+            jobId = _runningJobIds.First();
             return true;
         }
 
-        if (PendingJob is not null)
+        if (PendingJob is not null && _runningJobIds.Contains(PendingJob.Id))
         {
             jobId = PendingJob.Id;
             return true;
@@ -1270,13 +1326,85 @@ public partial class ManageViewModel : ViewModelBase
 
     private void RefreshPauseStateFromController()
     {
-        if (!TryGetCurrentControlJobId(out var jobId))
+        if (_runningJobIds.Count == 0)
+        {
+            IsPaused = false;
+            PauseRunningCommand.NotifyCanExecuteChanged();
+            PlayRunningCommand.NotifyCanExecuteChanged();
+            StopRunningCommand.NotifyCanExecuteChanged();
             return;
+        }
 
-        if (!_backupExecutionController.TryGetCurrentJobControlState(jobId, out var controlState))
+        if (TryGetCurrentControlJobId(out var jobId)
+            && TryGetRuntimeControlState(jobId, out var controlState))
+        {
+            IsPaused = controlState == BackupJobControlState.Paused;
+            PauseRunningCommand.NotifyCanExecuteChanged();
+            PlayRunningCommand.NotifyCanExecuteChanged();
+            StopRunningCommand.NotifyCanExecuteChanged();
             return;
+        }
 
-        IsPaused = controlState == BackupJobControlState.Paused;
+        var allPaused = _runningJobIds.Count > 0
+            && _runningJobIds.All(id =>
+                TryGetRuntimeControlState(id, out var state)
+                && state == BackupJobControlState.Paused);
+        IsPaused = allPaused;
+        PauseRunningCommand.NotifyCanExecuteChanged();
+        PlayRunningCommand.NotifyCanExecuteChanged();
+        StopRunningCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool SyncRunningJobsFromRuntimeStates(IReadOnlyDictionary<int, BackupJobRuntimeState> runtimeStates)
+    {
+        var activeJobIds = runtimeStates
+            .Where(pair => pair.Value.IsActive)
+            .Select(pair => pair.Key)
+            .ToHashSet();
+
+        if (_runningJobIds.SetEquals(activeJobIds))
+            return false;
+
+        _runningJobIds.Clear();
+        foreach (var id in activeJobIds)
+        {
+            _runningJobIds.Add(id);
+        }
+
+        RefreshRunningState();
+        RunJobCommand.NotifyCanExecuteChanged();
+        RunSelectedCommand.NotifyCanExecuteChanged();
+        return true;
+    }
+
+    private bool TryGetRuntimeControlState(int jobId, out BackupJobControlState controlState)
+    {
+        if (_backupExecutionController.TryGetCurrentJobControlState(jobId, out controlState))
+            return true;
+
+        if (_runningJobIds.Contains(jobId))
+        {
+            controlState = BackupJobControlState.Running;
+            return true;
+        }
+
+        controlState = default;
+        return false;
+    }
+
+    private string ResolveRunningJobLabel(int jobId)
+    {
+        var job = _allJobs.FirstOrDefault(j => j.Id == jobId);
+        if (job is not null && !string.IsNullOrWhiteSpace(job.Name))
+            return job.Name;
+
+        return $"#{jobId}";
+    }
+
+    private bool IsJobRunnable(Models.BackupJob job)
+    {
+        return job.Status != Core.BackupJobStatus.Active
+            && !_runningJobIds.Contains(job.Id);
     }
 
     private static bool IsStoppedByUser(Exception ex)

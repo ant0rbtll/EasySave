@@ -252,6 +252,7 @@ translations:
   gui_log_event_end_backup: "END"
   gui_log_event_business_software_detected: "BLOCKED"
   gui_log_event_action: "ACTION"
+  gui_log_event_stopped: "STOPPED"
   gui_manage_empty_title: "No backup jobs"
   gui_manage_empty_subtitle: "You haven't created any backup jobs yet. Use the Create button in the top left corner to add one."
   gui_window_minimize: "Minimize"

@@ -280,4 +280,5 @@ public enum LocalizationKey
     gui_log_event_end_backup,
     gui_log_event_business_software_detected,
     gui_log_event_action,
+    gui_log_event_stopped,
 }

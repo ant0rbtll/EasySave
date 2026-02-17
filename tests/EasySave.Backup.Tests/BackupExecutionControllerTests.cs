@@ -67,4 +67,55 @@ public class BackupExecutionControllerTests
         Assert.Equal(BackupJobControlState.StopRequested, job1State);
         Assert.Equal(BackupJobControlState.Running, job2State);
     }
+
+    [Fact]
+    public void PauseForJob_BeforeBeginJob_ShouldApplyWhenJobStarts()
+    {
+        using var controller = new BackupExecutionController();
+        controller.PauseForJob(42);
+
+        Assert.True(controller.TryGetCurrentJobControlState(42, out var pendingState));
+        Assert.Equal(BackupJobControlState.Paused, pendingState);
+
+        controller.BeginJob(42);
+
+        var hasAction = controller.TryDequeueAction(out var actionKey);
+        Assert.True(hasAction);
+        Assert.Equal("action_backup_paused_by_user", actionKey);
+        Assert.True(controller.TryGetCurrentJobControlState(42, out var startedState));
+        Assert.Equal(BackupJobControlState.Paused, startedState);
+    }
+
+    [Fact]
+    public void RequestStopForJob_BeforeBeginJob_ShouldApplyWhenJobStarts()
+    {
+        using var controller = new BackupExecutionController();
+        controller.RequestStopForJob(42);
+
+        Assert.True(controller.TryGetCurrentJobControlState(42, out var pendingState));
+        Assert.Equal(BackupJobControlState.StopRequested, pendingState);
+
+        controller.BeginJob(42);
+
+        var ex = Assert.Throws<InvalidOperationException>(() => controller.WaitIfPausedOrThrowIfStopped());
+        Assert.Equal("error_backup_stopped_by_user", ex.Message);
+        Assert.Equal("error_backup_stopped_by_user", ex.Data["errorKey"]);
+        Assert.Equal("action_backup_stopped_by_user", ex.Data["actionKey"]);
+    }
+
+    [Fact]
+    public void ResumeForJob_BeforeBeginJob_ShouldClearPendingPause()
+    {
+        using var controller = new BackupExecutionController();
+        controller.PauseForJob(42);
+        controller.ResumeForJob(42);
+
+        Assert.False(controller.TryGetCurrentJobControlState(42, out _));
+
+        controller.BeginJob(42);
+
+        Assert.True(controller.TryGetCurrentJobControlState(42, out var startedState));
+        Assert.Equal(BackupJobControlState.Running, startedState);
+        Assert.False(controller.TryDequeueAction(out _));
+    }
 }

@@ -87,7 +87,8 @@ public class BackupEngine(
                         totalFiles,
                         totalSize,
                         remainingFiles,
-                        remainingSize);
+                        remainingSize,
+                        cancellationToken);
 
                     var destinationDir = Path.GetDirectoryName(destinationFile)!;
 
@@ -158,19 +159,25 @@ public class BackupEngine(
                 totalDurationMs = backupLoopTimer.ElapsedMilliseconds;
             }
 
+            bool stoppedByUser = IsStoppedByUser(ex);
+            bool blockedByBusinessSoftware = IsBusinessSoftwareBlocked(ex);
             string sourceContext = ex.Data["errorKey"]?.ToString() ?? ex.GetType().Name;
             string destinationContext = ex.Data["0"]?.ToString() ?? ex.Message;
-            if (sourceContext == BackupRuntimeKeys.ErrorBackupStoppedByUser)
+
+            if (stoppedByUser)
             {
                 sourceContext = ex.Data["actionKey"]?.ToString() ?? BackupRuntimeKeys.ActionBackupStoppedByUser;
                 destinationContext = string.Empty;
+                _stateWriter.MarkInactive(job.Id);
+            }
+            else
+            {
+                UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, sourceContext, destinationContext);
             }
 
-            UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, sourceContext, destinationContext);
-
-            var eventType = sourceContext == BackupRuntimeKeys.ErrorBackupStoppedByUser || sourceContext == BackupRuntimeKeys.ActionBackupStoppedByUser
-                ? LogEventType.Action
-                : sourceContext == BackupRuntimeKeys.ErrorBusinessSoftwareRunning
+            var eventType = stoppedByUser
+                ? LogEventType.Stopped
+                : blockedByBusinessSoftware
                 ? LogEventType.BusinessSoftwareDetected
                 : LogEventType.Error;
             Log(
@@ -331,11 +338,13 @@ public class BackupEngine(
         int totalFiles,
         long totalSize,
         int remainingFiles,
-        long remainingSize)
+        long remainingSize,
+        CancellationToken cancellationToken)
     {
         var blockedLogged = false;
         while (true)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             LogPendingUserActions(job);
             _executionController.WaitIfPausedOrThrowIfStopped();
 
@@ -373,7 +382,7 @@ public class BackupEngine(
                         0);
                 }
 
-                Thread.Sleep(BusinessSoftwareRetryDelayMs);
+                Task.Delay(BusinessSoftwareRetryDelayMs, cancellationToken).GetAwaiter().GetResult();
             }
         }
     }
@@ -381,6 +390,13 @@ public class BackupEngine(
     private static bool IsBusinessSoftwareBlocked(Exception ex)
     {
         return string.Equals(ex.Data["errorKey"]?.ToString(), BusinessSoftwareErrorKey, StringComparison.Ordinal);
+    }
+
+    private static bool IsStoppedByUser(Exception ex)
+    {
+        return string.Equals(ex.Data["errorKey"]?.ToString(), BackupRuntimeKeys.ErrorBackupStoppedByUser, StringComparison.Ordinal)
+            || string.Equals(ex.Data["actionKey"]?.ToString(), BackupRuntimeKeys.ActionBackupStoppedByUser, StringComparison.Ordinal)
+            || string.Equals(ex.Message, BackupRuntimeKeys.ErrorBackupStoppedByUser, StringComparison.Ordinal);
     }
 
     private long EncryptTransferredFileIfRequired(string destinationFile, EncryptionPolicy policy)

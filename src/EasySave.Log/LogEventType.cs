@@ -38,5 +38,10 @@ public enum LogEventType
     /// <summary>
     /// A user-driven runtime action was triggered (pause/stop).
     /// </summary>
-    Action = 6
+    Action = 6,
+
+    /// <summary>
+    /// The backup operation was stopped by the user.
+    /// </summary>
+    Stopped = 7
 }

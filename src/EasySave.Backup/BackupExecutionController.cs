@@ -12,6 +12,7 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
 
     private readonly object _gate = new();
     private readonly Dictionary<int, JobControlState> _jobs = new();
+    private readonly Dictionary<int, PendingJobControlState> _pendingJobs = new();
     private readonly AsyncLocal<int?> _currentExecutionJobId = new();
 
     private bool _disposed;
@@ -33,6 +34,22 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
             state.StopRequested = false;
             state.PendingActions.Clear();
             state.ResumeEvent.Set();
+
+            if (_pendingJobs.Remove(jobId, out var pendingState))
+            {
+                if (pendingState.StopRequested)
+                {
+                    state.StopRequested = true;
+                    state.IsPaused = false;
+                    state.ResumeEvent.Set();
+                }
+                else if (pendingState.PauseRequested)
+                {
+                    state.IsPaused = true;
+                    state.PendingActions.Enqueue(PauseActionKey);
+                    state.ResumeEvent.Reset();
+                }
+            }
         }
 
         _currentExecutionJobId.Value = jobId;
@@ -73,14 +90,23 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
             if (_disposed)
                 return;
 
-            foreach (var state in GetTargetStates(jobId))
+            if (jobId >= 0)
             {
-                if (state.StopRequested || state.IsPaused)
-                    continue;
+                if (_jobs.TryGetValue(jobId, out var state))
+                {
+                    ApplyPause(state);
+                }
+                else
+                {
+                    SetPendingPause(jobId);
+                }
 
-                state.IsPaused = true;
-                state.PendingActions.Enqueue(PauseActionKey);
-                state.ResumeEvent.Reset();
+                return;
+            }
+
+            foreach (var state in _jobs.Values)
+            {
+                ApplyPause(state);
             }
         }
     }
@@ -97,10 +123,23 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
             if (_disposed)
                 return;
 
-            foreach (var state in GetTargetStates(jobId))
+            if (jobId >= 0)
             {
-                state.IsPaused = false;
-                state.ResumeEvent.Set();
+                if (_jobs.TryGetValue(jobId, out var state))
+                {
+                    ApplyResume(state);
+                }
+                else
+                {
+                    _pendingJobs.Remove(jobId);
+                }
+
+                return;
+            }
+
+            foreach (var state in _jobs.Values)
+            {
+                ApplyResume(state);
             }
         }
     }
@@ -117,11 +156,23 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
             if (_disposed)
                 return;
 
-            foreach (var state in GetTargetStates(jobId))
+            if (jobId >= 0)
             {
-                state.StopRequested = true;
-                state.IsPaused = false;
-                state.ResumeEvent.Set();
+                if (_jobs.TryGetValue(jobId, out var state))
+                {
+                    ApplyStop(state);
+                }
+                else
+                {
+                    SetPendingStop(jobId);
+                }
+
+                return;
+            }
+
+            foreach (var state in _jobs.Values)
+            {
+                ApplyStop(state);
             }
         }
     }
@@ -209,6 +260,16 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
 
             if (!_jobs.TryGetValue(jobId, out var state))
             {
+                if (_pendingJobs.TryGetValue(jobId, out var pending))
+                {
+                    controlState = pending.StopRequested
+                        ? BackupJobControlState.StopRequested
+                        : pending.PauseRequested
+                        ? BackupJobControlState.Paused
+                        : BackupJobControlState.Running;
+                    return true;
+                }
+
                 controlState = default;
                 return false;
             }
@@ -238,6 +299,7 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
             _disposed = true;
             statesToDispose = [.. _jobs.Values];
             _jobs.Clear();
+            _pendingJobs.Clear();
         }
 
         foreach (var state in statesToDispose)
@@ -254,19 +316,59 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
         return exception;
     }
 
-    private IEnumerable<JobControlState> GetTargetStates(int jobId)
+    private static void ApplyPause(JobControlState state)
     {
-        if (jobId < 0)
+        if (state.StopRequested || state.IsPaused)
+            return;
+
+        state.IsPaused = true;
+        state.PendingActions.Enqueue(PauseActionKey);
+        state.ResumeEvent.Reset();
+    }
+
+    private static void ApplyResume(JobControlState state)
+    {
+        state.IsPaused = false;
+        state.ResumeEvent.Set();
+    }
+
+    private static void ApplyStop(JobControlState state)
+    {
+        state.StopRequested = true;
+        state.IsPaused = false;
+        state.ResumeEvent.Set();
+    }
+
+    private void SetPendingPause(int jobId)
+    {
+        if (!_pendingJobs.TryGetValue(jobId, out var pending))
         {
-            return _jobs.Values;
+            pending = new PendingJobControlState();
+            _pendingJobs[jobId] = pending;
         }
 
-        if (_jobs.TryGetValue(jobId, out var state))
+        if (pending.StopRequested)
+            return;
+
+        pending.PauseRequested = true;
+    }
+
+    private void SetPendingStop(int jobId)
+    {
+        if (!_pendingJobs.TryGetValue(jobId, out var pending))
         {
-            return [state];
+            pending = new PendingJobControlState();
+            _pendingJobs[jobId] = pending;
         }
 
-        return [];
+        pending.StopRequested = true;
+        pending.PauseRequested = false;
+    }
+
+    private sealed class PendingJobControlState
+    {
+        public bool PauseRequested { get; set; }
+        public bool StopRequested { get; set; }
     }
 
     private sealed class JobControlState
