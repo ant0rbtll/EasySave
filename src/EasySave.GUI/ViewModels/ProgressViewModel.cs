@@ -207,32 +207,21 @@ public partial class ProgressViewModel : ViewModelBase
                 () => _applicationService.GetAllJobsLiveProgress(),
                 cancellationToken);
 
-            var signature = BuildSignature(states);
+            var orderedStates = states.Values
+                .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(s => s.Id)
+                .ToList();
+
+            var signature = BuildSignature(orderedStates);
             if (string.Equals(signature, _lastSnapshotSignature, StringComparison.Ordinal))
                 return;
 
-            _lastSnapshotSignature = signature;
-            var items = states.Values
-                .OrderBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(s => s.Id)
-                .Select(MapItem)
-                .ToList();
-
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                ActiveBackups.Clear();
-                foreach (var item in items)
-                    ActiveBackups.Add(item);
-
-                if (IsStopDialogOpen
-                    && PendingStopJobId is int pendingStopId
-                    && !items.Any(item => item.Id == pendingStopId))
-                {
-                    CloseStopDialog();
-                }
-
-                OnPropertyChanged(nameof(HasActiveBackups));
+                SyncActiveBackups(orderedStates);
             });
+
+            _lastSnapshotSignature = signature;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -248,28 +237,124 @@ public partial class ProgressViewModel : ViewModelBase
         }
     }
 
-    private Models.ActiveBackupProgressItem MapItem(BackupJobLiveProgressState state)
+    private void SyncActiveBackups(IReadOnlyList<BackupJobLiveProgressState> orderedStates)
+    {
+        var desiredStateById = orderedStates.ToDictionary(s => s.Id);
+        var previousCount = ActiveBackups.Count;
+
+        for (var i = ActiveBackups.Count - 1; i >= 0; i--)
+        {
+            if (!desiredStateById.ContainsKey(ActiveBackups[i].Id))
+            {
+                ActiveBackups.RemoveAt(i);
+            }
+        }
+
+        for (var desiredIndex = 0; desiredIndex < orderedStates.Count; desiredIndex++)
+        {
+            var state = orderedStates[desiredIndex];
+            var existingIndex = FindActiveBackupIndex(state.Id);
+
+            if (existingIndex < 0)
+            {
+                ActiveBackups.Insert(desiredIndex, CreateItem(state));
+                continue;
+            }
+
+            if (existingIndex != desiredIndex)
+            {
+                ActiveBackups.Move(existingIndex, desiredIndex);
+            }
+
+            UpdateItemFromState(ActiveBackups[desiredIndex], state);
+        }
+
+        if (previousCount != ActiveBackups.Count)
+        {
+            OnPropertyChanged(nameof(HasActiveBackups));
+        }
+
+        if (IsStopDialogOpen
+            && PendingStopJobId is int pendingStopId
+            && !desiredStateById.ContainsKey(pendingStopId))
+        {
+            CloseStopDialog();
+        }
+    }
+
+    private int FindActiveBackupIndex(int jobId)
+    {
+        for (var i = 0; i < ActiveBackups.Count; i++)
+        {
+            if (ActiveBackups[i].Id == jobId)
+                return i;
+        }
+
+        return -1;
+    }
+
+    private Models.ActiveBackupProgressItem CreateItem(BackupJobLiveProgressState state)
+    {
+        var presentation = BuildPresentation(state);
+
+        return new Models.ActiveBackupProgressItem
+        {
+            Id = state.Id,
+            Name = state.Name,
+            ProgressPercent = presentation.ProgressPercent,
+            ProgressDisplay = presentation.ProgressDisplay,
+            FilesDisplay = presentation.FilesDisplay,
+            SizeDisplay = presentation.SizeDisplay,
+            CurrentSourcePath = presentation.CurrentSourcePath,
+            CurrentDestinationPath = presentation.CurrentDestinationPath,
+            UpdatedAtDisplay = presentation.UpdatedAtDisplay,
+            RuntimeStatusText = presentation.RuntimeStatusText,
+            RuntimeStatusBackground = presentation.RuntimeStatusBackground,
+            RuntimeStatusForeground = presentation.RuntimeStatusForeground,
+            CanPlay = presentation.CanPlay,
+            CanPause = presentation.CanPause,
+            CanStop = presentation.CanStop
+        };
+    }
+
+    private void UpdateItemFromState(Models.ActiveBackupProgressItem item, BackupJobLiveProgressState state)
+    {
+        var presentation = BuildPresentation(state);
+
+        item.Name = state.Name;
+        item.ProgressPercent = presentation.ProgressPercent;
+        item.ProgressDisplay = presentation.ProgressDisplay;
+        item.FilesDisplay = presentation.FilesDisplay;
+        item.SizeDisplay = presentation.SizeDisplay;
+        item.CurrentSourcePath = presentation.CurrentSourcePath;
+        item.CurrentDestinationPath = presentation.CurrentDestinationPath;
+        item.UpdatedAtDisplay = presentation.UpdatedAtDisplay;
+        item.RuntimeStatusText = presentation.RuntimeStatusText;
+        item.RuntimeStatusBackground = presentation.RuntimeStatusBackground;
+        item.RuntimeStatusForeground = presentation.RuntimeStatusForeground;
+        item.CanPlay = presentation.CanPlay;
+        item.CanPause = presentation.CanPause;
+        item.CanStop = presentation.CanStop;
+    }
+
+    private ActiveBackupPresentation BuildPresentation(BackupJobLiveProgressState state)
     {
         if (string.Equals(state.CurrentSourcePath, BackupRuntimeKeys.ErrorBusinessSoftwareRunning, StringComparison.Ordinal))
         {
-            return new Models.ActiveBackupProgressItem
-            {
-                Id = state.Id,
-                Name = state.Name,
-                ProgressPercent = state.ProgressPercent,
-                ProgressDisplay = $"{state.ProgressPercent}%",
-                FilesDisplay = $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
-                SizeDisplay = $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes))}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes))}",
-                CurrentSourcePath = state.CurrentSourcePath ?? "-",
-                CurrentDestinationPath = state.CurrentDestinationPath ?? "-",
-                UpdatedAtDisplay = FormatUpdatedAt(state.LastUpdateAt),
-                RuntimeStatusText = StatusBlockedBusinessText,
-                RuntimeStatusBackground = "#2AAF3A3A",
-                RuntimeStatusForeground = "#FFC8C8",
-                CanPlay = false,
-                CanPause = false,
-                CanStop = false
-            };
+            return new ActiveBackupPresentation(
+                ProgressPercent: state.ProgressPercent,
+                ProgressDisplay: $"{state.ProgressPercent}%",
+                FilesDisplay: $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
+                SizeDisplay: $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes))}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes))}",
+                CurrentSourcePath: state.CurrentSourcePath ?? "-",
+                CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
+                UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
+                RuntimeStatusText: StatusBlockedBusinessText,
+                RuntimeStatusBackground: "#2AAF3A3A",
+                RuntimeStatusForeground: "#FFC8C8",
+                CanPlay: false,
+                CanPause: false,
+                CanStop: false);
         }
 
         var controlState = ResolveControlState(state.Id);
@@ -280,24 +365,20 @@ public partial class ProgressViewModel : ViewModelBase
             _ => (StatusRunningText, "#224A90E2", "#CFE8FF", false, true, true)
         };
 
-        return new Models.ActiveBackupProgressItem
-        {
-            Id = state.Id,
-            Name = state.Name,
-            ProgressPercent = state.ProgressPercent,
-            ProgressDisplay = $"{state.ProgressPercent}%",
-            FilesDisplay = $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
-            SizeDisplay = $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes))}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes))}",
-            CurrentSourcePath = state.CurrentSourcePath ?? "-",
-            CurrentDestinationPath = state.CurrentDestinationPath ?? "-",
-            UpdatedAtDisplay = FormatUpdatedAt(state.LastUpdateAt),
-            RuntimeStatusText = statusText,
-            RuntimeStatusBackground = statusBackground,
-            RuntimeStatusForeground = statusForeground,
-            CanPlay = canPlay,
-            CanPause = canPause,
-            CanStop = canStop
-        };
+        return new ActiveBackupPresentation(
+            ProgressPercent: state.ProgressPercent,
+            ProgressDisplay: $"{state.ProgressPercent}%",
+            FilesDisplay: $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
+            SizeDisplay: $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes))}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes))}",
+            CurrentSourcePath: state.CurrentSourcePath ?? "-",
+            CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
+            UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
+            RuntimeStatusText: statusText,
+            RuntimeStatusBackground: statusBackground,
+            RuntimeStatusForeground: statusForeground,
+            CanPlay: canPlay,
+            CanPause: canPause,
+            CanStop: canStop);
     }
 
     private BackupJobControlState ResolveControlState(int jobId)
@@ -326,17 +407,16 @@ public partial class ProgressViewModel : ViewModelBase
         return updatedAt.Value.ToString("T", culture);
     }
 
-    private string BuildSignature(IReadOnlyDictionary<int, BackupJobLiveProgressState> states)
+    private string BuildSignature(IReadOnlyList<BackupJobLiveProgressState> orderedStates)
     {
-        if (states.Count == 0)
+        if (orderedStates.Count == 0)
             return "empty";
 
         return string.Join("|",
-            states.OrderBy(kvp => kvp.Key).Select(kvp =>
+            orderedStates.Select(s =>
             {
-                var s = kvp.Value;
                 var controlState = ResolveControlState(s.Id);
-                return $"{s.Id}:{s.Status}:{s.ProgressPercent}:{s.RemainingFiles}:{s.RemainingSizeBytes}:{s.CurrentSourcePath}:{s.CurrentDestinationPath}:{s.LastUpdateAt:O}:{controlState}";
+                return $"{s.Id}:{s.Name}:{s.Status}:{s.ProgressPercent}:{s.TotalFiles}:{s.TotalSizeBytes}:{s.RemainingFiles}:{s.RemainingSizeBytes}:{s.CurrentSourcePath}:{s.CurrentDestinationPath}:{controlState}";
             }));
     }
 
@@ -366,4 +446,19 @@ public partial class ProgressViewModel : ViewModelBase
 
         return $"#{jobId.ToString(CultureInfo.InvariantCulture)}";
     }
+
+    private readonly record struct ActiveBackupPresentation(
+        int ProgressPercent,
+        string ProgressDisplay,
+        string FilesDisplay,
+        string SizeDisplay,
+        string CurrentSourcePath,
+        string CurrentDestinationPath,
+        string UpdatedAtDisplay,
+        string RuntimeStatusText,
+        string RuntimeStatusBackground,
+        string RuntimeStatusForeground,
+        bool CanPlay,
+        bool CanPause,
+        bool CanStop);
 }
