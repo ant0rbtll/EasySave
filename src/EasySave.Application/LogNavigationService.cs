@@ -9,6 +9,8 @@ namespace EasySave.Application;
 /// </summary>
 public sealed class LogNavigationService : ILogNavigationService
 {
+    private const string PauseActionKey = "action_backup_paused_by_user";
+
     private readonly IPathProvider _pathProvider;
     private readonly IReadOnlyDictionary<LogFormat, ILogReader> _readerByFormat;
     private readonly object _sync = new();
@@ -242,8 +244,33 @@ public sealed class LogNavigationService : ILogNavigationService
                     backupId,
                     entry.BackupName,
                     entry.Timestamp,
-                    indexed.Order);
+                    indexed.Order,
+                    false);
                 continue;
+            }
+
+            if (entry.EventType == LogEventType.Action && string.Equals(entry.SourcePathUNC, PauseActionKey, StringComparison.Ordinal))
+            {
+                if (openRuns.TryGetValue(backupId, out var open))
+                {
+                    openRuns[backupId] = open with { IsPaused = true };
+                }
+                else
+                {
+                    openRuns[backupId] = new OpenRun(
+                        backupId,
+                        entry.BackupName,
+                        entry.Timestamp,
+                        indexed.Order,
+                        true);
+                }
+
+                continue;
+            }
+
+            if (openRuns.TryGetValue(backupId, out var activeRun))
+            {
+                openRuns[backupId] = activeRun with { IsPaused = false };
             }
 
             if (entry.EventType == LogEventType.EndBackup)
@@ -267,7 +294,8 @@ public sealed class LogNavigationService : ILogNavigationService
                         backupId,
                         entry.BackupName,
                         entry.Timestamp,
-                        indexed.Order);
+                        indexed.Order,
+                        false);
 
                     runs.Add(CreateRun(
                         format,
@@ -283,9 +311,7 @@ public sealed class LogNavigationService : ILogNavigationService
                 continue;
             }
 
-            if (entry.EventType == LogEventType.Error
-                || entry.EventType == LogEventType.BusinessSoftwareDetected
-                || entry.EventType == LogEventType.Stopped)
+            if (entry.EventType == LogEventType.Stopped)
             {
                 if (openRuns.TryGetValue(backupId, out var open))
                 {
@@ -294,8 +320,8 @@ public sealed class LogNavigationService : ILogNavigationService
                         open,
                         indexed.Order,
                         entry.Timestamp,
-                        LogRunStatus.Error,
-                        null,
+                        LogRunStatus.Stopped,
+                        entry.TransferTimeMs,
                         null,
                         runOrdinal++));
                     openRuns.Remove(backupId);
@@ -306,7 +332,45 @@ public sealed class LogNavigationService : ILogNavigationService
                         backupId,
                         entry.BackupName,
                         entry.Timestamp,
-                        indexed.Order);
+                        indexed.Order,
+                        false);
+
+                    runs.Add(CreateRun(
+                        format,
+                        orphanStart,
+                        indexed.Order,
+                        entry.Timestamp,
+                        LogRunStatus.Stopped,
+                        entry.TransferTimeMs,
+                        null,
+                        runOrdinal++));
+                }
+            }
+
+            if (entry.EventType == LogEventType.Error
+                || entry.EventType == LogEventType.BusinessSoftwareDetected)
+            {
+                if (openRuns.TryGetValue(backupId, out var open))
+                {
+                    runs.Add(CreateRun(
+                        format,
+                        open,
+                        indexed.Order,
+                        entry.Timestamp,
+                        LogRunStatus.Error,
+                        entry.TransferTimeMs,
+                        null,
+                        runOrdinal++));
+                    openRuns.Remove(backupId);
+                }
+                else
+                {
+                    var orphanStart = new OpenRun(
+                        backupId,
+                        entry.BackupName,
+                        entry.Timestamp,
+                        indexed.Order,
+                        false);
 
                     runs.Add(CreateRun(
                         format,
@@ -314,7 +378,7 @@ public sealed class LogNavigationService : ILogNavigationService
                         indexed.Order,
                         entry.Timestamp,
                         LogRunStatus.Error,
-                        null,
+                        entry.TransferTimeMs,
                         null,
                         runOrdinal++));
                 }
@@ -328,7 +392,7 @@ public sealed class LogNavigationService : ILogNavigationService
                 open,
                 lastOrder,
                 null,
-                LogRunStatus.InProgress,
+                open.IsPaused ? LogRunStatus.Paused : LogRunStatus.InProgress,
                 null,
                 null,
                 runOrdinal++));
@@ -361,7 +425,7 @@ public sealed class LogNavigationService : ILogNavigationService
             open.StartTimestamp,
             endTimestamp,
             status,
-            status == LogRunStatus.Completed ? totalDurationMs : null,
+            status != LogRunStatus.InProgress ? totalDurationMs : null,
             status == LogRunStatus.Completed ? totalSizeBytes : null);
 
         return new InternalRun(summary, open.StartOrder, boundedLastOrder);
@@ -413,7 +477,7 @@ public sealed class LogNavigationService : ILogNavigationService
 
     private sealed record IndexedEntry(LogEntry Entry, int Order);
 
-    private sealed record OpenRun(int BackupId, string BackupName, DateTime StartTimestamp, int StartOrder);
+    private sealed record OpenRun(int BackupId, string BackupName, DateTime StartTimestamp, int StartOrder, bool IsPaused);
 
     private sealed record InternalRun(LogRunSummary Summary, int StartOrder, int LastOrder)
     {

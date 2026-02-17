@@ -78,8 +78,10 @@ public partial class LogViewModel : ViewModelBase
     [ObservableProperty] private string _colRuns = string.Empty;
 
     [ObservableProperty] private string _statusInProgress = string.Empty;
+    [ObservableProperty] private string _statusPaused = string.Empty;
     [ObservableProperty] private string _statusCompleted = string.Empty;
     [ObservableProperty] private string _statusError = string.Empty;
+    [ObservableProperty] private string _statusStopped = string.Empty;
     [ObservableProperty] private string _emptyTitle = string.Empty;
     [ObservableProperty] private string _emptySubtitle = string.Empty;
     [ObservableProperty] private bool _hasAvailableLogs;
@@ -123,7 +125,7 @@ public partial class LogViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(PageJumpWatermark))]
     [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
     [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
-    private int _selectedPageSize = 25;
+    private int _selectedPageSize = 15;
 
     public int PageSize => Math.Max(1, SelectedPageSize);
     public int TotalPages => FilteredLogsCount == 0 ? 1 : (int)Math.Ceiling((double)FilteredLogsCount / PageSize);
@@ -171,7 +173,7 @@ public partial class LogViewModel : ViewModelBase
     {
         if (value <= 0)
         {
-            SelectedPageSize = 25;
+            SelectedPageSize = 15;
             return;
         }
 
@@ -233,8 +235,10 @@ public partial class LogViewModel : ViewModelBase
         ColRuns = _localizationService.TranslateText(LocalizationKey.gui_log_col_runs);
 
         StatusInProgress = _localizationService.TranslateText(LocalizationKey.gui_log_status_in_progress);
+        StatusPaused = _localizationService.TranslateText(LocalizationKey.gui_log_status_paused);
         StatusCompleted = _localizationService.TranslateText(LocalizationKey.gui_log_status_completed);
         StatusError = _localizationService.TranslateText(LocalizationKey.gui_log_status_error);
+        StatusStopped = _localizationService.TranslateText(LocalizationKey.gui_log_status_stopped);
         EmptyTitle = _localizationService.TranslateText(LocalizationKey.gui_log_empty_title);
         EmptySubtitle = string.Format(
             CultureInfo.CurrentCulture,
@@ -824,6 +828,8 @@ public partial class LogViewModel : ViewModelBase
         {
             LogRunStatus.Completed => StatusCompleted,
             LogRunStatus.Error => StatusError,
+            LogRunStatus.Stopped => StatusStopped,
+            LogRunStatus.Paused => StatusPaused,
             _ => StatusInProgress
         };
     }
@@ -833,7 +839,7 @@ public partial class LogViewModel : ViewModelBase
         return run.Status switch
         {
             LogRunStatus.InProgress => StatusInProgress,
-            LogRunStatus.Error => "-",
+            LogRunStatus.Paused => StatusPaused,
             _ => run.TotalDurationMs.HasValue ? LogValueFormatter.FormatDuration(run.TotalDurationMs.Value) : "-"
         };
     }
@@ -900,6 +906,8 @@ public partial class LogViewModel : ViewModelBase
         {
             LogRunStatus.Completed => "completed",
             LogRunStatus.Error => "error",
+            LogRunStatus.Stopped => "stopped",
+            LogRunStatus.Paused => "paused",
             _ => "inprogress"
         };
     }

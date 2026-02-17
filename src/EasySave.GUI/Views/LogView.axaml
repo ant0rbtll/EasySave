@@ -118,12 +118,26 @@
 		<Style Selector="Border.run-status-badge[Tag=inprogress] TextBlock">
 			<Setter Property="Foreground" Value="#9FD3FF"/>
 		</Style>
+		<Style Selector="Border.run-status-badge[Tag=paused]">
+			<Setter Property="Background" Value="#1F5A4A1A"/>
+			<Setter Property="BorderBrush" Value="#5AFFD54F"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=paused] TextBlock">
+			<Setter Property="Foreground" Value="#FFE082"/>
+		</Style>
 		<Style Selector="Border.run-status-badge[Tag=error]">
 			<Setter Property="Background" Value="#1F5A2323"/>
 			<Setter Property="BorderBrush" Value="#5AE57373"/>
 		</Style>
 		<Style Selector="Border.run-status-badge[Tag=error] TextBlock">
 			<Setter Property="Foreground" Value="#FFB3B3"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=stopped]">
+			<Setter Property="Background" Value="#1F6A341F"/>
+			<Setter Property="BorderBrush" Value="#5AFFA65C"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=stopped] TextBlock">
+			<Setter Property="Foreground" Value="#FFD8B5"/>
 		</Style>
 
 		<Style Selector="Button.run-row-btn">

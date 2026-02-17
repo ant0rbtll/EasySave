@@ -51,7 +51,7 @@ public partial class ManageViewModel : ViewModelBase
     [NotifyPropertyChangedFor(nameof(PageJumpWatermark))]
     [NotifyCanExecuteChangedFor(nameof(PreviousPageCommand))]
     [NotifyCanExecuteChangedFor(nameof(NextPageCommand))]
-    private int selectedPageSize = 25;
+    private int selectedPageSize = 15;
 
     [ObservableProperty]
     private string pageInputText = string.Empty;
@@ -362,7 +362,7 @@ public partial class ManageViewModel : ViewModelBase
     {
         if (value <= 0)
         {
-            SelectedPageSize = 25;
+            SelectedPageSize = 15;
             return;
         }
 
