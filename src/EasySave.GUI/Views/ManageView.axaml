@@ -38,6 +38,12 @@
 		<Style Selector="Border.status-badge[Tag=Active] TextBlock">
 			<Setter Property="Foreground" Value="#7AB8FF"/>
 		</Style>
+		<Style Selector="Border.status-badge[Tag=Paused]">
+			<Setter Property="Background" Value="#1F5A4A1A"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Paused] TextBlock">
+			<Setter Property="Foreground" Value="#FFE082"/>
+		</Style>
 		<Style Selector="Border.status-badge[Tag=Done]">
 			<Setter Property="Background" Value="#1A66BB6A"/>
 		</Style>

@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
+using EasySave.Application;
 using EasySave.Configuration;
 using EasySave.GUI.ViewModels;
 using EasySave.GUI.Views;
@@ -45,6 +46,7 @@ public partial class App : Avalonia.Application
             var pathProvider = _services.GetRequiredService<IPathProvider>();
             var preferencesRepository = _services.GetRequiredService<IUserPreferencesRepository>();
             var localizationService = _services.GetRequiredService<ILocalizationService>();
+            var backupApplicationService = _services.GetRequiredService<BackupApplicationService>();
 
             // Chargement des préférences sauvegardées
             var preferences = preferencesRepository.Load();
@@ -53,6 +55,7 @@ public partial class App : Avalonia.Application
                 : "fr";
             localizationService.Culture = language;
             pathProvider.SetLogDirectoryOverride(preferences.LogDirectory);
+            backupApplicationService.ReconcileStartupState();
 
             desktop.MainWindow = new MainWindow
             {

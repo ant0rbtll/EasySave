@@ -50,6 +50,7 @@ translations:
   backupjob_last_executed: "Derniere execution"
   backupjob_status: "État"
   backupjob_active: "Actif"
+  backupjob_paused: "En pause"
   backupjob_inactive: "Inactif"
   backupjob_done: "Terminé"
   backupjob_error: "Erreur"
@@ -196,6 +197,10 @@ translations:
   gui_window_maximize: "Agrandir"
   gui_window_restore: "Restaurer"
   gui_window_close: "Fermer"
+  gui_close_confirm_title: "Confirmer la fermeture"
+  gui_close_confirm_message: "Des sauvegardes sont en cours ou en pause. Quitter l'application va les arrêter. Voulez-vous continuer ?"
+  gui_close_confirm_confirm: "Quitter et arrêter"
+  gui_close_confirm_cancel: "Annuler"
 
   gui_log_history_subtitle: "Sélectionnez une date pour voir les logs d'activité"
   gui_log_detail_subtitle: "Détails des opérations effectuées"

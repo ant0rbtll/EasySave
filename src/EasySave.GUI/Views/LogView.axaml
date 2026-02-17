@@ -608,7 +608,7 @@
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
 								<Button Classes="page-nav-btn" Command="{Binding PreviousPageCommand}">
-									<TextBlock Text="â" FontSize="12"/>
+									<TextBlock Text="&#9664;" FontSize="12"/>
 								</Button>
 
 								<ItemsControl ItemsSource="{Binding PaginationItems}">
@@ -637,7 +637,7 @@
 								</ItemsControl>
 
 								<Button Classes="page-nav-btn" Command="{Binding NextPageCommand}">
-									<TextBlock Text="â¶" FontSize="12"/>
+									<TextBlock Text="&#9654;" FontSize="12"/>
 								</Button>
 							</StackPanel>
 
@@ -660,7 +660,7 @@
 								</TextBox>
 
 								<Button Classes="page-go-btn" Command="{Binding JumpToEnteredPageCommand}">
-									<TextBlock Text="âµ" FontSize="13"/>
+									<TextBlock Text="&#8629;" FontSize="13"/>
 								</Button>
 
 								<TextBlock Text="|" Classes="page-meta"/>

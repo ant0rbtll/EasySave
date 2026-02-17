@@ -56,6 +56,7 @@ public enum LocalizationKey
     backupjob_last_executed,
     backupjob_status,
     backupjob_active,
+    backupjob_paused,
     backupjob_inactive,
     backupjob_done,
     backupjob_error,
@@ -216,6 +217,10 @@ public enum LocalizationKey
     gui_window_maximize,
     gui_window_restore,
     gui_window_close,
+    gui_close_confirm_title,
+    gui_close_confirm_message,
+    gui_close_confirm_confirm,
+    gui_close_confirm_cancel,
 
     // Log - Log viewer
     gui_log_history_subtitle,

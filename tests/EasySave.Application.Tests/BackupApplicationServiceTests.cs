@@ -14,6 +14,7 @@ public class BackupApplicationServiceTests
     private readonly Mock<IBackupExecutionGuard> _backupExecutionGuardMock;
     private readonly Mock<IBackupJobStateService> _backupJobStateServiceMock;
     private readonly Mock<IStateReader> _stateReaderMock;
+    private readonly Mock<IStateWriter> _stateWriterMock;
     private readonly BackupApplicationService _service;
 
     public BackupApplicationServiceTests()
@@ -23,11 +24,17 @@ public class BackupApplicationServiceTests
         _backupExecutionGuardMock = new Mock<IBackupExecutionGuard>();
         _backupJobStateServiceMock = new Mock<IBackupJobStateService>();
         _stateReaderMock = new Mock<IStateReader>();
+        _stateWriterMock = new Mock<IStateWriter>();
         _engineMock
             .Setup(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>());
-        _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object, _backupJobStateServiceMock.Object, _stateReaderMock.Object);
+        _service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            _stateReaderMock.Object,
+            stateWriter: _stateWriterMock.Object);
     }
 
     /// <summary>
@@ -106,6 +113,47 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
+    public void GetAllJobs_WhenStateContainsOrphanActive_ShouldMarkInactiveOnce()
+    {
+        _repoMock.Setup(r => r.GetAll()).Returns(new List<BackupJob>());
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [42] = new() { BackupId = 42, Status = BackupStatus.Active, Timestamp = DateTime.UtcNow }
+        });
+
+        _service.GetAllJobs();
+        _service.GetAllJobs();
+
+        _stateWriterMock.Verify(w => w.Update(It.Is<StateEntry>(entry =>
+            entry.BackupId == 42 &&
+            entry.Status == BackupStatus.Inactive)), Times.Once);
+    }
+
+    [Fact]
+    public void GetAllJobs_WhenActiveJobIsRunning_ShouldNotMarkInactive()
+    {
+        var coordinatorMock = new Mock<IBackupRunCoordinator>();
+        coordinatorMock.Setup(c => c.IsRunning(42)).Returns(true);
+        _repoMock.Setup(r => r.GetAll()).Returns(new List<BackupJob>());
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [42] = new() { BackupId = 42, Status = BackupStatus.Active, Timestamp = DateTime.UtcNow }
+        });
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            _stateReaderMock.Object,
+            coordinatorMock.Object,
+            stateWriter: _stateWriterMock.Object);
+
+        service.GetAllJobs();
+
+        _stateWriterMock.Verify(w => w.Update(It.IsAny<StateEntry>()), Times.Never);
+    }
+
+    [Fact]
     public void GetAllJobsLiveProgress_ShouldReturnOnlyActiveEntries()
     {
         var timestamp = new DateTime(2026, 2, 16, 11, 45, 0, DateTimeKind.Utc);
@@ -167,6 +215,27 @@ public class BackupApplicationServiceTests
         var result = _service.GetAllJobsLiveProgress();
 
         Assert.Equal(100, result[7].ProgressPercent);
+    }
+
+    [Fact]
+    public void GetAllJobsLiveProgress_ShouldReturnPausedEntries()
+    {
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [3] = new()
+            {
+                BackupId = 3,
+                BackupName = "Job Paused",
+                Status = BackupStatus.Paused,
+                ProgressPercent = 33
+            }
+        });
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Single(result);
+        Assert.Equal(BackupJobStatus.Paused, result[3].Status);
+        Assert.Equal(33, result[3].ProgressPercent);
     }
 
     [Fact]

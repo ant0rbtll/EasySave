@@ -535,6 +535,43 @@ public class BackupEngineTests
     }
 
     [Fact]
+    public async Task Execute_WhenControllerReportsPaused_UpdatesStateToPausedThenActive()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        var executionController = new StubExecutionController(
+            controlStates: [BackupJobControlState.Paused, BackupJobControlState.Running]);
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionController);
+
+        await engine.Execute(job);
+
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Paused)), Times.AtLeastOnce);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Active)), Times.AtLeastOnce);
+    }
+
+    [Fact]
     public async Task Execute_WhenStoppedByUser_MarksInactiveAndLogsStoppedEvent()
     {
         var job = new BackupJob
@@ -598,10 +635,12 @@ public class BackupEngineTests
 
     private sealed class StubExecutionController(
         IEnumerable<string>? actions = null,
-        Exception? waitException = null) : IBackupExecutionController
+        Exception? waitException = null,
+        IEnumerable<BackupJobControlState>? controlStates = null) : IBackupExecutionController
     {
         private readonly Queue<string> _actions = new(actions ?? []);
         private readonly Exception? _waitException = waitException;
+        private readonly Queue<BackupJobControlState> _controlStates = new(controlStates ?? []);
 
         public void BeginJob(int jobId) { }
 
@@ -639,8 +678,14 @@ public class BackupEngineTests
 
         public bool TryGetCurrentJobControlState(int jobId, out BackupJobControlState controlState)
         {
-            controlState = default;
-            return false;
+            if (_controlStates.Count == 0)
+            {
+                controlState = default;
+                return false;
+            }
+
+            controlState = _controlStates.Dequeue();
+            return true;
         }
     }
 

@@ -1226,6 +1226,7 @@ public partial class ManageViewModel : ViewModelBase
         return status switch
         {
             Core.BackupJobStatus.Active => _localizationService.TranslateText(LocalizationKey.backupjob_active),
+            Core.BackupJobStatus.Paused => _localizationService.TranslateText(LocalizationKey.backupjob_paused),
             Core.BackupJobStatus.Done => _localizationService.TranslateText(LocalizationKey.backupjob_done),
             Core.BackupJobStatus.Error => _localizationService.TranslateText(LocalizationKey.backupjob_error),
             _ => _localizationService.TranslateText(LocalizationKey.backupjob_inactive)
@@ -1403,7 +1404,7 @@ public partial class ManageViewModel : ViewModelBase
 
     private bool IsJobRunnable(Models.BackupJob job)
     {
-        return job.Status != Core.BackupJobStatus.Active
+        return job.Status is not (Core.BackupJobStatus.Active or Core.BackupJobStatus.Paused)
             && !_runningJobIds.Contains(job.Id);
     }
 

@@ -74,9 +74,16 @@ public class BackupEngine(
                 cancellationToken.ThrowIfCancellationRequested();
 
                 LogPendingUserActions(job);
-                _executionController.WaitIfPausedOrThrowIfStopped();
                 var relativePath = Path.GetRelativePath(job.Source, file);
                 var destinationFile = Path.Combine(job.Destination, relativePath);
+                WaitForRuntimeControlAndSyncState(
+                    job,
+                    totalFiles,
+                    totalSize,
+                    remainingFiles,
+                    remainingSize,
+                    file,
+                    destinationFile);
 
                 if (CanCopyFile(job.Type, file, destinationFile))
                 {
@@ -105,6 +112,18 @@ public class BackupEngine(
                             0
                         );
                     }
+
+                    // Check pause/stop one more time right before transfer.
+                    // This narrows the race window where pause could be requested
+                    // after the pre-loop check but before starting the next file copy.
+                    WaitForRuntimeControlAndSyncState(
+                        job,
+                        totalFiles,
+                        totalSize,
+                        remainingFiles,
+                        remainingSize,
+                        file,
+                        destinationFile);
 
                     TransferResult result = _transferService.TransferFile(file, destinationFile, true);
 
@@ -140,14 +159,28 @@ public class BackupEngine(
 
                     UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, file, destinationFile);
                     LogPendingUserActions(job);
-                    _executionController.WaitIfPausedOrThrowIfStopped();
+                    WaitForRuntimeControlAndSyncState(
+                        job,
+                        totalFiles,
+                        totalSize,
+                        remainingFiles,
+                        remainingSize,
+                        file,
+                        destinationFile);
                 }
             }
             backupLoopTimer.Stop();
             totalDurationMs = backupLoopTimer.ElapsedMilliseconds;
 
             LogPendingUserActions(job);
-            _executionController.WaitIfPausedOrThrowIfStopped();
+            WaitForRuntimeControlAndSyncState(
+                job,
+                totalFiles,
+                totalSize,
+                remainingFiles,
+                remainingSize,
+                string.Empty,
+                string.Empty);
             UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
             Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, totalDurationMs);
             _stateWriter.MarkInactive(job.Id);
@@ -346,7 +379,14 @@ public class BackupEngine(
         {
             cancellationToken.ThrowIfCancellationRequested();
             LogPendingUserActions(job);
-            _executionController.WaitIfPausedOrThrowIfStopped();
+            WaitForRuntimeControlAndSyncState(
+                job,
+                totalFiles,
+                totalSize,
+                remainingFiles,
+                remainingSize,
+                sourceFile,
+                destinationFile);
 
             try
             {
@@ -429,6 +469,53 @@ public class BackupEngine(
         {
             // Encryption failures must not interrupt backup execution.
             return -1;
+        }
+    }
+
+    private void WaitForRuntimeControlAndSyncState(
+        BackupJob job,
+        int totalFiles,
+        long totalSize,
+        int remainingFiles,
+        long remainingSize,
+        string sourcePath,
+        string destinationPath)
+    {
+        var progress = totalFiles > 0
+            ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles)
+            : 0;
+
+        var hasControlState = _executionController.TryGetCurrentJobControlState(job.Id, out var controlState);
+        var isPaused = hasControlState && controlState == BackupJobControlState.Paused;
+
+        if (isPaused)
+        {
+            UpdateState(
+                job,
+                BackupStatus.Paused,
+                totalFiles,
+                totalSize,
+                remainingFiles,
+                remainingSize,
+                progress,
+                sourcePath,
+                destinationPath);
+        }
+
+        _executionController.WaitIfPausedOrThrowIfStopped();
+
+        if (isPaused)
+        {
+            UpdateState(
+                job,
+                BackupStatus.Active,
+                totalFiles,
+                totalSize,
+                remainingFiles,
+                remainingSize,
+                progress,
+                sourcePath,
+                destinationPath);
         }
     }
 

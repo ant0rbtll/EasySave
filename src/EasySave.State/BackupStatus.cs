@@ -23,5 +23,10 @@ public enum BackupStatus
     /// <summary>
     /// The backup encountered an error.
     /// </summary>
-    Error
+    Error,
+
+    /// <summary>
+    /// The backup is temporarily paused by user action.
+    /// </summary>
+    Paused
 }

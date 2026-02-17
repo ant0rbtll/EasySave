@@ -1,4 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using EasySave.Application;
+using EasySave.Backup;
 using EasySave.Localization;
 
 namespace EasySave.GUI.ViewModels;
@@ -27,6 +29,8 @@ public partial class MainWindowViewModel : ViewModelBase
     private string tooltipClose = string.Empty;
 
     private readonly ILocalizationService _localizationService;
+    private readonly BackupApplicationService _backupApplicationService;
+    private readonly IBackupExecutionController _backupExecutionController;
     private readonly HomeViewModel _homeViewModel;
     private readonly CreateViewModel _createViewModel;
     private readonly ManageViewModel _manageViewModel;
@@ -45,7 +49,9 @@ public partial class MainWindowViewModel : ViewModelBase
         ConfigViewModel configViewModel,
         SidebarViewModel sidebarViewModel,
         HomeViewModel homeViewModel,
-        ILocalizationService localizationService
+        ILocalizationService localizationService,
+        BackupApplicationService backupApplicationService,
+        IBackupExecutionController backupExecutionController
         )
     {
         _createViewModel = createViewModel;
@@ -57,6 +63,8 @@ public partial class MainWindowViewModel : ViewModelBase
         _configViewModel.SetOnLanguageChanged(OnLanguageChanged);
         _homeViewModel = homeViewModel;
         _localizationService = localizationService;
+        _backupApplicationService = backupApplicationService;
+        _backupExecutionController = backupExecutionController;
 
         _createViewModel.OnJobCreated = () => _manageViewModel.LoadJobsCommand.Execute(null);
 
@@ -94,6 +102,11 @@ public partial class MainWindowViewModel : ViewModelBase
     }
     public void Navigate(string page)
     {
+        if (string.Equals(page, "log", StringComparison.Ordinal))
+        {
+            _logViewModel.LoadDatesCommand.Execute(null);
+        }
+
         CurrentPage = page switch
         {
             "creation" => _createViewModel,
@@ -128,5 +141,34 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(ScrollablePage));
         OnPropertyChanged(nameof(FixedPage));
+    }
+
+    public bool HasRunningOrPausedBackups()
+    {
+        try
+        {
+            return _backupApplicationService
+                .GetAllJobsRuntimeStates()
+                .Values
+                .Any(state => state.IsActive);
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public void StopAllBackups()
+    {
+        _backupExecutionController.RequestStop();
+    }
+
+    public (string Title, string Message, string ConfirmText, string CancelText) GetCloseConfirmationTexts()
+    {
+        return (
+            _localizationService.TranslateText(LocalizationKey.gui_close_confirm_title),
+            _localizationService.TranslateText(LocalizationKey.gui_close_confirm_message),
+            _localizationService.TranslateText(LocalizationKey.gui_close_confirm_confirm),
+            _localizationService.TranslateText(LocalizationKey.gui_close_confirm_cancel));
     }
 }

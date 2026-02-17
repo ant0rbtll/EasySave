@@ -3,6 +3,7 @@ using EasySave.Backup;
 using EasySave.Core;
 using EasySave.State;
 using EasySave.System;
+using System.Threading;
 
 namespace EasySave.Application;
 
@@ -17,7 +18,8 @@ public class BackupApplicationService(
     IBackupJobStateService backupJobStateService,
     IStateReader? stateReader = null,
     IBackupRunCoordinator? backupRunCoordinator = null,
-    IBackupExecutionGuard? backupExecutionGuard = null)
+    IBackupExecutionGuard? backupExecutionGuard = null,
+    IStateWriter? stateWriter = null)
 {
     private static readonly TimeSpan BusinessSoftwareBlockedDisplayDuration = TimeSpan.FromSeconds(20);
     private readonly IBackupJobRepository _repo = repo;
@@ -26,6 +28,8 @@ public class BackupApplicationService(
     private readonly IStateReader? _stateReader = stateReader;
     private readonly IBackupRunCoordinator _backupRunCoordinator = backupRunCoordinator ?? new InMemoryBackupRunCoordinator();
     private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
+    private readonly IStateWriter? _stateWriter = stateWriter;
+    private int _activeStateReconciled;
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -104,6 +108,7 @@ public class BackupApplicationService(
     /// <returns>A list of <see cref="BackupJob"/> objects.</returns>
     public List<BackupJob> GetAllJobs()
     {
+        EnsureActiveStateConsistency();
         var jobs = _repo.GetAll();
         _backupJobStateService.ApplyState(jobs);
         return jobs;
@@ -114,6 +119,7 @@ public class BackupApplicationService(
     /// </summary>
     public IReadOnlyDictionary<int, BackupJobRuntimeState> GetAllJobsRuntimeStates()
     {
+        EnsureActiveStateConsistency();
         var jobs = _repo.GetAll();
         _backupJobStateService.ApplyState(jobs);
 
@@ -127,6 +133,7 @@ public class BackupApplicationService(
     /// </summary>
     public IReadOnlyDictionary<int, BackupJobLiveProgressState> GetAllJobsLiveProgress()
     {
+        EnsureActiveStateConsistency();
         var entries = _stateReader?.ReadEntries() ?? new Dictionary<int, StateEntry>();
         var jobNamesById = (_repo.GetAll() ?? [])
             .ToDictionary(j => j.Id, j => j.Name);
@@ -134,6 +141,7 @@ public class BackupApplicationService(
         foreach (var (jobId, entry) in entries)
         {
             var shouldInclude = entry.Status == BackupStatus.Active
+                || entry.Status == BackupStatus.Paused
                 || IsRecentBusinessSoftwareBlockedEntry(entry);
 
             if (!shouldInclude)
@@ -194,10 +202,53 @@ public class BackupApplicationService(
     /// <returns>The BackupJob if found, null otherwise.</returns>
     public BackupJob? GetJob(int id)
     {
+        EnsureActiveStateConsistency();
         var job = _repo.GetById(id);
         if (job == null) return null;
         _backupJobStateService.ApplyState(job);
         return job;
+    }
+
+    /// <summary>
+    /// Reconciles stale runtime state at application startup.
+    /// </summary>
+    public void ReconcileStartupState()
+    {
+        EnsureActiveStateConsistency();
+    }
+
+    private void EnsureActiveStateConsistency()
+    {
+        if (Interlocked.Exchange(ref _activeStateReconciled, 1) == 1)
+            return;
+
+        if (_stateReader is null || _stateWriter is null)
+            return;
+
+        var entries = _stateReader.ReadEntries();
+        foreach (var (jobId, entry) in entries)
+        {
+            if (entry.Status is not (BackupStatus.Active or BackupStatus.Paused))
+                continue;
+
+            if (_backupRunCoordinator.IsRunning(jobId))
+                continue;
+
+            _stateWriter.Update(new StateEntry
+            {
+                BackupId = jobId,
+                BackupName = entry.BackupName,
+                Timestamp = DateTime.Now,
+                Status = BackupStatus.Inactive,
+                TotalFiles = entry.TotalFiles,
+                TotalSizeBytes = entry.TotalSizeBytes,
+                RemainingFiles = entry.RemainingFiles,
+                RemainingSizeBytes = entry.RemainingSizeBytes,
+                ProgressPercent = entry.ProgressPercent,
+                CurrentSourcePath = entry.CurrentSourcePath,
+                CurrentDestinationPath = entry.CurrentDestinationPath
+            });
+        }
     }
 
     /// <summary>
@@ -230,6 +281,7 @@ public class BackupApplicationService(
             BackupStatus.Active => BackupJobStatus.Active,
             BackupStatus.Done => BackupJobStatus.Done,
             BackupStatus.Error => BackupJobStatus.Error,
+            BackupStatus.Paused => BackupJobStatus.Paused,
             _ => BackupJobStatus.Inactive
         };
     }

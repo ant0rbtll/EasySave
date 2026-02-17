@@ -19,4 +19,9 @@ public interface IBackupExecutionControlService
     /// Requests stop for the active backup.
     /// </summary>
     void Stop();
+
+    /// <summary>
+    /// Requests stop for all active backups.
+    /// </summary>
+    void StopAll();
 }

@@ -23,5 +23,10 @@ public enum BackupJobStatus
     /// <summary>
     /// The last backup execution ended with an error.
     /// </summary>
-    Error
+    Error,
+
+    /// <summary>
+    /// The backup is currently paused.
+    /// </summary>
+    Paused
 }

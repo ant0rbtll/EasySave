@@ -2,7 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
 using Avalonia.Media;
+using EasySave.GUI.ViewModels;
 
 namespace EasySave.GUI.Views;
 
@@ -13,12 +15,14 @@ public partial class MainWindow : Window
 
     /// <summary>Thickness in pixels of the resize area along the window edges.</summary>
     private const int ResizeBorder = 6;
+    private bool _isCloseConfirmed;
 
     public MainWindow()
     {
         InitializeComponent();
 
         ConfigurePlatformTitleBar();
+        Closing += OnWindowClosing;
     }
 
     private void ConfigurePlatformTitleBar()
@@ -162,5 +166,88 @@ public partial class MainWindow : Window
             WindowEdge.NorthEast or WindowEdge.SouthWest => new Cursor(StandardCursorType.TopRightCorner),
             _ => Cursor.Default
         };
+    }
+
+    private async void OnWindowClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (_isCloseConfirmed)
+            return;
+
+        if (DataContext is not MainWindowViewModel viewModel)
+            return;
+
+        if (!viewModel.HasRunningOrPausedBackups())
+            return;
+
+        e.Cancel = true;
+
+        var shouldClose = await ShowCloseConfirmationDialogAsync(viewModel);
+        if (!shouldClose)
+            return;
+
+        viewModel.StopAllBackups();
+        _isCloseConfirmed = true;
+        Close();
+    }
+
+    private async Task<bool> ShowCloseConfirmationDialogAsync(MainWindowViewModel viewModel)
+    {
+        var (title, message, confirmText, cancelText) = viewModel.GetCloseConfirmationTexts();
+
+        var dialog = new Window
+        {
+            Title = title,
+            Width = 520,
+            CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            SystemDecorations = SystemDecorations.BorderOnly
+        };
+
+        var messageBlock = new TextBlock
+        {
+            Text = message,
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(0, 0, 0, 16)
+        };
+
+        var confirmButton = new Button
+        {
+            Content = confirmText,
+            MinWidth = 130,
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        confirmButton.Click += (_, _) => dialog.Close(true);
+
+        var cancelButton = new Button
+        {
+            Content = cancelText,
+            MinWidth = 90,
+            Margin = new Thickness(8, 0, 0, 0),
+            HorizontalAlignment = HorizontalAlignment.Right
+        };
+        cancelButton.Click += (_, _) => dialog.Close(false);
+
+        dialog.Content = new StackPanel
+        {
+            Margin = new Thickness(20),
+            Spacing = 8,
+            Children =
+            {
+                messageBlock,
+                new StackPanel
+                {
+                    Orientation = Orientation.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Children =
+                    {
+                        confirmButton,
+                        cancelButton
+                    }
+                }
+            }
+        };
+
+        var result = await dialog.ShowDialog<bool>(this);
+        return result;
     }
 }
