@@ -257,11 +257,11 @@ public class BackupApplicationServiceTests
     /// Verifies that attempting to run a non-existent job by ID throws a localized not-found error.
     /// </summary>
     [Fact]
-    public void RunJob_WhenJobDoesNotExist_ShouldThrowNotFoundError()
+    public async Task RunJob_WhenJobDoesNotExist_ShouldThrowNotFoundError()
     {
         _repoMock.Setup(r => r.GetById(888)).Returns((BackupJob?)null);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => _service.RunJob(888).GetAwaiter().GetResult());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.RunJob(888));
 
         Assert.Equal("error_job_not_found", exception.Message);
         Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
@@ -284,9 +284,9 @@ public class BackupApplicationServiceTests
     /// Ensures that providing an empty array of IDs results in no interactions with the repository.
     /// </summary>
     [Fact]
-    public void RunJobs_WithEmptyArray_ShouldNotCallRepository()
+    public async Task RunJobs_WithEmptyArray_ShouldNotCallRepository()
     {
-        _service.RunJobs(new int[] { }).GetAwaiter().GetResult();
+        await _service.RunJobs(new int[] { });
 
         _repoMock.Verify(r => r.GetById(It.IsAny<int>()), Times.Never);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -296,13 +296,13 @@ public class BackupApplicationServiceTests
     /// Verifies that RunJobs calls the repository for each ID provided in the array.
     /// </summary>
     [Fact]
-    public void RunJobs_ShouldCallRepositoryForEachId()
+    public async Task RunJobs_ShouldCallRepositoryForEachId()
     {
         int[] ids = { 1, 2, 3 };
         _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((int id) =>
             new BackupJob { Id = id, Name = $"Job{id}", Source = "/src", Destination = "/dst", Type = BackupType.Complete });
 
-        _service.RunJobs(ids).GetAwaiter().GetResult();
+        await _service.RunJobs(ids);
 
         _repoMock.Verify(r => r.GetById(1), Times.Once);
         _repoMock.Verify(r => r.GetById(2), Times.Once);
@@ -313,11 +313,11 @@ public class BackupApplicationServiceTests
     /// Ensures that RunAllJobs requests all jobs from the repository exactly once.
     /// </summary>
     [Fact]
-    public void RunAllJobs_ShouldRequestAllJobsFromRepository()
+    public async Task RunAllJobs_ShouldRequestAllJobsFromRepository()
     {
         _repoMock.Setup(r => r.GetAll()).Returns(new List<BackupJob>());
 
-        _service.RunAllJobs().GetAwaiter().GetResult();
+        await _service.RunAllJobs();
 
         _repoMock.Verify(r => r.GetAll(), Times.Once);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -350,12 +350,12 @@ public class BackupApplicationServiceTests
     /// Ensures that RunJobs propagates not-found errors when one of the IDs does not exist.
     /// </summary>
     [Fact]
-    public void RunJobs_WithMixedValidAndInvalidIds_ShouldThrowNotFoundError()
+    public async Task RunJobs_WithMixedValidAndInvalidIds_ShouldThrowNotFoundError()
     {
         _repoMock.Setup(r => r.GetById(1)).Returns(new BackupJob { Id = 1, Name = "Job1", Source = "/src1", Destination = "/dst1", Type = BackupType.Complete });
         _repoMock.Setup(r => r.GetById(99)).Returns((BackupJob?)null);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => _service.RunJobs(new int[] { 1, 99 }).GetAwaiter().GetResult());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.RunJobs(new int[] { 1, 99 }));
 
         Assert.Equal("error_job_not_found", exception.Message);
         Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
@@ -394,11 +394,11 @@ public class BackupApplicationServiceTests
     /// Ensures that RunJob throws not-found when the repository returns null.
     /// </summary>
     [Fact]
-    public void RunJob_WithNullResultFromRepo_ShouldThrowNotFoundError()
+    public async Task RunJob_WithNullResultFromRepo_ShouldThrowNotFoundError()
     {
         _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((BackupJob?)null);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => _service.RunJob(99).GetAwaiter().GetResult());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.RunJob(99));
 
         Assert.Equal("error_job_not_found", exception.Message);
         Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
@@ -432,22 +432,22 @@ public class BackupApplicationServiceTests
     #region RunJob / RunJobs / RunAllJobs with engine execution
 
     [Fact]
-    public void RunJob_WithExistingJob_ShouldCallEngineExecute()
+    public async Task RunJob_WithExistingJob_ShouldCallEngineExecute()
     {
         var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job);
 
-        _service.RunJob(1).GetAwaiter().GetResult();
+        await _service.RunJob(1);
 
         _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public void RunJob_WithMissingJob_ShouldThrowNotFoundError()
+    public async Task RunJob_WithMissingJob_ShouldThrowNotFoundError()
     {
         _repoMock.Setup(r => r.GetById(1)).Returns((BackupJob?)null);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => _service.RunJob(1).GetAwaiter().GetResult());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.RunJob(1));
 
         Assert.Equal("error_job_not_found", exception.Message);
         Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
@@ -456,21 +456,21 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
-    public void RunJobs_WithExistingJobs_ShouldCallEngineExecuteForEach()
+    public async Task RunJobs_WithExistingJobs_ShouldCallEngineExecuteForEach()
     {
         var job1 = new BackupJob { Id = 1, Name = "Job1", Source = "/src1", Destination = "/dst1", Type = BackupType.Complete };
         var job2 = new BackupJob { Id = 2, Name = "Job2", Source = "/src2", Destination = "/dst2", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job1);
         _repoMock.Setup(r => r.GetById(2)).Returns(job2);
 
-        _service.RunJobs(new[] { 1, 2 }).GetAwaiter().GetResult();
+        await _service.RunJobs(new[] { 1, 2 });
 
         _engineMock.Verify(e => e.Execute(job1, It.IsAny<CancellationToken>()), Times.Once);
         _engineMock.Verify(e => e.Execute(job2, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public void RunAllJobs_WithJobs_ShouldCallEngineExecuteForEach()
+    public async Task RunAllJobs_WithJobs_ShouldCallEngineExecuteForEach()
     {
         var jobs = new List<BackupJob>
         {
@@ -479,14 +479,14 @@ public class BackupApplicationServiceTests
         };
         _repoMock.Setup(r => r.GetAll()).Returns(jobs);
 
-        _service.RunAllJobs().GetAwaiter().GetResult();
+        await _service.RunAllJobs();
 
         _engineMock.Verify(e => e.Execute(jobs[0], It.IsAny<CancellationToken>()), Times.Once);
         _engineMock.Verify(e => e.Execute(jobs[1], It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public void RunJob_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
+    public async Task RunJob_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
     {
         var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job);
@@ -506,7 +506,7 @@ public class BackupApplicationServiceTests
             _backupJobStateServiceMock.Object,
             backupExecutionGuard: _backupExecutionGuardMock.Object);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => service.RunJob(1).GetAwaiter().GetResult());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunJob(1));
 
         Assert.Equal("error_business_software_running", exception.Message);
         Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
@@ -515,7 +515,7 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
-    public void RunJob_WhenBusinessSoftwareIsConfiguredButNotRunning_ShouldExecute()
+    public async Task RunJob_WhenBusinessSoftwareIsConfiguredButNotRunning_ShouldExecute()
     {
         var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job);
@@ -526,13 +526,13 @@ public class BackupApplicationServiceTests
             _backupJobStateServiceMock.Object,
             backupExecutionGuard: _backupExecutionGuardMock.Object);
 
-        service.RunJob(1).GetAwaiter().GetResult();
+        await service.RunJob(1);
 
         _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
-    public void RunJob_WhenEngineThrowsBusinessSoftwareError_ShouldPropagate()
+    public async Task RunJob_WhenEngineThrowsBusinessSoftwareError_ShouldPropagate()
     {
         var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job);
@@ -551,7 +551,7 @@ public class BackupApplicationServiceTests
             .Setup(e => e.Execute(job, It.IsAny<CancellationToken>()))
             .ThrowsAsync(simulatedEngineException);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => service.RunJob(1).GetAwaiter().GetResult());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunJob(1));
 
         Assert.Equal("error_business_software_running", exception.Message);
         Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
@@ -560,7 +560,7 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
-    public void RunAllJobs_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
+    public async Task RunAllJobs_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
     {
         var jobs = new List<BackupJob>
         {
@@ -584,7 +584,7 @@ public class BackupApplicationServiceTests
             _backupJobStateServiceMock.Object,
             backupExecutionGuard: _backupExecutionGuardMock.Object);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => service.RunAllJobs().GetAwaiter().GetResult());
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunAllJobs());
 
         Assert.Equal("error_business_software_running", exception.Message);
         Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
