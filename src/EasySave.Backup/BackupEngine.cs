@@ -23,7 +23,7 @@ public class BackupEngine(
     ITransferService transferService,
     IStateWriter stateWriter,
     ILogger logger,
-    IUserPreferencesRepository? preferencesRepository,
+    IUserPreferencesRepository? preferencesRepository = null,
     IEncryptionPolicyProvider? encryptionPolicyProvider = null,
     IEncryptionProviderResolver? encryptionProviderResolver = null,
     IBackupExecutionGuard? executionGuard = null,
