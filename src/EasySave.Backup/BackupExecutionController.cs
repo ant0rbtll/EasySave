@@ -23,6 +23,9 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
     {
         lock (_gate)
         {
+            if (_disposed)
+                return;
+
             _currentJobId = jobId;
             _isPaused = false;
             _stopRequested = false;
@@ -35,6 +38,9 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
     {
         lock (_gate)
         {
+            if (_disposed)
+                return;
+
             if (_currentJobId != jobId)
                 return;
 
@@ -55,6 +61,9 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
     {
         lock (_gate)
         {
+            if (_disposed)
+                return;
+
             if (!IsCurrentJobTargeted(jobId) || _stopRequested)
                 return;
 
@@ -76,6 +85,9 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
     {
         lock (_gate)
         {
+            if (_disposed)
+                return;
+
             if (!IsCurrentJobTargeted(jobId))
                 return;
 
@@ -93,6 +105,9 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
     {
         lock (_gate)
         {
+            if (_disposed)
+                return;
+
             if (!IsCurrentJobTargeted(jobId))
                 return;
 
@@ -108,12 +123,17 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
         {
             bool isPaused;
             bool stopRequested;
+            bool isDisposed;
 
             lock (_gate)
             {
+                isDisposed = _disposed;
                 stopRequested = _stopRequested;
                 isPaused = _isPaused;
             }
+
+            if (isDisposed)
+                return;
 
             if (stopRequested)
                 throw CreateStoppedByUserException();
@@ -121,7 +141,14 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
             if (!isPaused)
                 return;
 
-            _resumeEvent.Wait(100);
+            try
+            {
+                _resumeEvent.Wait(100);
+            }
+            catch (ObjectDisposedException)
+            {
+                return;
+            }
         }
     }
 
@@ -129,6 +156,12 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
     {
         lock (_gate)
         {
+            if (_disposed)
+            {
+                actionKey = string.Empty;
+                return false;
+            }
+
             if (_pendingActions.Count == 0)
             {
                 actionKey = string.Empty;
@@ -144,6 +177,12 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
     {
         lock (_gate)
         {
+            if (_disposed)
+            {
+                controlState = default;
+                return false;
+            }
+
             if (!IsCurrentJobTargeted(jobId))
             {
                 controlState = default;
@@ -165,11 +204,14 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
 
     public void Dispose()
     {
-        if (_disposed)
-            return;
+        lock (_gate)
+        {
+            if (_disposed)
+                return;
 
+            _disposed = true;
+        }
         _resumeEvent.Dispose();
-        _disposed = true;
     }
 
     private static Exception CreateStoppedByUserException()

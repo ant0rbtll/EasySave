@@ -516,9 +516,9 @@
 															<Setter Property="Foreground" Value="#CE93D8"/>
 														</Style>
 
-														<Style Selector="Border[Tag=EndBackup]">
-															<Setter Property="Background" Value="#22009688"/>
-														</Style>
+															<Style Selector="Border[Tag=EndBackup]">
+																<Setter Property="Background" Value="#22009688"/>
+															</Style>
 															<Style Selector="Border[Tag=EndBackup] TextBlock">
 																<Setter Property="Foreground" Value="#80CBC4"/>
 															</Style>
