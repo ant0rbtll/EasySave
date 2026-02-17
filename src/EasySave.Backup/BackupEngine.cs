@@ -23,11 +23,11 @@ public class BackupEngine(
     ITransferService transferService,
     IStateWriter stateWriter,
     ILogger logger,
-    IUserPreferencesRepository? preferencesRepository = null,
     IEncryptionPolicyProvider? encryptionPolicyProvider = null,
     IEncryptionProviderResolver? encryptionProviderResolver = null,
     IBackupExecutionGuard? executionGuard = null,
-    IBackupExecutionController? executionController = null) : IBackupEngine
+    IBackupExecutionController? executionController = null,
+    IUserPreferencesRepository? preferencesRepository = null) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
