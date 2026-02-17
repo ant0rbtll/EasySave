@@ -36,7 +36,7 @@ public class BackupEngine(
     /// </summary>
     /// <param name="job">Backup job to execute.</param>
     /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
-    /// <inheritdoc />
+    #region Execute
     public Task Execute(
         BackupJob job,
         CancellationToken cancellationToken = default,
@@ -273,6 +273,7 @@ public class BackupEngine(
             }
         }
     }
+    #endregion
 
     private static bool IsStoppedByUser(Exception ex)
     {
