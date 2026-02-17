@@ -1,6 +1,8 @@
 using System.Reflection;
 using EasySave.AppCommon;
 using EasySave.AppCommon.Services;
+using EasySave.Application.Readers;
+using EasySave.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EasySave.UI.Tests;

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 using EasySave.Core;
 using EasySave.Log;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Readers;
 
 /// <summary>
 /// Reads JSON daily logs.

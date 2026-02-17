@@ -1,8 +1,9 @@
+using EasySave.Application.Readers;
 using EasySave.Configuration;
 using EasySave.Core;
 using EasySave.Log;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Reads log files by date using pluggable format readers.

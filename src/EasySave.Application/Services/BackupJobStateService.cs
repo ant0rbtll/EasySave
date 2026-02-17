@@ -1,7 +1,8 @@
+using EasySave.Application.Readers;
 using EasySave.Core;
 using EasySave.State;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Enriches backup jobs with runtime metadata loaded from state persistence.

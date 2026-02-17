@@ -4,8 +4,9 @@ using EasySave.Core;
 using EasySave.State;
 using EasySave.System;
 using System.Threading;
+using EasySave.Application.Readers;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Initializes a new instance of the <see cref="BackupApplicationService"/> class.

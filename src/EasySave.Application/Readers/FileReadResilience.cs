@@ -1,4 +1,6 @@
-namespace EasySave.Application;
+using EasySave.Core.Exceptions;
+
+namespace EasySave.Application.Readers;
 
 /// <summary>
 /// Provides resilient file read helpers used by readers in the application layer.
@@ -48,6 +50,11 @@ internal static class FileReadResilience
         var info = new FileInfo(filePath);
         if (info.Length > maxFileSizeBytes)
         {
+            throw new EasysaveDefaultException(
+                $"File '{filePath}' is too large ({info.Length} bytes). Maximum allowed size is {maxFileSizeBytes} bytes.",
+                ""
+                );
+
             throw new InvalidDataException(
                 $"File '{filePath}' is too large ({info.Length} bytes). Maximum allowed size is {maxFileSizeBytes} bytes.");
         }

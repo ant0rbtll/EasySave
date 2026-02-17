@@ -1,6 +1,6 @@
 using EasySave.Core;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Applies runtime state information to backup job models.

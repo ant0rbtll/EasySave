@@ -4,7 +4,7 @@ using System.Xml.Linq;
 using EasySave.Core;
 using EasySave.Log;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Readers;
 
 /// <summary>
 /// Reads XML daily logs.

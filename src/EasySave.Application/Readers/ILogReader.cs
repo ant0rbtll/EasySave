@@ -1,7 +1,7 @@
 using EasySave.Core;
 using EasySave.Log;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Readers;
 
 /// <summary>
 /// Reads log entries from one concrete file format.

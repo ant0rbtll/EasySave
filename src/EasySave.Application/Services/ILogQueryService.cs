@@ -1,7 +1,7 @@
 using EasySave.Core;
 using EasySave.Log;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Provides read access to persisted daily logs.
