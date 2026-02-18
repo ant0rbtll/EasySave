@@ -41,6 +41,8 @@ namespace EasySave.AppCommon
             // Setup configuration providers
             _services.AddSingleton<IPathProvider, DefaultPathProvider>();
             _services.AddSingleton<IJobIdProvider, SequentialJobIdProvider>();
+            _services.AddSingleton<LogServerStatusNotifier>();
+            _services.AddSingleton<ILogServerStatusNotifier>(sp => sp.GetRequiredService<LogServerStatusNotifier>());
             _services.AddSingleton<ReloadableLogger>();
 
             // Setup infrastructure

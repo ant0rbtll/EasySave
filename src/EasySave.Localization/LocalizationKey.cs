@@ -174,6 +174,18 @@ public enum LocalizationKey
     gui_create_error_unexpected,
     gui_create_success,
 
+    // Config - Log Mode
+    gui_config_log_mode,
+    log_mode_local,
+    log_mode_centralized,
+    log_mode_local_and_centralized,
+    gui_config_log_server_url,
+    gui_config_log_server_url_watermark,
+    gui_config_log_server_url_invalid,
+
+    // Log server status
+    gui_log_server_unreachable,
+
     // Config - Encrypted Extensions
     gui_config_encrypted_extensions,
     gui_config_encrypted_extensions_watermark,

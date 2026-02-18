@@ -1,0 +1,22 @@
+# Serveur centralisé de logs EasySave
+# Déploiement : docker compose -f compose.logserver.yaml up -d
+services:
+  easysave-logserver:
+    build:
+      context: .
+      dockerfile: Dockerfile.logserver
+    container_name: easysave-logserver
+    restart: unless-stopped
+    ports:
+      - "5080:5080"
+    volumes:
+      - logserver-logs:/app/logs
+      - logserver-data:/app/data
+    environment:
+      - ASPNETCORE_URLS=http://+:5080
+      - LogDirectory=/app/logs
+      - ClientsFile=/app/data/clients.json
+
+volumes:
+  logserver-logs:
+  logserver-data:

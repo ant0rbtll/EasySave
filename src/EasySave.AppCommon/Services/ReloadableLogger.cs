@@ -14,14 +14,19 @@ public sealed class ReloadableLogger : ILogger, ILoggerRuntimeReloader, IDisposa
 
     private readonly IUserPreferencesRepository _preferencesRepository;
     private readonly IPathProvider _pathProvider;
+    private readonly LogServerStatusNotifier _statusNotifier;
     private readonly object _sync = new();
 
     private ILogger _currentLogger;
 
-    public ReloadableLogger(IUserPreferencesRepository preferencesRepository, IPathProvider pathProvider)
+    public ReloadableLogger(
+        IUserPreferencesRepository preferencesRepository,
+        IPathProvider pathProvider,
+        LogServerStatusNotifier statusNotifier)
     {
         _preferencesRepository = preferencesRepository;
         _pathProvider = pathProvider;
+        _statusNotifier = statusNotifier;
         _currentLogger = CreateConfiguredLogger();
     }
 
@@ -67,15 +72,47 @@ public sealed class ReloadableLogger : ILogger, ILoggerRuntimeReloader, IDisposa
             var userPreferences = _preferencesRepository.Load();
             _pathProvider.SetLogDirectoryOverride(userPreferences.LogDirectory);
 
-            EasyLog.ILogFormatter formatter = userPreferences.LogFormat == LogFormat.Xml
-                ? new EasyLog.XmlLogFormatter()
-                : new EasyLog.JsonLogFormatter();
+            var logMode = userPreferences.LogMode;
 
-            return new EasyLog.DailyFileLogger(
-                formatter,
-                _pathProvider,
-                EasyLogDailyFileMutexName,
-                userPreferences.LogFormat);
+            ILogger? localLogger = null;
+            if (logMode == LogMode.Local || logMode == LogMode.LocalAndCentralized)
+            {
+                localLogger = CreateLocalLogger(userPreferences.LogFormat);
+            }
+
+            ILogger? remoteLogger = null;
+            if ((logMode == LogMode.Centralized || logMode == LogMode.LocalAndCentralized)
+                && !string.IsNullOrWhiteSpace(userPreferences.LogServerUrl))
+            {
+                var httpSender = new HttpLogSender(userPreferences.LogServerUrl, userPreferences.LogFormat);
+
+                if (logMode == LogMode.Centralized)
+                {
+                    var fallbackLogger = CreateLocalLogger(userPreferences.LogFormat);
+                    remoteLogger = new ResilientHttpLogSender(httpSender, _statusNotifier, fallbackLogger);
+                }
+                else
+                {
+                    remoteLogger = new ResilientHttpLogSender(httpSender, _statusNotifier);
+                }
+            }
+            else
+            {
+                _statusNotifier.ReportStatus(true);
+            }
+
+            return logMode switch
+            {
+                LogMode.Centralized => remoteLogger ?? new NoOpLogger(),
+                LogMode.LocalAndCentralized => (localLogger, remoteLogger) switch
+                {
+                    (not null, not null) => new CompositeLogger(localLogger, remoteLogger),
+                    (not null, null) => localLogger,
+                    (null, not null) => remoteLogger,
+                    _ => new NoOpLogger()
+                },
+                _ => localLogger ?? new NoOpLogger()
+            };
         }
         catch (Exception ex)
         {
@@ -90,5 +127,18 @@ public sealed class ReloadableLogger : ILogger, ILoggerRuntimeReloader, IDisposa
 
             return new NoOpLogger();
         }
+    }
+
+    private ILogger CreateLocalLogger(LogFormat logFormat)
+    {
+        EasyLog.ILogFormatter formatter = logFormat == LogFormat.Xml
+            ? new EasyLog.XmlLogFormatter()
+            : new EasyLog.JsonLogFormatter();
+
+        return new EasyLog.DailyFileLogger(
+            formatter,
+            _pathProvider,
+            EasyLogDailyFileMutexName,
+            logFormat);
     }
 }

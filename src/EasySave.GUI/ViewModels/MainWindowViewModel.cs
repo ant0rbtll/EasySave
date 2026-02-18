@@ -3,10 +3,11 @@ using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
 using EasySave.Backup;
 using EasySave.Localization;
+using EasySave.Log;
 
 namespace EasySave.GUI.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
     public SidebarViewModel Sidebar { get; }
 
@@ -30,6 +31,12 @@ public partial class MainWindowViewModel : ViewModelBase
     private string tooltipClose = string.Empty;
 
     [ObservableProperty]
+    private bool isLogServerWarningVisible;
+
+    [ObservableProperty]
+    private string logServerWarningMessage = string.Empty;
+
+    [ObservableProperty]
     private bool isCloseDialogOpen;
 
     [ObservableProperty]
@@ -45,6 +52,7 @@ public partial class MainWindowViewModel : ViewModelBase
     private string closeDialogCancelText = string.Empty;
 
     private readonly ILocalizationService _localizationService;
+    private readonly ILogServerStatusNotifier _logServerStatusNotifier;
     private readonly BackupApplicationService _backupApplicationService;
     private readonly IBackupExecutionController _backupExecutionController;
     private readonly HomeViewModel _homeViewModel;
@@ -68,6 +76,7 @@ public partial class MainWindowViewModel : ViewModelBase
         SidebarViewModel sidebarViewModel,
         HomeViewModel homeViewModel,
         ILocalizationService localizationService,
+        ILogServerStatusNotifier logServerStatusNotifier,
         BackupApplicationService backupApplicationService,
         IBackupExecutionController backupExecutionController
         )
@@ -81,6 +90,15 @@ public partial class MainWindowViewModel : ViewModelBase
         _configViewModel.SetOnLanguageChanged(OnLanguageChanged);
         _homeViewModel = homeViewModel;
         _localizationService = localizationService;
+        _logServerStatusNotifier = logServerStatusNotifier;
+        _logServerStatusNotifier.ServerStatusChanged += OnLogServerStatusChanged;
+
+        if (!_logServerStatusNotifier.IsServerReachable)
+        {
+            LogServerWarningMessage = _localizationService.TranslateText(
+                LocalizationKey.gui_log_server_unreachable);
+            IsLogServerWarningVisible = true;
+        }
         _backupApplicationService = backupApplicationService;
         _backupExecutionController = backupExecutionController;
 
@@ -100,6 +118,12 @@ public partial class MainWindowViewModel : ViewModelBase
         _tooltipRestoreText = _localizationService.TranslateText(LocalizationKey.gui_window_restore);
         TooltipClose = _localizationService.TranslateText(LocalizationKey.gui_window_close);
         TooltipMaximize = _tooltipMaximizeText;
+
+        if (IsLogServerWarningVisible && !_logServerStatusNotifier.IsServerReachable)
+        {
+            LogServerWarningMessage = _localizationService.TranslateText(
+                LocalizationKey.gui_log_server_unreachable);
+        }
         CloseDialogTitle = _localizationService.TranslateText(LocalizationKey.gui_close_confirm_title);
         CloseDialogMessage = _localizationService.TranslateText(LocalizationKey.gui_close_confirm_message);
         CloseDialogConfirmText = _localizationService.TranslateText(LocalizationKey.gui_close_confirm_confirm);
@@ -163,6 +187,28 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(ScrollablePage));
         OnPropertyChanged(nameof(FixedPage));
+    }
+
+    public void Dispose()
+    {
+        _logServerStatusNotifier.ServerStatusChanged -= OnLogServerStatusChanged;
+    }
+
+    private void OnLogServerStatusChanged(bool isReachable)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (isReachable)
+            {
+                IsLogServerWarningVisible = false;
+            }
+            else
+            {
+                LogServerWarningMessage = _localizationService.TranslateText(
+                    LocalizationKey.gui_log_server_unreachable);
+                IsLogServerWarningVisible = true;
+            }
+        });
     }
 
     public bool HasRunningOrPausedBackups()
