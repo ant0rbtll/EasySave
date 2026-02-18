@@ -140,7 +140,8 @@ public class ProgramTests
     {
         var logger = new ReloadableLogger(
             new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Json } },
-            new ThrowingPathProvider());
+            new ThrowingPathProvider(),
+            new LogServerStatusNotifier());
 
         logger.Write(new LogEntry(DateTime.UtcNow, "job", LogEventType.TransferFile, "src", "dst", 12, 34));
 
@@ -153,7 +154,8 @@ public class ProgramTests
         var pathProvider = new RecordingPathProvider();
         using var logger = new ReloadableLogger(
             new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Xml } },
-            pathProvider);
+            pathProvider,
+            new LogServerStatusNotifier());
 
         logger.Write(new LogEntry(
             DateTime.UtcNow,
@@ -173,7 +175,8 @@ public class ProgramTests
         var pathProvider = new RecordingPathProvider();
         using var logger = new ReloadableLogger(
             new FakeUserPreferencesRepository { Preferences = new UserPreferences { LogFormat = LogFormat.Json } },
-            pathProvider);
+            pathProvider,
+            new LogServerStatusNotifier());
 
         logger.Write(new LogEntry(
             DateTime.UtcNow,

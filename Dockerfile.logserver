@@ -1,28 +1,28 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0.100
+FROM mcr.microsoft.com/dotnet/sdk:8.0.100 AS build
 
-WORKDIR /app
+WORKDIR /src
 
-# Copier le fichier de solution
+# Copier les fichiers de solution
 COPY EasySave.sln ./
 COPY global.json ./
 
-# Copier TOUS les fichiers .csproj de src/
-COPY src/EasySave.UI/*.csproj ./src/EasySave.UI/
+# Copier tous les fichiers .csproj de src/
 COPY src/EasySave.Core/*.csproj ./src/EasySave.Core/
+COPY src/EasySave.Log/*.csproj ./src/EasySave.Log/
+COPY src/EasyLog/*.csproj ./src/EasyLog/
+COPY src/EasySave.Configuration/*.csproj ./src/EasySave.Configuration/
+COPY src/EasySave.LogServer/*.csproj ./src/EasySave.LogServer/
+COPY src/EasySave.UI/*.csproj ./src/EasySave.UI/
 COPY src/EasySave.Application/*.csproj ./src/EasySave.Application/
 COPY src/EasySave.Backup/*.csproj ./src/EasySave.Backup/
 COPY src/EasySave.Persistence/*.csproj ./src/EasySave.Persistence/
 COPY src/EasySave.Localization/*.csproj ./src/EasySave.Localization/
-COPY src/EasySave.Configuration/*.csproj ./src/EasySave.Configuration/
 COPY src/EasySave.System/*.csproj ./src/EasySave.System/
 COPY src/EasySave.State/*.csproj ./src/EasySave.State/
-COPY src/EasyLog/*.csproj ./src/EasyLog/
-COPY src/EasySave.Log/*.csproj ./src/EasySave.Log/
 COPY src/EasySave.GUI/*.csproj ./src/EasySave.GUI/
 COPY src/EasySave.AppCommon/*.csproj ./src/EasySave.AppCommon/
-COPY src/EasySave.LogServer/*.csproj ./src/EasySave.LogServer/
 
-# Copier TOUS les fichiers .csproj de tests/
+# Copier les fichiers .csproj de tests/
 COPY tests/EasyLog.Tests/*.csproj ./tests/EasyLog.Tests/
 COPY tests/EasySave.Log.Tests/*.csproj ./tests/EasySave.Log.Tests/
 COPY tests/EasySave.Backup.Tests/*.csproj ./tests/EasySave.Backup.Tests/
@@ -33,22 +33,23 @@ COPY tests/EasySave.Localization.Tests/*.csproj ./tests/EasySave.Localization.Te
 COPY tests/EasySave.Configuration.Tests/*.csproj ./tests/EasySave.Configuration.Tests/
 COPY tests/EasySave.System.Tests/*.csproj ./tests/EasySave.System.Tests/
 COPY tests/EasySave.UI.Tests/*.csproj ./tests/EasySave.UI.Tests/
-COPY tests/EasySave.AppCommon.Tests/*.csproj ./tests/EasySave.AppCommon.Tests/
-COPY tests/EasySave.LogServer.Tests/*.csproj ./tests/EasySave.LogServer.Tests/
 
 # Restaurer les dépendances
 RUN dotnet restore
 
-# Copier le reste du code
+# Copier le reste du code et publier
 COPY . .
+RUN dotnet publish src/EasySave.LogServer/EasySave.LogServer.csproj -c Release -o /app/publish
 
-# Installer ReportGenerator pour générer les rapports de coverage
-RUN dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.5.1
-ENV PATH="${PATH}:/root/.dotnet/tools"
+# Image de runtime légère
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
-# Exécuter tous les tests avec code coverage
-CMD dotnet test --collect:"XPlat Code Coverage" --results-directory /app/test-results && \
-    reportgenerator \
-    -reports:/app/test-results/**/coverage.cobertura.xml \
-    -targetdir:/app/coverage-report \
-    -reporttypes:Html
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Créer les répertoires de données
+RUN mkdir -p /app/logs /app/data
+
+EXPOSE 5080
+
+ENTRYPOINT ["dotnet", "EasySave.LogServer.dll"]

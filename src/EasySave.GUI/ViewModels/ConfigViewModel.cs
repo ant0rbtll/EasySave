@@ -31,6 +31,8 @@ public partial class ConfigViewModel : ViewModelBase
 
     [ObservableProperty] private string selectedLanguage;
     [ObservableProperty] private LogFormat selectedLogFormat;
+    [ObservableProperty] private LogMode selectedLogMode;
+    [ObservableProperty] private string? logServerUrl;
     [ObservableProperty] private string? logDirectory;
     [ObservableProperty] private string? statusMessage;
     [ObservableProperty] private string? pathError;
@@ -54,12 +56,23 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string encryptedExtensionsWatermark = "";
     [ObservableProperty] private string encryptedExtensionsAddText = "";
     [ObservableProperty] private string encryptedExtensionsEmptyText = "";
+    [ObservableProperty] private string logModeText = "";
+    [ObservableProperty] private string logModeLocalText = "";
+    [ObservableProperty] private string logModeCentralizedText = "";
+    [ObservableProperty] private string logModeLocalAndCentralizedText = "";
+    [ObservableProperty] private string logServerUrlText = "";
+    [ObservableProperty] private string logServerUrlWatermark = "";
 
     public ObservableCollection<string> EncryptedExtensions { get; } = [];
     public ObservableCollection<string> BusinessSoftwareProcesses { get; } = [];
 
     public bool IsJsonLogFormatSelected => SelectedLogFormat == LogFormat.Json;
     public bool IsXmlLogFormatSelected => SelectedLogFormat == LogFormat.Xml;
+
+    public bool IsLocalModeSelected => SelectedLogMode == LogMode.Local;
+    public bool IsCentralizedModeSelected => SelectedLogMode == LogMode.Centralized;
+    public bool IsLocalAndCentralizedModeSelected => SelectedLogMode == LogMode.LocalAndCentralized;
+    public bool IsLogServerUrlVisible => SelectedLogMode != LogMode.Local;
 
     [ObservableProperty] private string? newExtensionInput;
     [ObservableProperty] private string? newBusinessSoftwareInput;
@@ -85,6 +98,8 @@ public partial class ConfigViewModel : ViewModelBase
         var preferences = preferencesRepository.Load();
         selectedLanguage = NormalizeLanguage(preferences.Language);
         selectedLogFormat = preferences.LogFormat;
+        selectedLogMode = preferences.LogMode;
+        logServerUrl = preferences.LogServerUrl;
         logDirectory = preferences.LogDirectory;
 
         foreach (var processName in preferences.BusinessSoftwareProcessNames)
@@ -152,6 +167,12 @@ public partial class ConfigViewModel : ViewModelBase
         EncryptedExtensionsWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_watermark);
         EncryptedExtensionsAddText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_add);
         EncryptedExtensionsEmptyText = _localizationService.TranslateText(LocalizationKey.gui_config_encrypted_extensions_empty);
+        LogModeText = _localizationService.TranslateText(LocalizationKey.gui_config_log_mode);
+        LogModeLocalText = _localizationService.TranslateText(LocalizationKey.log_mode_local);
+        LogModeCentralizedText = _localizationService.TranslateText(LocalizationKey.log_mode_centralized);
+        LogModeLocalAndCentralizedText = _localizationService.TranslateText(LocalizationKey.log_mode_local_and_centralized);
+        LogServerUrlText = _localizationService.TranslateText(LocalizationKey.gui_config_log_server_url);
+        LogServerUrlWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_log_server_url_watermark);
         ValidatePath();
     }
 
@@ -160,6 +181,20 @@ public partial class ConfigViewModel : ViewModelBase
         ClearStatusMessage();
         OnPropertyChanged(nameof(IsJsonLogFormatSelected));
         OnPropertyChanged(nameof(IsXmlLogFormatSelected));
+    }
+
+    partial void OnSelectedLogModeChanged(LogMode value)
+    {
+        ClearStatusMessage();
+        OnPropertyChanged(nameof(IsLocalModeSelected));
+        OnPropertyChanged(nameof(IsCentralizedModeSelected));
+        OnPropertyChanged(nameof(IsLocalAndCentralizedModeSelected));
+        OnPropertyChanged(nameof(IsLogServerUrlVisible));
+    }
+
+    partial void OnLogServerUrlChanged(string? value)
+    {
+        ClearStatusMessage();
     }
 
     partial void OnSelectedLanguageChanged(string value)
@@ -187,8 +222,12 @@ public partial class ConfigViewModel : ViewModelBase
 
         var preferences = _preferencesRepository.Load();
         var logFormatChanged = preferences.LogFormat != SelectedLogFormat;
+        var logModeChanged = preferences.LogMode != SelectedLogMode;
+        var logServerUrlChanged = preferences.LogServerUrl != LogServerUrl;
         preferences.Language = language;
         preferences.LogFormat = SelectedLogFormat;
+        preferences.LogMode = SelectedLogMode;
+        preferences.LogServerUrl = string.IsNullOrWhiteSpace(LogServerUrl) ? null : LogServerUrl;
         preferences.LogDirectory = string.IsNullOrWhiteSpace(LogDirectory) ? null : LogDirectory;
         preferences.BusinessSoftwareProcessNames = [..BusinessSoftwareProcesses];
         preferences.EncryptedExtensions = [..EncryptedExtensions];
@@ -196,7 +235,7 @@ public partial class ConfigViewModel : ViewModelBase
 
         _localizationService.Culture = language;
         _pathProvider.SetLogDirectoryOverride(preferences.LogDirectory);
-        if (logFormatChanged)
+        if (logFormatChanged || logModeChanged || logServerUrlChanged)
         {
             _loggerRuntimeReloader.Reload();
         }
@@ -239,6 +278,24 @@ public partial class ConfigViewModel : ViewModelBase
     private void SelectXmlLogFormat()
     {
         SelectedLogFormat = LogFormat.Xml;
+    }
+
+    [RelayCommand]
+    private void SelectLocalMode()
+    {
+        SelectedLogMode = LogMode.Local;
+    }
+
+    [RelayCommand]
+    private void SelectCentralizedMode()
+    {
+        SelectedLogMode = LogMode.Centralized;
+    }
+
+    [RelayCommand]
+    private void SelectLocalAndCentralizedMode()
+    {
+        SelectedLogMode = LogMode.LocalAndCentralized;
     }
 
     [RelayCommand]

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\EasySave.Core\EasySave.Core.csproj" />
+    <ProjectReference Include="..\EasySave.Log\EasySave.Log.csproj" />
+    <ProjectReference Include="..\EasyLog\EasyLog.csproj" />
+    <ProjectReference Include="..\EasySave.Configuration\EasySave.Configuration.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -84,6 +84,36 @@
 							</StackPanel>
 						</StackPanel>
 
+						<!-- Mode de log -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="{Binding LogModeText}" FontWeight="SemiBold"/>
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<RadioButton Classes="log-format"
+											 GroupName="LogMode"
+											 Content="{Binding LogModeLocalText}"
+											 IsChecked="{Binding IsLocalModeSelected, Mode=OneWay}"
+											 Command="{Binding SelectLocalModeCommand}"/>
+								<RadioButton Classes="log-format"
+											 GroupName="LogMode"
+											 Content="{Binding LogModeCentralizedText}"
+											 IsChecked="{Binding IsCentralizedModeSelected, Mode=OneWay}"
+											 Command="{Binding SelectCentralizedModeCommand}"/>
+								<RadioButton Classes="log-format"
+											 GroupName="LogMode"
+											 Content="{Binding LogModeLocalAndCentralizedText}"
+											 IsChecked="{Binding IsLocalAndCentralizedModeSelected, Mode=OneWay}"
+											 Command="{Binding SelectLocalAndCentralizedModeCommand}"/>
+							</StackPanel>
+						</StackPanel>
+
+						<!-- URL serveur de logs -->
+						<StackPanel Spacing="8" IsVisible="{Binding IsLogServerUrlVisible}">
+							<TextBlock Text="{Binding LogServerUrlText}" FontWeight="SemiBold"/>
+							<TextBox Text="{Binding LogServerUrl}"
+									 Watermark="{Binding LogServerUrlWatermark}"
+									 HorizontalAlignment="Stretch"/>
+						</StackPanel>
+
 						<!-- Dossier de logs -->
 						<StackPanel Spacing="8">
 							<TextBlock Text="{Binding LogDirectoryText}" FontWeight="SemiBold"/>

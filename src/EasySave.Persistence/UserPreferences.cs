@@ -29,6 +29,17 @@ public class UserPreferences
     public LogFormat LogFormat { get; set; } = LogFormat.Json;
 
     /// <summary>
+    /// Gets or sets the log delivery mode (local, centralized, or both).
+    /// </summary>
+    public LogMode LogMode { get; set; } = LogMode.Local;
+
+    /// <summary>
+    /// Gets or sets the URL of the centralized log server.
+    /// Required when LogMode is Centralized or LocalAndCentralized.
+    /// </summary>
+    public string? LogServerUrl { get; set; }
+
+    /// <summary>
     /// Gets or sets file extensions that should be encrypted after transfer.
     /// </summary>
     public List<string> EncryptedExtensions

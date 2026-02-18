@@ -43,7 +43,7 @@ public partial class MainWindow : Window
         ExtendClientAreaToDecorationsHint = false;
         SystemDecorations = SystemDecorations.Full;
         TitleBarGrid.IsVisible = false;
-        MainLayoutGrid.RowDefinitions = new RowDefinitions("0,*");
+        MainLayoutGrid.RowDefinitions = new RowDefinitions("0,Auto,*");
     }
 
     private void ConfigureLinux()
@@ -74,7 +74,7 @@ public partial class MainWindow : Window
     private void ConfigureMacOS()
     {
         ExtendClientAreaTitleBarHeightHint = 32;
-        MainLayoutGrid.RowDefinitions = new RowDefinitions("32,*");
+        MainLayoutGrid.RowDefinitions = new RowDefinitions("32,Auto,*");
         TitleBarLogo.IsVisible = false;
         TitleBarBrand.Spacing = 0;
         TitleBarBrand.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;

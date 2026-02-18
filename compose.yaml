@@ -1,4 +1,5 @@
-# docker-compose.yml (unique)
+# Environnements de développement et de test EasySave
+# Le serveur de logs est dans compose.logserver.yaml
 services:
   easysave-dev:
     build:
