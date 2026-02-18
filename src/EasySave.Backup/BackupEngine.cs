@@ -46,6 +46,7 @@ public class BackupEngine(
     private readonly ILargeFileTransferBarrier _largeFileTransferBarrier = largeFileTransferBarrier ?? new NoOpLargeFileTransferBarrier();
     private const string BusinessSoftwareErrorKey = BackupRuntimeKeys.ErrorBusinessSoftwareRunning;
     private const int BusinessSoftwareRetryDelayMs = 500;
+    private const int PriorityBarrierPollDelayMs = 100;
 
     /// <summary>
     /// Executes a complete or differential backup.
@@ -122,7 +123,17 @@ public class BackupEngine(
                             planned.DestinationFile);
                     }
 
-                    waitTask.GetAwaiter().GetResult();
+                    WaitUntilPriorityBarrierAllowsCopy(
+                        waitTask,
+                        job,
+                        totalFiles,
+                        totalSize,
+                        remainingFiles,
+                        remainingSize,
+                        planned.SourceFile,
+                        planned.DestinationFile,
+                        cancellationToken);
+
                     if (hasWaited)
                     {
                         UpdateState(
@@ -319,6 +330,54 @@ public class BackupEngine(
             {
                 _priorityFilesBarrier.UnregisterJob(job.Id);
             }
+        }
+    }
+
+    private void WaitUntilPriorityBarrierAllowsCopy(
+        Task waitTask,
+        BackupJob job,
+        int totalFiles,
+        long totalSize,
+        int remainingFiles,
+        long remainingSize,
+        string sourceFile,
+        string destinationFile,
+        CancellationToken cancellationToken)
+    {
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            LogPendingUserActions(job);
+            var resumedFromPause = WaitForRuntimeControlAndSyncState(
+                job,
+                totalFiles,
+                totalSize,
+                remainingFiles,
+                remainingSize,
+                sourceFile,
+                destinationFile);
+
+            if (waitTask.IsCompleted)
+            {
+                waitTask.GetAwaiter().GetResult();
+                return;
+            }
+
+            if (resumedFromPause)
+            {
+                UpdateState(
+                    job,
+                    BackupStatus.Waiting,
+                    totalFiles,
+                    totalSize,
+                    remainingFiles,
+                    remainingSize,
+                    totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
+                    sourceFile,
+                    destinationFile);
+            }
+
+            Task.Delay(PriorityBarrierPollDelayMs, cancellationToken).GetAwaiter().GetResult();
         }
     }
 
@@ -525,7 +584,7 @@ public class BackupEngine(
         }
     }
 
-    private void WaitForRuntimeControlAndSyncState(
+    private bool WaitForRuntimeControlAndSyncState(
         BackupJob job,
         int totalFiles,
         long totalSize,
@@ -572,6 +631,8 @@ public class BackupEngine(
                 sourcePath,
                 destinationPath);
         }
+
+        return isPaused;
     }
 
 }

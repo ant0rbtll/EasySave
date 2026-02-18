@@ -666,6 +666,86 @@ public class BackupEngineTests
     }
 
     [Fact]
+    public async Task Execute_WhenStopRequestedDuringPriorityWait_ShouldStopWithoutWaitingBarrierCompletion()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var neverCompleted = new TaskCompletionSource<bool>();
+        var barrierMock = new Mock<IPriorityFilesBarrier>();
+        barrierMock
+            .Setup(b => b.WaitUntilNoPriorityPendingAsync(It.IsAny<CancellationToken>()))
+            .Returns(neverCompleted.Task);
+
+        var executionController = new StopOnSecondWaitExecutionController();
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            priorityFilesBarrier: barrierMock.Object,
+            executionController: executionController);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job));
+        Assert.Equal(BackupRuntimeKeys.ErrorBackupStoppedByUser, ex.Message);
+
+        _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Never);
+        _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Waiting)), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Execute_WhenResumedWhileStillWaitingForPriorityBarrier_ShouldReturnToWaitingStatus()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var neverCompleted = new TaskCompletionSource<bool>();
+        var barrierMock = new Mock<IPriorityFilesBarrier>();
+        barrierMock
+            .Setup(b => b.WaitUntilNoPriorityPendingAsync(It.IsAny<CancellationToken>()))
+            .Returns(neverCompleted.Task);
+
+        var executionController = new StubExecutionController(
+            controlStates: [BackupJobControlState.Running, BackupJobControlState.Paused, BackupJobControlState.Running]);
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            priorityFilesBarrier: barrierMock.Object,
+            executionController: executionController);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(260));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => engine.Execute(job, cts.Token));
+
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Waiting)), Times.AtLeast(2));
+    }
+
+    [Fact]
     public async Task Execute_UnsupportedBackupType_ThrowsNotSupportedException()
     {
         // Arrange
@@ -740,6 +820,44 @@ public class BackupEngineTests
             }
 
             controlState = _controlStates.Dequeue();
+            return true;
+        }
+    }
+
+    private sealed class StopOnSecondWaitExecutionController : IBackupExecutionController
+    {
+        private int _waitCalls;
+
+        public void BeginJob(int jobId) { }
+        public void EndJob(int jobId) { }
+        public void PauseAll() { }
+        public void Pause(int jobId) { }
+        public void ResumeAll() { }
+        public void Resume(int jobId) { }
+        public void RequestStopAll() { }
+        public void RequestStop(int jobId) { }
+
+        public void WaitIfPausedOrThrowIfStopped()
+        {
+            _waitCalls++;
+            if (_waitCalls < 2)
+                return;
+
+            var exception = new InvalidOperationException(BackupRuntimeKeys.ErrorBackupStoppedByUser);
+            exception.Data["errorKey"] = BackupRuntimeKeys.ErrorBackupStoppedByUser;
+            exception.Data["actionKey"] = BackupRuntimeKeys.ActionBackupStoppedByUser;
+            throw exception;
+        }
+
+        public bool TryDequeueAction(out string actionKey)
+        {
+            actionKey = string.Empty;
+            return false;
+        }
+
+        public bool TryGetCurrentJobControlState(int jobId, out BackupJobControlState controlState)
+        {
+            controlState = BackupJobControlState.Running;
             return true;
         }
     }
