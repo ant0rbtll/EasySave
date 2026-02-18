@@ -61,6 +61,7 @@ public enum LocalizationKey
     backupjob_inactive,
     backupjob_done,
     backupjob_error,
+    backupjob_waiting,
     backupjob_never,
     input_number_invalid,
     input_backuptype_invalid,
@@ -304,4 +305,8 @@ public enum LocalizationKey
     gui_log_event_business_software_detected,
     gui_log_event_action,
     gui_log_event_stopped,
+    gui_config_priority_extensions,
+    gui_config_priority_extensions_watermark,
+    gui_config_priority_extensions_add,
+    gui_config_priority_extensions_empty,
 }

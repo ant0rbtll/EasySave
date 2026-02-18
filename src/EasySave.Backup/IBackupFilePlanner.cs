@@ -1,0 +1,106 @@
+using EasySave.Core;
+using EasySave.System;
+
+namespace EasySave.Backup;
+
+/// <summary>
+/// Builds a file execution plan for one backup job.
+/// </summary>
+public interface IBackupFilePlanner
+{
+    /// <summary>
+    /// Builds ordered file plans including priority and copy decision.
+    /// </summary>
+    IReadOnlyList<BackupFilePlan> BuildPlans(BackupJob job, IEnumerable<string>? priorityExtensions);
+}
+
+/// <summary>
+/// Default implementation based on the configured file system.
+/// </summary>
+public sealed class DefaultBackupFilePlanner(IFileSystem fileSystem) : IBackupFilePlanner
+{
+    private readonly IFileSystem _fileSystem = fileSystem;
+
+    public IReadOnlyList<BackupFilePlan> BuildPlans(BackupJob job, IEnumerable<string>? priorityExtensions)
+    {
+        ArgumentNullException.ThrowIfNull(job);
+
+        var normalizedExtensions = NormalizePriorityExtensions(priorityExtensions);
+        var priorityExtensionSet = new HashSet<string>(normalizedExtensions, StringComparer.OrdinalIgnoreCase);
+        var files = _fileSystem.EnumerateFilesRecursive(job.Source, normalizedExtensions).ToList();
+
+        var plans = new List<BackupFilePlan>(files.Count);
+        foreach (var file in files)
+        {
+            var relativePath = Path.GetRelativePath(job.Source, file);
+            var destinationFile = Path.Combine(job.Destination, relativePath);
+            var normalizedExtension = NormalizeExtension(Path.GetExtension(file));
+            var isPriority = normalizedExtension is not null && priorityExtensionSet.Contains(normalizedExtension);
+            var shouldCopy = ShouldCopyFile(job.Type, file, destinationFile);
+            plans.Add(new BackupFilePlan(file, destinationFile, isPriority, shouldCopy));
+        }
+
+        return plans;
+    }
+
+    private bool ShouldCopyFile(BackupType type, string sourceFile, string destinationFile)
+    {
+        if (type == BackupType.Complete)
+        {
+            return true;
+        }
+
+        if (type == BackupType.Differential)
+        {
+            var destinationDir = Path.GetDirectoryName(destinationFile)!;
+            if (!_fileSystem.DirectoryExists(destinationDir))
+            {
+                return true;
+            }
+
+            if (!_fileSystem.FileExists(destinationFile))
+            {
+                return true;
+            }
+
+            var sourceSize = _fileSystem.GetFileSize(sourceFile);
+            var destSize = _fileSystem.GetFileSize(destinationFile);
+            return sourceSize != destSize;
+        }
+
+        var e = new NotSupportedException("error_backup_type_invalid");
+        e.Data["0_type"] = type;
+        throw e;
+    }
+
+    private static List<string> NormalizePriorityExtensions(IEnumerable<string>? extensions)
+    {
+        if (extensions is null)
+        {
+            return [];
+        }
+
+        return extensions
+            .Select(NormalizeExtension)
+            .Where(e => e is not null)
+            .Select(e => e!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
+    private static string? NormalizeExtension(string? extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            return null;
+        }
+
+        var normalized = extension.Trim();
+        if (!normalized.StartsWith(".", StringComparison.Ordinal))
+        {
+            normalized = "." + normalized;
+        }
+
+        return normalized.ToLowerInvariant();
+    }
+}

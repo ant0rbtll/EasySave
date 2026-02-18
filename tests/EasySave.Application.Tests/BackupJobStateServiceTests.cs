@@ -102,6 +102,28 @@ public class BackupJobStateServiceTests
         Assert.Null(jobs[1].LastExecutionDate);
     }
 
+    [Fact]
+    public void ApplyState_WithWaitingStatus_MapsToWaitingJobStatus()
+    {
+        var reader = new StubStateReader(new Dictionary<int, StateEntry>
+        {
+            [10] = new()
+            {
+                BackupId = 10,
+                Timestamp = new DateTime(2026, 2, 17, 8, 0, 0, DateTimeKind.Utc),
+                Status = BackupStatus.Waiting
+            }
+        });
+
+        var service = new BackupJobStateService(reader);
+        var job = new BackupJob { Id = 10 };
+
+        service.ApplyState(job);
+
+        Assert.True(job.IsActive);
+        Assert.Equal(BackupJobStatus.Waiting, job.Status);
+    }
+
     private sealed class StubStateReader(IReadOnlyDictionary<int, StateEntry> entries) : IStateReader
     {
         public int ReadEntriesCalls { get; private set; }

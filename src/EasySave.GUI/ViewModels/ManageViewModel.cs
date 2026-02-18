@@ -1229,6 +1229,7 @@ public partial class ManageViewModel : ViewModelBase
             Core.BackupJobStatus.Active => _localizationService.TranslateText(LocalizationKey.backupjob_active),
             Core.BackupJobStatus.Paused => _localizationService.TranslateText(LocalizationKey.backupjob_paused),
             Core.BackupJobStatus.Blocked => _localizationService.TranslateText(LocalizationKey.backupjob_blocked),
+            Core.BackupJobStatus.Waiting => _localizationService.TranslateText(LocalizationKey.backupjob_waiting),
             Core.BackupJobStatus.Done => _localizationService.TranslateText(LocalizationKey.backupjob_done),
             Core.BackupJobStatus.Error => _localizationService.TranslateText(LocalizationKey.backupjob_error),
             _ => _localizationService.TranslateText(LocalizationKey.backupjob_inactive)
@@ -1406,7 +1407,7 @@ public partial class ManageViewModel : ViewModelBase
 
     private bool IsJobRunnable(Models.BackupJob job)
     {
-        return job.Status is not (Core.BackupJobStatus.Active or Core.BackupJobStatus.Paused or Core.BackupJobStatus.Blocked)
+        return job.Status is not (Core.BackupJobStatus.Active or Core.BackupJobStatus.Waiting or Core.BackupJobStatus.Paused or Core.BackupJobStatus.Blocked)
             && !_runningJobIds.Contains(job.Id);
     }
 

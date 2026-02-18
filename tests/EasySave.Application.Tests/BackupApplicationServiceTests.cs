@@ -277,6 +277,27 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
+    public void GetAllJobsLiveProgress_ShouldReturnWaitingEntries()
+    {
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [11] = new()
+            {
+                BackupId = 11,
+                BackupName = "Job Waiting",
+                Status = BackupStatus.Waiting,
+                ProgressPercent = 21
+            }
+        });
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Single(result);
+        Assert.Equal(BackupJobStatus.Waiting, result[11].Status);
+        Assert.Equal(21, result[11].ProgressPercent);
+    }
+
+    [Fact]
     public void GetAllJobsLiveProgress_ShouldUseDictionaryKeyAsId_AndResolveNonEmptyName()
     {
         _repoMock.Setup(r => r.GetAll()).Returns(

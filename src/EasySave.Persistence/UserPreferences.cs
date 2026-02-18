@@ -81,6 +81,18 @@ public class UserPreferences
         set => BusinessSoftwareProcessNames = ParseLegacyBusinessSoftwareProcessNames(value);
     }
 
+    private List<string>? _priorityExtensions;
+
+    /// <summary>
+    /// Gets or sets file extensions that are considered priority.
+    /// Non-priority files wait for these to be finished across all jobs.
+    /// </summary>
+    public List<string> PriorityExtensions
+    {
+        get => _priorityExtensions ??= [];
+        set => _priorityExtensions = value ?? [];
+    }
+
     private static List<string> NormalizeBusinessSoftwareProcessNames(IEnumerable<string>? names)
     {
         if (names is null)

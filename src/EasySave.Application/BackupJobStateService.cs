@@ -45,7 +45,7 @@ public sealed class BackupJobStateService(IStateReader stateReader) : IBackupJob
         {
             job.LastExecutionDate = entry.Timestamp;
             job.Status = MapStatus(entry.Status);
-            job.IsActive = job.Status is BackupJobStatus.Active or BackupJobStatus.Paused or BackupJobStatus.Blocked;
+            job.IsActive = job.Status is BackupJobStatus.Active or BackupJobStatus.Waiting or BackupJobStatus.Paused or BackupJobStatus.Blocked;
             return;
         }
 
@@ -60,6 +60,7 @@ public sealed class BackupJobStateService(IStateReader stateReader) : IBackupJob
         {
             BackupStatus.Inactive => BackupJobStatus.Inactive,
             BackupStatus.Active => BackupJobStatus.Active,
+            BackupStatus.Waiting => BackupJobStatus.Waiting,
             BackupStatus.Done => BackupJobStatus.Done,
             BackupStatus.Error => BackupJobStatus.Error,
             BackupStatus.Paused => BackupJobStatus.Paused,

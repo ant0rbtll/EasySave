@@ -96,7 +96,7 @@ public sealed class DefaultFileSystem : IFileSystem
             Directory.CreateDirectory(destDir);
     }
 
-    public IEnumerable<string> EnumerateFilesRecursive(string rootPath)
+    public IEnumerable<string> EnumerateFilesRecursive(string rootPath, IEnumerable<string>? priorityExtensions = null)
     {
         if (string.IsNullOrWhiteSpace(rootPath))
         {
@@ -111,7 +111,19 @@ public sealed class DefaultFileSystem : IFileSystem
             e.Data["directory"] = rootPath;
             throw e;
         }
-        return Directory.EnumerateFiles(rootPath, "*", SearchOption.AllDirectories);
+        var allFiles = Directory.EnumerateFiles(rootPath, "*", SearchOption.AllDirectories).ToList();
+
+        if (priorityExtensions == null || !priorityExtensions.Any())
+        {
+            return allFiles;
+        }
+
+        var prioritySet = new HashSet<string>(priorityExtensions, StringComparer.OrdinalIgnoreCase);
+       
+        return allFiles
+            .OrderByDescending(f => prioritySet.Contains(Path.GetExtension(f)))
+            .ThenBy(f => f);
+        //return Directory.EnumerateFiles(rootPath, "*", SearchOption.AllDirectories);
     }
 
     public IEnumerable<string> EnumerateDirectoriesRecursive(string rootPath)
