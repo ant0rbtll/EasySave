@@ -112,6 +112,10 @@
 							<TextBox Text="{Binding LogServerUrl}"
 									 Watermark="{Binding LogServerUrlWatermark}"
 									 HorizontalAlignment="Stretch"/>
+							<TextBlock Text="{Binding LogServerUrlError}"
+									   Foreground="#F44336"
+									   FontSize="12"
+									   IsVisible="{Binding LogServerUrlError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
 						</StackPanel>
 
 						<!-- Dossier de logs -->

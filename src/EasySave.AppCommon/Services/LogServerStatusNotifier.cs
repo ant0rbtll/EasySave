@@ -8,18 +8,26 @@ namespace EasySave.AppCommon.Services;
 /// </summary>
 public sealed class LogServerStatusNotifier : ILogServerStatusNotifier
 {
-    private volatile bool _isServerReachable = true;
+    private readonly object _sync = new();
+    private bool _isServerReachable = true;
 
     public event Action<bool>? ServerStatusChanged;
 
-    public bool IsServerReachable => _isServerReachable;
+    public bool IsServerReachable
+    {
+        get { lock (_sync) return _isServerReachable; }
+    }
 
     public void ReportStatus(bool isReachable)
     {
-        if (_isServerReachable == isReachable)
-            return;
+        lock (_sync)
+        {
+            if (_isServerReachable == isReachable)
+                return;
 
-        _isServerReachable = isReachable;
+            _isServerReachable = isReachable;
+        }
+
         ServerStatusChanged?.Invoke(isReachable);
     }
 }

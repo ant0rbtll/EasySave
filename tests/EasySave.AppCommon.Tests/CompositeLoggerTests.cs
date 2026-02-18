@@ -33,7 +33,7 @@ public class CompositeLoggerTests
     }
 
     [Fact]
-    public void Write_OneLoggerThrows_ExceptionPropagates()
+    public void Write_OneLoggerThrows_OtherLoggersStillCalled()
     {
         var throwing = new Mock<ILogger>();
         throwing.Setup(l => l.Write(It.IsAny<LogEntry>()))
@@ -42,9 +42,28 @@ public class CompositeLoggerTests
         using var composite = new CompositeLogger(throwing.Object, spy);
         var entry = LogEntryFactory.Create();
 
-        Assert.Throws<InvalidOperationException>(() => composite.Write(entry));
-        // Second logger is not reached because no try/catch in foreach
-        Assert.Empty(spy.WrittenEntries);
+        var ex = Assert.Throws<AggregateException>(() => composite.Write(entry));
+
+        Assert.Single(ex.InnerExceptions);
+        Assert.IsType<InvalidOperationException>(ex.InnerExceptions[0]);
+        Assert.Single(spy.WrittenEntries);
+    }
+
+    [Fact]
+    public void Write_AllLoggersThrow_AggregatesAllExceptions()
+    {
+        var throwing1 = new Mock<ILogger>();
+        throwing1.Setup(l => l.Write(It.IsAny<LogEntry>()))
+            .Throws(new InvalidOperationException("first"));
+        var throwing2 = new Mock<ILogger>();
+        throwing2.Setup(l => l.Write(It.IsAny<LogEntry>()))
+            .Throws(new InvalidOperationException("second"));
+        using var composite = new CompositeLogger(throwing1.Object, throwing2.Object);
+        var entry = LogEntryFactory.Create();
+
+        var ex = Assert.Throws<AggregateException>(() => composite.Write(entry));
+
+        Assert.Equal(2, ex.InnerExceptions.Count);
     }
 
     [Fact]

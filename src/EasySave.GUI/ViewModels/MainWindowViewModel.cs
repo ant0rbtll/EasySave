@@ -7,7 +7,7 @@ using EasySave.Log;
 
 namespace EasySave.GUI.ViewModels;
 
-public partial class MainWindowViewModel : ViewModelBase
+public partial class MainWindowViewModel : ViewModelBase, IDisposable
 {
     public SidebarViewModel Sidebar { get; }
 
@@ -187,6 +187,11 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         OnPropertyChanged(nameof(ScrollablePage));
         OnPropertyChanged(nameof(FixedPage));
+    }
+
+    public void Dispose()
+    {
+        _logServerStatusNotifier.ServerStatusChanged -= OnLogServerStatusChanged;
     }
 
     private void OnLogServerStatusChanged(bool isReachable)

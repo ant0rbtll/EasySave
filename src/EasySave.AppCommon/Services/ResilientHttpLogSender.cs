@@ -15,6 +15,7 @@ public sealed class ResilientHttpLogSender : ILogger, IDisposable
     private readonly ILogger? _fallbackLogger;
     private readonly LogServerStatusNotifier _statusNotifier;
     private readonly Timer _healthCheckTimer;
+    private volatile bool _disposed;
 
     /// <param name="httpSender">The underlying HTTP log sender.</param>
     /// <param name="statusNotifier">Notifier to report server status changes.</param>
@@ -39,6 +40,9 @@ public sealed class ResilientHttpLogSender : ILogger, IDisposable
     {
         ArgumentNullException.ThrowIfNull(entry);
 
+        if (_disposed)
+            return;
+
         try
         {
             _httpSender.Write(entry);
@@ -53,6 +57,7 @@ public sealed class ResilientHttpLogSender : ILogger, IDisposable
 
     public void Dispose()
     {
+        _disposed = true;
         _healthCheckTimer.Dispose();
         _httpSender.Dispose();
 
@@ -62,6 +67,9 @@ public sealed class ResilientHttpLogSender : ILogger, IDisposable
 
     private void OnHealthCheckTick(object? state)
     {
+        if (_disposed)
+            return;
+
         try
         {
             _httpSender.CheckServerHealth();

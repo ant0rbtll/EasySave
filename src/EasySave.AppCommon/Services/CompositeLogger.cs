@@ -11,20 +11,50 @@ public sealed class CompositeLogger(params ILogger[] loggers) : ILogger, IDispos
 
     public void Write(LogEntry entry)
     {
+        List<Exception>? exceptions = null;
+
         foreach (var logger in _loggers)
         {
-            logger.Write(entry);
+            try
+            {
+                logger.Write(entry);
+            }
+            catch (Exception ex)
+            {
+                exceptions ??= [];
+                exceptions.Add(ex);
+            }
+        }
+
+        if (exceptions is { Count: > 0 })
+        {
+            throw new AggregateException("One or more loggers failed.", exceptions);
         }
     }
 
     public void Dispose()
     {
+        Exception? firstException = null;
+
         foreach (var logger in _loggers)
         {
             if (logger is IDisposable disposable)
             {
-                disposable.Dispose();
+                try
+                {
+                    disposable.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    firstException ??= ex;
+                }
             }
+        }
+
+        
+        if (firstException != null)
+        {
+            throw firstException;
         }
     }
 }

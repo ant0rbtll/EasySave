@@ -127,6 +127,7 @@ translations:
   log_mode_local_and_centralized: "Local + Centralized"
   gui_config_log_server_url: "Log server URL"
   gui_config_log_server_url_watermark: "Ex: http://localhost:5080"
+  gui_config_log_server_url_invalid: "Invalid URL. Expected format: http://host:port"
   gui_log_server_unreachable: "Log server unreachable — logs are being saved locally"
   gui_home_description: "EasySave is a backup software that lets you create, manage and run your backup jobs with ease. Back up your files using complete or differential mode, and keep track of all your backup activities in the activity log."
   gui_manage_title: "Backup Jobs"

@@ -36,6 +36,7 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string? logDirectory;
     [ObservableProperty] private string? statusMessage;
     [ObservableProperty] private string? pathError;
+    [ObservableProperty] private string? logServerUrlError;
 
     // Propriétés traduites
     [ObservableProperty] private string titleText = "";
@@ -146,6 +147,20 @@ public partial class ConfigViewModel : ViewModelBase
             : _localizationService.TranslateText(LocalizationKey.gui_config_path_invalid);
     }
 
+    private void ValidateLogServerUrl()
+    {
+        if (!IsLogServerUrlVisible || string.IsNullOrWhiteSpace(LogServerUrl))
+        {
+            LogServerUrlError = null;
+            return;
+        }
+
+        LogServerUrlError = Uri.TryCreate(LogServerUrl, UriKind.Absolute, out var uri)
+                            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+            ? null
+            : _localizationService.TranslateText(LocalizationKey.gui_config_log_server_url_invalid);
+    }
+
 
     public void RefreshTranslations()
     {
@@ -190,11 +205,13 @@ public partial class ConfigViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsCentralizedModeSelected));
         OnPropertyChanged(nameof(IsLocalAndCentralizedModeSelected));
         OnPropertyChanged(nameof(IsLogServerUrlVisible));
+        ValidateLogServerUrl();
     }
 
     partial void OnLogServerUrlChanged(string? value)
     {
         ClearStatusMessage();
+        ValidateLogServerUrl();
     }
 
     partial void OnSelectedLanguageChanged(string value)
@@ -246,7 +263,7 @@ public partial class ConfigViewModel : ViewModelBase
         RestartStatusMessageAutoClear();
     }
 
-    private bool CanSave() => PathError is null;
+    private bool CanSave() => PathError is null && LogServerUrlError is null;
 
     private const string DefaultLanguage = "fr";
 
@@ -258,6 +275,11 @@ public partial class ConfigViewModel : ViewModelBase
     }
 
     partial void OnPathErrorChanged(string? value)
+    {
+        SaveCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnLogServerUrlErrorChanged(string? value)
     {
         SaveCommand.NotifyCanExecuteChanged();
     }

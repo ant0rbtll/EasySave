@@ -135,13 +135,20 @@ public sealed class JsonClientRegistry : IClientRegistry, IDisposable
 
     private void SaveToDisk()
     {
-        var list = _clients
-            .Select(kv => new ClientInfo(kv.Key, kv.Value))
-            .OrderBy(c => c.MacAddress)
-            .ToList();
+        try
+        {
+            var list = _clients
+                .Select(kv => new ClientInfo(kv.Key, kv.Value))
+                .OrderBy(c => c.MacAddress)
+                .ToList();
 
-        var json = JsonSerializer.Serialize(list, JsonOptions);
-        File.WriteAllText(_filePath, json);
+            var json = JsonSerializer.Serialize(list, JsonOptions);
+            File.WriteAllText(_filePath, json);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Failed to save client registry to {_filePath}: {ex.Message}");
+        }
     }
 
     private static string NormalizeMac(string macAddress)

@@ -141,7 +141,7 @@ public sealed class ServerLogWriter(ServerPathProvider pathProvider, LogFormat d
         if (footerIndex < 0)
         {
             stream.Seek(0, SeekOrigin.End);
-            WriteNewLineIfNeeded(stream, bytes);
+            WriteNewLineIfNeeded(stream);
             if (!string.IsNullOrEmpty(separator))
                 WriteUtf8(stream, separator + Environment.NewLine);
             WriteUtf8(stream, indentedEntry + Environment.NewLine + footer + Environment.NewLine);
@@ -183,7 +183,7 @@ public sealed class ServerLogWriter(ServerPathProvider pathProvider, LogFormat d
     private static void AppendWithoutFooter(FileStream stream, string separator, string indentedEntry)
     {
         stream.Seek(0, SeekOrigin.End);
-        WriteNewLineIfNeeded(stream, ReadAllBytes(stream));
+        WriteNewLineIfNeeded(stream);
         if (!string.IsNullOrEmpty(separator))
             WriteUtf8(stream, separator + Environment.NewLine);
         WriteUtf8(stream, indentedEntry + Environment.NewLine);
@@ -233,13 +233,16 @@ public sealed class ServerLogWriter(ServerPathProvider pathProvider, LogFormat d
         return start;
     }
 
-    private static void WriteNewLineIfNeeded(FileStream stream, byte[] currentBytes)
+    private static void WriteNewLineIfNeeded(FileStream stream)
     {
-        if (currentBytes.Length == 0)
+        if (stream.Length == 0)
             return;
 
-        byte last = currentBytes[^1];
-        if (last != (byte)'\n' && last != (byte)'\r')
+        stream.Seek(-1, SeekOrigin.End);
+        int last = stream.ReadByte();
+        stream.Seek(0, SeekOrigin.End);
+
+        if (last != '\n' && last != '\r')
             WriteUtf8(stream, Environment.NewLine);
     }
 
