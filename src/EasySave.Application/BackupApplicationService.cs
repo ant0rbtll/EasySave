@@ -3,6 +3,7 @@ using EasySave.Backup;
 using EasySave.Core;
 using EasySave.State;
 using EasySave.System;
+using System.Threading;
 
 namespace EasySave.Application;
 
@@ -17,7 +18,8 @@ public class BackupApplicationService(
     IBackupJobStateService backupJobStateService,
     IStateReader? stateReader = null,
     IBackupRunCoordinator? backupRunCoordinator = null,
-    IBackupExecutionGuard? backupExecutionGuard = null)
+    IBackupExecutionGuard? backupExecutionGuard = null,
+    IStateWriter? stateWriter = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
@@ -25,6 +27,8 @@ public class BackupApplicationService(
     private readonly IStateReader? _stateReader = stateReader;
     private readonly IBackupRunCoordinator _backupRunCoordinator = backupRunCoordinator ?? new InMemoryBackupRunCoordinator();
     private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
+    private readonly IStateWriter? _stateWriter = stateWriter;
+    private int _activeStateReconciled;
 
     /// <summary>
     /// Creates and saves a new backup job.
@@ -62,8 +66,6 @@ public class BackupApplicationService(
     /// <param name="cancellationToken">Cancellation token.</param>
     public async Task RunJob(int id, CancellationToken cancellationToken = default)
     {
-        EnsureBusinessSoftwareIsNotRunning();
-
         var job = _repo.GetById(id);
         if (job is null)
         {
@@ -105,6 +107,7 @@ public class BackupApplicationService(
     /// <returns>A list of <see cref="BackupJob"/> objects.</returns>
     public List<BackupJob> GetAllJobs()
     {
+        EnsureActiveStateConsistency();
         var jobs = _repo.GetAll();
         _backupJobStateService.ApplyState(jobs);
         return jobs;
@@ -115,6 +118,7 @@ public class BackupApplicationService(
     /// </summary>
     public IReadOnlyDictionary<int, BackupJobRuntimeState> GetAllJobsRuntimeStates()
     {
+        EnsureActiveStateConsistency();
         var jobs = _repo.GetAll();
         _backupJobStateService.ApplyState(jobs);
 
@@ -128,13 +132,18 @@ public class BackupApplicationService(
     /// </summary>
     public IReadOnlyDictionary<int, BackupJobLiveProgressState> GetAllJobsLiveProgress()
     {
+        EnsureActiveStateConsistency();
         var entries = _stateReader?.ReadEntries() ?? new Dictionary<int, StateEntry>();
         var jobNamesById = (_repo.GetAll() ?? [])
             .ToDictionary(j => j.Id, j => j.Name);
         var states = new Dictionary<int, BackupJobLiveProgressState>(entries.Count);
         foreach (var (jobId, entry) in entries)
         {
-            if (entry.Status != BackupStatus.Active)
+            var shouldInclude = entry.Status == BackupStatus.Active
+                || entry.Status == BackupStatus.Paused
+                || entry.Status == BackupStatus.Blocked;
+
+            if (!shouldInclude)
             {
                 continue;
             }
@@ -143,7 +152,7 @@ public class BackupApplicationService(
             states[jobId] = new BackupJobLiveProgressState(
                 jobId,
                 jobName,
-                BackupJobStatus.Active,
+                MapStatus(entry.Status),
                 ClampProgress(entry.ProgressPercent),
                 entry.TotalFiles,
                 entry.TotalSizeBytes,
@@ -180,10 +189,53 @@ public class BackupApplicationService(
     /// <returns>The BackupJob if found, null otherwise.</returns>
     public BackupJob? GetJob(int id)
     {
+        EnsureActiveStateConsistency();
         var job = _repo.GetById(id);
         if (job == null) return null;
         _backupJobStateService.ApplyState(job);
         return job;
+    }
+
+    /// <summary>
+    /// Reconciles stale runtime state at application startup.
+    /// </summary>
+    public void ReconcileStartupState()
+    {
+        EnsureActiveStateConsistency();
+    }
+
+    private void EnsureActiveStateConsistency()
+    {
+        if (Interlocked.Exchange(ref _activeStateReconciled, 1) == 1)
+            return;
+
+        if (_stateReader is null || _stateWriter is null)
+            return;
+
+        var entries = _stateReader.ReadEntries();
+        foreach (var (jobId, entry) in entries)
+        {
+            if (entry.Status is not (BackupStatus.Active or BackupStatus.Paused or BackupStatus.Blocked))
+                continue;
+
+            if (_backupRunCoordinator.IsRunning(jobId))
+                continue;
+
+            _stateWriter.Update(new StateEntry
+            {
+                BackupId = jobId,
+                BackupName = entry.BackupName,
+                Timestamp = DateTime.Now,
+                Status = BackupStatus.Inactive,
+                TotalFiles = entry.TotalFiles,
+                TotalSizeBytes = entry.TotalSizeBytes,
+                RemainingFiles = entry.RemainingFiles,
+                RemainingSizeBytes = entry.RemainingSizeBytes,
+                ProgressPercent = entry.ProgressPercent,
+                CurrentSourcePath = entry.CurrentSourcePath,
+                CurrentDestinationPath = entry.CurrentDestinationPath
+            });
+        }
     }
 
     /// <summary>
@@ -206,6 +258,20 @@ public class BackupApplicationService(
     private void EnsureBusinessSoftwareIsNotRunning()
     {
         _backupExecutionGuard.EnsureCanCopyNextFile();
+    }
+
+    private static BackupJobStatus MapStatus(BackupStatus status)
+    {
+        return status switch
+        {
+            BackupStatus.Inactive => BackupJobStatus.Inactive,
+            BackupStatus.Active => BackupJobStatus.Active,
+            BackupStatus.Done => BackupJobStatus.Done,
+            BackupStatus.Error => BackupJobStatus.Error,
+            BackupStatus.Paused => BackupJobStatus.Paused,
+            BackupStatus.Blocked => BackupJobStatus.Blocked,
+            _ => BackupJobStatus.Inactive
+        };
     }
 
     private static int ClampProgress(int progressPercent) => Math.Clamp(progressPercent, 0, 100);

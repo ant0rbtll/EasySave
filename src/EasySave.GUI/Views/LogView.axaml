@@ -118,12 +118,33 @@
 		<Style Selector="Border.run-status-badge[Tag=inprogress] TextBlock">
 			<Setter Property="Foreground" Value="#9FD3FF"/>
 		</Style>
+		<Style Selector="Border.run-status-badge[Tag=paused]">
+			<Setter Property="Background" Value="#1F5A4A1A"/>
+			<Setter Property="BorderBrush" Value="#5AFFD54F"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=paused] TextBlock">
+			<Setter Property="Foreground" Value="#FFE082"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=blocked]">
+			<Setter Property="Background" Value="#1F5A2323"/>
+			<Setter Property="BorderBrush" Value="#5AE57373"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=blocked] TextBlock">
+			<Setter Property="Foreground" Value="#FFB3B3"/>
+		</Style>
 		<Style Selector="Border.run-status-badge[Tag=error]">
 			<Setter Property="Background" Value="#1F5A2323"/>
 			<Setter Property="BorderBrush" Value="#5AE57373"/>
 		</Style>
 		<Style Selector="Border.run-status-badge[Tag=error] TextBlock">
 			<Setter Property="Foreground" Value="#FFB3B3"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=stopped]">
+			<Setter Property="Background" Value="#1F6A341F"/>
+			<Setter Property="BorderBrush" Value="#5AFFA65C"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=stopped] TextBlock">
+			<Setter Property="Foreground" Value="#FFD8B5"/>
 		</Style>
 
 		<Style Selector="Button.run-row-btn">
@@ -516,13 +537,25 @@
 															<Setter Property="Foreground" Value="#CE93D8"/>
 														</Style>
 
-														<Style Selector="Border[Tag=EndBackup]">
-															<Setter Property="Background" Value="#22009688"/>
-														</Style>
-														<Style Selector="Border[Tag=EndBackup] TextBlock">
-															<Setter Property="Foreground" Value="#80CBC4"/>
-														</Style>
-													</Border.Styles>
+															<Style Selector="Border[Tag=EndBackup]">
+																<Setter Property="Background" Value="#22009688"/>
+															</Style>
+															<Style Selector="Border[Tag=EndBackup] TextBlock">
+																<Setter Property="Foreground" Value="#80CBC4"/>
+															</Style>
+															<Style Selector="Border[Tag=Action]">
+																<Setter Property="Background" Value="#22FFB74D"/>
+															</Style>
+															<Style Selector="Border[Tag=Action] TextBlock">
+																<Setter Property="Foreground" Value="#FFD180"/>
+															</Style>
+															<Style Selector="Border[Tag=Stopped]">
+																<Setter Property="Background" Value="#22FF7043"/>
+															</Style>
+															<Style Selector="Border[Tag=Stopped] TextBlock">
+																<Setter Property="Foreground" Value="#FFCCBC"/>
+															</Style>
+														</Border.Styles>
 
 													<Border.Tag>
 														<Binding Path="EventType"/>
@@ -582,7 +615,7 @@
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center">
 								<Button Classes="page-nav-btn" Command="{Binding PreviousPageCommand}">
-									<TextBlock Text="â" FontSize="12"/>
+									<TextBlock Text="&#9664;" FontSize="12"/>
 								</Button>
 
 								<ItemsControl ItemsSource="{Binding PaginationItems}">
@@ -611,7 +644,7 @@
 								</ItemsControl>
 
 								<Button Classes="page-nav-btn" Command="{Binding NextPageCommand}">
-									<TextBlock Text="â¶" FontSize="12"/>
+									<TextBlock Text="&#9654;" FontSize="12"/>
 								</Button>
 							</StackPanel>
 
@@ -634,7 +667,7 @@
 								</TextBox>
 
 								<Button Classes="page-go-btn" Command="{Binding JumpToEnteredPageCommand}">
-									<TextBlock Text="âµ" FontSize="13"/>
+									<TextBlock Text="&#8629;" FontSize="13"/>
 								</Button>
 
 								<TextBlock Text="|" Classes="page-meta"/>

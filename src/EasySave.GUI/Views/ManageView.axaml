@@ -38,6 +38,12 @@
 		<Style Selector="Border.status-badge[Tag=Active] TextBlock">
 			<Setter Property="Foreground" Value="#7AB8FF"/>
 		</Style>
+		<Style Selector="Border.status-badge[Tag=Paused]">
+			<Setter Property="Background" Value="#1F5A4A1A"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Paused] TextBlock">
+			<Setter Property="Foreground" Value="#FFE082"/>
+		</Style>
 		<Style Selector="Border.status-badge[Tag=Done]">
 			<Setter Property="Background" Value="#1A66BB6A"/>
 		</Style>
@@ -49,6 +55,12 @@
 		</Style>
 		<Style Selector="Border.status-badge[Tag=Error] TextBlock">
 			<Setter Property="Foreground" Value="#EF5350"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Blocked]">
+			<Setter Property="Background" Value="#2AAF3A3A"/>
+		</Style>
+		<Style Selector="Border.status-badge[Tag=Blocked] TextBlock">
+			<Setter Property="Foreground" Value="#FFC8C8"/>
 		</Style>
 		<Style Selector="Border.type-badge TextBlock">
 			<Setter Property="FontSize" Value="11"/>
@@ -485,11 +497,11 @@
 											</Border>
 
 											<!-- Status -->
-											<Border Grid.Column="2"
-													Classes="status-badge"
-													Tag="{Binding Status}"
-													HorizontalAlignment="Center"
-													VerticalAlignment="Center">
+												<Border Grid.Column="2"
+														Classes="status-badge"
+														Tag="{Binding Status}"
+														HorizontalAlignment="Center"
+														VerticalAlignment="Center">
 												<TextBlock Text="{Binding StatusDisplay}"/>
 											</Border>
 

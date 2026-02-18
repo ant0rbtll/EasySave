@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using EasySave.GUI.ViewModels;
 
 namespace EasySave.GUI.Views;
 
@@ -13,12 +14,16 @@ public partial class MainWindow : Window
 
     /// <summary>Thickness in pixels of the resize area along the window edges.</summary>
     private const int ResizeBorder = 6;
+    private bool _isCloseConfirmed;
+    private MainWindowViewModel? _subscribedViewModel;
 
     public MainWindow()
     {
         InitializeComponent();
 
         ConfigurePlatformTitleBar();
+        Closing += OnWindowClosing;
+        DataContextChanged += OnDataContextChanged;
     }
 
     private void ConfigurePlatformTitleBar()
@@ -162,5 +167,47 @@ public partial class MainWindow : Window
             WindowEdge.NorthEast or WindowEdge.SouthWest => new Cursor(StandardCursorType.TopRightCorner),
             _ => Cursor.Default
         };
+    }
+
+    private void OnWindowClosing(object? sender, WindowClosingEventArgs e)
+    {
+        if (_isCloseConfirmed)
+            return;
+
+        if (DataContext is not MainWindowViewModel viewModel)
+            return;
+
+        if (!viewModel.HasRunningOrPausedBackups())
+            return;
+
+        e.Cancel = true;
+
+        viewModel.OpenCloseConfirmationDialog();
+    }
+
+    private void OnDataContextChanged(object? sender, EventArgs e)
+    {
+        if (ReferenceEquals(_subscribedViewModel, DataContext))
+            return;
+
+        if (_subscribedViewModel is not null)
+            _subscribedViewModel.CloseConfirmed -= OnCloseConfirmed;
+
+        _subscribedViewModel = DataContext as MainWindowViewModel;
+        if (_subscribedViewModel is not null)
+            _subscribedViewModel.CloseConfirmed += OnCloseConfirmed;
+    }
+
+    private void OnCloseConfirmed(object? sender, EventArgs e)
+    {
+        _isCloseConfirmed = true;
+        Close();
+    }
+
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        if (_subscribedViewModel is not null)
+            _subscribedViewModel.CloseConfirmed -= OnCloseConfirmed;
     }
 }

@@ -26,6 +26,7 @@ namespace EasySave.UI
                 { "error_job_not_found", LocalizationKey.error_job_not_found },
                 { "error_max_id", LocalizationKey.error_max_id },
                 { "error_file_transfer_failed", LocalizationKey.error_file_transfer_failed },
+                { "error_backup_stopped_by_user", LocalizationKey.error_backup_stopped_by_user },
                 { "error_backup_type_invalid", LocalizationKey.error_backup_type_invalid },
                 { "error_file_not_found", LocalizationKey.error_file_not_found },
                 { "error_directory_not_found", LocalizationKey.error_directory_not_found },

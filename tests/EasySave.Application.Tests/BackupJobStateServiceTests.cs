@@ -30,6 +30,30 @@ public class BackupJobStateServiceTests
     }
 
     [Fact]
+    public void ApplyState_WithPausedEntry_MapsPausedAndKeepsJobActive()
+    {
+        var timestamp = new DateTime(2026, 2, 11, 10, 30, 0, DateTimeKind.Utc);
+        var reader = new StubStateReader(new Dictionary<int, StateEntry>
+        {
+            [42] = new()
+            {
+                BackupId = 42,
+                Timestamp = timestamp,
+                Status = BackupStatus.Paused
+            }
+        });
+
+        var service = new BackupJobStateService(reader);
+        var job = new BackupJob { Id = 42 };
+
+        service.ApplyState(job);
+
+        Assert.Equal(timestamp, job.LastExecutionDate);
+        Assert.True(job.IsActive);
+        Assert.Equal(BackupJobStatus.Paused, job.Status);
+    }
+
+    [Fact]
     public void ApplyState_WithMissingEntry_ResetsRuntimeFields()
     {
         var reader = new StubStateReader(new Dictionary<int, StateEntry>());

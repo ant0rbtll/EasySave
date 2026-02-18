@@ -14,6 +14,7 @@ public class BackupApplicationServiceTests
     private readonly Mock<IBackupExecutionGuard> _backupExecutionGuardMock;
     private readonly Mock<IBackupJobStateService> _backupJobStateServiceMock;
     private readonly Mock<IStateReader> _stateReaderMock;
+    private readonly Mock<IStateWriter> _stateWriterMock;
     private readonly BackupApplicationService _service;
 
     public BackupApplicationServiceTests()
@@ -23,11 +24,17 @@ public class BackupApplicationServiceTests
         _backupExecutionGuardMock = new Mock<IBackupExecutionGuard>();
         _backupJobStateServiceMock = new Mock<IBackupJobStateService>();
         _stateReaderMock = new Mock<IStateReader>();
+        _stateWriterMock = new Mock<IStateWriter>();
         _engineMock
             .Setup(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
         _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>());
-        _service = new BackupApplicationService(_repoMock.Object, _engineMock.Object, _backupJobStateServiceMock.Object, _stateReaderMock.Object);
+        _service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            _stateReaderMock.Object,
+            stateWriter: _stateWriterMock.Object);
     }
 
     /// <summary>
@@ -106,6 +113,62 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
+    public void GetAllJobsRuntimeStates_ShouldExposeBlockedStatus()
+    {
+        var jobs = new List<BackupJob>
+        {
+            new() { Id = 7, Status = BackupJobStatus.Blocked, IsActive = true }
+        };
+        _repoMock.Setup(r => r.GetAll()).Returns(jobs);
+
+        var result = _service.GetAllJobsRuntimeStates();
+
+        Assert.Single(result);
+        Assert.Equal(BackupJobStatus.Blocked, result[7].Status);
+    }
+
+    [Fact]
+    public void GetAllJobs_WhenStateContainsOrphanActive_ShouldMarkInactiveOnce()
+    {
+        _repoMock.Setup(r => r.GetAll()).Returns(new List<BackupJob>());
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [42] = new() { BackupId = 42, Status = BackupStatus.Active, Timestamp = DateTime.UtcNow }
+        });
+
+        _service.GetAllJobs();
+        _service.GetAllJobs();
+
+        _stateWriterMock.Verify(w => w.Update(It.Is<StateEntry>(entry =>
+            entry.BackupId == 42 &&
+            entry.Status == BackupStatus.Inactive)), Times.Once);
+    }
+
+    [Fact]
+    public void GetAllJobs_WhenActiveJobIsRunning_ShouldNotMarkInactive()
+    {
+        var coordinatorMock = new Mock<IBackupRunCoordinator>();
+        coordinatorMock.Setup(c => c.IsRunning(42)).Returns(true);
+        _repoMock.Setup(r => r.GetAll()).Returns(new List<BackupJob>());
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [42] = new() { BackupId = 42, Status = BackupStatus.Active, Timestamp = DateTime.UtcNow }
+        });
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            _stateReaderMock.Object,
+            coordinatorMock.Object,
+            stateWriter: _stateWriterMock.Object);
+
+        service.GetAllJobs();
+
+        _stateWriterMock.Verify(w => w.Update(It.IsAny<StateEntry>()), Times.Never);
+    }
+
+    [Fact]
     public void GetAllJobsLiveProgress_ShouldReturnOnlyActiveEntries()
     {
         var timestamp = new DateTime(2026, 2, 16, 11, 45, 0, DateTimeKind.Utc);
@@ -151,6 +214,29 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
+    public void GetAllJobsLiveProgress_ShouldExposeBlockedStatus()
+    {
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [5] = new()
+            {
+                BackupId = 5,
+                BackupName = "Blocked Job",
+                Status = BackupStatus.Blocked,
+                CurrentSourcePath = BackupRuntimeKeys.ErrorBusinessSoftwareRunning,
+                CurrentDestinationPath = "excel",
+                ProgressPercent = 12,
+                Timestamp = DateTime.Now
+            }
+        });
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Single(result);
+        Assert.Equal(BackupJobStatus.Blocked, result[5].Status);
+    }
+
+    [Fact]
     public void GetAllJobsLiveProgress_ShouldClampProgressPercent()
     {
         _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
@@ -167,6 +253,27 @@ public class BackupApplicationServiceTests
         var result = _service.GetAllJobsLiveProgress();
 
         Assert.Equal(100, result[7].ProgressPercent);
+    }
+
+    [Fact]
+    public void GetAllJobsLiveProgress_ShouldReturnPausedEntries()
+    {
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [3] = new()
+            {
+                BackupId = 3,
+                BackupName = "Job Paused",
+                Status = BackupStatus.Paused,
+                ProgressPercent = 33
+            }
+        });
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Single(result);
+        Assert.Equal(BackupJobStatus.Paused, result[3].Status);
+        Assert.Equal(33, result[3].ProgressPercent);
     }
 
     [Fact]
@@ -486,19 +593,13 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
-    public async Task RunJob_WhenBusinessSoftwareIsRunning_ShouldBlockExecution()
+    public async Task RunJob_WhenBusinessSoftwareIsRunningInGuard_ShouldStillExecuteEngine()
     {
         var job = new BackupJob { Id = 1, Name = "Test", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
         _repoMock.Setup(r => r.GetById(1)).Returns(job);
         _backupExecutionGuardMock
             .Setup(g => g.EnsureCanCopyNextFile())
-            .Throws(() =>
-            {
-                var ex = new InvalidOperationException("error_business_software_running");
-                ex.Data["errorKey"] = "error_business_software_running";
-                ex.Data["0"] = "calc";
-                return ex;
-            });
+            .Throws(new InvalidOperationException("error_business_software_running"));
 
         var service = new BackupApplicationService(
             _repoMock.Object,
@@ -506,12 +607,9 @@ public class BackupApplicationServiceTests
             _backupJobStateServiceMock.Object,
             backupExecutionGuard: _backupExecutionGuardMock.Object);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunJob(1));
+        await service.RunJob(1);
 
-        Assert.Equal("error_business_software_running", exception.Message);
-        Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
-        Assert.Equal("calc", exception.Data["0"]);
-        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -523,8 +621,7 @@ public class BackupApplicationServiceTests
         var service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
-            _backupJobStateServiceMock.Object,
-            backupExecutionGuard: _backupExecutionGuardMock.Object);
+            _backupJobStateServiceMock.Object);
 
         await service.RunJob(1);
 
@@ -542,6 +639,7 @@ public class BackupApplicationServiceTests
             _engineMock.Object,
             _backupJobStateServiceMock.Object,
             backupExecutionGuard: _backupExecutionGuardMock.Object);
+
 
         var simulatedEngineException = new InvalidOperationException("error_business_software_running");
         simulatedEngineException.Data["errorKey"] = "error_business_software_running";

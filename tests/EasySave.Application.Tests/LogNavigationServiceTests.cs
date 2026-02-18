@@ -84,7 +84,7 @@ public class LogNavigationServiceTests
         [
             CreateEntry("2026-02-12T10:00:00Z", 3, "job-3", LogEventType.StartBackup),
             CreateEntry("2026-02-12T10:00:01Z", 3, "job-3", LogEventType.TransferFile),
-            CreateEntry("2026-02-12T10:00:02Z", 3, "job-3", LogEventType.Error)
+            CreateEntry("2026-02-12T10:00:02Z", 3, "job-3", LogEventType.Error, transferTimeMs: 1234)
         ]);
 
         var service = CreateService(temp.LogsDirectory);
@@ -94,6 +94,75 @@ public class LogNavigationServiceTests
         var run = Assert.Single(runs);
         Assert.Equal(LogRunStatus.Error, run.Status);
         Assert.NotNull(run.EndTimestamp);
+        Assert.Equal(1234, run.TotalDurationMs);
+        Assert.Null(run.TotalSizeBytes);
+    }
+
+    [Fact]
+    public void GetRunsByDateAndBackupId_WhenLastEventIsBusinessSoftwareDetected_ShouldMarkBlocked()
+    {
+        using var temp = new TempDirectory();
+        var date = new DateOnly(2026, 2, 12);
+
+        WriteJson(Path.Combine(temp.LogsDirectory, "2026-02-12.json"),
+        [
+            CreateEntry("2026-02-12T10:00:00Z", 9, "job-9", LogEventType.StartBackup),
+            CreateEntry("2026-02-12T10:00:01Z", 9, "job-9", LogEventType.BusinessSoftwareDetected)
+        ]);
+
+        var service = CreateService(temp.LogsDirectory);
+
+        var runs = service.GetRunsByDateAndBackupId(date, 9);
+
+        var run = Assert.Single(runs);
+        Assert.Equal(LogRunStatus.Blocked, run.Status);
+        Assert.Null(run.EndTimestamp);
+    }
+
+    [Fact]
+    public void GetRunsByDateAndBackupId_MarksStoppedWhenTerminalEventIsStopped()
+    {
+        using var temp = new TempDirectory();
+        var date = new DateOnly(2026, 2, 12);
+
+        WriteJson(Path.Combine(temp.LogsDirectory, "2026-02-12.json"),
+        [
+            CreateEntry("2026-02-12T10:00:00Z", 4, "job-4", LogEventType.StartBackup),
+            CreateEntry("2026-02-12T10:00:01Z", 4, "job-4", LogEventType.TransferFile),
+            CreateEntry("2026-02-12T10:00:02Z", 4, "job-4", LogEventType.Stopped, transferTimeMs: 2345)
+        ]);
+
+        var service = CreateService(temp.LogsDirectory);
+
+        var runs = service.GetRunsByDateAndBackupId(date, 4);
+
+        var run = Assert.Single(runs);
+        Assert.Equal(LogRunStatus.Stopped, run.Status);
+        Assert.NotNull(run.EndTimestamp);
+        Assert.Equal(2345, run.TotalDurationMs);
+        Assert.Null(run.TotalSizeBytes);
+    }
+
+    [Fact]
+    public void GetRunsByDateAndBackupId_MarksPausedWhenLastEventIsPauseAction()
+    {
+        using var temp = new TempDirectory();
+        var date = new DateOnly(2026, 2, 12);
+
+        WriteJson(Path.Combine(temp.LogsDirectory, "2026-02-12.json"),
+        [
+            CreateEntry("2026-02-12T10:00:00Z", 5, "job-5", LogEventType.StartBackup),
+            CreateEntry("2026-02-12T10:00:01Z", 5, "job-5", LogEventType.TransferFile),
+            CreateEntry("2026-02-12T10:00:02Z", 5, "job-5", LogEventType.Action, sourcePathUNC: "action_backup_paused_by_user")
+        ]);
+
+        var service = CreateService(temp.LogsDirectory);
+
+        var runs = service.GetRunsByDateAndBackupId(date, 5);
+
+        var run = Assert.Single(runs);
+        Assert.Equal(LogRunStatus.Paused, run.Status);
+        Assert.Null(run.EndTimestamp);
         Assert.Null(run.TotalDurationMs);
         Assert.Null(run.TotalSizeBytes);
     }
@@ -174,6 +243,7 @@ public class LogNavigationServiceTests
         int backupId,
         string backupName,
         LogEventType eventType,
+        string sourcePathUNC = "\\\\src",
         long transferTimeMs = 0,
         long fileSizeBytes = 0)
     {
@@ -182,7 +252,7 @@ public class LogNavigationServiceTests
             backupId,
             backupName,
             eventType,
-            "\\\\src",
+            sourcePathUNC,
             "\\\\dst",
             fileSizeBytes,
             transferTimeMs,

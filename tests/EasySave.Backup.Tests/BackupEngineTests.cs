@@ -400,7 +400,7 @@ public class BackupEngineTests
     }
 
     [Fact]
-    public async Task Execute_WhenBusinessSoftwareDetectedDuringFileLoop_StopsAndLogsReason()
+    public async Task Execute_WhenBusinessSoftwareDetectedDuringFileLoop_WaitsThenContinuesAndLogsReason()
     {
         var job = new BackupJob
         {
@@ -426,7 +426,7 @@ public class BackupEngineTests
             .Callback(() =>
             {
                 callCount++;
-                if (callCount >= 2)
+                if (callCount is 2 or 3)
                 {
                     var ex = new InvalidOperationException("error_business_software_running");
                     ex.Data["errorKey"] = "error_business_software_running";
@@ -442,16 +442,172 @@ public class BackupEngineTests
             _loggerMock.Object,
             executionGuard: guardMock.Object);
 
-        var exThrown = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job));
-        Assert.Equal("error_business_software_running", exThrown.Message);
+        await engine.Execute(job);
 
         _transferServiceMock.Verify(ts => ts.TransferFile("/source/file1.txt", "/destination/file1.txt", true), Times.Once);
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file2.txt", "/destination/file2.txt", true), Times.Never);
-        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file2.txt", "/destination/file2.txt", true), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Never);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Done)), Times.Once);
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
             le.EventType == LogEventType.BusinessSoftwareDetected &&
             le.SourcePathUNC == "error_business_software_running" &&
             le.DestinationPathUNC == "calc")), Times.Once);
+    }
+
+    [Fact]
+    public async Task Execute_WhenCancelledDuringBusinessSoftwareWait_ShouldThrowOperationCanceledException()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var guardMock = new Mock<IBackupExecutionGuard>();
+        guardMock.Setup(g => g.EnsureCanCopyNextFile())
+            .Throws(() =>
+            {
+                var ex = new InvalidOperationException("error_business_software_running");
+                ex.Data["errorKey"] = "error_business_software_running";
+                ex.Data["0"] = "calc";
+                return ex;
+            });
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionGuard: guardMock.Object);
+
+        using var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromMilliseconds(80));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => engine.Execute(job, cts.Token));
+
+        _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Never);
+    }
+
+    [Fact]
+    public async Task Execute_WhenPauseActionIsPending_LogsActionEventWithActionKey()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        var executionController = new StubExecutionController(
+            actions: ["action_backup_paused_by_user"]);
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionController);
+
+        await engine.Execute(job);
+
+        _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
+            le.EventType == LogEventType.Action &&
+            le.SourcePathUNC == "action_backup_paused_by_user")), Times.Once);
+    }
+
+    [Fact]
+    public async Task Execute_WhenControllerReportsPaused_UpdatesStateToPausedThenActive()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        var executionController = new StubExecutionController(
+            controlStates: [BackupJobControlState.Paused, BackupJobControlState.Running]);
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionController);
+
+        await engine.Execute(job);
+
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Paused)), Times.AtLeastOnce);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Active)), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Execute_WhenStoppedByUser_MarksInactiveAndLogsStoppedEvent()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var stopException = new InvalidOperationException("error_backup_stopped_by_user");
+        stopException.Data["errorKey"] = "error_backup_stopped_by_user";
+        stopException.Data["actionKey"] = "action_backup_stopped_by_user";
+        var executionController = new StubExecutionController(waitException: stopException);
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionController);
+
+        var exThrown = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job));
+        Assert.Equal("error_backup_stopped_by_user", exThrown.Message);
+
+        _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Never);
+        _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
+            le.EventType == LogEventType.Stopped &&
+            le.SourcePathUNC == "action_backup_stopped_by_user")), Times.Once);
     }
 
     [Fact]
@@ -473,7 +629,64 @@ public class BackupEngineTests
             .Returns(1000);
 
         // Act & Assert
+        
         await Assert.ThrowsAsync<NotSupportedException>(() => _backupEngine.Execute(job));
+    }
+
+    private sealed class StubExecutionController(
+        IEnumerable<string>? actions = null,
+        Exception? waitException = null,
+        IEnumerable<BackupJobControlState>? controlStates = null) : IBackupExecutionController
+    {
+        private readonly Queue<string> _actions = new(actions ?? []);
+        private readonly Exception? _waitException = waitException;
+        private readonly Queue<BackupJobControlState> _controlStates = new(controlStates ?? []);
+
+        public void BeginJob(int jobId) { }
+
+        public void EndJob(int jobId) { }
+
+        public void PauseAll() { }
+
+        public void Pause(int jobId) { }
+
+        public void ResumeAll() { }
+
+        public void Resume(int jobId) { }
+
+        public void RequestStopAll() { }
+
+        public void RequestStop(int jobId) { }
+
+        public void WaitIfPausedOrThrowIfStopped()
+        {
+            if (_waitException is not null)
+                throw _waitException;
+        }
+
+        public bool TryDequeueAction(out string actionKey)
+        {
+            if (_actions.Count == 0)
+            {
+                actionKey = string.Empty;
+                return false;
+            }
+
+            actionKey = _actions.Dequeue();
+            return true;
+        }
+
+        public bool TryGetCurrentJobControlState(int jobId, out BackupJobControlState controlState)
+        {
+            if (_controlStates.Count == 0)
+            {
+                controlState = default;
+                return false;
+            }
+
+            controlState = _controlStates.Dequeue();
+            return true;
+        }
     }
 
     [Fact]

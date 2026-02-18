@@ -20,7 +20,22 @@ public enum LogRunStatus
     /// <summary>
     /// The run ended with an error event.
     /// </summary>
-    Error = 2
+    Error = 2,
+
+    /// <summary>
+    /// The run was stopped by the user.
+    /// </summary>
+    Stopped = 3,
+
+    /// <summary>
+    /// The run is currently paused by the user.
+    /// </summary>
+    Paused = 4,
+
+    /// <summary>
+    /// The run is currently blocked by business software detection.
+    /// </summary>
+    Blocked = 5
 }
 
 /// <summary>
@@ -42,9 +57,9 @@ public sealed record LogJobSummary(
 /// <param name="BackupName">Backup job display name.</param>
 /// <param name="Format">Source log format containing this run.</param>
 /// <param name="StartTimestamp">Run start timestamp.</param>
-/// <param name="EndTimestamp">Run end timestamp when completed.</param>
+/// <param name="EndTimestamp">Run end timestamp when a terminal event is present.</param>
 /// <param name="Status">Computed run status from terminal events.</param>
-/// <param name="TotalDurationMs">Total duration from EndBackup transfer time when available.</param>
+/// <param name="TotalDurationMs">Total duration from terminal event transfer time when available.</param>
 /// <param name="TotalSizeBytes">Total backup size from EndBackup file size when available.</param>
 public sealed record LogRunSummary(
     string RunId,
