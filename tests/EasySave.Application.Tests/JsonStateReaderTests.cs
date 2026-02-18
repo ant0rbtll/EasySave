@@ -31,6 +31,32 @@ public class JsonStateReaderTests
     }
 
     [Fact]
+    public void ReadEntries_WhenStatusIsString_ReturnsEntries()
+    {
+        using var temp = new TempDirectory();
+        var statePath = Path.Combine(temp.RootPath, "state.json");
+        File.WriteAllText(
+            statePath,
+            """
+            {
+              "4": {
+                "backupId": 4,
+                "timestamp": "2026-02-11T10:30:00Z",
+                "status": "Waiting"
+              }
+            }
+            """);
+
+        var reader = new JsonStateReader(new TestPathProvider(statePath));
+
+        var entries = reader.ReadEntries();
+
+        Assert.True(entries.ContainsKey(4));
+        Assert.Equal(4, entries[4].BackupId);
+        Assert.Equal(State.BackupStatus.Waiting, entries[4].Status);
+    }
+
+    [Fact]
     public void ReadEntries_WhenJsonIsInvalid_ReturnsEmpty()
     {
         using var temp = new TempDirectory();

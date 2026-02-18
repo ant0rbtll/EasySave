@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Diagnostics;
 using EasySave.Configuration;
 using EasySave.State;
@@ -15,7 +16,11 @@ public sealed class JsonStateReader(IPathProvider pathProvider) : IStateReader
     private readonly IPathProvider _pathProvider = pathProvider;
     private static readonly JsonSerializerOptions s_jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        Converters =
+        {
+            new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true)
+        }
     };
 
     /// <inheritdoc />

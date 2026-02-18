@@ -398,5 +398,48 @@ public class JsonBackupJobRepositoryTests : IDisposable
         _pathProviderMock.Verify(p => p.GetJobsConfigPath(), Times.AtLeast(4));
     }
 
+    [Fact]
+    public void Add_SerializesBackupTypeAsString()
+    {
+        _idProviderMock.Setup(p => p.NextId(It.IsAny<List<BackupJob>>())).Returns(1);
+        var repo = CreateRepository();
+
+        repo.Add(new BackupJob
+        {
+            Name = "Job",
+            Source = "/src",
+            Destination = "/dst",
+            Type = BackupType.Differential
+        });
+
+        var json = File.ReadAllText(_testFilePath);
+
+        Assert.Contains("\"type\": \"Differential\"", json);
+    }
+
+    [Fact]
+    public void GetAll_WhenTypeIsLegacyInteger_ReadsJobsSuccessfully()
+    {
+        File.WriteAllText(
+            _testFilePath,
+            """
+            [
+              {
+                "id": 1,
+                "name": "Legacy",
+                "source": "/src",
+                "destination": "/dst",
+                "type": 1
+              }
+            ]
+            """);
+
+        var repo = CreateRepository();
+        var jobs = repo.GetAll();
+
+        Assert.Single(jobs);
+        Assert.Equal(BackupType.Differential, jobs[0].Type);
+    }
+
     #endregion
 }

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using EasySave.Configuration;
 using EasySave.Core;
 
@@ -25,7 +26,11 @@ public class JsonBackupJobRepository : IBackupJobRepository
         _jsonOptions = new JsonSerializerOptions
         {
             WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            Converters =
+            {
+                new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true)
+            }
         };
     }
 
