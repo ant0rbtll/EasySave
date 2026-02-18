@@ -182,7 +182,7 @@ public partial class MainWindowViewModel : ViewModelBase
 
     public void StopAllBackups()
     {
-        _backupExecutionController.RequestStop();
+        _backupExecutionController.RequestStopAll();
     }
 
     public void OpenCloseConfirmationDialog()

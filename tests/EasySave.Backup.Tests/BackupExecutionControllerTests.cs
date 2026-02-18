@@ -9,7 +9,7 @@ public class BackupExecutionControllerTests
     {
         using var controller = new BackupExecutionController();
         controller.BeginJob(1);
-        controller.Pause();
+        controller.PauseAll();
 
         var hasAction = controller.TryDequeueAction(out var actionKey);
         Assert.True(hasAction);
@@ -18,7 +18,7 @@ public class BackupExecutionControllerTests
         var waitTask = Task.Run(() => controller.WaitIfPausedOrThrowIfStopped());
         Assert.False(waitTask.Wait(TimeSpan.FromMilliseconds(150)));
 
-        controller.Resume();
+        controller.ResumeAll();
         var completed = waitTask.Wait(TimeSpan.FromSeconds(2));
 
         Assert.True(completed);
@@ -29,7 +29,7 @@ public class BackupExecutionControllerTests
     {
         using var controller = new BackupExecutionController();
         controller.BeginJob(1);
-        controller.RequestStop();
+        controller.RequestStopAll();
 
         var ex = Assert.Throws<InvalidOperationException>(() => controller.WaitIfPausedOrThrowIfStopped());
 
@@ -45,7 +45,7 @@ public class BackupExecutionControllerTests
         controller.BeginJob(1);
         controller.BeginJob(2);
 
-        controller.PauseForJob(1);
+        controller.Pause(1);
 
         Assert.True(controller.TryGetCurrentJobControlState(1, out var job1State));
         Assert.True(controller.TryGetCurrentJobControlState(2, out var job2State));
@@ -60,7 +60,7 @@ public class BackupExecutionControllerTests
         controller.BeginJob(1);
         controller.BeginJob(2);
 
-        controller.RequestStopForJob(1);
+        controller.RequestStop(1);
 
         Assert.True(controller.TryGetCurrentJobControlState(1, out var job1State));
         Assert.True(controller.TryGetCurrentJobControlState(2, out var job2State));
@@ -72,7 +72,7 @@ public class BackupExecutionControllerTests
     public void PauseForJob_BeforeBeginJob_ShouldApplyWhenJobStarts()
     {
         using var controller = new BackupExecutionController();
-        controller.PauseForJob(42);
+        controller.Pause(42);
 
         Assert.True(controller.TryGetCurrentJobControlState(42, out var pendingState));
         Assert.Equal(BackupJobControlState.Paused, pendingState);
@@ -90,7 +90,7 @@ public class BackupExecutionControllerTests
     public void RequestStopForJob_BeforeBeginJob_ShouldApplyWhenJobStarts()
     {
         using var controller = new BackupExecutionController();
-        controller.RequestStopForJob(42);
+        controller.RequestStop(42);
 
         Assert.True(controller.TryGetCurrentJobControlState(42, out var pendingState));
         Assert.Equal(BackupJobControlState.StopRequested, pendingState);
@@ -107,8 +107,8 @@ public class BackupExecutionControllerTests
     public void ResumeForJob_BeforeBeginJob_ShouldClearPendingPause()
     {
         using var controller = new BackupExecutionController();
-        controller.PauseForJob(42);
-        controller.ResumeForJob(42);
+        controller.Pause(42);
+        controller.Resume(42);
 
         Assert.False(controller.TryGetCurrentJobControlState(42, out _));
 

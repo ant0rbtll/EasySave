@@ -79,12 +79,12 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
         stateToDispose?.ResumeEvent.Dispose();
     }
 
-    public void Pause()
+    public void PauseAll()
     {
-        PauseForJob(-1);
+        Pause(-1);
     }
 
-    public void PauseForJob(int jobId)
+    public void Pause(int jobId)
     {
         lock (_gate)
         {
@@ -112,12 +112,12 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
         }
     }
 
-    public void Resume()
+    public void ResumeAll()
     {
-        ResumeForJob(-1);
+        Resume(-1);
     }
 
-    public void ResumeForJob(int jobId)
+    public void Resume(int jobId)
     {
         lock (_gate)
         {
@@ -145,12 +145,12 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
         }
     }
 
-    public void RequestStop()
+    public void RequestStopAll()
     {
-        RequestStopForJob(-1);
+        RequestStop(-1);
     }
 
-    public void RequestStopForJob(int jobId)
+    public void RequestStop(int jobId)
     {
         lock (_gate)
         {

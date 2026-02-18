@@ -126,13 +126,13 @@ public partial class ProgressViewModel : ViewModelBase
     [RelayCommand]
     private void PauseJob(int jobId)
     {
-        _backupExecutionController.PauseForJob(jobId);
+        _backupExecutionController.Pause(jobId);
     }
 
     [RelayCommand]
     private void PlayJob(int jobId)
     {
-        _backupExecutionController.ResumeForJob(jobId);
+        _backupExecutionController.Resume(jobId);
     }
 
     [RelayCommand]
@@ -149,7 +149,7 @@ public partial class ProgressViewModel : ViewModelBase
         if (PendingStopJobId is not int jobId)
             return;
 
-        _backupExecutionController.RequestStopForJob(jobId);
+        _backupExecutionController.RequestStop(jobId);
         CloseStopDialog();
     }
 

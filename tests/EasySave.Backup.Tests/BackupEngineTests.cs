@@ -646,17 +646,17 @@ public class BackupEngineTests
 
         public void EndJob(int jobId) { }
 
-        public void Pause() { }
+        public void PauseAll() { }
 
-        public void PauseForJob(int jobId) { }
+        public void Pause(int jobId) { }
 
-        public void Resume() { }
+        public void ResumeAll() { }
 
-        public void ResumeForJob(int jobId) { }
+        public void Resume(int jobId) { }
 
-        public void RequestStop() { }
+        public void RequestStopAll() { }
 
-        public void RequestStopForJob(int jobId) { }
+        public void RequestStop(int jobId) { }
 
         public void WaitIfPausedOrThrowIfStopped()
         {

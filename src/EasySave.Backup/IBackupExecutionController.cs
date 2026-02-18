@@ -23,34 +23,34 @@ public interface IBackupExecutionController
     void EndJob(int jobId);
 
     /// <summary>
-    /// Requests pause for the currently running job.
+    /// Requests pause for all running jobs.
     /// </summary>
-    void Pause();
+    void PauseAll();
 
     /// <summary>
     /// Requests pause for a specific running job.
     /// </summary>
-    void PauseForJob(int jobId);
+    void Pause(int jobId);
 
     /// <summary>
-    /// Resumes the currently paused job.
+    /// Resumes all paused jobs.
     /// </summary>
-    void Resume();
+    void ResumeAll();
 
     /// <summary>
     /// Resumes a specific paused job.
     /// </summary>
-    void ResumeForJob(int jobId);
+    void Resume(int jobId);
 
     /// <summary>
-    /// Requests stop for the currently running job.
+    /// Requests stop for all running jobs.
     /// </summary>
-    void RequestStop();
+    void RequestStopAll();
 
     /// <summary>
     /// Requests stop for a specific running job.
     /// </summary>
-    void RequestStopForJob(int jobId);
+    void RequestStop(int jobId);
 
     /// <summary>
     /// Blocks execution while paused and throws when stop is requested.

@@ -648,9 +648,9 @@ public partial class ManageViewModel : ViewModelBase
     private void PauseRunning()
     {
         if (TryGetCurrentControlJobId(out var jobId))
-            _backupExecutionController.PauseForJob(jobId);
+            _backupExecutionController.Pause(jobId);
         else
-            _backupExecutionController.Pause();
+            _backupExecutionController.PauseAll();
 
         RefreshPauseStateFromController();
     }
@@ -672,9 +672,9 @@ public partial class ManageViewModel : ViewModelBase
     private void PlayRunning()
     {
         if (TryGetCurrentControlJobId(out var jobId))
-            _backupExecutionController.ResumeForJob(jobId);
+            _backupExecutionController.Resume(jobId);
         else
-            _backupExecutionController.Resume();
+            _backupExecutionController.ResumeAll();
 
         RefreshPauseStateFromController();
     }
@@ -696,9 +696,9 @@ public partial class ManageViewModel : ViewModelBase
     private void StopRunning()
     {
         if (TryGetCurrentControlJobId(out var jobId))
-            _backupExecutionController.RequestStopForJob(jobId);
+            _backupExecutionController.RequestStop(jobId);
         else
-            _backupExecutionController.RequestStop();
+            _backupExecutionController.RequestStopAll();
 
         RefreshPauseStateFromController();
     }
