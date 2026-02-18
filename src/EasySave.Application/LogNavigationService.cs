@@ -1,6 +1,5 @@
 using EasySave.Configuration;
 using EasySave.Core;
-using EasySave.Backup;
 using EasySave.Log;
 
 namespace EasySave.Application;

@@ -1,4 +1,4 @@
-namespace EasySave.Backup;
+namespace EasySave.Core;
 
 /// <summary>
 /// Centralized runtime keys shared across backup, application and UI layers.
