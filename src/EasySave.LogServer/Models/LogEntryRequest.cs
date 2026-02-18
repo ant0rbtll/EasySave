@@ -14,5 +14,6 @@ public record LogEntryRequest(
     long TransferTimeMs,
     long EncryptionTimeMs,
     string MacAddress,
+    string? Hostname = null,
     string? LogFormat = null
 );

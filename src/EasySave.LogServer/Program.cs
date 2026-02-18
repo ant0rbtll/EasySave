@@ -39,7 +39,7 @@ app.MapPost("/api/logs", (LogEntryRequest request, ServerLogWriter writer, IClie
     if (string.IsNullOrWhiteSpace(request.EventType))
         return Results.BadRequest(new { error = "EventType is required." });
 
-    clients.EnsureRegistered(request.MacAddress);
+    clients.EnsureRegistered(request.MacAddress, request.Hostname);
     var clientName = clients.GetFriendlyName(request.MacAddress);
 
     var enriched = new EnrichedLogEntry(

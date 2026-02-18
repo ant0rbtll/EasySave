@@ -62,6 +62,7 @@ public sealed class HttpLogSender : ILogger, IDisposable
             entry.TransferTimeMs,
             entry.EncryptionTimeMs,
             MacAddress = _macAddress,
+            Hostname = Environment.MachineName,
             LogFormat = _logFormat.ToString()
         };
 
@@ -115,7 +116,8 @@ public sealed class HttpLogSender : ILogger, IDisposable
 
             var interfaces = NetworkInterface.GetAllNetworkInterfaces()
                 .Where(n => n.OperationalStatus == OperationalStatus.Up
-                            && n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                            && n.NetworkInterfaceType != NetworkInterfaceType.Loopback
+                            && !IsVirtualInterface(n))
                 .OrderBy(n => Array.IndexOf(preferredTypes, n.NetworkInterfaceType) is var idx && idx >= 0 ? idx : int.MaxValue)
                 .ThenBy(n => n.Name);
 
@@ -135,5 +137,15 @@ public sealed class HttpLogSender : ILogger, IDisposable
         }
 
         return "00:00:00:00:00:00";
+    }
+
+    private static bool IsVirtualInterface(NetworkInterface nic)
+    {
+        var name = nic.Name;
+        return name.StartsWith("br-", StringComparison.Ordinal)
+            || name.StartsWith("veth", StringComparison.Ordinal)
+            || name.StartsWith("virbr", StringComparison.Ordinal)
+            || name.StartsWith("docker", StringComparison.Ordinal)
+            || name.StartsWith("gpd", StringComparison.Ordinal);
     }
 }

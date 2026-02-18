@@ -31,20 +31,21 @@ public sealed class JsonClientRegistry : IClientRegistry, IDisposable
         _clients = LoadFromDisk();
     }
 
-    public void EnsureRegistered(string macAddress)
+    public void EnsureRegistered(string macAddress, string? hostname = null)
     {
         var normalized = NormalizeMac(macAddress);
 
         _lock.EnterUpgradeableReadLock();
         try
         {
-            if (_clients.ContainsKey(normalized))
+            var exists = _clients.TryGetValue(normalized, out var currentName);
+            if (exists && !string.IsNullOrWhiteSpace(currentName))
                 return;
 
             _lock.EnterWriteLock();
             try
             {
-                _clients[normalized] = null;
+                _clients[normalized] = string.IsNullOrWhiteSpace(hostname) ? null : hostname;
                 SaveToDisk();
             }
             finally

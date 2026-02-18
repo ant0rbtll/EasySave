@@ -8,9 +8,10 @@ namespace EasySave.LogServer.Services;
 public interface IClientRegistry
 {
     /// <summary>
-    /// Ensures a MAC address is registered. Adds it with a null friendly name if unknown.
+    /// Ensures a MAC address is registered. Uses the provided hostname as friendly name
+    /// if the client is new or has no friendly name yet.
     /// </summary>
-    void EnsureRegistered(string macAddress);
+    void EnsureRegistered(string macAddress, string? hostname = null);
 
     /// <summary>
     /// Gets the friendly name for a MAC address, or null if not set.
