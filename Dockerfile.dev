@@ -38,6 +38,8 @@ COPY tests/EasySave.Localization.Tests/*.csproj ./tests/EasySave.Localization.Te
 COPY tests/EasySave.Configuration.Tests/*.csproj ./tests/EasySave.Configuration.Tests/
 COPY tests/EasySave.System.Tests/*.csproj ./tests/EasySave.System.Tests/
 COPY tests/EasySave.UI.Tests/*.csproj ./tests/EasySave.UI.Tests/
+COPY tests/EasySave.AppCommon.Tests/*.csproj ./tests/EasySave.AppCommon.Tests/
+COPY tests/EasySave.LogServer.Tests/*.csproj ./tests/EasySave.LogServer.Tests/
 
 # Restaurer les dépendances
 RUN dotnet restore
