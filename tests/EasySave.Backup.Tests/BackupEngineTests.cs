@@ -482,7 +482,7 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/file1.txt" });
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(1000);
@@ -524,7 +524,7 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/file1.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(true);
@@ -562,7 +562,7 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/file1.txt" });
         _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
             .Returns(true);
@@ -588,6 +588,45 @@ public class BackupEngineTests
     }
 
     [Fact]
+    public async Task Execute_WhenControllerReportsPaused_ExcludesAndReincludesPriorityFilesForThatJob()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.IsAny<string>()))
+            .Returns(true);
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+        _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
+            .Returns(new TransferResult(FileSizeBytes: 1000, TransferTimeMs: 10, ErrorCode: 0));
+
+        var barrierMock = new Mock<IPriorityFilesBarrier>();
+        var executionController = new StubExecutionController(
+            controlStates: [BackupJobControlState.Paused, BackupJobControlState.Running]);
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            priorityFilesBarrier: barrierMock.Object,
+            executionController: executionController);
+
+        await engine.Execute(job);
+
+        barrierMock.Verify(b => b.PauseJob(job.Id), Times.AtLeastOnce);
+        barrierMock.Verify(b => b.ResumeJob(job.Id), Times.AtLeastOnce);
+    }
+
+    [Fact]
     public async Task Execute_WhenStoppedByUser_MarksInactiveAndLogsStoppedEvent()
     {
         var job = new BackupJob
@@ -599,7 +638,7 @@ public class BackupEngineTests
             Type = BackupType.Complete
         };
 
-        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source"))
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/file1.txt" });
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(1000);

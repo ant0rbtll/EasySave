@@ -120,7 +120,7 @@ public class BackupJobStateServiceTests
 
         service.ApplyState(job);
 
-        Assert.False(job.IsActive);
+        Assert.True(job.IsActive);
         Assert.Equal(BackupJobStatus.Waiting, job.Status);
     }
 

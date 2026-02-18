@@ -133,7 +133,6 @@ public class BackupEngine(
                             planned.DestinationFile);
                     }
                 }
-                _executionGuard.EnsureCanCopyNextFile();
                 WaitUntilBusinessSoftwareAllowsCopy(
                         job,
                         planned.SourceFile,
@@ -507,6 +506,7 @@ public class BackupEngine(
 
         if (isPaused)
         {
+            _priorityFilesBarrier.PauseJob(job.Id);
             UpdateState(
                 job,
                 BackupStatus.Paused,
@@ -523,6 +523,7 @@ public class BackupEngine(
 
         if (isPaused)
         {
+            _priorityFilesBarrier.ResumeJob(job.Id);
             UpdateState(
                 job,
                 BackupStatus.Active,

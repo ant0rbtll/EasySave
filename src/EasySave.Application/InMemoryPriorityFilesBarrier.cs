@@ -8,8 +8,8 @@ namespace EasySave.Application;
 public sealed class InMemoryPriorityFilesBarrier : IPriorityFilesBarrier
 {
     private readonly object _sync = new();
-    private readonly Dictionary<int, int> _pendingPriorityByJob = new();
-    private int _pendingPriorityTotal;
+    private readonly Dictionary<int, JobPriorityState> _jobStates = new();
+    private int _effectivePendingPriorityTotal;
     private TaskCompletionSource<bool> _noPendingPrioritySignal = CompletedSignal();
 
     public void RegisterJob(int jobId, int pendingPriorityFiles)
@@ -21,20 +21,20 @@ public sealed class InMemoryPriorityFilesBarrier : IPriorityFilesBarrier
 
         lock (_sync)
         {
-            if (_pendingPriorityByJob.ContainsKey(jobId))
+            if (_jobStates.ContainsKey(jobId))
             {
                 return;
             }
 
-            if (_pendingPriorityTotal == 0 && pendingPriorityFiles > 0)
+            if (_effectivePendingPriorityTotal == 0 && pendingPriorityFiles > 0)
             {
                 _noPendingPrioritySignal = PendingSignal();
             }
 
-            _pendingPriorityByJob[jobId] = pendingPriorityFiles;
-            _pendingPriorityTotal += pendingPriorityFiles;
+            _jobStates[jobId] = new JobPriorityState(pendingPriorityFiles);
+            _effectivePendingPriorityTotal += pendingPriorityFiles;
 
-            if (_pendingPriorityTotal == 0)
+            if (_effectivePendingPriorityTotal == 0)
             {
                 _noPendingPrioritySignal.TrySetResult(true);
             }
@@ -45,16 +45,18 @@ public sealed class InMemoryPriorityFilesBarrier : IPriorityFilesBarrier
     {
         lock (_sync)
         {
-            if (!_pendingPriorityByJob.TryGetValue(jobId, out var pending) || pending <= 0)
+            if (!_jobStates.TryGetValue(jobId, out var state) || state.Remaining <= 0)
             {
                 return;
             }
 
-            pending--;
-            _pendingPriorityByJob[jobId] = pending;
-            _pendingPriorityTotal--;
+            state.Remaining--;
+            if (!state.IsPaused)
+            {
+                _effectivePendingPriorityTotal--;
+            }
 
-            if (_pendingPriorityTotal == 0)
+            if (_effectivePendingPriorityTotal == 0)
             {
                 _noPendingPrioritySignal.TrySetResult(true);
             }
@@ -72,21 +74,69 @@ public sealed class InMemoryPriorityFilesBarrier : IPriorityFilesBarrier
         return waitTask.WaitAsync(cancellationToken);
     }
 
-    public void UnregisterJob(int jobId)
+    public void PauseJob(int jobId)
     {
         lock (_sync)
         {
-            if (!_pendingPriorityByJob.Remove(jobId, out var pendingForJob))
+            if (!_jobStates.TryGetValue(jobId, out var state) || state.IsPaused)
             {
                 return;
             }
 
-            if (pendingForJob > 0)
+            state.IsPaused = true;
+            if (state.Remaining > 0)
             {
-                _pendingPriorityTotal -= pendingForJob;
+                _effectivePendingPriorityTotal -= state.Remaining;
+                if (_effectivePendingPriorityTotal == 0)
+                {
+                    _noPendingPrioritySignal.TrySetResult(true);
+                }
+            }
+        }
+    }
+
+    public void ResumeJob(int jobId)
+    {
+        lock (_sync)
+        {
+            if (!_jobStates.TryGetValue(jobId, out var state) || !state.IsPaused)
+            {
+                return;
             }
 
-            if (_pendingPriorityTotal == 0)
+            state.IsPaused = false;
+            if (state.Remaining > 0)
+            {
+                if (_effectivePendingPriorityTotal == 0)
+                {
+                    _noPendingPrioritySignal = PendingSignal();
+                }
+
+                _effectivePendingPriorityTotal += state.Remaining;
+            }
+
+            if (_effectivePendingPriorityTotal == 0)
+            {
+                _noPendingPrioritySignal.TrySetResult(true);
+            }
+        }
+    }
+
+    public void UnregisterJob(int jobId)
+    {
+        lock (_sync)
+        {
+            if (!_jobStates.Remove(jobId, out var state))
+            {
+                return;
+            }
+
+            if (!state.IsPaused && state.Remaining > 0)
+            {
+                _effectivePendingPriorityTotal -= state.Remaining;
+            }
+
+            if (_effectivePendingPriorityTotal == 0)
             {
                 _noPendingPrioritySignal.TrySetResult(true);
             }
@@ -101,5 +151,11 @@ public sealed class InMemoryPriorityFilesBarrier : IPriorityFilesBarrier
         var tcs = PendingSignal();
         tcs.TrySetResult(true);
         return tcs;
+    }
+
+    private sealed class JobPriorityState(int remaining)
+    {
+        public int Remaining { get; set; } = remaining;
+        public bool IsPaused { get; set; }
     }
 }

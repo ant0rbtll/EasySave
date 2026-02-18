@@ -140,6 +140,7 @@ public class BackupApplicationService(
         foreach (var (jobId, entry) in entries)
         {
             var shouldInclude = entry.Status == BackupStatus.Active
+                || entry.Status == BackupStatus.Waiting
                 || entry.Status == BackupStatus.Paused
                 || entry.Status == BackupStatus.Blocked;
 
@@ -215,7 +216,7 @@ public class BackupApplicationService(
         var entries = _stateReader.ReadEntries();
         foreach (var (jobId, entry) in entries)
         {
-            if (entry.Status is not (BackupStatus.Active or BackupStatus.Paused or BackupStatus.Blocked))
+            if (entry.Status is not (BackupStatus.Active or BackupStatus.Waiting or BackupStatus.Paused or BackupStatus.Blocked))
                 continue;
 
             if (_backupRunCoordinator.IsRunning(jobId))
@@ -266,6 +267,7 @@ public class BackupApplicationService(
         {
             BackupStatus.Inactive => BackupJobStatus.Inactive,
             BackupStatus.Active => BackupJobStatus.Active,
+            BackupStatus.Waiting => BackupJobStatus.Waiting,
             BackupStatus.Done => BackupJobStatus.Done,
             BackupStatus.Error => BackupJobStatus.Error,
             BackupStatus.Paused => BackupJobStatus.Paused,

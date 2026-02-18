@@ -1407,7 +1407,7 @@ public partial class ManageViewModel : ViewModelBase
 
     private bool IsJobRunnable(Models.BackupJob job)
     {
-        return job.Status is not (Core.BackupJobStatus.Active or Core.BackupJobStatus.Paused or Core.BackupJobStatus.Blocked)
+        return job.Status is not (Core.BackupJobStatus.Active or Core.BackupJobStatus.Waiting or Core.BackupJobStatus.Paused or Core.BackupJobStatus.Blocked)
             && !_runningJobIds.Contains(job.Id);
     }
 

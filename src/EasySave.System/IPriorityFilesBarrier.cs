@@ -21,6 +21,16 @@ public interface IPriorityFilesBarrier
     Task WaitUntilNoPriorityPendingAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Temporarily excludes remaining priority files for a paused job from global blocking.
+    /// </summary>
+    void PauseJob(int jobId);
+
+    /// <summary>
+    /// Re-includes remaining priority files for a resumed job into global blocking.
+    /// </summary>
+    void ResumeJob(int jobId);
+
+    /// <summary>
     /// Unregisters a job and releases any remaining pending priority files for that job.
     /// </summary>
     void UnregisterJob(int jobId);
@@ -41,6 +51,14 @@ public sealed class NoOpPriorityFilesBarrier : IPriorityFilesBarrier
 
     public Task WaitUntilNoPriorityPendingAsync(CancellationToken cancellationToken = default)
         => Task.CompletedTask;
+
+    public void PauseJob(int jobId)
+    {
+    }
+
+    public void ResumeJob(int jobId)
+    {
+    }
 
     public void UnregisterJob(int jobId)
     {

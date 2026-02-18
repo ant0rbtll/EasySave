@@ -50,6 +50,7 @@ public partial class ProgressViewModel : ViewModelBase
     public string TooltipPause { get; private set; } = string.Empty;
     public string TooltipStop { get; private set; } = string.Empty;
     public string StatusRunningText { get; private set; } = string.Empty;
+    public string StatusWaitingText { get; private set; } = string.Empty;
     public string StatusPausedText { get; private set; } = string.Empty;
     public string StatusStopRequestedText { get; private set; } = string.Empty;
     public string StatusBlockedBusinessText { get; private set; } = string.Empty;
@@ -89,6 +90,7 @@ public partial class ProgressViewModel : ViewModelBase
         TooltipPause = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_pause);
         TooltipStop = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_stop);
         StatusRunningText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_running);
+        StatusWaitingText = _localizationService.TranslateText(LocalizationKey.backupjob_waiting);
         StatusPausedText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_paused);
         StatusStopRequestedText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_stopping);
         StatusBlockedBusinessText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_blocked_business);
@@ -113,6 +115,7 @@ public partial class ProgressViewModel : ViewModelBase
         OnPropertyChanged(nameof(TooltipPause));
         OnPropertyChanged(nameof(TooltipStop));
         OnPropertyChanged(nameof(StatusRunningText));
+        OnPropertyChanged(nameof(StatusWaitingText));
         OnPropertyChanged(nameof(StatusPausedText));
         OnPropertyChanged(nameof(StatusStopRequestedText));
         OnPropertyChanged(nameof(StatusBlockedBusinessText));
@@ -354,6 +357,24 @@ public partial class ProgressViewModel : ViewModelBase
                 RuntimeStatusForeground: "#FFC8C8",
                 CanPlay: false,
                 CanPause: false,
+                CanStop: true);
+        }
+
+        if (state.Status == Core.BackupJobStatus.Waiting)
+        {
+            return new ActiveBackupPresentation(
+                ProgressPercent: state.ProgressPercent,
+                ProgressDisplay: $"{state.ProgressPercent}%",
+                FilesDisplay: $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
+                SizeDisplay: $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes))}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes))}",
+                CurrentSourcePath: state.CurrentSourcePath ?? "-",
+                CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
+                UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
+                RuntimeStatusText: StatusWaitingText,
+                RuntimeStatusBackground: "#2A8B5A2B",
+                RuntimeStatusForeground: "#FFD59A",
+                CanPlay: false,
+                CanPause: true,
                 CanStop: true);
         }
 
