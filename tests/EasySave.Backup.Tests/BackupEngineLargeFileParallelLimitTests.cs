@@ -1,6 +1,5 @@
 using EasySave.Core;
 using EasySave.Log;
-using EasySave.Persistence;
 using EasySave.State;
 using EasySave.System;
 using Moq;
@@ -16,19 +15,10 @@ public class BackupEngineLargeFileParallelLimitTests
         var transferService = new TrackingTransferService();
         var stateWriter = new Mock<IStateWriter>();
         var logger = new Mock<ILogger>();
-        var preferencesRepository = new Mock<IUserPreferencesRepository>();
-
-        preferencesRepository
-            .Setup(r => r.Load())
-            .Returns(new UserPreferences
-            {
-                ParallelLargeFileThresholdValue = 1,
-                ParallelLargeFileThresholdUnit = TransferSizeUnit.Kilo
-            });
 
         var barrier = new InMemoryLargeFileTransferBarrier();
-        var engine1 = CreateEngine(fileSystem.Object, transferService, stateWriter.Object, logger.Object, preferencesRepository.Object, barrier);
-        var engine2 = CreateEngine(fileSystem.Object, transferService, stateWriter.Object, logger.Object, preferencesRepository.Object, barrier);
+        var engine1 = CreateEngine(fileSystem.Object, transferService, stateWriter.Object, logger.Object, barrier);
+        var engine2 = CreateEngine(fileSystem.Object, transferService, stateWriter.Object, logger.Object, barrier);
 
         const string source1 = "/source/job1";
         const string source2 = "/source/job2";
@@ -42,8 +32,11 @@ public class BackupEngineLargeFileParallelLimitTests
 
         var job1 = new BackupJob { Id = 1, Name = "Job1", Source = source1, Destination = "/destination/job1", Type = BackupType.Complete };
         var job2 = new BackupJob { Id = 2, Name = "Job2", Source = source2, Destination = "/destination/job2", Type = BackupType.Complete };
+        var executionContext = new BackupExecutionContext(parallelLargeFileThresholdBytes: 1024);
 
-        await Task.WhenAll(engine1.Execute(job1), engine2.Execute(job2));
+        await Task.WhenAll(
+            engine1.Execute(job1, executionContext: executionContext),
+            engine2.Execute(job2, executionContext: executionContext));
 
         Assert.Equal(1, transferService.MaxConcurrentLargeTransfers);
         stateWriter.Verify(
@@ -58,19 +51,10 @@ public class BackupEngineLargeFileParallelLimitTests
         var transferService = new TrackingTransferService();
         var stateWriter = new Mock<IStateWriter>();
         var logger = new Mock<ILogger>();
-        var preferencesRepository = new Mock<IUserPreferencesRepository>();
-
-        preferencesRepository
-            .Setup(r => r.Load())
-            .Returns(new UserPreferences
-            {
-                ParallelLargeFileThresholdValue = 1,
-                ParallelLargeFileThresholdUnit = TransferSizeUnit.Kilo
-            });
 
         var barrier = new InMemoryLargeFileTransferBarrier();
-        var engine1 = CreateEngine(fileSystem.Object, transferService, stateWriter.Object, logger.Object, preferencesRepository.Object, barrier);
-        var engine2 = CreateEngine(fileSystem.Object, transferService, stateWriter.Object, logger.Object, preferencesRepository.Object, barrier);
+        var engine1 = CreateEngine(fileSystem.Object, transferService, stateWriter.Object, logger.Object, barrier);
+        var engine2 = CreateEngine(fileSystem.Object, transferService, stateWriter.Object, logger.Object, barrier);
 
         const string sourceLarge = "/source/large";
         const string sourceSmall = "/source/small";
@@ -84,8 +68,11 @@ public class BackupEngineLargeFileParallelLimitTests
 
         var largeJob = new BackupJob { Id = 3, Name = "Large", Source = sourceLarge, Destination = "/destination/large", Type = BackupType.Complete };
         var smallJob = new BackupJob { Id = 4, Name = "Small", Source = sourceSmall, Destination = "/destination/small", Type = BackupType.Complete };
+        var executionContext = new BackupExecutionContext(parallelLargeFileThresholdBytes: 1024);
 
-        await Task.WhenAll(engine1.Execute(largeJob), engine2.Execute(smallJob));
+        await Task.WhenAll(
+            engine1.Execute(largeJob, executionContext: executionContext),
+            engine2.Execute(smallJob, executionContext: executionContext));
 
         Assert.True(transferService.SmallTransferStartedBeforeLargeCompleted);
     }
@@ -95,7 +82,6 @@ public class BackupEngineLargeFileParallelLimitTests
         ITransferService transferService,
         IStateWriter stateWriter,
         ILogger logger,
-        IUserPreferencesRepository preferencesRepository,
         ILargeFileTransferBarrier barrier)
     {
         return new BackupEngine(
@@ -103,7 +89,6 @@ public class BackupEngineLargeFileParallelLimitTests
             transferService,
             stateWriter,
             logger,
-            preferencesRepository,
             executionGuard: Mock.Of<IBackupExecutionGuard>(),
             largeFileTransferBarrier: barrier);
     }

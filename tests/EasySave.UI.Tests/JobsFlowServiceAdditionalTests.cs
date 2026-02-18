@@ -379,7 +379,10 @@ public class JobsFlowServiceAdditionalTests
 
     private sealed class ThrowingBackupEngine : IBackupEngine
     {
-        public Task Execute(BackupJob job, CancellationToken cancellationToken = default)
+        public Task Execute(
+            BackupJob job,
+            CancellationToken cancellationToken = default,
+            BackupExecutionContext? executionContext = null)
         {
             throw new InvalidOperationException("boom");
         }

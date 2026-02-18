@@ -2,7 +2,6 @@ using EasySave.Core;
 using EasySave.Log;
 using EasySave.System;
 using EasySave.State;
-using EasySave.Persistence;
 using System.Diagnostics;
 using System.Threading;
 
@@ -23,7 +22,6 @@ public class BackupEngine(
     ITransferService transferService,
     IStateWriter stateWriter,
     ILogger logger,
-    IUserPreferencesRepository? preferencesRepository = null,
     IEncryptionPolicyProvider? encryptionPolicyProvider = null,
     IEncryptionProviderResolver? encryptionProviderResolver = null,
     IBackupExecutionGuard? executionGuard = null,
@@ -36,7 +34,6 @@ public class BackupEngine(
     private readonly ITransferService _transferService = transferService;
     private readonly IStateWriter _stateWriter = stateWriter;
     private readonly ILogger _logger = logger;
-    private readonly IUserPreferencesRepository? _preferencesRepository = preferencesRepository;
     private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
@@ -54,12 +51,17 @@ public class BackupEngine(
     /// <param name="job">Backup job to execute.</param>
     /// <exception cref="NotSupportedException">The backup type is not supported.</exception>
     /// <inheritdoc />
-    public Task Execute(BackupJob job, CancellationToken cancellationToken = default)
+    public Task Execute(
+        BackupJob job,
+        CancellationToken cancellationToken = default,
+        BackupExecutionContext? executionContext = null)
     {
-        return Task.Run(() => ExecuteCore(job, cancellationToken), cancellationToken);
+        return Task.Run(
+            () => ExecuteCore(job, cancellationToken, executionContext ?? BackupExecutionContext.Empty),
+            cancellationToken);
     }
 
-    private void ExecuteCore(BackupJob job, CancellationToken cancellationToken)
+    private void ExecuteCore(BackupJob job, CancellationToken cancellationToken, BackupExecutionContext executionContext)
     {
         long totalDurationMs = 0;
         Stopwatch? backupLoopTimer = null;
@@ -67,9 +69,8 @@ public class BackupEngine(
         bool barrierRegistered = false;
         try
         {
-            var preferences = _preferencesRepository?.Load();
-            var plannedFiles = _filePlanner.BuildPlans(job, preferences?.PriorityExtensions);
-            var parallelLargeFileThresholdBytes = preferences?.GetParallelLargeFileThresholdBytes() ?? 0;
+            var plannedFiles = _filePlanner.BuildPlans(job, executionContext.PriorityExtensions);
+            var parallelLargeFileThresholdBytes = Math.Max(0, executionContext.ParallelLargeFileThresholdBytes);
             var encryptionPolicy = _encryptionPolicyProvider.GetPolicy() ?? EncryptionPolicy.Disabled;
 
             int totalFiles = plannedFiles.Count;

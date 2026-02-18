@@ -12,5 +12,9 @@ public interface IBackupEngine
     /// </summary>
     /// <param name="job">The backup job to execute.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task Execute(BackupJob job, CancellationToken cancellationToken = default);
+    /// <param name="executionContext">Runtime execution options.</param>
+    Task Execute(
+        BackupJob job,
+        CancellationToken cancellationToken = default,
+        BackupExecutionContext? executionContext = null);
 }

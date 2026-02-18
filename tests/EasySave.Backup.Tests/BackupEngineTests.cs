@@ -3,7 +3,6 @@ using EasySave.State;
 using EasySave.System;
 using EasySave.Log;
 using Moq;
-using EasySave.Persistence;
 
 namespace EasySave.Backup.Tests;
 
@@ -13,7 +12,6 @@ public class BackupEngineTests
     private readonly Mock<ITransferService> _transferServiceMock;
     private readonly Mock<IStateWriter> _stateWriterMock;
     private readonly Mock<ILogger> _loggerMock;
-    private readonly Mock<IUserPreferencesRepository> _userPreferencesMock;
     private readonly Mock<IEncryptionPolicyProvider> _encryptionPolicyProviderMock;
     private readonly Mock<IEncryptionProviderResolver> _encrytionResolverProviderMock;
     private readonly Mock<IBackupExecutionGuard> _backupUpExecutionGuardMock;
@@ -28,7 +26,6 @@ public class BackupEngineTests
         _encryptionPolicyProviderMock = new Mock<IEncryptionPolicyProvider>();
         _encrytionResolverProviderMock = new Mock<IEncryptionProviderResolver>();
         _backupUpExecutionGuardMock = new Mock<IBackupExecutionGuard>();
-        _userPreferencesMock = new Mock<IUserPreferencesRepository>();
         _encryptionPolicyProviderMock
             .Setup(p => p.GetPolicy())
             .Returns(EncryptionPolicy.Disabled);
@@ -38,7 +35,6 @@ public class BackupEngineTests
             _transferServiceMock.Object,
             _stateWriterMock.Object,
             _loggerMock.Object,
-            _userPreferencesMock.Object,
             _encryptionPolicyProviderMock.Object,
             _encrytionResolverProviderMock.Object,
             _backupUpExecutionGuardMock.Object
