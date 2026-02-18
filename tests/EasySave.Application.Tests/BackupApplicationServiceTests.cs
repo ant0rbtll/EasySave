@@ -113,6 +113,21 @@ public class BackupApplicationServiceTests
     }
 
     [Fact]
+    public void GetAllJobsRuntimeStates_ShouldExposeBlockedStatus()
+    {
+        var jobs = new List<BackupJob>
+        {
+            new() { Id = 7, Status = BackupJobStatus.Blocked, IsActive = true }
+        };
+        _repoMock.Setup(r => r.GetAll()).Returns(jobs);
+
+        var result = _service.GetAllJobsRuntimeStates();
+
+        Assert.Single(result);
+        Assert.Equal(BackupJobStatus.Blocked, result[7].Status);
+    }
+
+    [Fact]
     public void GetAllJobs_WhenStateContainsOrphanActive_ShouldMarkInactiveOnce()
     {
         _repoMock.Setup(r => r.GetAll()).Returns(new List<BackupJob>());
@@ -196,6 +211,29 @@ public class BackupApplicationServiceTests
         Assert.Equal("/dst/a.txt", result[1].CurrentDestinationPath);
         Assert.Equal(timestamp, result[1].LastUpdateAt);
         Assert.False(result.ContainsKey(2));
+    }
+
+    [Fact]
+    public void GetAllJobsLiveProgress_ShouldExposeBlockedStatus()
+    {
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [5] = new()
+            {
+                BackupId = 5,
+                BackupName = "Blocked Job",
+                Status = BackupStatus.Blocked,
+                CurrentSourcePath = BackupRuntimeKeys.ErrorBusinessSoftwareRunning,
+                CurrentDestinationPath = "excel",
+                ProgressPercent = 12,
+                Timestamp = DateTime.Now
+            }
+        });
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Single(result);
+        Assert.Equal(BackupJobStatus.Blocked, result[5].Status);
     }
 
     [Fact]

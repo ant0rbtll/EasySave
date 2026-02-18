@@ -400,7 +400,7 @@ public class BackupEngine(
                 // Keep the backup active and expose the temporary block in live state.
                 UpdateState(
                     job,
-                    BackupStatus.Active,
+                    BackupStatus.Blocked,
                     totalFiles,
                     totalSize,
                     remainingFiles,

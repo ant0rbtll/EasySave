@@ -21,7 +21,6 @@ public class BackupApplicationService(
     IBackupExecutionGuard? backupExecutionGuard = null,
     IStateWriter? stateWriter = null)
 {
-    private static readonly TimeSpan BusinessSoftwareBlockedDisplayDuration = TimeSpan.FromSeconds(20);
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
     private readonly IBackupJobStateService _backupJobStateService = backupJobStateService;
@@ -142,7 +141,7 @@ public class BackupApplicationService(
         {
             var shouldInclude = entry.Status == BackupStatus.Active
                 || entry.Status == BackupStatus.Paused
-                || IsRecentBusinessSoftwareBlockedEntry(entry);
+                || entry.Status == BackupStatus.Blocked;
 
             if (!shouldInclude)
             {
@@ -165,18 +164,6 @@ public class BackupApplicationService(
         }
 
         return states;
-    }
-
-    private static bool IsRecentBusinessSoftwareBlockedEntry(StateEntry entry)
-    {
-        if (entry.Status != BackupStatus.Error)
-            return false;
-
-        if (!string.Equals(entry.CurrentSourcePath, BackupRuntimeKeys.ErrorBusinessSoftwareRunning, StringComparison.Ordinal))
-            return false;
-
-        var age = DateTime.Now - entry.Timestamp;
-        return age >= TimeSpan.Zero && age <= BusinessSoftwareBlockedDisplayDuration;
     }
 
     private static string ResolveNonEmptyJobName(string? stateName, int jobId, IReadOnlyDictionary<int, string> jobNamesById)
@@ -228,7 +215,7 @@ public class BackupApplicationService(
         var entries = _stateReader.ReadEntries();
         foreach (var (jobId, entry) in entries)
         {
-            if (entry.Status is not (BackupStatus.Active or BackupStatus.Paused))
+            if (entry.Status is not (BackupStatus.Active or BackupStatus.Paused or BackupStatus.Blocked))
                 continue;
 
             if (_backupRunCoordinator.IsRunning(jobId))
@@ -282,6 +269,7 @@ public class BackupApplicationService(
             BackupStatus.Done => BackupJobStatus.Done,
             BackupStatus.Error => BackupJobStatus.Error,
             BackupStatus.Paused => BackupJobStatus.Paused,
+            BackupStatus.Blocked => BackupJobStatus.Blocked,
             _ => BackupJobStatus.Inactive
         };
     }

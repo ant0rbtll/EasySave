@@ -28,5 +28,10 @@ public enum BackupJobStatus
     /// <summary>
     /// The backup is currently paused.
     /// </summary>
-    Paused
+    Paused,
+
+    /// <summary>
+    /// The backup is temporarily blocked by business software detection.
+    /// </summary>
+    Blocked
 }

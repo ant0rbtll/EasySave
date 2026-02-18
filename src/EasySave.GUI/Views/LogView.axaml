@@ -125,6 +125,13 @@
 		<Style Selector="Border.run-status-badge[Tag=paused] TextBlock">
 			<Setter Property="Foreground" Value="#FFE082"/>
 		</Style>
+		<Style Selector="Border.run-status-badge[Tag=blocked]">
+			<Setter Property="Background" Value="#1F5A2323"/>
+			<Setter Property="BorderBrush" Value="#5AE57373"/>
+		</Style>
+		<Style Selector="Border.run-status-badge[Tag=blocked] TextBlock">
+			<Setter Property="Foreground" Value="#FFB3B3"/>
+		</Style>
 		<Style Selector="Border.run-status-badge[Tag=error]">
 			<Setter Property="Background" Value="#1F5A2323"/>
 			<Setter Property="BorderBrush" Value="#5AE57373"/>

@@ -82,6 +82,7 @@ public partial class LogViewModel : ViewModelBase
     [ObservableProperty] private string _statusCompleted = string.Empty;
     [ObservableProperty] private string _statusError = string.Empty;
     [ObservableProperty] private string _statusStopped = string.Empty;
+    [ObservableProperty] private string _statusBlocked = string.Empty;
     [ObservableProperty] private string _emptyTitle = string.Empty;
     [ObservableProperty] private string _emptySubtitle = string.Empty;
     [ObservableProperty] private bool _hasAvailableLogs;
@@ -239,6 +240,7 @@ public partial class LogViewModel : ViewModelBase
         StatusCompleted = _localizationService.TranslateText(LocalizationKey.gui_log_status_completed);
         StatusError = _localizationService.TranslateText(LocalizationKey.gui_log_status_error);
         StatusStopped = _localizationService.TranslateText(LocalizationKey.gui_log_status_stopped);
+        StatusBlocked = _localizationService.TranslateText(LocalizationKey.gui_log_status_blocked);
         EmptyTitle = _localizationService.TranslateText(LocalizationKey.gui_log_empty_title);
         EmptySubtitle = string.Format(
             CultureInfo.CurrentCulture,
@@ -805,7 +807,7 @@ public partial class LogViewModel : ViewModelBase
             BackupName = run.BackupName,
             StartTime = run.StartTimestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
             EndTime = run.EndTimestamp?.ToString("HH:mm:ss", CultureInfo.InvariantCulture) ?? StatusInProgress,
-            Status = GetRunStatusText(run.Status),
+            Status = GetRunStatusText(run),
             StatusTone = GetRunStatusTone(run.Status),
             TotalDuration = GetRunTotalDurationText(run),
             TotalSize = run.Status == LogRunStatus.Completed && run.TotalSizeBytes.HasValue
@@ -822,10 +824,11 @@ public partial class LogViewModel : ViewModelBase
         return $"{runCount} {ColRuns.ToLowerInvariant()}";
     }
 
-    private string GetRunStatusText(LogRunStatus status)
+    private string GetRunStatusText(LogRunSummary run)
     {
-        return status switch
+        return run.Status switch
         {
+            LogRunStatus.Blocked => StatusBlocked,
             LogRunStatus.Completed => StatusCompleted,
             LogRunStatus.Error => StatusError,
             LogRunStatus.Stopped => StatusStopped,
@@ -840,6 +843,7 @@ public partial class LogViewModel : ViewModelBase
         {
             LogRunStatus.InProgress => StatusInProgress,
             LogRunStatus.Paused => StatusPaused,
+            LogRunStatus.Blocked => StatusBlocked,
             _ => run.TotalDurationMs.HasValue ? LogValueFormatter.FormatDuration(run.TotalDurationMs.Value) : "-"
         };
     }
@@ -904,6 +908,7 @@ public partial class LogViewModel : ViewModelBase
     {
         return status switch
         {
+            LogRunStatus.Blocked => "blocked",
             LogRunStatus.Completed => "completed",
             LogRunStatus.Error => "error",
             LogRunStatus.Stopped => "stopped",

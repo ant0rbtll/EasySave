@@ -16,9 +16,9 @@ public interface IBackupExecutionControlService
     void Resume();
 
     /// <summary>
-    /// Requests stop for the active backup.
+    /// Requests stop for a specific active backup.
     /// </summary>
-    void Stop();
+    void Stop(int jobId);
 
     /// <summary>
     /// Requests stop for all active backups.

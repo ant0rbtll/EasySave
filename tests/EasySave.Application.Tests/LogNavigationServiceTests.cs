@@ -99,6 +99,27 @@ public class LogNavigationServiceTests
     }
 
     [Fact]
+    public void GetRunsByDateAndBackupId_WhenLastEventIsBusinessSoftwareDetected_ShouldMarkBlocked()
+    {
+        using var temp = new TempDirectory();
+        var date = new DateOnly(2026, 2, 12);
+
+        WriteJson(Path.Combine(temp.LogsDirectory, "2026-02-12.json"),
+        [
+            CreateEntry("2026-02-12T10:00:00Z", 9, "job-9", LogEventType.StartBackup),
+            CreateEntry("2026-02-12T10:00:01Z", 9, "job-9", LogEventType.BusinessSoftwareDetected)
+        ]);
+
+        var service = CreateService(temp.LogsDirectory);
+
+        var runs = service.GetRunsByDateAndBackupId(date, 9);
+
+        var run = Assert.Single(runs);
+        Assert.Equal(LogRunStatus.Blocked, run.Status);
+        Assert.Null(run.EndTimestamp);
+    }
+
+    [Fact]
     public void GetRunsByDateAndBackupId_MarksStoppedWhenTerminalEventIsStopped()
     {
         using var temp = new TempDirectory();

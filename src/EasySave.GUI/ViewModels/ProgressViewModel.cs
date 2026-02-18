@@ -339,7 +339,7 @@ public partial class ProgressViewModel : ViewModelBase
 
     private ActiveBackupPresentation BuildPresentation(BackupJobLiveProgressState state)
     {
-        if (string.Equals(state.CurrentSourcePath, BackupRuntimeKeys.ErrorBusinessSoftwareRunning, StringComparison.Ordinal))
+        if (state.Status == Core.BackupJobStatus.Blocked)
         {
             return new ActiveBackupPresentation(
                 ProgressPercent: state.ProgressPercent,
@@ -354,7 +354,7 @@ public partial class ProgressViewModel : ViewModelBase
                 RuntimeStatusForeground: "#FFC8C8",
                 CanPlay: false,
                 CanPause: false,
-                CanStop: false);
+                CanStop: true);
         }
 
         var controlState = ResolveControlState(state.Id);

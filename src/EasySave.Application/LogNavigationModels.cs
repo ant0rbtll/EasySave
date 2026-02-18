@@ -30,7 +30,12 @@ public enum LogRunStatus
     /// <summary>
     /// The run is currently paused by the user.
     /// </summary>
-    Paused = 4
+    Paused = 4,
+
+    /// <summary>
+    /// The run is currently blocked by business software detection.
+    /// </summary>
+    Blocked = 5
 }
 
 /// <summary>

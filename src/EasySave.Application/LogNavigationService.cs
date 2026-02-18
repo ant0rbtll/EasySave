@@ -1,5 +1,6 @@
 using EasySave.Configuration;
 using EasySave.Core;
+using EasySave.Backup;
 using EasySave.Log;
 
 namespace EasySave.Application;
@@ -9,7 +10,7 @@ namespace EasySave.Application;
 /// </summary>
 public sealed class LogNavigationService : ILogNavigationService
 {
-    private const string PauseActionKey = "action_backup_paused_by_user";
+    private const string PauseActionKey = BackupRuntimeKeys.ActionBackupPausedByUser;
 
     private readonly IPathProvider _pathProvider;
     private readonly IReadOnlyDictionary<LogFormat, ILogReader> _readerByFormat;
@@ -268,6 +269,25 @@ public sealed class LogNavigationService : ILogNavigationService
                 continue;
             }
 
+            if (entry.EventType == LogEventType.BusinessSoftwareDetected)
+            {
+                if (openRuns.TryGetValue(backupId, out var open))
+                {
+                    openRuns[backupId] = open with { IsPaused = false };
+                }
+                else
+                {
+                    openRuns[backupId] = new OpenRun(
+                        backupId,
+                        entry.BackupName,
+                        entry.Timestamp,
+                        indexed.Order,
+                        false);
+                }
+
+                continue;
+            }
+
             if (openRuns.TryGetValue(backupId, out var activeRun))
             {
                 openRuns[backupId] = activeRun with { IsPaused = false };
@@ -347,8 +367,7 @@ public sealed class LogNavigationService : ILogNavigationService
                 }
             }
 
-            if (entry.EventType == LogEventType.Error
-                || entry.EventType == LogEventType.BusinessSoftwareDetected)
+            if (entry.EventType == LogEventType.Error)
             {
                 if (openRuns.TryGetValue(backupId, out var open))
                 {
@@ -392,13 +411,46 @@ public sealed class LogNavigationService : ILogNavigationService
                 open,
                 lastOrder,
                 null,
-                open.IsPaused ? LogRunStatus.Paused : LogRunStatus.InProgress,
+                ResolveOpenRunStatus(open.BackupId, open, entries),
                 null,
                 null,
                 runOrdinal++));
         }
 
         return runs;
+    }
+
+    private static LogRunStatus ResolveOpenRunStatus(
+        int backupId,
+        OpenRun open,
+        IReadOnlyList<IndexedEntry> entries)
+    {
+        for (var i = entries.Count - 1; i >= open.StartOrder; i--)
+        {
+            var entry = entries[i].Entry;
+            if (entry.BackupId != backupId)
+                continue;
+
+            if (entry.EventType == LogEventType.Action
+                && string.Equals(entry.SourcePathUNC, PauseActionKey, StringComparison.Ordinal))
+            {
+                return LogRunStatus.Paused;
+            }
+
+            if (entry.EventType == LogEventType.BusinessSoftwareDetected)
+            {
+                return LogRunStatus.Blocked;
+            }
+
+            if (entry.EventType == LogEventType.TransferFile
+                || entry.EventType == LogEventType.CreateDirectory
+                || entry.EventType == LogEventType.StartBackup)
+            {
+                return LogRunStatus.InProgress;
+            }
+        }
+
+        return open.IsPaused ? LogRunStatus.Paused : LogRunStatus.InProgress;
     }
 
     private static InternalRun CreateRun(
@@ -477,7 +529,12 @@ public sealed class LogNavigationService : ILogNavigationService
 
     private sealed record IndexedEntry(LogEntry Entry, int Order);
 
-    private sealed record OpenRun(int BackupId, string BackupName, DateTime StartTimestamp, int StartOrder, bool IsPaused);
+    private sealed record OpenRun(
+        int BackupId,
+        string BackupName,
+        DateTime StartTimestamp,
+        int StartOrder,
+        bool IsPaused);
 
     private sealed record InternalRun(LogRunSummary Summary, int StartOrder, int LastOrder)
     {

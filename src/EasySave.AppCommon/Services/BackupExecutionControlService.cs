@@ -13,7 +13,7 @@ public sealed class BackupExecutionControlService(IBackupExecutionController exe
 
     public void Resume() => _executionController.Resume();
 
-    public void Stop() => StopAll();
+    public void Stop(int jobId) => _executionController.RequestStopForJob(jobId);
 
     public void StopAll() => _executionController.RequestStop();
 }
