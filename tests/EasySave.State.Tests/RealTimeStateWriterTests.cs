@@ -75,7 +75,7 @@ public class RealTimeStateWriterTests : IDisposable
 
         // Assert
         Assert.True(File.Exists(_testFilePath));
-        _pathProviderMock.Verify(p => p.GetStatePath(), Times.Once);
+        _pathProviderMock.Verify(p => p.GetStatePath(), Times.Exactly(2));
     }
 
     [Fact]
@@ -218,7 +218,7 @@ public class RealTimeStateWriterTests : IDisposable
 
         // Assert
         Assert.True(File.Exists(_testFilePath));
-        _pathProviderMock.Verify(p => p.GetStatePath(), Times.Once);
+        _pathProviderMock.Verify(p => p.GetStatePath(), Times.Exactly(2));
     }
 
     [Fact]
@@ -243,7 +243,7 @@ public class RealTimeStateWriterTests : IDisposable
 
         // Assert - File should not be created since entry doesn't exist
         Assert.False(File.Exists(_testFilePath));
-        _pathProviderMock.Verify(p => p.GetStatePath(), Times.Never);
+        _pathProviderMock.Verify(p => p.GetStatePath(), Times.Once);
     }
 
     [Fact]
@@ -318,7 +318,27 @@ public class RealTimeStateWriterTests : IDisposable
         writer.MarkInactive(1);
 
         // Assert
-        _pathProviderMock.Verify(p => p.GetStatePath(), Times.Exactly(2));
+        _pathProviderMock.Verify(p => p.GetStatePath(), Times.Exactly(3));
+    }
+
+    [Fact]
+    public void Update_LoadsExistingEntriesBeforeWriting()
+    {
+        // Arrange
+        var existing = new Dictionary<int, StateEntry>
+        {
+            [1] = new() { BackupId = 1, BackupName = "Existing", Status = BackupStatus.Inactive }
+        };
+        var json = StateSerializer.ToPrettyJson(new GlobalState { Entries = existing });
+        File.WriteAllText(_testFilePath, json);
+        var writer = CreateWriter();
+
+        // Act
+        writer.Update(new StateEntry { BackupId = 2, BackupName = "New", Status = BackupStatus.Active });
+
+        // Assert
+        Assert.True(_state.Entries.ContainsKey(1));
+        Assert.True(_state.Entries.ContainsKey(2));
     }
 
     #endregion
