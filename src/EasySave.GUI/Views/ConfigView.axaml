@@ -118,6 +118,25 @@
 									   IsVisible="{Binding LogServerUrlError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
 						</StackPanel>
 
+						<!-- Limite transfert gros fichiers -->
+						<StackPanel Spacing="8">
+							<TextBlock Text="{Binding LargeFileThresholdText}" FontWeight="SemiBold"/>
+							<Grid ColumnDefinitions="2*,Auto" HorizontalAlignment="Stretch">
+								<TextBox Grid.Column="0"
+										 Text="{Binding LargeFileThresholdValueText}"
+										 Watermark="{Binding LargeFileThresholdValueWatermark}"/>
+								<ComboBox Grid.Column="1"
+										  Margin="8,0,0,0"
+										  MinWidth="110"
+										  ItemsSource="{Binding AvailableTransferSizeUnits}"
+										  SelectedItem="{Binding SelectedLargeFileThresholdUnitOption}"/>
+							</Grid>
+							<TextBlock Text="{Binding LargeFileThresholdError}"
+									   Foreground="#F44336"
+									   FontSize="12"
+									   IsVisible="{Binding LargeFileThresholdError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+						</StackPanel>
+
 						<!-- Dossier de logs -->
 						<StackPanel Spacing="8">
 							<TextBlock Text="{Binding LogDirectoryText}" FontWeight="SemiBold"/>

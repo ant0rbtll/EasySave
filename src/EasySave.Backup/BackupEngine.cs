@@ -29,19 +29,21 @@ public class BackupEngine(
     IBackupExecutionGuard? executionGuard = null,
     IPriorityFilesBarrier? priorityFilesBarrier = null,
     IBackupFilePlanner? filePlanner = null,
-    IBackupExecutionController? executionController = null) : IBackupEngine
+    IBackupExecutionController? executionController = null,
+    ILargeFileTransferBarrier? largeFileTransferBarrier = null) : IBackupEngine
 {
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
     private readonly IStateWriter _stateWriter = stateWriter;
     private readonly ILogger _logger = logger;
-    private readonly IUserPreferencesRepository _preferencesRepository = preferencesRepository;
+    private readonly IUserPreferencesRepository? _preferencesRepository = preferencesRepository;
     private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
     private readonly IPriorityFilesBarrier _priorityFilesBarrier = priorityFilesBarrier ?? new NoOpPriorityFilesBarrier();
     private readonly IBackupFilePlanner _filePlanner = filePlanner ?? new DefaultBackupFilePlanner(fileSystem);
     private readonly IBackupExecutionController _executionController = executionController ?? new NoOpBackupExecutionController();
+    private readonly ILargeFileTransferBarrier _largeFileTransferBarrier = largeFileTransferBarrier ?? new NoOpLargeFileTransferBarrier();
     private const string BusinessSoftwareErrorKey = BackupRuntimeKeys.ErrorBusinessSoftwareRunning;
     private const int BusinessSoftwareRetryDelayMs = 500;
 
@@ -64,7 +66,9 @@ public class BackupEngine(
         bool barrierRegistered = false;
         try
         {
-            var plannedFiles = _filePlanner.BuildPlans(job, _preferencesRepository?.Load()?.PriorityExtensions);
+            var preferences = _preferencesRepository?.Load();
+            var plannedFiles = _filePlanner.BuildPlans(job, preferences?.PriorityExtensions);
+            var parallelLargeFileThresholdBytes = preferences?.GetParallelLargeFileThresholdBytes() ?? 0;
             var encryptionPolicy = _encryptionPolicyProvider.GetPolicy() ?? EncryptionPolicy.Disabled;
 
             int totalFiles = plannedFiles.Count;
@@ -171,7 +175,40 @@ public class BackupEngine(
                         planned.SourceFile,
                         planned.DestinationFile);
 
-                    TransferResult result = _transferService.TransferFile(planned.SourceFile, planned.DestinationFile, true);
+                var sourceFileSize = _fileSystem.GetFileSize(planned.SourceFile);
+                var waitedForLargeFileSlot = false;
+                using var largeFileTransferLease = _largeFileTransferBarrier.Acquire(
+                    sourceFileSize,
+                    parallelLargeFileThresholdBytes,
+                    cancellationToken,
+                    onWaitingForSlot: () =>
+                    {
+                        waitedForLargeFileSlot = true;
+                        UpdateState(
+                            job,
+                            BackupStatus.Waiting,
+                            totalFiles,
+                            totalSize,
+                            remainingFiles,
+                            remainingSize,
+                            totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
+                            planned.SourceFile,
+                            planned.DestinationFile);
+                    });
+                if (waitedForLargeFileSlot)
+                {
+                    UpdateState(
+                        job,
+                        BackupStatus.Active,
+                        totalFiles,
+                        totalSize,
+                        remainingFiles,
+                        remainingSize,
+                        totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
+                        planned.SourceFile,
+                        planned.DestinationFile);
+                }
+                TransferResult result = _transferService.TransferFile(planned.SourceFile, planned.DestinationFile, true);
 
                 if (!result.IsSuccess)
                 {

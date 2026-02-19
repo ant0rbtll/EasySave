@@ -56,7 +56,7 @@ public class SettingsFlowServiceTests
         var menuConfig = Assert.Single(menuService.ShownMenuConfigs);
         Assert.Equal(LocalizationKey.menu_params, menuConfig.Label);
 
-        menuConfig.Actions[3]();
+        menuConfig.Actions[4]();
 
         Assert.True(backCalled);
     }

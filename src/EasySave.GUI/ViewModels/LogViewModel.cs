@@ -625,7 +625,7 @@ public partial class LogViewModel : ViewModelBase
                 EventTypeLabel = GetEventTypeLabel(log.EventType),
                 Source = log.SourcePathUNC,
                 Destination = log.DestinationPathUNC,
-                FileSize = LogValueFormatter.FormatFileSize(log.FileSizeBytes),
+                FileSize = LogValueFormatter.FormatFileSize(log.FileSizeBytes, _localizationService.Culture),
                 Duration = LogValueFormatter.FormatDuration(log.TransferTimeMs),
                 EncryptionTime = log.EncryptionTimeMs < 0
                     ? StatusError
@@ -811,7 +811,7 @@ public partial class LogViewModel : ViewModelBase
             StatusTone = GetRunStatusTone(run.Status),
             TotalDuration = GetRunTotalDurationText(run),
             TotalSize = run.Status == LogRunStatus.Completed && run.TotalSizeBytes.HasValue
-                ? LogValueFormatter.FormatFileSize(run.TotalSizeBytes.Value)
+                ? LogValueFormatter.FormatFileSize(run.TotalSizeBytes.Value, _localizationService.Culture)
                 : string.Empty,
             Format = run.Format.ToString().ToUpperInvariant(),
             IsInProgress = run.Status == LogRunStatus.InProgress,

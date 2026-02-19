@@ -39,6 +39,7 @@ internal interface IMenuFactory
     /// <param name="onShowChangeLocale">Action invoked when opening locale settings.</param>
     /// <param name="onShowChangeLogDirectory">Action invoked when opening log path settings.</param>
     /// <param name="onShowChangeLogFormat">Action invoked when opening log format settings.</param>
+    /// <param name="onShowChangeLargeFileThreshold">Action invoked when opening parallel large-file transfer settings.</param>
     /// <param name="onBack">Action invoked for the back entry.</param>
     /// <param name="renderHeader">Optional header renderer.</param>
     /// <returns>The configured settings menu.</returns>
@@ -46,6 +47,7 @@ internal interface IMenuFactory
         Action onShowChangeLocale,
         Action onShowChangeLogDirectory,
         Action onShowChangeLogFormat,
+        Action onShowChangeLargeFileThreshold,
         Action onBack,
         Action? renderHeader = null);
 

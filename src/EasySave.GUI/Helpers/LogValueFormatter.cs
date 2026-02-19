@@ -35,14 +35,17 @@ public static class LogValueFormatter
         return $"{milliseconds / 86_400_000d:0.##} d";
     }
 
-    public static string FormatFileSize(long bytes)
+    public static string FormatFileSize(long bytes, string? cultureCode = null)
     {
         if (bytes < 0)
         {
             return "Error";
         }
 
-        string[] units = ["B", "KB", "MB", "GB", "TB", "PB"];
+        var useFrenchUnits = string.Equals(cultureCode, "fr", StringComparison.OrdinalIgnoreCase);
+        string[] units = useFrenchUnits
+            ? ["o", "Ko", "Mo", "Go", "To"]
+            : ["B", "KB", "MB", "GB", "TB"];
         double value = bytes;
         var unitIndex = 0;
 

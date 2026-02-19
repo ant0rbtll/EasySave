@@ -58,24 +58,27 @@ public class MenuFactoryTests
         var locale = false;
         var path = false;
         var format = false;
+        var threshold = false;
         var back = false;
 
         var menu = factory.CreateParamsMenu(
             () => locale = true,
             () => path = true,
             () => format = true,
+            () => threshold = true,
             () => back = true);
 
         Assert.Equal(
-            new[] { LocalizationKey.menu_params_locale, LocalizationKey.menu_params_log_path, LocalizationKey.menu_params_log_format, LocalizationKey.back },
+            new[] { LocalizationKey.menu_params_locale, LocalizationKey.menu_params_log_path, LocalizationKey.menu_params_log_format, LocalizationKey.menu_params_large_file_threshold, LocalizationKey.back },
             menu.Items);
 
         menu.Actions[0]();
         menu.Actions[1]();
         menu.Actions[2]();
         menu.Actions[3]();
+        menu.Actions[4]();
 
-        Assert.True(locale && path && format && back);
+        Assert.True(locale && path && format && threshold && back);
     }
 
     [Fact]

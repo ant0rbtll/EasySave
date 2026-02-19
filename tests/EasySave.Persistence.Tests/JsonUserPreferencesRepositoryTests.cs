@@ -384,6 +384,38 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
     }
 
     [Fact]
+    public void SaveAndLoad_PersistsParallelLargeFileThresholdSettings()
+    {
+        // Arrange
+        var repo = CreateRepository();
+        var preferences = new UserPreferences
+        {
+            ParallelLargeFileThresholdValue = 2,
+            ParallelLargeFileThresholdUnit = TransferSizeUnit.Giga
+        };
+
+        // Act
+        repo.Save(preferences);
+        var loadedPreferences = repo.Load();
+
+        // Assert
+        Assert.Equal(2, loadedPreferences.ParallelLargeFileThresholdValue);
+        Assert.Equal(TransferSizeUnit.Giga, loadedPreferences.ParallelLargeFileThresholdUnit);
+    }
+
+    [Fact]
+    public void GetParallelLargeFileThresholdBytes_ConvertsUnitsUsingPowerOf1024()
+    {
+        var preferences = new UserPreferences
+        {
+            ParallelLargeFileThresholdValue = 3,
+            ParallelLargeFileThresholdUnit = TransferSizeUnit.Mega
+        };
+
+        Assert.Equal(3L * 1024L * 1024L, preferences.GetParallelLargeFileThresholdBytes());
+    }
+
+    [Fact]
     public void PathProvider_GetUserPreferencesPath_IsCalledOnEachOperation()
     {
         // Arrange

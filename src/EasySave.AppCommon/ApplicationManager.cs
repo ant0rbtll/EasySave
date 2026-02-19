@@ -63,6 +63,7 @@ namespace EasySave.AppCommon
             _services.AddSingleton<IBackupExecutionController, BackupExecutionController>();
             _services.AddSingleton<IBackupRunCoordinator, InMemoryBackupRunCoordinator>();
             _services.AddSingleton<IPriorityFilesBarrier, InMemoryPriorityFilesBarrier>();
+            _services.AddSingleton<ILargeFileTransferBarrier, InMemoryLargeFileTransferBarrier>();
             _services.AddSingleton<ILocalizationService, LocalizationService>();
             _services.AddSingleton<ILogReader, JsonLogReader>();
             _services.AddSingleton<ILogReader, XmlLogReader>();

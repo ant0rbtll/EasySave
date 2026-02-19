@@ -64,6 +64,7 @@ namespace EasySave.UI.Menu
             Action onShowChangeLocale,
             Action onShowChangeLogDirectory,
             Action onShowChangeLogFormat,
+            Action onShowChangeLargeFileThreshold,
             Action onBack,
             Action? renderHeader = null)
         {
@@ -72,6 +73,7 @@ namespace EasySave.UI.Menu
                 LocalizationKey.menu_params_locale,
                 LocalizationKey.menu_params_log_path,
                 LocalizationKey.menu_params_log_format,
+                LocalizationKey.menu_params_large_file_threshold,
                 LocalizationKey.back
             };
 
@@ -80,7 +82,8 @@ namespace EasySave.UI.Menu
                 { 0, onShowChangeLocale },
                 { 1, onShowChangeLogDirectory },
                 { 2, onShowChangeLogFormat },
-                { 3, onBack }
+                { 3, onShowChangeLargeFileThreshold },
+                { 4, onBack }
             };
 
             return new MenuConfig(items, actions, LocalizationKey.menu_params, renderHeader);

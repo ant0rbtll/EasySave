@@ -62,6 +62,7 @@ internal class SettingsFlowService(
             () => ShowChangeLocale(onBackToMainMenu),
             () => ShowChangeLogDirectory(onBackToMainMenu),
             () => ShowChangeLogFormat(onBackToMainMenu),
+            () => ShowChangeLargeFileThreshold(onBackToMainMenu),
             onBackToMainMenu,
             RenderSettingsHeader);
 
@@ -211,6 +212,7 @@ internal class SettingsFlowService(
         }
 
         DisplayActiveLogDirectoryStatus();
+        DisplayLargeFileThresholdStatus();
         _consoleAdapter.WriteLine();
     }
 
@@ -343,6 +345,19 @@ internal class SettingsFlowService(
         _messageService.WriteWithParams(LocalizationKey.settings_log_directory_active_custom, [_activeLogDirectory]);
     }
 
+    private void DisplayLargeFileThresholdStatus()
+    {
+        if (_userPreferences.ParallelLargeFileThresholdValue <= 0)
+        {
+            _messageService.Write(LocalizationKey.settings_large_file_threshold_disabled);
+            return;
+        }
+
+        var unitLabel = GetTransferSizeUnitLabel(_userPreferences.ParallelLargeFileThresholdUnit);
+        var value = $"{_userPreferences.ParallelLargeFileThresholdValue} {unitLabel}";
+        _messageService.WriteWithParams(LocalizationKey.settings_large_file_threshold_active, [value]);
+    }
+
     /// <summary>
     /// Returns the localized label for the current language.
     /// </summary>
@@ -369,5 +384,71 @@ internal class SettingsFlowService(
             LogFormat.Xml => _localizationService.TranslateText(LocalizationKey.log_format_xml),
             _ => _localizationService.TranslateText(LocalizationKey.log_format_json)
         };
+    }
+
+    private string GetTransferSizeUnitLabel(TransferSizeUnit unit)
+    {
+        return unit switch
+        {
+            TransferSizeUnit.Mega => _localizationService.TranslateText(LocalizationKey.size_unit_mega),
+            TransferSizeUnit.Giga => _localizationService.TranslateText(LocalizationKey.size_unit_giga),
+            _ => _localizationService.TranslateText(LocalizationKey.size_unit_kilo)
+        };
+    }
+
+    private void ShowChangeLargeFileThreshold(Action onBackToMainMenu)
+    {
+        _consoleAdapter.Clear();
+        _menuService.DisplayLabel(LocalizationKey.menu_params_large_file_threshold);
+        DisplayLargeFileThresholdStatus();
+        _consoleAdapter.WriteLine();
+
+        var thresholdValue = _inputService.AskInt(LocalizationKey.ask_large_file_threshold_value);
+        if (thresholdValue is null)
+        {
+            ConfigureParams(onBackToMainMenu);
+            return;
+        }
+
+        if (thresholdValue < 0)
+        {
+            _messageService.Write(LocalizationKey.input_number_invalid);
+            _menuService.WaitForUser();
+            ConfigureParams(onBackToMainMenu);
+            return;
+        }
+
+        var unitItems = new[]
+        {
+            GetTransferSizeUnitLabel(TransferSizeUnit.Kilo),
+            GetTransferSizeUnitLabel(TransferSizeUnit.Mega),
+            GetTransferSizeUnitLabel(TransferSizeUnit.Giga),
+            _messageService.Translate(LocalizationKey.back)
+        };
+
+        var selectedUnitIndex = _menuService.ShowMenu(unitItems, LocalizationKey.menu_params_large_file_threshold);
+        if (selectedUnitIndex == 3)
+        {
+            ConfigureParams(onBackToMainMenu);
+            return;
+        }
+
+        var selectedUnit = selectedUnitIndex switch
+        {
+            1 => TransferSizeUnit.Mega,
+            2 => TransferSizeUnit.Giga,
+            _ => TransferSizeUnit.Kilo
+        };
+
+        ChangeLargeFileThreshold(thresholdValue.Value, selectedUnit, onBackToMainMenu);
+    }
+
+    private void ChangeLargeFileThreshold(long thresholdValue, TransferSizeUnit unit, Action onBackToMainMenu)
+    {
+        _userPreferences.ParallelLargeFileThresholdValue = thresholdValue < 0 ? 0 : thresholdValue;
+        _userPreferences.ParallelLargeFileThresholdUnit = unit;
+        _preferencesRepository.Save(_userPreferences);
+
+        ConfigureParams(onBackToMainMenu);
     }
 }
