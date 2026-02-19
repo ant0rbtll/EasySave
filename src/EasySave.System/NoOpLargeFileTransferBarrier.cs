@@ -5,5 +5,9 @@ namespace EasySave.System;
 /// </summary>
 public sealed class NoOpLargeFileTransferBarrier : ILargeFileTransferBarrier
 {
-    public IDisposable? Acquire(long fileSizeBytes, long thresholdBytes, CancellationToken cancellationToken, Action? onWaitingForSlot = null) => null;
+    public LargeFileTransferAcquireResult TryAcquire(long fileSizeBytes, long thresholdBytes, out IDisposable? lease)
+    {
+        lease = null;
+        return LargeFileTransferAcquireResult.NotRequired;
+    }
 }

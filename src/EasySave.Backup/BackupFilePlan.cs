@@ -6,5 +6,6 @@ namespace EasySave.Backup;
 public sealed record BackupFilePlan(
     string SourceFile,
     string DestinationFile,
+    long SourceFileSizeBytes,
     bool IsPriority,
     bool ShouldCopy);

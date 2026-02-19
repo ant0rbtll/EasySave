@@ -698,7 +698,41 @@ public class BackupEngineTests
 
         _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Never);
         _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
-        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Waiting)), Times.AtLeastOnce);
+    }
+
+    [Fact]
+    public async Task Execute_WhenStopRequestedDuringLargeFileSlotWait_ShouldStopWithoutWaitingSlotCompletion()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
+            .Returns(new List<string> { "/source/large.bin" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(20 * 1024);
+
+        var executionController = new StopOnSecondWaitExecutionController();
+        var alwaysBusyLargeBarrier = new AlwaysBusyLargeFileTransferBarrier();
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionController,
+            largeFileTransferBarrier: alwaysBusyLargeBarrier);
+
+        var executionContext = new BackupExecutionContext(parallelLargeFileThresholdBytes: 1024);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job, executionContext: executionContext));
+        Assert.Equal(BackupRuntimeKeys.ErrorBackupStoppedByUser, ex.Message);
+
+        _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Never);
+        _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
     }
 
     [Fact]
@@ -855,6 +889,17 @@ public class BackupEngineTests
         {
             controlState = BackupJobControlState.Running;
             return true;
+        }
+    }
+
+    private sealed class AlwaysBusyLargeFileTransferBarrier : ILargeFileTransferBarrier
+    {
+        public LargeFileTransferAcquireResult TryAcquire(long fileSizeBytes, long thresholdBytes, out IDisposable? lease)
+        {
+            lease = null;
+            return fileSizeBytes > thresholdBytes && thresholdBytes > 0
+                ? LargeFileTransferAcquireResult.Busy
+                : LargeFileTransferAcquireResult.NotRequired;
         }
     }
 

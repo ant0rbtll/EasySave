@@ -44,6 +44,7 @@ public class BackupEngine(
     private const string BusinessSoftwareErrorKey = BackupRuntimeKeys.ErrorBusinessSoftwareRunning;
     private const int BusinessSoftwareRetryDelayMs = 500;
     private const int PriorityBarrierPollDelayMs = 100;
+    private const int LargeFileBarrierPollDelayMs = 100;
 
     /// <summary>
     /// Executes a complete or differential backup.
@@ -74,7 +75,7 @@ public class BackupEngine(
             var encryptionPolicy = _encryptionPolicyProvider.GetPolicy() ?? EncryptionPolicy.Disabled;
 
             int totalFiles = plannedFiles.Count;
-            long totalSize = plannedFiles.Sum(f => _fileSystem.GetFileSize(f.SourceFile));
+            long totalSize = plannedFiles.Sum(f => f.SourceFileSizeBytes);
 
             int remainingFiles = totalFiles;
             long remainingSize = totalSize;
@@ -175,51 +176,17 @@ public class BackupEngine(
                     );
                 }
 
-                    // Check pause/stop one more time right before transfer.
-                    // This narrows the race window where pause could be requested
-                    // after the pre-loop check but before starting the next file copy.
-                    WaitForRuntimeControlAndSyncState(
-                        job,
-                        totalFiles,
-                        totalSize,
-                        remainingFiles,
-                        remainingSize,
-                        planned.SourceFile,
-                        planned.DestinationFile);
-
-                var sourceFileSize = _fileSystem.GetFileSize(planned.SourceFile);
-                var waitedForLargeFileSlot = false;
-                using var largeFileTransferLease = _largeFileTransferBarrier.Acquire(
-                    sourceFileSize,
+                using var largeFileTransferLease = WaitUntilLargeFileBarrierAllowsCopy(
+                    job,
+                    totalFiles,
+                    totalSize,
+                    remainingFiles,
+                    remainingSize,
+                    planned.SourceFile,
+                    planned.DestinationFile,
+                    planned.SourceFileSizeBytes,
                     parallelLargeFileThresholdBytes,
-                    cancellationToken,
-                    onWaitingForSlot: () =>
-                    {
-                        waitedForLargeFileSlot = true;
-                        UpdateState(
-                            job,
-                            BackupStatus.Waiting,
-                            totalFiles,
-                            totalSize,
-                            remainingFiles,
-                            remainingSize,
-                            totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
-                            planned.SourceFile,
-                            planned.DestinationFile);
-                    });
-                if (waitedForLargeFileSlot)
-                {
-                    UpdateState(
-                        job,
-                        BackupStatus.Active,
-                        totalFiles,
-                        totalSize,
-                        remainingFiles,
-                        remainingSize,
-                        totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
-                        planned.SourceFile,
-                        planned.DestinationFile);
-                }
+                    cancellationToken);
                 TransferResult result = _transferService.TransferFile(planned.SourceFile, planned.DestinationFile, true);
 
                 if (!result.IsSuccess)
@@ -379,6 +346,75 @@ public class BackupEngine(
             }
 
             Task.Delay(PriorityBarrierPollDelayMs, cancellationToken).GetAwaiter().GetResult();
+        }
+    }
+
+    private IDisposable? WaitUntilLargeFileBarrierAllowsCopy(
+        BackupJob job,
+        int totalFiles,
+        long totalSize,
+        int remainingFiles,
+        long remainingSize,
+        string sourceFile,
+        string destinationFile,
+        long sourceFileSizeBytes,
+        long thresholdBytes,
+        CancellationToken cancellationToken)
+    {
+        var waitingStateDisplayed = false;
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            LogPendingUserActions(job);
+            var resumedFromPause = WaitForRuntimeControlAndSyncState(
+                job,
+                totalFiles,
+                totalSize,
+                remainingFiles,
+                remainingSize,
+                sourceFile,
+                destinationFile);
+
+            var acquireResult = _largeFileTransferBarrier.TryAcquire(
+                sourceFileSizeBytes,
+                thresholdBytes,
+                out var lease);
+
+            if (acquireResult is LargeFileTransferAcquireResult.NotRequired or LargeFileTransferAcquireResult.Acquired)
+            {
+                if (waitingStateDisplayed)
+                {
+                    UpdateState(
+                        job,
+                        BackupStatus.Active,
+                        totalFiles,
+                        totalSize,
+                        remainingFiles,
+                        remainingSize,
+                        totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
+                        sourceFile,
+                        destinationFile);
+                }
+
+                return lease;
+            }
+
+            if (!waitingStateDisplayed || resumedFromPause)
+            {
+                waitingStateDisplayed = true;
+                UpdateState(
+                    job,
+                    BackupStatus.Waiting,
+                    totalFiles,
+                    totalSize,
+                    remainingFiles,
+                    remainingSize,
+                    totalFiles > 0 ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles) : 0,
+                    sourceFile,
+                    destinationFile);
+            }
+
+            Task.Delay(LargeFileBarrierPollDelayMs, cancellationToken).GetAwaiter().GetResult();
         }
     }
 

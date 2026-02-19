@@ -10,26 +10,27 @@ public sealed class InMemoryLargeFileTransferBarrier : ILargeFileTransferBarrier
     private readonly SemaphoreSlim _largeTransferSemaphore = new(1, 1);
     private bool _disposed;
 
-    public IDisposable? Acquire(
+    public LargeFileTransferAcquireResult TryAcquire(
         long fileSizeBytes,
         long thresholdBytes,
-        CancellationToken cancellationToken,
-        Action? onWaitingForSlot = null)
+        out IDisposable? lease)
     {
         if (_disposed
             || thresholdBytes <= 0
             || fileSizeBytes <= thresholdBytes)
         {
-            return null;
+            lease = null;
+            return LargeFileTransferAcquireResult.NotRequired;
         }
 
-        if (!_largeTransferSemaphore.Wait(0, cancellationToken))
+        if (!_largeTransferSemaphore.Wait(0))
         {
-            onWaitingForSlot?.Invoke();
-            _largeTransferSemaphore.Wait(cancellationToken);
+            lease = null;
+            return LargeFileTransferAcquireResult.Busy;
         }
 
-        return new Releaser(_largeTransferSemaphore);
+        lease = new Releaser(_largeTransferSemaphore);
+        return LargeFileTransferAcquireResult.Acquired;
     }
 
     public void Dispose()

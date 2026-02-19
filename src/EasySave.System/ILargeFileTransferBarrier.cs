@@ -1,17 +1,26 @@
 namespace EasySave.System;
 
 /// <summary>
+/// Result of a non-blocking large-file slot acquisition attempt.
+/// </summary>
+public enum LargeFileTransferAcquireResult
+{
+    NotRequired,
+    Acquired,
+    Busy
+}
+
+/// <summary>
 /// Coordinates global concurrency for transfers of large files.
 /// </summary>
 public interface ILargeFileTransferBarrier
 {
     /// <summary>
-    /// Acquires an exclusive transfer slot when the file exceeds the configured threshold.
-    /// Returns <see langword="null"/> when no slot is required.
+    /// Attempts to acquire an exclusive transfer slot without blocking.
+    /// Returns an acquisition result and outputs a disposable lease when acquired.
     /// </summary>
-    IDisposable? Acquire(
+    LargeFileTransferAcquireResult TryAcquire(
         long fileSizeBytes,
         long thresholdBytes,
-        CancellationToken cancellationToken,
-        Action? onWaitingForSlot = null);
+        out IDisposable? lease);
 }
