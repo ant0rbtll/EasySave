@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace EasySave.State;
 
@@ -9,7 +10,11 @@ public class StateSerializer
 {
     private static readonly JsonSerializerOptions s_jsonOptions = new()
     {
-        WriteIndented = true
+        WriteIndented = true,
+        Converters =
+        {
+            new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true)
+        }
     };
 
     /// <summary>

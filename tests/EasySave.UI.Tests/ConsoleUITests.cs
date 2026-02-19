@@ -200,7 +200,13 @@ public class ConsoleUITests
         public MenuConfig CreateLocaleMenu(IReadOnlyDictionary<string, LocalizationKey> cultures, Action<string> onSelectLocale, Action onBack, Action? renderHeader = null)
             => throw new NotSupportedException();
 
-        public MenuConfig CreateParamsMenu(Action onShowChangeLocale, Action onShowChangeLogDirectory, Action onShowChangeLogFormat, Action onBack, Action? renderHeader = null)
+        public MenuConfig CreateParamsMenu(
+            Action onShowChangeLocale,
+            Action onShowChangeLogDirectory,
+            Action onShowChangeLogFormat,
+            Action onShowChangeLargeFileThreshold,
+            Action onBack,
+            Action? renderHeader = null)
             => throw new NotSupportedException();
 
         public MenuConfig CreateLogFormatMenu(string jsonLabel, string xmlLabel, string backLabel, Action onJson, Action onXml, Action onBack, Action? renderHeader = null)
@@ -218,7 +224,10 @@ public class ConsoleUITests
 
     private sealed class ThrowingBackupEngine : IBackupEngine
     {
-        public Task Execute(BackupJob job, CancellationToken cancellationToken = default)
+        public Task Execute(
+            BackupJob job,
+            CancellationToken cancellationToken = default,
+            BackupExecutionContext? executionContext = null)
         {
             throw new InvalidOperationException("boom");
         }

@@ -19,7 +19,8 @@ public class BackupApplicationService(
     IStateReader? stateReader = null,
     IBackupRunCoordinator? backupRunCoordinator = null,
     IBackupExecutionGuard? backupExecutionGuard = null,
-    IStateWriter? stateWriter = null)
+    IStateWriter? stateWriter = null,
+    IUserPreferencesRepository? userPreferencesRepository = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
@@ -28,6 +29,7 @@ public class BackupApplicationService(
     private readonly IBackupRunCoordinator _backupRunCoordinator = backupRunCoordinator ?? new InMemoryBackupRunCoordinator();
     private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
     private readonly IStateWriter? _stateWriter = stateWriter;
+    private readonly IUserPreferencesRepository? _userPreferencesRepository = userPreferencesRepository;
     private int _activeStateReconciled;
 
     /// <summary>
@@ -250,9 +252,14 @@ public class BackupApplicationService(
 
     private Task RunJobInternalAsync(BackupJob job, CancellationToken cancellationToken)
     {
+        var preferences = _userPreferencesRepository?.Load();
+        var executionContext = new BackupExecutionContext(
+            preferences?.PriorityExtensions,
+            preferences?.GetParallelLargeFileThresholdBytes() ?? 0);
+
         return _backupRunCoordinator.RunExclusiveAsync(
             job.Id,
-            ct => _engine.Execute(job, ct),
+            ct => _engine.Execute(job, ct, executionContext),
             cancellationToken);
     }
 

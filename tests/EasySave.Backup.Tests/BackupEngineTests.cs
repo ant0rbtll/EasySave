@@ -3,7 +3,6 @@ using EasySave.State;
 using EasySave.System;
 using EasySave.Log;
 using Moq;
-using EasySave.Persistence;
 
 namespace EasySave.Backup.Tests;
 
@@ -13,7 +12,6 @@ public class BackupEngineTests
     private readonly Mock<ITransferService> _transferServiceMock;
     private readonly Mock<IStateWriter> _stateWriterMock;
     private readonly Mock<ILogger> _loggerMock;
-    private readonly Mock<IUserPreferencesRepository> _userPreferencesMock;
     private readonly Mock<IEncryptionPolicyProvider> _encryptionPolicyProviderMock;
     private readonly Mock<IEncryptionProviderResolver> _encrytionResolverProviderMock;
     private readonly Mock<IBackupExecutionGuard> _backupUpExecutionGuardMock;
@@ -28,7 +26,6 @@ public class BackupEngineTests
         _encryptionPolicyProviderMock = new Mock<IEncryptionPolicyProvider>();
         _encrytionResolverProviderMock = new Mock<IEncryptionProviderResolver>();
         _backupUpExecutionGuardMock = new Mock<IBackupExecutionGuard>();
-        _userPreferencesMock = new Mock<IUserPreferencesRepository>();
         _encryptionPolicyProviderMock
             .Setup(p => p.GetPolicy())
             .Returns(EncryptionPolicy.Disabled);
@@ -38,7 +35,6 @@ public class BackupEngineTests
             _transferServiceMock.Object,
             _stateWriterMock.Object,
             _loggerMock.Object,
-            _userPreferencesMock.Object,
             _encryptionPolicyProviderMock.Object,
             _encrytionResolverProviderMock.Object,
             _backupUpExecutionGuardMock.Object
@@ -666,6 +662,120 @@ public class BackupEngineTests
     }
 
     [Fact]
+    public async Task Execute_WhenStopRequestedDuringPriorityWait_ShouldStopWithoutWaitingBarrierCompletion()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var neverCompleted = new TaskCompletionSource<bool>();
+        var barrierMock = new Mock<IPriorityFilesBarrier>();
+        barrierMock
+            .Setup(b => b.WaitUntilNoPriorityPendingAsync(It.IsAny<CancellationToken>()))
+            .Returns(neverCompleted.Task);
+
+        var executionController = new StopOnSecondWaitExecutionController();
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            priorityFilesBarrier: barrierMock.Object,
+            executionController: executionController);
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job));
+        Assert.Equal(BackupRuntimeKeys.ErrorBackupStoppedByUser, ex.Message);
+
+        _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Never);
+        _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
+    }
+
+    [Fact]
+    public async Task Execute_WhenStopRequestedDuringLargeFileSlotWait_ShouldStopWithoutWaitingSlotCompletion()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
+            .Returns(new List<string> { "/source/large.bin" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(20 * 1024);
+
+        var executionController = new StopOnSecondWaitExecutionController();
+        var alwaysBusyLargeBarrier = new AlwaysBusyLargeFileTransferBarrier();
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionController,
+            largeFileTransferBarrier: alwaysBusyLargeBarrier);
+
+        var executionContext = new BackupExecutionContext(parallelLargeFileThresholdBytes: 1024);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => engine.Execute(job, executionContext: executionContext));
+        Assert.Equal(BackupRuntimeKeys.ErrorBackupStoppedByUser, ex.Message);
+
+        _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Never);
+        _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
+    }
+
+    [Fact]
+    public async Task Execute_WhenResumedWhileStillWaitingForPriorityBarrier_ShouldReturnToWaitingStatus()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var neverCompleted = new TaskCompletionSource<bool>();
+        var barrierMock = new Mock<IPriorityFilesBarrier>();
+        barrierMock
+            .Setup(b => b.WaitUntilNoPriorityPendingAsync(It.IsAny<CancellationToken>()))
+            .Returns(neverCompleted.Task);
+
+        var executionController = new StubExecutionController(
+            controlStates: [BackupJobControlState.Running, BackupJobControlState.Paused, BackupJobControlState.Running]);
+
+        var engine = new BackupEngine(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            priorityFilesBarrier: barrierMock.Object,
+            executionController: executionController);
+
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(260));
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => engine.Execute(job, cts.Token));
+
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Waiting)), Times.AtLeast(2));
+    }
+
+    [Fact]
     public async Task Execute_UnsupportedBackupType_ThrowsNotSupportedException()
     {
         // Arrange
@@ -741,6 +851,55 @@ public class BackupEngineTests
 
             controlState = _controlStates.Dequeue();
             return true;
+        }
+    }
+
+    private sealed class StopOnSecondWaitExecutionController : IBackupExecutionController
+    {
+        private int _waitCalls;
+
+        public void BeginJob(int jobId) { }
+        public void EndJob(int jobId) { }
+        public void PauseAll() { }
+        public void Pause(int jobId) { }
+        public void ResumeAll() { }
+        public void Resume(int jobId) { }
+        public void RequestStopAll() { }
+        public void RequestStop(int jobId) { }
+
+        public void WaitIfPausedOrThrowIfStopped()
+        {
+            _waitCalls++;
+            if (_waitCalls < 2)
+                return;
+
+            var exception = new InvalidOperationException(BackupRuntimeKeys.ErrorBackupStoppedByUser);
+            exception.Data["errorKey"] = BackupRuntimeKeys.ErrorBackupStoppedByUser;
+            exception.Data["actionKey"] = BackupRuntimeKeys.ActionBackupStoppedByUser;
+            throw exception;
+        }
+
+        public bool TryDequeueAction(out string actionKey)
+        {
+            actionKey = string.Empty;
+            return false;
+        }
+
+        public bool TryGetCurrentJobControlState(int jobId, out BackupJobControlState controlState)
+        {
+            controlState = BackupJobControlState.Running;
+            return true;
+        }
+    }
+
+    private sealed class AlwaysBusyLargeFileTransferBarrier : ILargeFileTransferBarrier
+    {
+        public LargeFileTransferAcquireResult TryAcquire(long fileSizeBytes, long thresholdBytes, out IDisposable? lease)
+        {
+            lease = null;
+            return fileSizeBytes > thresholdBytes && thresholdBytes > 0
+                ? LargeFileTransferAcquireResult.Busy
+                : LargeFileTransferAcquireResult.NotRequired;
         }
     }
 

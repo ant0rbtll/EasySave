@@ -209,7 +209,10 @@ internal sealed class FakeBackupEngine : IBackupEngine
 {
     public List<BackupJob> ExecutedJobs { get; } = new();
 
-    public Task Execute(BackupJob job, CancellationToken cancellationToken = default)
+    public Task Execute(
+        BackupJob job,
+        CancellationToken cancellationToken = default,
+        BackupExecutionContext? executionContext = null)
     {
         ExecutedJobs.Add(job);
         return Task.CompletedTask;

@@ -37,6 +37,10 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string? statusMessage;
     [ObservableProperty] private string? pathError;
     [ObservableProperty] private string? logServerUrlError;
+    [ObservableProperty] private string largeFileThresholdValueText = "0";
+    [ObservableProperty] private TransferSizeUnit selectedLargeFileThresholdUnit = TransferSizeUnit.Kilo;
+    [ObservableProperty] private TransferSizeUnitOption? selectedLargeFileThresholdUnitOption;
+    [ObservableProperty] private string? largeFileThresholdError;
 
     // Propriétés traduites
     [ObservableProperty] private string titleText = "";
@@ -63,6 +67,8 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string logModeLocalAndCentralizedText = "";
     [ObservableProperty] private string logServerUrlText = "";
     [ObservableProperty] private string logServerUrlWatermark = "";
+    [ObservableProperty] private string largeFileThresholdText = "";
+    [ObservableProperty] private string largeFileThresholdValueWatermark = "";
     [ObservableProperty] private string? newPriorityExtensionInput;
     [ObservableProperty] private string priorityExtensionsText = "";
     [ObservableProperty] private string priorityExtensionsWatermark = "";
@@ -72,6 +78,7 @@ public partial class ConfigViewModel : ViewModelBase
     public ObservableCollection<string> EncryptedExtensions { get; } = [];
     public ObservableCollection<string> BusinessSoftwareProcesses { get; } = [];
     public ObservableCollection<string> PriorityExtensions { get; } = [];
+    public ObservableCollection<TransferSizeUnitOption> AvailableTransferSizeUnits { get; } = [];
 
     public bool IsJsonLogFormatSelected => SelectedLogFormat == LogFormat.Json;
     public bool IsXmlLogFormatSelected => SelectedLogFormat == LogFormat.Xml;
@@ -108,6 +115,8 @@ public partial class ConfigViewModel : ViewModelBase
         selectedLogMode = preferences.LogMode;
         logServerUrl = preferences.LogServerUrl;
         logDirectory = preferences.LogDirectory;
+        largeFileThresholdValueText = preferences.ParallelLargeFileThresholdValue.ToString();
+        selectedLargeFileThresholdUnit = preferences.ParallelLargeFileThresholdUnit;
 
         foreach (var processName in preferences.BusinessSoftwareProcessNames)
         {
@@ -202,11 +211,15 @@ public partial class ConfigViewModel : ViewModelBase
         LogModeLocalAndCentralizedText = _localizationService.TranslateText(LocalizationKey.log_mode_local_and_centralized);
         LogServerUrlText = _localizationService.TranslateText(LocalizationKey.gui_config_log_server_url);
         LogServerUrlWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_log_server_url_watermark);
+        LargeFileThresholdText = _localizationService.TranslateText(LocalizationKey.gui_config_large_file_threshold);
+        LargeFileThresholdValueWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_large_file_threshold_value_watermark);
         PriorityExtensionsText = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions);
         PriorityExtensionsWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_watermark);
         PriorityExtensionsAddText = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_add);
         PriorityExtensionsEmptyText = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_empty);
+        RefreshTransferSizeUnits();
         ValidatePath();
+        ValidateLargeFileThreshold();
     }
 
     partial void OnSelectedLogFormatChanged(LogFormat value)
@@ -230,6 +243,30 @@ public partial class ConfigViewModel : ViewModelBase
     {
         ClearStatusMessage();
         ValidateLogServerUrl();
+    }
+
+    partial void OnLargeFileThresholdValueTextChanged(string value)
+    {
+        ClearStatusMessage();
+        ValidateLargeFileThreshold();
+    }
+
+    partial void OnSelectedLargeFileThresholdUnitChanged(TransferSizeUnit value)
+    {
+        ClearStatusMessage();
+    }
+
+    partial void OnSelectedLargeFileThresholdUnitOptionChanged(TransferSizeUnitOption? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        if (SelectedLargeFileThresholdUnit != value.Unit)
+        {
+            SelectedLargeFileThresholdUnit = value.Unit;
+        }
     }
 
     partial void OnSelectedLanguageChanged(string value)
@@ -267,6 +304,8 @@ public partial class ConfigViewModel : ViewModelBase
         preferences.BusinessSoftwareProcessNames = [..BusinessSoftwareProcesses];
         preferences.EncryptedExtensions = [..EncryptedExtensions];
         preferences.PriorityExtensions = [.. PriorityExtensions];
+        preferences.ParallelLargeFileThresholdValue = ParseLargeFileThresholdValue();
+        preferences.ParallelLargeFileThresholdUnit = SelectedLargeFileThresholdUnit;
         _preferencesRepository.Save(preferences);
 
         _localizationService.Culture = language;
@@ -282,7 +321,7 @@ public partial class ConfigViewModel : ViewModelBase
         RestartStatusMessageAutoClear();
     }
 
-    private bool CanSave() => PathError is null && LogServerUrlError is null;
+    private bool CanSave() => PathError is null && LogServerUrlError is null && LargeFileThresholdError is null;
 
     private const string DefaultLanguage = "fr";
 
@@ -299,6 +338,11 @@ public partial class ConfigViewModel : ViewModelBase
     }
 
     partial void OnLogServerUrlErrorChanged(string? value)
+    {
+        SaveCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnLargeFileThresholdErrorChanged(string? value)
     {
         SaveCommand.NotifyCanExecuteChanged();
     }
@@ -499,9 +543,49 @@ public partial class ConfigViewModel : ViewModelBase
         ClearStatusMessage();
     }
 
+    private void ValidateLargeFileThreshold()
+    {
+        var isValid = long.TryParse(LargeFileThresholdValueText, out var value) && value >= 0;
+        LargeFileThresholdError = isValid
+            ? null
+            : _localizationService.TranslateText(LocalizationKey.gui_config_large_file_threshold_invalid);
+    }
+
+    private long ParseLargeFileThresholdValue()
+    {
+        return long.TryParse(LargeFileThresholdValueText, out var value) && value >= 0
+            ? value
+            : 0;
+    }
+
+    private void RefreshTransferSizeUnits()
+    {
+        var selected = SelectedLargeFileThresholdUnit;
+        AvailableTransferSizeUnits.Clear();
+        AvailableTransferSizeUnits.Add(new TransferSizeUnitOption(
+            TransferSizeUnit.Kilo,
+            _localizationService.TranslateText(LocalizationKey.size_unit_kilo)));
+        AvailableTransferSizeUnits.Add(new TransferSizeUnitOption(
+            TransferSizeUnit.Mega,
+            _localizationService.TranslateText(LocalizationKey.size_unit_mega)));
+        AvailableTransferSizeUnits.Add(new TransferSizeUnitOption(
+            TransferSizeUnit.Giga,
+            _localizationService.TranslateText(LocalizationKey.size_unit_giga)));
+
+        SelectedLargeFileThresholdUnitOption = AvailableTransferSizeUnits
+            .FirstOrDefault(option => option.Unit == selected)
+            ?? AvailableTransferSizeUnits.FirstOrDefault();
+        SelectedLargeFileThresholdUnit = SelectedLargeFileThresholdUnitOption?.Unit ?? selected;
+    }
+
 }
 
 public record LanguageOption(string Code, string Label)
+{
+    public override string ToString() => Label;
+}
+
+public record TransferSizeUnitOption(TransferSizeUnit Unit, string Label)
 {
     public override string ToString() => Label;
 }

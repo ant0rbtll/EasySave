@@ -26,7 +26,7 @@ public class BackupApplicationServiceTests
         _stateReaderMock = new Mock<IStateReader>();
         _stateWriterMock = new Mock<IStateWriter>();
         _engineMock
-            .Setup(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()))
+            .Setup(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()))
             .Returns(Task.CompletedTask);
         _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>());
         _service = new BackupApplicationService(
@@ -394,7 +394,7 @@ public class BackupApplicationServiceTests
         Assert.Equal("error_job_not_found", exception.Message);
         Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
         Assert.Equal("888", exception.Data["0"]);
-        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
 
     /// <summary>
@@ -417,7 +417,7 @@ public class BackupApplicationServiceTests
         await _service.RunJobs(new int[] { });
 
         _repoMock.Verify(r => r.GetById(It.IsAny<int>()), Times.Never);
-        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
 
     /// <summary>
@@ -448,7 +448,7 @@ public class BackupApplicationServiceTests
         await _service.RunAllJobs();
 
         _repoMock.Verify(r => r.GetAll(), Times.Once);
-        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
 
     /// <summary>
@@ -532,7 +532,7 @@ public class BackupApplicationServiceTests
         Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
         Assert.Equal("99", exception.Data["0"]);
         _repoMock.Verify(r => r.GetById(99), Times.Once);
-        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
 
     /// <summary>
@@ -567,7 +567,47 @@ public class BackupApplicationServiceTests
 
         await _service.RunJob(1);
 
-        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
+        _engineMock.Verify(e => e.Execute(
+            job,
+            It.IsAny<CancellationToken>(),
+            It.Is<BackupExecutionContext>(ctx =>
+                ctx.PriorityExtensions.Count == 0
+                && ctx.ParallelLargeFileThresholdBytes == 0)), Times.Once);
+    }
+
+    [Fact]
+    public async Task RunJob_WithPreferences_ShouldPassExecutionContextToEngine()
+    {
+        var job = new BackupJob { Id = 17, Name = "job", Source = "/src", Destination = "/dst", Type = BackupType.Complete };
+        _repoMock.Setup(r => r.GetById(17)).Returns(job);
+
+        var preferencesRepositoryMock = new Mock<IUserPreferencesRepository>();
+        preferencesRepositoryMock
+            .Setup(p => p.Load())
+            .Returns(new UserPreferences
+            {
+                PriorityExtensions = [".txt", ".zip"],
+                ParallelLargeFileThresholdValue = 2,
+                ParallelLargeFileThresholdUnit = TransferSizeUnit.Mega
+            });
+
+        var service = new BackupApplicationService(
+            _repoMock.Object,
+            _engineMock.Object,
+            _backupJobStateServiceMock.Object,
+            _stateReaderMock.Object,
+            userPreferencesRepository: preferencesRepositoryMock.Object);
+
+        await service.RunJob(17);
+
+        _engineMock.Verify(e => e.Execute(
+            job,
+            It.IsAny<CancellationToken>(),
+            It.Is<BackupExecutionContext>(ctx =>
+                ctx.PriorityExtensions.Count == 2 &&
+                ctx.PriorityExtensions.Contains(".txt") &&
+                ctx.PriorityExtensions.Contains(".zip") &&
+                ctx.ParallelLargeFileThresholdBytes == 2L * 1024L * 1024L)), Times.Once);
     }
 
     [Fact]
@@ -580,7 +620,7 @@ public class BackupApplicationServiceTests
         Assert.Equal("error_job_not_found", exception.Message);
         Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
         Assert.Equal("1", exception.Data["0"]);
-        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
 
     [Fact]
@@ -593,8 +633,8 @@ public class BackupApplicationServiceTests
 
         await _service.RunJobs(new[] { 1, 2 });
 
-        _engineMock.Verify(e => e.Execute(job1, It.IsAny<CancellationToken>()), Times.Once);
-        _engineMock.Verify(e => e.Execute(job2, It.IsAny<CancellationToken>()), Times.Once);
+        _engineMock.Verify(e => e.Execute(job1, It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Once);
+        _engineMock.Verify(e => e.Execute(job2, It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Once);
     }
 
     [Fact]
@@ -609,8 +649,8 @@ public class BackupApplicationServiceTests
 
         await _service.RunAllJobs();
 
-        _engineMock.Verify(e => e.Execute(jobs[0], It.IsAny<CancellationToken>()), Times.Once);
-        _engineMock.Verify(e => e.Execute(jobs[1], It.IsAny<CancellationToken>()), Times.Once);
+        _engineMock.Verify(e => e.Execute(jobs[0], It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Once);
+        _engineMock.Verify(e => e.Execute(jobs[1], It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Once);
     }
 
     [Fact]
@@ -630,7 +670,7 @@ public class BackupApplicationServiceTests
 
         await service.RunJob(1);
 
-        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
+        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Once);
     }
 
     [Fact]
@@ -646,7 +686,7 @@ public class BackupApplicationServiceTests
 
         await service.RunJob(1);
 
-        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
+        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Once);
     }
 
     [Fact]
@@ -667,7 +707,7 @@ public class BackupApplicationServiceTests
         simulatedEngineException.Data["0"] = "calc";
 
         _engineMock
-            .Setup(e => e.Execute(job, It.IsAny<CancellationToken>()))
+            .Setup(e => e.Execute(job, It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()))
             .ThrowsAsync(simulatedEngineException);
 
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.RunJob(1));
@@ -675,7 +715,7 @@ public class BackupApplicationServiceTests
         Assert.Equal("error_business_software_running", exception.Message);
         Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
         Assert.Equal("calc", exception.Data["0"]);
-        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>()), Times.Once);
+        _engineMock.Verify(e => e.Execute(job, It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Once);
     }
 
     [Fact]
@@ -708,7 +748,7 @@ public class BackupApplicationServiceTests
         Assert.Equal("error_business_software_running", exception.Message);
         Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
         Assert.Equal("calc", exception.Data["0"]);
-        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>()), Times.Never);
+        _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
 
     #endregion

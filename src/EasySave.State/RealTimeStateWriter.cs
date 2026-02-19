@@ -1,5 +1,6 @@
 using EasySave.Configuration;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace EasySave.State;
 
@@ -9,7 +10,11 @@ public class RealTimeStateWriter(
 {
     private static readonly JsonSerializerOptions s_jsonOptions = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+        Converters =
+        {
+            new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true)
+        }
     };
 
     private readonly object _sync = new();

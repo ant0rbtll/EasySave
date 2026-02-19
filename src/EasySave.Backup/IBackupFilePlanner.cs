@@ -34,16 +34,17 @@ public sealed class DefaultBackupFilePlanner(IFileSystem fileSystem) : IBackupFi
         {
             var relativePath = Path.GetRelativePath(job.Source, file);
             var destinationFile = Path.Combine(job.Destination, relativePath);
+            var sourceFileSizeBytes = _fileSystem.GetFileSize(file);
             var normalizedExtension = NormalizeExtension(Path.GetExtension(file));
             var isPriority = normalizedExtension is not null && priorityExtensionSet.Contains(normalizedExtension);
-            var shouldCopy = ShouldCopyFile(job.Type, file, destinationFile);
-            plans.Add(new BackupFilePlan(file, destinationFile, isPriority, shouldCopy));
+            var shouldCopy = ShouldCopyFile(job.Type, file, destinationFile, sourceFileSizeBytes);
+            plans.Add(new BackupFilePlan(file, destinationFile, sourceFileSizeBytes, isPriority, shouldCopy));
         }
 
         return plans;
     }
 
-    private bool ShouldCopyFile(BackupType type, string sourceFile, string destinationFile)
+    private bool ShouldCopyFile(BackupType type, string sourceFile, string destinationFile, long sourceFileSizeBytes)
     {
         if (type == BackupType.Complete)
         {
@@ -63,9 +64,8 @@ public sealed class DefaultBackupFilePlanner(IFileSystem fileSystem) : IBackupFi
                 return true;
             }
 
-            var sourceSize = _fileSystem.GetFileSize(sourceFile);
             var destSize = _fileSystem.GetFileSize(destinationFile);
-            return sourceSize != destSize;
+            return sourceFileSizeBytes != destSize;
         }
 
         var e = new NotSupportedException("error_backup_type_invalid");

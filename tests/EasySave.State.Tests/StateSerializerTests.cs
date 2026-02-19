@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace EasySave.State.Tests;
 
@@ -160,7 +161,15 @@ public class StateSerializerTests
 
         // Act
         var json = StateSerializer.ToPrettyJson(state);
-        var deserialized = JsonSerializer.Deserialize<Dictionary<int, StateEntry>>(json);
+        var deserialized = JsonSerializer.Deserialize<Dictionary<int, StateEntry>>(
+            json,
+            new JsonSerializerOptions
+            {
+                Converters =
+                {
+                    new JsonStringEnumConverter(namingPolicy: null, allowIntegerValues: true)
+                }
+            });
 
         // Assert
         Assert.NotNull(deserialized);
@@ -248,6 +257,22 @@ public class StateSerializerTests
             Assert.NotNull(json);
             Assert.Contains("Status", json);
         });
+    }
+
+    [Fact]
+    public void ToPrettyJson_Status_IsSerializedAsString()
+    {
+        var state = new GlobalState
+        {
+            Entries = new Dictionary<int, StateEntry>
+            {
+                { 1, new StateEntry { BackupId = 1, Status = BackupStatus.Active } }
+            }
+        };
+
+        var json = StateSerializer.ToPrettyJson(state);
+
+        Assert.Contains("\"Status\": \"Active\"", json);
     }
 
     #endregion
