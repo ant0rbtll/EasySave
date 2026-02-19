@@ -176,18 +176,21 @@ public class BackupEngine(
                     );
                 }
 
-                using var largeFileTransferLease = WaitUntilLargeFileBarrierAllowsCopy(
-                    job,
-                    totalFiles,
-                    totalSize,
-                    remainingFiles,
-                    remainingSize,
-                    planned.SourceFile,
-                    planned.DestinationFile,
-                    planned.SourceFileSizeBytes,
-                    parallelLargeFileThresholdBytes,
-                    cancellationToken);
-                TransferResult result = _transferService.TransferFile(planned.SourceFile, planned.DestinationFile, true);
+                TransferResult result;
+                using (WaitUntilLargeFileBarrierAllowsCopy(
+                           job,
+                           totalFiles,
+                           totalSize,
+                           remainingFiles,
+                           remainingSize,
+                           planned.SourceFile,
+                           planned.DestinationFile,
+                           planned.SourceFileSizeBytes,
+                           parallelLargeFileThresholdBytes,
+                           cancellationToken))
+                {
+                    result = _transferService.TransferFile(planned.SourceFile, planned.DestinationFile, true);
+                }
 
                 if (!result.IsSuccess)
                 {
