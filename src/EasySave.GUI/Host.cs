@@ -1,8 +1,8 @@
 ﻿using Avalonia;
 using EasySave.Application;
+using EasySave.GUI.Services;
 using EasySave.GUI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace EasySave.GUI
 {
@@ -18,6 +18,10 @@ namespace EasySave.GUI
         /// <param name="args">Command-line arguments.</param>
         public void ConfigureServices(IServiceCollection services, string[] args)
         {
+            // GUI-specific services
+            services.AddSingleton<IBackupJobDisplayService, BackupJobDisplayService>();
+            services.AddSingleton<IBackupRunningStateTracker, BackupRunningStateTracker>();
+
             // GUI-specific ViewModels
             services.AddSingleton<MainWindowViewModel>();
             services.AddSingleton<HomeViewModel>();
