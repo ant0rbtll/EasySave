@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Core.Exceptions;
 
 namespace EasySave.Configuration
 {
@@ -25,7 +26,7 @@ namespace EasySave.Configuration
             {
                 LogFormat.Json => "json",
                 LogFormat.Xml => "xml",
-                _ => throw new ArgumentOutOfRangeException(nameof(format), format, "Unsupported log format.")
+                _ => throw new UnsupportedLogFormatException(format.ToString())
             };
 
             string logsDir = ResolveLogsDirectory();
@@ -86,7 +87,7 @@ namespace EasySave.Configuration
 
             if (IsSameDirectory(attemptedLogsDir, defaultLogsDir))
             {
-                throw new InvalidOperationException("Unable to create or access the default log directory.");
+                throw new EasysaveDefaultException("Error_unable_access_log_directory",[], "");
             }
 
             string fallbackPath = Path.Combine(defaultLogsDir, fileName);

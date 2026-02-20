@@ -22,7 +22,7 @@ internal static class FileReadResilience
     /// <exception cref="InvalidDataException">Thrown when file size exceeds the configured limit.</exception>
     public static string ReadAllTextWithRetry(string filePath, long maxFileSizeBytes)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        EasysaveDefaultException.ThrowIfNullOrWhiteSpace(filePath);
 
         EnsureFileSizeWithinLimit(filePath, maxFileSizeBytes);
 
@@ -51,9 +51,7 @@ internal static class FileReadResilience
         if (info.Length > maxFileSizeBytes)
         {
             throw new EasysaveDefaultException(
-                $"File '{filePath}' is too large ({info.Length} bytes). Maximum allowed size is {maxFileSizeBytes} bytes.",
-                ""
-                );
+                $"File '{filePath}' is too large ({info.Length} bytes). Maximum allowed size is {maxFileSizeBytes} bytes.", []);
 
             throw new InvalidDataException(
                 $"File '{filePath}' is too large ({info.Length} bytes). Maximum allowed size is {maxFileSizeBytes} bytes.");

@@ -1,4 +1,5 @@
 namespace EasySave.Application.Tests;
+using EasySave.Application.Readers;
 
 public class LogReadersTests
 {

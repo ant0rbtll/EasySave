@@ -38,23 +38,28 @@
         {
         }
     }
-
-    public class JobNotFoundException : EasysaveDefaultException
-    {
-        public JobNotFoundException(int id) : base(
-            "error_job_not_found",
-            [id.ToString()],
-            "")
+    public class FileNullOrNotFoundException : EasysaveDefaultException {
+        public FileNullOrNotFoundException(
+            string errorKey,
+            List<string> details
+            )
+            : base("",
+                  new List<string>(),
+                  details.ToString()
+            )
         {
         }
     }
 
-    public class JobAlreadyExistException : EasysaveDefaultException
+    public class DirectoryNullOrNotFoundException : EasysaveDefaultException
     {
-        public JobAlreadyExistException(int id) : base(
-            "error_job_already_exist",
-            [id.ToString()],
-            "")
+        public DirectoryNullOrNotFoundException(
+            List<string> details
+            )
+            : base("error_directory_not_found",
+                  new List<string>(),
+                  details.ToString()
+            )
         {
         }
     }
