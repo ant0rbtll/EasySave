@@ -38,4 +38,29 @@
         {
         }
     }
+    public class FileNullOrNotFoundException : EasysaveDefaultException {
+        public FileNullOrNotFoundException(
+            string errorKey,
+            List<string> details
+            )
+            : base("",
+                  new List<string>(),
+                  details.ToString()
+            )
+        {
+        }
+    }
+
+    public class DirectoryNullOrNotFoundException : EasysaveDefaultException
+    {
+        public DirectoryNullOrNotFoundException(
+            List<string> details
+            )
+            : base("error_directory_not_found",
+                  new List<string>(),
+                  details.ToString()
+            )
+        {
+        }
+    }
 }
