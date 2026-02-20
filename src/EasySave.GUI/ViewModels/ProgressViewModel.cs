@@ -220,7 +220,7 @@ public partial class ProgressViewModel : ViewModelBase
 
     private bool CanPauseSelected() => HasSelection && ActiveBackups.Where(b => b.IsSelected).All(b => b.CanPause);
     private bool CanPlaySelected() => HasSelection && ActiveBackups.Where(b => b.IsSelected).All(b => b.CanPlay);
-    private bool CanStopSelected() => ActiveBackups.Any(b => b.IsSelected && b.CanStop);
+    private bool CanStopSelected() => HasSelection && ActiveBackups.Where(b => b.IsSelected).All(b => b.CanStop);
 
     private void NotifyBatchCanExecuteChanged()
     {
