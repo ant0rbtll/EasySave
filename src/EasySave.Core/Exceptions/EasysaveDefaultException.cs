@@ -17,14 +17,9 @@ namespace EasySave.Core.Exceptions
 
         public EasysaveDefaultException(string errorKey, List<string> options, string details = "")
         {
-            _errorKey = errorKey;
-            _options = options;
-            _details = details;
-        }
-
-        public string getTranslatedTexte()
-        {
-            throw new NotImplementedException();
+            ErrorKey = errorKey;
+            Options = options;
+            Details = details;
         }
 
         public static void ThrowIfNullOrWhiteSpace(string? value)
