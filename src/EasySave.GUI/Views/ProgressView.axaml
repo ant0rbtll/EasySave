@@ -43,13 +43,77 @@
         </Style>
     </UserControl.Styles>
 
-    <Grid RowDefinitions="Auto,*" Margin="24">
-        <StackPanel Grid.Row="0" Spacing="4">
-            <TextBlock Text="{Binding TitleText}" FontSize="22" FontWeight="Bold"/>
-            <TextBlock Text="{Binding SubtitleText}" FontSize="13" Foreground="#8FA3B8"/>
-        </StackPanel>
+    <Grid RowDefinitions="Auto,Auto,*" Margin="24">
+        <!-- Header row with title + bulk action buttons -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="0,0,0,0">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="{Binding TitleText}" FontSize="22" FontWeight="Bold"/>
+                <TextBlock Text="{Binding SubtitleText}" FontSize="13" Foreground="#8FA3B8"/>
+            </StackPanel>
 
-        <Border Grid.Row="1"
+            <Button Grid.Column="1"
+                    Command="{Binding PlaySelectedCommand}"
+                    ToolTip.Tip="{Binding PlaySelectedText}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,8,0"
+                    Padding="10,6"
+                    Background="#1A66BB6A"
+                    BorderThickness="0"
+                    CornerRadius="6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
+                    <TextBlock Text="{Binding PlaySelectedText}"
+                               Foreground="#66BB6A"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <Button Grid.Column="2"
+                    Command="{Binding PauseSelectedCommand}"
+                    ToolTip.Tip="{Binding PauseSelectedText}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,8,0"
+                    Padding="10,6"
+                    Background="#1AFFB74D"
+                    BorderThickness="0"
+                    CornerRadius="6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M6 5h4v14H6zM14 5h4v14h-4z" Foreground="#FFB74D" Width="14" Height="14"/>
+                    <TextBlock Text="{Binding PauseSelectedText}"
+                               Foreground="#FFB74D"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <Button Grid.Column="3"
+                    Command="{Binding AskStopSelectedCommand}"
+                    ToolTip.Tip="{Binding StopSelectedText}"
+                    VerticalAlignment="Center"
+                    Margin="0,0,8,0"
+                    Padding="10,6"
+                    Background="#1AEF5350"
+                    BorderThickness="0"
+                    CornerRadius="6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="M6 6h12v12H6z" Foreground="#EF5350" Width="14" Height="14"/>
+                    <TextBlock Text="{Binding StopSelectedText}"
+                               Foreground="#EF5350"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <CheckBox Grid.Column="4"
+                      IsChecked="{Binding IsAllSelected}"
+                      ToolTip.Tip="{Binding SelectAllTooltip}"
+                      VerticalAlignment="Center"
+                      IsVisible="{Binding HasActiveBackups}"/>
+        </Grid>
+
+        <!-- Empty state -->
+        <Border Grid.Row="2"
                 Margin="0,18,0,0"
                 BorderBrush="#22FFFFFF"
                 BorderThickness="1"
@@ -78,7 +142,8 @@
             </StackPanel>
         </Border>
 
-        <ScrollViewer Grid.Row="1"
+        <!-- Active backups list -->
+        <ScrollViewer Grid.Row="2"
                       Margin="0,18,0,0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
@@ -88,17 +153,24 @@
                     <DataTemplate x:DataType="models:ActiveBackupProgressItem">
                         <Border Classes="progress-card" Margin="0,0,0,10">
                             <Grid RowDefinitions="Auto,Auto,Auto,Auto"
-                                  ColumnDefinitions="*,Auto"
+                                  ColumnDefinitions="Auto,*,Auto"
                                   RowSpacing="8"
                                   ColumnSpacing="12">
+                                <!-- Checkbox for selection -->
+                                <CheckBox Grid.Row="0"
+                                          Grid.Column="0"
+                                          IsChecked="{Binding IsSelected}"
+                                          Click="ItemCheckBox_Click"
+                                          VerticalAlignment="Center"/>
                                 <TextBlock Grid.Row="0"
-                                           Grid.Column="0"
+                                           Grid.Column="1"
                                            Text="{Binding Name}"
                                            FontSize="15"
                                            FontWeight="SemiBold"
-                                           Foreground="#E7F1FB"/>
+                                           Foreground="#E7F1FB"
+                                           VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="0"
-                                            Grid.Column="1"
+                                            Grid.Column="2"
                                             Orientation="Horizontal"
                                             Spacing="6"
                                             HorizontalAlignment="Right"
@@ -144,12 +216,12 @@
                                 </StackPanel>
 
                                 <ProgressBar Grid.Row="1"
-                                             Grid.ColumnSpan="2"
+                                             Grid.ColumnSpan="3"
                                              Classes="active-progress"
                                              Value="{Binding ProgressPercent}"/>
 
                                 <Grid Grid.Row="2"
-                                      Grid.ColumnSpan="2"
+                                      Grid.ColumnSpan="3"
                                       ColumnDefinitions="Auto,Auto,20,Auto,Auto,20,Auto,Auto">
                                     <TextBlock Grid.Column="0" Classes="meta-label" Text="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).FilesLabelText}"/>
                                     <TextBlock Grid.Column="1" Classes="meta-value" Text="{Binding FilesDisplay}" Margin="6,0,0,0"/>
@@ -160,7 +232,7 @@
                                 </Grid>
 
                                 <Grid Grid.Row="3"
-                                      Grid.ColumnSpan="2"
+                                      Grid.ColumnSpan="3"
                                       RowDefinitions="Auto,Auto"
                                       RowSpacing="5">
                                     <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="6">
@@ -179,7 +251,8 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <Border Grid.RowSpan="2"
+        <!-- Stop confirmation dialog -->
+        <Border Grid.RowSpan="3"
                 Background="#AA000000"
                 IsVisible="{Binding IsStopDialogOpen}">
             <Border Background="#2D2D3D"
@@ -194,9 +267,11 @@
                                FontSize="18"
                                FontWeight="Bold"
                                HorizontalAlignment="Center"/>
+                    <!-- Single stop message -->
                     <StackPanel Orientation="Horizontal"
                                 HorizontalAlignment="Center"
-                                Spacing="4">
+                                Spacing="4"
+                                IsVisible="{Binding !IsStopSelectedMode}">
                         <TextBlock Text="{Binding ConfirmStopMessageText}"
                                    FontSize="14"
                                    Foreground="#BBBBBB"/>
@@ -208,6 +283,12 @@
                                    FontSize="14"
                                    Foreground="#BBBBBB"/>
                     </StackPanel>
+                    <!-- Multi stop message -->
+                    <TextBlock Text="{Binding ConfirmStopSelectedMessageText}"
+                               FontSize="14"
+                               Foreground="#BBBBBB"
+                               HorizontalAlignment="Center"
+                               IsVisible="{Binding IsStopSelectedMode}"/>
                     <StackPanel Orientation="Horizontal"
                                 Spacing="12"
                                 HorizontalAlignment="Center">
@@ -217,13 +298,24 @@
                                 Background="#44FFFFFF"
                                 Foreground="White"
                                 CornerRadius="6"/>
+                        <!-- Single stop confirm -->
                         <Button Content="{Binding StopText}"
                                 Command="{Binding ConfirmStopJobCommand}"
                                 Padding="20,8"
                                 Background="#EF5350"
                                 Foreground="White"
                                 FontWeight="SemiBold"
-                                CornerRadius="6"/>
+                                CornerRadius="6"
+                                IsVisible="{Binding !IsStopSelectedMode}"/>
+                        <!-- Multi stop confirm -->
+                        <Button Content="{Binding StopText}"
+                                Command="{Binding ConfirmStopSelectedCommand}"
+                                Padding="20,8"
+                                Background="#EF5350"
+                                Foreground="White"
+                                FontWeight="SemiBold"
+                                CornerRadius="6"
+                                IsVisible="{Binding IsStopSelectedMode}"/>
                     </StackPanel>
                 </StackPanel>
             </Border>

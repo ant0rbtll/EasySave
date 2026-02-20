@@ -199,4 +199,18 @@ public class ActiveBackupProgressItem : ModelBase
             OnNotifyPropertyChanged(nameof(CanStop));
         }
     }
+
+    private bool isSelected;
+    public bool IsSelected
+    {
+        get => isSelected;
+        set
+        {
+            if (isSelected == value)
+                return;
+
+            isSelected = value;
+            OnNotifyPropertyChanged(nameof(IsSelected));
+        }
+    }
 }

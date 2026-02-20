@@ -23,6 +23,33 @@ public partial class ProgressViewModel : ViewModelBase
 
     public ObservableCollection<Models.ActiveBackupProgressItem> ActiveBackups { get; } = [];
 
+    private bool _updatingSelection;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(PauseSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PlaySelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AskStopSelectedCommand))]
+    private bool hasSelection;
+
+    private bool _isAllSelected;
+    public bool IsAllSelected
+    {
+        get => _isAllSelected;
+        set
+        {
+            if (_isAllSelected == value) return;
+            _isAllSelected = value;
+            OnPropertyChanged(nameof(IsAllSelected));
+
+            _updatingSelection = true;
+            foreach (var item in ActiveBackups)
+                item.IsSelected = value;
+            _updatingSelection = false;
+
+            UpdateHasSelection();
+        }
+    }
+
     [ObservableProperty]
     private bool isStopDialogOpen;
 
@@ -31,6 +58,8 @@ public partial class ProgressViewModel : ViewModelBase
 
     [ObservableProperty]
     private string pendingStopJobName = string.Empty;
+
+    private bool _isStopSelectedMode;
 
     public string TitleText { get; private set; } = string.Empty;
     public string SubtitleText { get; private set; } = string.Empty;
@@ -56,6 +85,11 @@ public partial class ProgressViewModel : ViewModelBase
     public string StatusBlockedBusinessText { get; private set; } = string.Empty;
     public string ConfirmStopTitleText { get; private set; } = string.Empty;
     public string ConfirmStopMessageText { get; private set; } = string.Empty;
+    public string SelectAllTooltip { get; private set; } = string.Empty;
+    public string PauseSelectedText { get; private set; } = string.Empty;
+    public string PlaySelectedText { get; private set; } = string.Empty;
+    public string StopSelectedText { get; private set; } = string.Empty;
+    public string ConfirmStopSelectedMessageText { get; private set; } = string.Empty;
 
     public bool HasActiveBackups => ActiveBackups.Count > 0;
 
@@ -96,6 +130,10 @@ public partial class ProgressViewModel : ViewModelBase
         StatusBlockedBusinessText = _localizationService.TranslateText(LocalizationKey.gui_progress_status_blocked_business);
         ConfirmStopTitleText = _localizationService.TranslateText(LocalizationKey.gui_progress_confirm_stop_title);
         ConfirmStopMessageText = _localizationService.TranslateText(LocalizationKey.gui_progress_confirm_stop_message);
+        SelectAllTooltip = _localizationService.TranslateText(LocalizationKey.gui_progress_select_all);
+        PauseSelectedText = _localizationService.TranslateText(LocalizationKey.gui_progress_pause_selected);
+        PlaySelectedText = _localizationService.TranslateText(LocalizationKey.gui_progress_play_selected);
+        StopSelectedText = _localizationService.TranslateText(LocalizationKey.gui_progress_stop_selected);
 
         OnPropertyChanged(nameof(TitleText));
         OnPropertyChanged(nameof(SubtitleText));
@@ -121,6 +159,10 @@ public partial class ProgressViewModel : ViewModelBase
         OnPropertyChanged(nameof(StatusBlockedBusinessText));
         OnPropertyChanged(nameof(ConfirmStopTitleText));
         OnPropertyChanged(nameof(ConfirmStopMessageText));
+        OnPropertyChanged(nameof(SelectAllTooltip));
+        OnPropertyChanged(nameof(PauseSelectedText));
+        OnPropertyChanged(nameof(PlaySelectedText));
+        OnPropertyChanged(nameof(StopSelectedText));
 
         // Rebuild textual formatting when language/culture changes.
         _lastSnapshotSignature = string.Empty;
@@ -159,6 +201,60 @@ public partial class ProgressViewModel : ViewModelBase
     [RelayCommand]
     private void CancelStopJob()
     {
+        CloseStopDialog();
+    }
+
+    public void OnItemSelectionChanged()
+    {
+        if (_updatingSelection) return;
+        UpdateHasSelection();
+
+        _updatingSelection = true;
+        _isAllSelected = ActiveBackups.Count > 0 && ActiveBackups.All(b => b.IsSelected);
+        OnPropertyChanged(nameof(IsAllSelected));
+        _updatingSelection = false;
+    }
+
+    private void UpdateHasSelection()
+    {
+        HasSelection = ActiveBackups.Any(b => b.IsSelected);
+    }
+
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private void PauseSelected()
+    {
+        foreach (var item in ActiveBackups.Where(b => b.IsSelected && b.CanPause))
+            _backupExecutionController.Pause(item.Id);
+    }
+
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private void PlaySelected()
+    {
+        foreach (var item in ActiveBackups.Where(b => b.IsSelected && b.CanPlay))
+            _backupExecutionController.Resume(item.Id);
+    }
+
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private void AskStopSelected()
+    {
+        var selectedStoppable = ActiveBackups.Where(b => b.IsSelected && b.CanStop).ToList();
+        if (selectedStoppable.Count == 0) return;
+
+        _isStopSelectedMode = true;
+        PendingStopJobId = null;
+        PendingStopJobName = string.Empty;
+        ConfirmStopSelectedMessageText = _localizationService.TranslateTextWithParams(
+            LocalizationKey.gui_progress_confirm_stop_selected_message,
+            [selectedStoppable.Count.ToString(CultureInfo.InvariantCulture)]);
+        OnPropertyChanged(nameof(ConfirmStopSelectedMessageText));
+        IsStopDialogOpen = true;
+    }
+
+    [RelayCommand]
+    private void ConfirmStopSelected()
+    {
+        foreach (var item in ActiveBackups.Where(b => b.IsSelected && b.CanStop))
+            _backupExecutionController.RequestStop(item.Id);
         CloseStopDialog();
     }
 
@@ -275,6 +371,12 @@ public partial class ProgressViewModel : ViewModelBase
         if (previousCount != ActiveBackups.Count)
         {
             OnPropertyChanged(nameof(HasActiveBackups));
+            UpdateHasSelection();
+
+            _updatingSelection = true;
+            _isAllSelected = ActiveBackups.Count > 0 && ActiveBackups.All(b => b.IsSelected);
+            OnPropertyChanged(nameof(IsAllSelected));
+            _updatingSelection = false;
         }
 
         if (IsStopDialogOpen
@@ -441,11 +543,15 @@ public partial class ProgressViewModel : ViewModelBase
             }));
     }
 
+    public bool IsStopSelectedMode => _isStopSelectedMode;
+
     private void CloseStopDialog()
     {
         IsStopDialogOpen = false;
         PendingStopJobId = null;
         PendingStopJobName = string.Empty;
+        _isStopSelectedMode = false;
+        OnPropertyChanged(nameof(IsStopSelectedMode));
     }
 
     private string ResolveStopTargetName(int jobId)
