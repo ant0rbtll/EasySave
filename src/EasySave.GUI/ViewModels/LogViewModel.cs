@@ -5,11 +5,8 @@ using EasySave.GUI.Helpers;
 using EasySave.GUI.Models;
 using EasySave.Localization;
 using EasySave.Log;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
-using System.Linq;
 
 namespace EasySave.GUI.ViewModels;
 
@@ -129,7 +126,7 @@ public partial class LogViewModel : ViewModelBase
     private int _selectedPageSize = 15;
 
     public int PageSize => Math.Max(1, SelectedPageSize);
-    public int TotalPages => FilteredLogsCount == 0 ? 1 : (int)Math.Ceiling((double)FilteredLogsCount / PageSize);
+    public int TotalPages => PaginationHelper.CalculateTotalPages(FilteredLogsCount, PageSize);
     public string PageDisplay => $"{CurrentPage}/{TotalPages}";
     public string PageJumpWatermark => $"1-{TotalPages}";
     public bool IsRunDrawerVisible => IsRunSelected;
@@ -734,68 +731,10 @@ public partial class LogViewModel : ViewModelBase
     private void RebuildPaginationItems()
     {
         PaginationItems.Clear();
-        foreach (var item in BuildVisibleItems(CurrentPage, TotalPages))
+        foreach (var item in PaginationHelper.BuildVisibleItems(CurrentPage, TotalPages))
         {
             PaginationItems.Add(item);
         }
-    }
-
-    private static List<PaginationItem> BuildVisibleItems(int currentPage, int totalPages)
-    {
-        if (totalPages <= 0)
-        {
-            return [];
-        }
-
-        if (totalPages <= 7)
-        {
-            var items = new List<PaginationItem>(totalPages);
-            for (var page = 1; page <= totalPages; page++)
-            {
-                items.Add(PaginationItem.Page(page, page == currentPage));
-            }
-
-            return items;
-        }
-
-        if (currentPage <= 4)
-        {
-            return
-            [
-                PaginationItem.Page(1, currentPage == 1),
-                PaginationItem.Page(2, currentPage == 2),
-                PaginationItem.Page(3, currentPage == 3),
-                PaginationItem.Page(4, currentPage == 4),
-                PaginationItem.Page(5, currentPage == 5),
-                PaginationItem.Ellipsis(),
-                PaginationItem.Page(totalPages, currentPage == totalPages)
-            ];
-        }
-
-        if (currentPage >= totalPages - 3)
-        {
-            return
-            [
-                PaginationItem.Page(1, currentPage == 1),
-                PaginationItem.Ellipsis(),
-                PaginationItem.Page(totalPages - 4, currentPage == totalPages - 4),
-                PaginationItem.Page(totalPages - 3, currentPage == totalPages - 3),
-                PaginationItem.Page(totalPages - 2, currentPage == totalPages - 2),
-                PaginationItem.Page(totalPages - 1, currentPage == totalPages - 1),
-                PaginationItem.Page(totalPages, currentPage == totalPages)
-            ];
-        }
-
-        return
-        [
-            PaginationItem.Page(1, currentPage == 1),
-            PaginationItem.Ellipsis(),
-            PaginationItem.Page(currentPage - 1, false),
-            PaginationItem.Page(currentPage, true),
-            PaginationItem.Page(currentPage + 1, false),
-            PaginationItem.Ellipsis(),
-            PaginationItem.Page(totalPages, currentPage == totalPages)
-        ];
     }
 
     private LogRunSummaryModel MapRun(LogRunSummary run)

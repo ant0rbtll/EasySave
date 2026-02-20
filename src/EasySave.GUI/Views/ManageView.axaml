@@ -615,7 +615,7 @@
 										</ItemsPanelTemplate>
 									</ItemsControl.ItemsPanel>
 									<ItemsControl.ItemTemplate>
-										<DataTemplate x:DataType="vm:PaginationItem">
+										<DataTemplate x:DataType="models:PaginationItem">
 											<Grid>
 												<Button IsVisible="{Binding IsPage}"
 														Classes="page-item-btn"
