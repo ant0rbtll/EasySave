@@ -126,7 +126,7 @@ public partial class LogViewModel : ViewModelBase
     private int _selectedPageSize = 15;
 
     public int PageSize => Math.Max(1, SelectedPageSize);
-    public int TotalPages => FilteredLogsCount == 0 ? 1 : (int)Math.Ceiling((double)FilteredLogsCount / PageSize);
+    public int TotalPages => PaginationHelper.CalculateTotalPages(FilteredLogsCount, PageSize);
     public string PageDisplay => $"{CurrentPage}/{TotalPages}";
     public string PageJumpWatermark => $"1-{TotalPages}";
     public bool IsRunDrawerVisible => IsRunSelected;

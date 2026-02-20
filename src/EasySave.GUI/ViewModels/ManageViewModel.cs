@@ -52,9 +52,7 @@ public partial class ManageViewModel : ViewModelBase
     [ObservableProperty]
     private string pageInputText = string.Empty;
 
-    public int TotalPages => FilteredJobsCount == 0
-        ? 1
-        : (int)Math.Ceiling((double)FilteredJobsCount / PageSize);
+    public int TotalPages => PaginationHelper.CalculateTotalPages(FilteredJobsCount, PageSize);
 
     public string PageDisplay => $"{CurrentPage}/{TotalPages}";
     public string PageJumpWatermark => $"1-{TotalPages}";
