@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Core.Exceptions;
 
 namespace EasySave.Persistence;
 
@@ -33,10 +34,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
 
         if (_jobs.ContainsKey(job.Id))
         {
-            var e = new InvalidOperationException($"Job with ID {job.Id} already exists.");
-            e.Data["errorKey"] = "error_add_exists";
-            e.Data["job_id"] = job.Id;
-            throw e;
+            throw new JobAlreadyExistException(job.Id);
         }
         _jobs[job.Id] = job;
     }
@@ -47,10 +45,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     {
         if (!_jobs.Remove(id))
         {
-            var e = new KeyNotFoundException($"Job with ID {id} not found");
-            e.Data["errorKey"] = "error_job_not_found";
-            e.Data["job_id"] = id;
-            throw e;
+            throw new JobNotFoundException(id);
         }
     }
 
@@ -60,10 +55,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     {
         if (!_jobs.TryGetValue(id, out var job))
         {
-            var e = new KeyNotFoundException($"Job with ID {id} not found");
-            e.Data["errorKey"] = "error_job_not_found";
-            e.Data["job_id"] = id;
-            throw e;
+            throw new JobNotFoundException(id);
         }
         return job;
     }
@@ -86,10 +78,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     {
         if (!_jobs.ContainsKey(job.Id))
         {
-            var e = new KeyNotFoundException($"Job with ID {job.Id} not found");
-            e.Data["errorKey"] = "error_job_not_found";
-            e.Data["job_id"] = job.Id;
-            throw e;
+            throw new JobNotFoundException(job.Id);
         }
         _jobs[job.Id] = job;
     }

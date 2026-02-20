@@ -38,4 +38,24 @@
         {
         }
     }
+
+    public class JobNotFoundException : EasysaveDefaultException
+    {
+        public JobNotFoundException(int id) : base(
+            "error_job_not_found",
+            [id.ToString()],
+            "")
+        {
+        }
+    }
+
+    public class JobAlreadyExistException : EasysaveDefaultException
+    {
+        public JobAlreadyExistException(int id) : base(
+            "error_job_already_exist",
+            [id.ToString()],
+            "")
+        {
+        }
+    }
 }
