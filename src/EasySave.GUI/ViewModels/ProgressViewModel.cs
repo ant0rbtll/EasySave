@@ -381,6 +381,7 @@ public partial class ProgressViewModel : ViewModelBase
         if (previousCount != ActiveBackups.Count)
         {
             OnPropertyChanged(nameof(HasActiveBackups));
+            UpdateHasSelection();
 
             _updatingSelection = true;
             _isAllSelected = ActiveBackups.Count > 0 && ActiveBackups.All(b => b.IsSelected);
@@ -388,8 +389,7 @@ public partial class ProgressViewModel : ViewModelBase
             _updatingSelection = false;
         }
 
-        if (HasSelection)
-            NotifyBatchCanExecuteChanged();
+        NotifyBatchCanExecuteChanged();
 
         if (IsStopDialogOpen
             && PendingStopJobId is int pendingStopId
