@@ -26,9 +26,6 @@ public partial class ProgressViewModel : ViewModelBase
     private bool _updatingSelection;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(PauseSelectedCommand))]
-    [NotifyCanExecuteChangedFor(nameof(PlaySelectedCommand))]
-    [NotifyCanExecuteChangedFor(nameof(AskStopSelectedCommand))]
     private bool hasSelection;
 
     private bool _isAllSelected;
@@ -218,29 +215,42 @@ public partial class ProgressViewModel : ViewModelBase
     private void UpdateHasSelection()
     {
         HasSelection = ActiveBackups.Any(b => b.IsSelected);
+        NotifyBatchCanExecuteChanged();
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private bool CanPauseSelected() => HasSelection && ActiveBackups.Where(b => b.IsSelected).All(b => b.CanPause);
+    private bool CanPlaySelected() => HasSelection && ActiveBackups.Where(b => b.IsSelected).All(b => b.CanPlay);
+    private bool CanStopSelected() => ActiveBackups.Any(b => b.IsSelected && b.CanStop);
+
+    private void NotifyBatchCanExecuteChanged()
+    {
+        PauseSelectedCommand.NotifyCanExecuteChanged();
+        PlaySelectedCommand.NotifyCanExecuteChanged();
+        AskStopSelectedCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanPauseSelected))]
     private void PauseSelected()
     {
         foreach (var item in ActiveBackups.Where(b => b.IsSelected && b.CanPause))
             _backupExecutionController.Pause(item.Id);
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelection))]
+    [RelayCommand(CanExecute = nameof(CanPlaySelected))]
     private void PlaySelected()
     {
         foreach (var item in ActiveBackups.Where(b => b.IsSelected && b.CanPlay))
             _backupExecutionController.Resume(item.Id);
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelection))]
+    [RelayCommand(CanExecute = nameof(CanStopSelected))]
     private void AskStopSelected()
     {
         var selectedStoppable = ActiveBackups.Where(b => b.IsSelected && b.CanStop).ToList();
         if (selectedStoppable.Count == 0) return;
 
         _isStopSelectedMode = true;
+        OnPropertyChanged(nameof(IsStopSelectedMode));
         PendingStopJobId = null;
         PendingStopJobName = string.Empty;
         ConfirmStopSelectedMessageText = _localizationService.TranslateTextWithParams(
@@ -371,13 +381,15 @@ public partial class ProgressViewModel : ViewModelBase
         if (previousCount != ActiveBackups.Count)
         {
             OnPropertyChanged(nameof(HasActiveBackups));
-            UpdateHasSelection();
 
             _updatingSelection = true;
             _isAllSelected = ActiveBackups.Count > 0 && ActiveBackups.All(b => b.IsSelected);
             OnPropertyChanged(nameof(IsAllSelected));
             _updatingSelection = false;
         }
+
+        if (HasSelection)
+            NotifyBatchCanExecuteChanged();
 
         if (IsStopDialogOpen
             && PendingStopJobId is int pendingStopId
