@@ -237,6 +237,11 @@ public enum LocalizationKey
     gui_progress_status_blocked_business,
     gui_progress_confirm_stop_title,
     gui_progress_confirm_stop_message,
+    gui_progress_select_all,
+    gui_progress_pause_selected,
+    gui_progress_play_selected,
+    gui_progress_stop_selected,
+    gui_progress_confirm_stop_selected_message,
 
     // Window controls
     gui_window_minimize,

@@ -64,6 +64,12 @@ public partial class ProgressView : UserControl
         }
     }
 
+    private void ItemCheckBox_Click(object? sender, RoutedEventArgs e)
+    {
+        if (ResolveViewModel() is { } viewModel)
+            viewModel.OnItemSelectionChanged();
+    }
+
     private void StopJob_Click(object? sender, RoutedEventArgs e)
     {
         if (sender is Button button
