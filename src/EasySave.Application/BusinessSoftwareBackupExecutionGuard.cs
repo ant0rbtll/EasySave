@@ -1,4 +1,4 @@
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.Persistence;
 using EasySave.System;
 using System.Diagnostics;
@@ -27,7 +27,7 @@ public sealed class BusinessSoftwareBackupExecutionGuard(
         {
             if (_isBusinessSoftwareRunning(configuredProcessName))
             {
-                throw new EasysaveDefaultException("error_business_software_running", [configuredProcessName]);
+                throw new EasysaveDefaultException(Localization.LocalizationKey.error_business_software_running, [configuredProcessName]);
             }
         }
     }

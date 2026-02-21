@@ -1,4 +1,4 @@
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 
 namespace EasySave.Application.Readers;
 
@@ -51,7 +51,7 @@ internal static class FileReadResilience
         if (info.Length > maxFileSizeBytes)
         {
             throw new EasysaveDefaultException(
-                "error_file_too_large",
+                Localization.LocalizationKey.error_file_too_large,
                 [filePath, info.Length.ToString(), maxFileSizeBytes.ToString()]
             );
         }

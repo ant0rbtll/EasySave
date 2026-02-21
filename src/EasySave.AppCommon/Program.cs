@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using EasySave.Application;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 
 namespace EasySave.AppCommon
 {
@@ -43,7 +43,7 @@ namespace EasySave.AppCommon
             {
                 "gui" => new GUI.Host(),
                 "console" => new UI.Host(),
-                _ => throw new InvalidArgumentException(hostType, $"Unknown host type")
+                _ => throw new InvalidArgumentException(hostType, "Unknown host type")
             };
 
             // Run

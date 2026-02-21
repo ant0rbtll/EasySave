@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\..\EasySave.Exception\EasySave.Exceptions.csproj" />
     <ProjectReference Include="..\EasySave.Core\EasySave.Core.csproj" />
     <ProjectReference Include="..\EasySave.Log\EasySave.Log.csproj" />
     <ProjectReference Include="..\EasySave.System\EasySave.System.csproj" />

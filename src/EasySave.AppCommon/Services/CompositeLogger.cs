@@ -1,4 +1,4 @@
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.AppCommon.Services;
@@ -29,7 +29,7 @@ public sealed class CompositeLogger(params ILogger[] loggers) : ILogger, IDispos
 
         if (exceptions is { Count: > 0 })
         {
-            throw new EasysaveDefaultException("error_logger_failed", [ /*exceptions*/]);
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_logger_failed, [ /*exceptions*/]);
         }
     }
 

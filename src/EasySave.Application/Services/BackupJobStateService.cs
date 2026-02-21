@@ -1,6 +1,6 @@
 using EasySave.Application.Readers;
 using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.State;
 
 namespace EasySave.Application.Services;

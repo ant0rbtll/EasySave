@@ -119,4 +119,14 @@ public class LocalizationService : ILocalizationService
             return key;
         }
     }
+
+    public string GetTranslateTextException(Exception ex)
+    {
+        if (ex is ITranslatableException easySaveExp)
+        {
+            return TranslateTextWithParams(easySaveExp.ErrorKey, easySaveExp.Options.ToArray());
+        }
+        else
+            return ex.Message;
+    }
 }

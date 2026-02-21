@@ -1,4 +1,4 @@
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.AppCommon.Services;

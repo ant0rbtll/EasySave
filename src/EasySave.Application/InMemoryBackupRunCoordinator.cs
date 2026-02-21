@@ -1,4 +1,4 @@
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using System.Collections.Concurrent;
 
 namespace EasySave.Application;
@@ -19,7 +19,7 @@ public sealed class InMemoryBackupRunCoordinator : IBackupRunCoordinator
 
         if (!_runningJobs.TryAdd(jobId, 0))
         {
-            throw new EasysaveDefaultException("error_job_already_running", [jobId.ToString()]);
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_job_already_running, [jobId.ToString()]);
         }
 
         try

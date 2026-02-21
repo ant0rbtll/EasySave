@@ -1,4 +1,4 @@
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using System.Diagnostics;
 
 namespace EasySave.System;

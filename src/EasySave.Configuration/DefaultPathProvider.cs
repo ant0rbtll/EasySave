@@ -1,5 +1,5 @@
 using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 
 namespace EasySave.Configuration
 {
@@ -87,7 +87,7 @@ namespace EasySave.Configuration
 
             if (IsSameDirectory(attemptedLogsDir, defaultLogsDir))
             {
-                throw new EasysaveDefaultException("Error_unable_access_log_directory",[], "");
+                throw new EasysaveDefaultException(Localization.LocalizationKey.error_unable_access_log, [], "");
             }
 
             string fallbackPath = Path.Combine(defaultLogsDir, fileName);

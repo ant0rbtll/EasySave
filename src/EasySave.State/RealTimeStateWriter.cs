@@ -1,5 +1,5 @@
 using EasySave.Configuration;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

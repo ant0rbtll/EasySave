@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
 using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.Application.Readers;
@@ -36,7 +36,7 @@ public sealed class XmlLogReader : LogReaderBase
 
         if (!string.Equals(root.Name.LocalName, "Logs", StringComparison.Ordinal))
         {
-            throw new EasysaveDefaultException("error_unexpected_element", [root.Name.LocalName, filePath]);
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_unexpected_element, [root.Name.LocalName, filePath]);
         }
 
         var entries = new List<LogEntry>();
@@ -92,7 +92,7 @@ public sealed class XmlLogReader : LogReaderBase
             return value;
         }
 
-        throw new EasysaveDefaultException("error_invalid_timestamp", [raw, filePath]);
+        throw new EasysaveDefaultException(Localization.LocalizationKey.error_invalid_timestamp, [raw, filePath]);
     }
 
     /// <summary>
@@ -115,7 +115,7 @@ public sealed class XmlLogReader : LogReaderBase
             return parsed;
         }
 
-        throw new EasysaveDefaultException("error_invalid_event_type", [raw, filePath]);
+        throw new EasysaveDefaultException(Localization.LocalizationKey.error_invalid_event_type, [raw, filePath]);
     }
 
     /// <summary>
@@ -139,7 +139,7 @@ public sealed class XmlLogReader : LogReaderBase
             return parsed;
         }
 
-        throw new EasysaveDefaultException("error_invalid_numeric_value", [raw, name, filePath]);
+        throw new EasysaveDefaultException(Localization.LocalizationKey.error_invalid_numeric_value, [raw, name, filePath]);
     }
 
     /// <summary>

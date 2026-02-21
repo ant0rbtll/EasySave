@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.AppCommon.Services;
@@ -79,7 +79,7 @@ public sealed class HttpLogSender : ILogger, IDisposable
         }
         catch (Exception ex)
         {
-            throw new EasysaveDefaultException("error_log_sent_failed", []);
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_log_sent_failed, []);
         }
     }
 

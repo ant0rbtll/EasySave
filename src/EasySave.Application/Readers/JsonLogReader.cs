@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.Application.Readers;

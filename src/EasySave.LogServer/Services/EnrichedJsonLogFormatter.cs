@@ -3,7 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using EasySave.LogServer.Models;
 using EasyLog;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 
 namespace EasySave.LogServer.Services;
 

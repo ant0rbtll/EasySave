@@ -1,11 +1,6 @@
 ﻿using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.Log;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EasySave.Application.Readers
 {
@@ -17,11 +12,11 @@ namespace EasySave.Application.Readers
 
         public IReadOnlyList<LogEntry> ReadEntries(string filePath)
         {
-            FileNullOrNotFoundException.ThrowIfNullOrWhiteSpace(filePath, "");
+            FileNullException.ThrowIfNullOrWhiteSpace(filePath, "");
 
             if (!File.Exists(filePath))
             {
-                throw new FileNullOrNotFoundException(filePath, "", "Log file not found.");
+                throw new FileNullException(filePath, "", "Log file not found.");
             }
 
             string log = FileReadResilience.ReadAllTextWithRetry(filePath, MaxLogFileSizeBytes);

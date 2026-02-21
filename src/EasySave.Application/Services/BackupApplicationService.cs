@@ -5,6 +5,7 @@ using EasySave.State;
 using EasySave.System;
 using System.Threading;
 using EasySave.Application.Readers;
+using EasySave.Exceptions;
 
 namespace EasySave.Application.Services;
 

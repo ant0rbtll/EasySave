@@ -1,5 +1,5 @@
 using EasySave.Backup;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.Persistence;
 
 namespace EasySave.Application;

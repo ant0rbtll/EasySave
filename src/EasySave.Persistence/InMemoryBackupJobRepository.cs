@@ -1,5 +1,5 @@
 using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 
 namespace EasySave.Persistence;
 
@@ -22,7 +22,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="JobAlreadyExistException">
     /// Thrown if the maximum number of jobs is reached or if the ID already exists.
     /// </exception>
     public void Add(BackupJob job)
@@ -40,7 +40,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public void Remove(int id)
     {
         if (!_jobs.Remove(id))
@@ -50,7 +50,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public BackupJob GetById(int id)
     {
         if (!_jobs.TryGetValue(id, out var job))
@@ -73,7 +73,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public void Update(BackupJob job)
     {
         if (!_jobs.ContainsKey(job.Id))

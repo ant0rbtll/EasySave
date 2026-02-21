@@ -1,4 +1,4 @@
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.System;
 
 namespace EasySave.Application;
@@ -17,7 +17,7 @@ public sealed class InMemoryPriorityFilesBarrier : IPriorityFilesBarrier
     {
         if (pendingPriorityFiles < 0)
         {
-            throw new EasysaveDefaultException("error_out_of_range",[nameof(pendingPriorityFiles)]);
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_out_of_range, [nameof(pendingPriorityFiles)]);
         }
 
         lock (_sync)

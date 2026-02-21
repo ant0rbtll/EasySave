@@ -2,6 +2,7 @@ using System.Text;
 using EasySave.Core;
 using EasySave.LogServer.Models;
 using EasyLog;
+using EasySave.Exceptions;
 
 namespace EasySave.LogServer.Services;
 
@@ -11,7 +12,7 @@ namespace EasySave.LogServer.Services;
 /// </summary>
 public sealed class ServerLogWriter(ServerPathProvider pathProvider, LogFormat defaultFormat) : IDisposable
 {
-    private readonly ServerPathProvider _pathProvider = pathProvider ?? throw new ArgumentNullException(nameof(pathProvider));
+    private readonly ServerPathProvider _pathProvider = pathProvider ?? throw new InvalidArgumentException(nameof(pathProvider));
     private readonly LogFormat _defaultFormat = defaultFormat;
     private readonly EnrichedJsonLogFormatter _jsonFormatter = new();
     private readonly EnrichedXmlLogFormatter _xmlFormatter = new();
@@ -20,7 +21,7 @@ public sealed class ServerLogWriter(ServerPathProvider pathProvider, LogFormat d
 
     public void Write(EnrichedLogEntry entry, LogFormat? requestedFormat = null)
     {
-        ArgumentNullException.ThrowIfNull(entry);
+        EasysaveDefaultException.ThrowIfNull(entry);
 
         var format = requestedFormat ?? _defaultFormat;
         var layout = GetLayout(format);

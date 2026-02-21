@@ -1,5 +1,5 @@
 using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 
 namespace EasySave.Persistence;
 
@@ -36,7 +36,7 @@ public class SequentialJobIdProvider : IJobIdProvider
 
         // No gap, return the next ID after max
         if (nextId == int.MaxValue) 
-            throw new EasysaveDefaultException("error_max_id", []);
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_max_id, []);
         
         return nextId;
     }

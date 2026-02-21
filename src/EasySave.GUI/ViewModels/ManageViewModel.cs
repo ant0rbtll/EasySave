@@ -8,6 +8,7 @@ using EasySave.GUI.Helpers;
 using EasySave.GUI.Models;
 using EasySave.GUI.Services;
 using EasySave.Localization;
+using EasySave.Exceptions;
 
 namespace EasySave.GUI.ViewModels;
 
@@ -567,10 +568,10 @@ public partial class ManageViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            if (ex.Data["errorKey"]?.ToString() == "error_job_not_found")
+            if (ex is EasysaveDefaultException exception && exception.ErrorKey == LocalizationKey.error_job_not_found)
             {
                 errorMessage = _localizationService.TranslateTextWithParams(
-                    LocalizationKey.gui_manage_error_job_not_found_named,
+                    LocalizationKey.error_job_not_found_named,
                     [job.Name]);
             }
             else

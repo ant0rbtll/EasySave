@@ -1,5 +1,5 @@
 using System.Text.Json;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.LogServer.Models;
 
 namespace EasySave.LogServer.Services;

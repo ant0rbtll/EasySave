@@ -1,5 +1,5 @@
 using EasySave.Core;
-using EasySave.Core.Exceptions;
+using EasySave.Exceptions;
 using EasySave.System;
 
 namespace EasySave.Backup;
@@ -69,7 +69,7 @@ public sealed class DefaultBackupFilePlanner(IFileSystem fileSystem) : IBackupFi
             return sourceFileSizeBytes != destSize;
         }
 
-        throw new EasysaveDefaultException("error_backup_type_invalid", [type.ToString()]);
+        throw new EasysaveDefaultException(Localization.LocalizationKey.error_backup_type_invalid, [type.ToString()]);
     }
 
     private static List<string> NormalizePriorityExtensions(IEnumerable<string>? extensions)

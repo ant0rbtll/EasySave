@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31903.59
+# Visual Studio Version 18
+VisualStudioVersion = 18.3.11505.172 d18.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F86F7A98-F514-4CE2-8811-D39077FF82E6}"
 EndProject
@@ -59,13 +59,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.AppCommon.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.LogServer.Tests", "tests\EasySave.LogServer.Tests\EasySave.LogServer.Tests.csproj", "{443794F6-B41E-4507-9340-750AC3A855E7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Exceptions", "EasySave.Exception\EasySave.Exceptions.csproj", "{342D9A2D-C7C7-4385-86C1-0FBC278FF44E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{D51E5DDC-9716-4E93-B1B5-CCA00D0695C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -172,6 +171,13 @@ Global
 		{443794F6-B41E-4507-9340-750AC3A855E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{443794F6-B41E-4507-9340-750AC3A855E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{443794F6-B41E-4507-9340-750AC3A855E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{342D9A2D-C7C7-4385-86C1-0FBC278FF44E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{342D9A2D-C7C7-4385-86C1-0FBC278FF44E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{342D9A2D-C7C7-4385-86C1-0FBC278FF44E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{342D9A2D-C7C7-4385-86C1-0FBC278FF44E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D51E5DDC-9716-4E93-B1B5-CCA00D0695C5} = {F86F7A98-F514-4CE2-8811-D39077FF82E6}
@@ -200,5 +206,9 @@ Global
 		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {F86F7A98-F514-4CE2-8811-D39077FF82E6}
 		{65A89075-6446-4A2F-BCBB-B106C1D87163} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
 		{443794F6-B41E-4507-9340-750AC3A855E7} = {A34B4EFA-18FB-4333-8AE7-F0307888FEED}
+		{342D9A2D-C7C7-4385-86C1-0FBC278FF44E} = {F86F7A98-F514-4CE2-8811-D39077FF82E6}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {07CFB3AF-0AF7-408F-90F1-4CCC07FC99A7}
 	EndGlobalSection
 EndGlobal

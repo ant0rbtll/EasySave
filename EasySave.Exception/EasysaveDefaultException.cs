@@ -1,21 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
+﻿using EasySave.Localization;
 
-namespace EasySave.Core.Exceptions
+namespace EasySave.Exceptions
 {
-    public class EasysaveDefaultException : SystemException
+    public class EasysaveDefaultException : SystemException, ITranslatableException
     {
-        protected string _errorKey = string.Empty;
-        protected List<string> _options;
-        protected string _details = "";
+        public LocalizationKey ErrorKey { get; }
+        public List<string> Options { get; }
+        public string Details { get; } = "";
 
 
-        public EasysaveDefaultException(string errorKey, List<string> options, string details = "")
+        public EasysaveDefaultException(LocalizationKey errorKey, List<string> options, string details = "")
         {
             ErrorKey = errorKey;
             Options = options;
