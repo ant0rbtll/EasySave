@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EasySave.Core;
+using EasySave.Core.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.Application.Readers;
@@ -8,9 +9,8 @@ namespace EasySave.Application.Readers;
 /// <summary>
 /// Reads JSON daily logs.
 /// </summary>
-public sealed class JsonLogReader : ILogReader
+public sealed class JsonLogReader : LogReaderBase
 {
-    private const long MaxLogFileSizeBytes = 50L * 1024 * 1024; // 50 MB
 
     private static readonly JsonSerializerOptions s_jsonOptions = new()
     {
@@ -19,34 +19,17 @@ public sealed class JsonLogReader : ILogReader
     };
 
     /// <inheritdoc />
-    public LogFormat Format => LogFormat.Json;
+    public override LogFormat Format => LogFormat.Json;
 
-    /// <inheritdoc />
-    public IReadOnlyList<LogEntry> ReadEntries(string filePath)
+    protected override IReadOnlyList<LogEntry> GetEntries(string log, string filePath)
     {
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new ArgumentException("File path must not be empty.", nameof(filePath));
-        }
-
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException("Log file not found.", filePath);
-        }
-
-        string json = FileReadResilience.ReadAllTextWithRetry(filePath, MaxLogFileSizeBytes);
-        if (string.IsNullOrWhiteSpace(json))
-        {
-            return [];
-        }
-
         try
         {
-            return JsonSerializer.Deserialize<List<LogEntry>>(json, s_jsonOptions) ?? [];
+            return JsonSerializer.Deserialize<List<LogEntry>>(log, s_jsonOptions) ?? [];
         }
         catch (JsonException ex)
         {
-            throw new InvalidDataException($"Invalid JSON log file '{filePath}'.", ex);
+            throw new InvalidLogFileException(filePath, "JSON");
         }
     }
 }

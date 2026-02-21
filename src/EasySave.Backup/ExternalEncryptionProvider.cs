@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Core.Exceptions;
 
 namespace EasySave.Backup;
 
@@ -16,7 +17,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
         EncryptionPolicy policy,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(policy);
+        EasysaveDefaultException.ThrowIfNull(policy);
 
         if (string.IsNullOrWhiteSpace(policy.CryptoSoftExecutablePath))
         {

@@ -1,3 +1,4 @@
+using EasySave.Core.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -23,7 +24,7 @@ public class StateSerializer
     #region ToPrettyJson
     public static string ToPrettyJson(GlobalState state)
     {
-        ArgumentNullException.ThrowIfNull(state);
+        EasysaveDefaultException.ThrowIfNull(state);
 
         string json = JsonSerializer.Serialize(state.Entries, s_jsonOptions);
         

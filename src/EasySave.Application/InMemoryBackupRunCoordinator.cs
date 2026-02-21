@@ -1,3 +1,4 @@
+using EasySave.Core.Exceptions;
 using System.Collections.Concurrent;
 
 namespace EasySave.Application;
@@ -14,14 +15,11 @@ public sealed class InMemoryBackupRunCoordinator : IBackupRunCoordinator
 
     public async Task RunExclusiveAsync(int jobId, Func<CancellationToken, Task> run, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(run);
+        EasysaveDefaultException.ThrowIfNull(run);
 
         if (!_runningJobs.TryAdd(jobId, 0))
         {
-            var exception = new InvalidOperationException($"Job with ID {jobId} is already running.");
-            exception.Data["errorKey"] = "error_job_already_running";
-            exception.Data["job_id"] = jobId;
-            throw exception;
+            throw new EasysaveDefaultException("error_job_already_running", [jobId.ToString()]);
         }
 
         try

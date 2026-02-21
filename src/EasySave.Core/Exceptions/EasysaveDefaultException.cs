@@ -29,5 +29,13 @@ namespace EasySave.Core.Exceptions
                 throw new InvalidArgumentException(nameof(value));
             }
         }
+
+        public static void ThrowIfNull(object? argument)
+        {
+            if (argument is null)
+            {
+                throw new InvalidArgumentException(nameof(argument));
+            }
+        }
     }
 }

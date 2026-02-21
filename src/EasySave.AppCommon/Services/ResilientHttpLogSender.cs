@@ -1,3 +1,4 @@
+using EasySave.Core.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.AppCommon.Services;
@@ -28,8 +29,8 @@ public sealed class ResilientHttpLogSender : ILogger, IDisposable
         LogServerStatusNotifier statusNotifier,
         ILogger? fallbackLogger = null)
     {
-        _httpSender = httpSender ?? throw new ArgumentNullException(nameof(httpSender));
-        _statusNotifier = statusNotifier ?? throw new ArgumentNullException(nameof(statusNotifier));
+        _httpSender = httpSender ?? throw new InvalidArgumentException(nameof(httpSender));
+        _statusNotifier = statusNotifier ?? throw new InvalidArgumentException(nameof(statusNotifier));
         _fallbackLogger = fallbackLogger;
 
         // Initial health check (immediate) + periodic every 10s
@@ -38,7 +39,7 @@ public sealed class ResilientHttpLogSender : ILogger, IDisposable
 
     public void Write(LogEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(entry);
+        EasysaveDefaultException.ThrowIfNull(entry);
 
         if (_disposed)
             return;

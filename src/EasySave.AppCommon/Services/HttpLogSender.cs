@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EasySave.Core;
+using EasySave.Core.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.AppCommon.Services;
@@ -24,7 +25,7 @@ public sealed class HttpLogSender : ILogger, IDisposable
 
     public HttpLogSender(string serverUrl, LogFormat logFormat)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(serverUrl);
+        EasysaveDefaultException.ThrowIfNullOrWhiteSpace(serverUrl);
         _httpClient = new HttpClient
         {
             BaseAddress = new Uri(serverUrl.TrimEnd('/') + "/"),
@@ -36,7 +37,7 @@ public sealed class HttpLogSender : ILogger, IDisposable
 
     internal HttpLogSender(HttpMessageHandler handler, string serverUrl, LogFormat logFormat)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(serverUrl);
+        EasysaveDefaultException.ThrowIfNullOrWhiteSpace(serverUrl);
         _httpClient = new HttpClient(handler)
         {
             BaseAddress = new Uri(serverUrl.TrimEnd('/') + "/"),
@@ -48,7 +49,7 @@ public sealed class HttpLogSender : ILogger, IDisposable
 
     public void Write(LogEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(entry);
+        EasysaveDefaultException.ThrowIfNull(entry);
 
         var request = new
         {
@@ -78,7 +79,7 @@ public sealed class HttpLogSender : ILogger, IDisposable
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException("Failed to send log to centralized server.", ex);
+            throw new EasysaveDefaultException("error_log_sent_failed", []);
         }
     }
 

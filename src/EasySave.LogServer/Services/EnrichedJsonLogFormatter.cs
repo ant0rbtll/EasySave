@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using EasySave.LogServer.Models;
 using EasyLog;
+using EasySave.Core.Exceptions;
 
 namespace EasySave.LogServer.Services;
 
@@ -22,7 +23,7 @@ public sealed class EnrichedJsonLogFormatter : ILogFileLayout
 
     public string Format(EnrichedLogEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(entry);
+        EasysaveDefaultException.ThrowIfNull(entry);
         return JsonSerializer.Serialize(entry, Options);
     }
 

@@ -3,6 +3,7 @@ using System.Xml;
 using System.Xml.Linq;
 using EasySave.LogServer.Models;
 using EasyLog;
+using EasySave.Core.Exceptions;
 
 namespace EasySave.LogServer.Services;
 
@@ -14,7 +15,7 @@ public sealed class EnrichedXmlLogFormatter : ILogFileLayout
 {
     public string Format(EnrichedLogEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(entry);
+        EasysaveDefaultException.ThrowIfNull(entry);
 
         var logEntry = new XElement("LogEntry",
             new XElement("Timestamp", entry.Timestamp.ToString("o")),

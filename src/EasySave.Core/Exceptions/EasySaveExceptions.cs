@@ -30,24 +30,33 @@
     public class InvalidArgumentException : EasysaveDefaultException
     {
         public InvalidArgumentException(
-            string value
+            string value,
+            string details = ""
             ) : base(
                 "error_invalid_argument",
                 [value], 
-                "")
+                details)
         {
         }
     }
     public class FileNullOrNotFoundException : EasysaveDefaultException {
         public FileNullOrNotFoundException(
-            string errorKey,
-            List<string> details
+            string path,
+            string path_type,
+            string details = ""
             )
-            : base("",
-                  new List<string>(),
-                  details.ToString()
+            : base("error_file_null",
+                  [path, path_type],
+                  details
             )
         {
+        }
+        public static void ThrowIfNullOrWhiteSpace(string? path, string pathType)
+        {
+            if (string.IsNullOrWhiteSpace(path) || string.IsNullOrEmpty(path))
+            {
+                throw new FileNullOrNotFoundException(path, pathType);
+            }
         }
     }
 

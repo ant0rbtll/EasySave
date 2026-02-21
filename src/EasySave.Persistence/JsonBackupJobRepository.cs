@@ -37,7 +37,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="JobAlreadyExistException">
     /// Thrown if the maximum number of jobs is reached or if the ID already exists.
     /// </exception>
     public void Add(BackupJob job)
@@ -59,7 +59,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public void Remove(int id)
     {
         var all = Load();
@@ -95,7 +95,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public void Update(BackupJob job)
     {
         var all = Load();

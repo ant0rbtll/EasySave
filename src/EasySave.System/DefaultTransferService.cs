@@ -1,3 +1,4 @@
+using EasySave.Core.Exceptions;
 using System.Diagnostics;
 
 namespace EasySave.System;
@@ -11,7 +12,7 @@ public sealed class DefaultTransferService : ITransferService
 
     public DefaultTransferService(IFileSystem fileSystem)
     {
-        _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+        _fileSystem = fileSystem ?? throw new InvalidArgumentException(nameof(fileSystem));
     }
 
     public TransferResult TransferFile(string sourcePath, string destinationPath, bool overwrite)
