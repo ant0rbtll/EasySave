@@ -102,6 +102,7 @@ public partial class ManageViewModel
             if (job.Status != state.Status)
             {
                 job.Status = state.Status;
+                job.StatusTag = state.Status.ToString();
                 runtimeChanged = true;
             }
 

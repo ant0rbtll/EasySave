@@ -426,8 +426,7 @@ public partial class ProgressViewModel : ViewModelBase
             CurrentDestinationPath = presentation.CurrentDestinationPath,
             UpdatedAtDisplay = presentation.UpdatedAtDisplay,
             RuntimeStatusText = presentation.RuntimeStatusText,
-            RuntimeStatusBackground = presentation.RuntimeStatusBackground,
-            RuntimeStatusForeground = presentation.RuntimeStatusForeground,
+            RuntimeStatusTag = presentation.RuntimeStatusTag,
             CanPlay = presentation.CanPlay,
             CanPause = presentation.CanPause,
             CanStop = presentation.CanStop
@@ -447,8 +446,7 @@ public partial class ProgressViewModel : ViewModelBase
         item.CurrentDestinationPath = presentation.CurrentDestinationPath;
         item.UpdatedAtDisplay = presentation.UpdatedAtDisplay;
         item.RuntimeStatusText = presentation.RuntimeStatusText;
-        item.RuntimeStatusBackground = presentation.RuntimeStatusBackground;
-        item.RuntimeStatusForeground = presentation.RuntimeStatusForeground;
+        item.RuntimeStatusTag = presentation.RuntimeStatusTag;
         item.CanPlay = presentation.CanPlay;
         item.CanPause = presentation.CanPause;
         item.CanStop = presentation.CanStop;
@@ -467,8 +465,7 @@ public partial class ProgressViewModel : ViewModelBase
                 CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
                 UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
                 RuntimeStatusText: StatusBlockedBusinessText,
-                RuntimeStatusBackground: "#2AAF3A3A",
-                RuntimeStatusForeground: "#FFC8C8",
+                RuntimeStatusTag: "blocked",
                 CanPlay: false,
                 CanPause: false,
                 CanStop: true);
@@ -485,19 +482,18 @@ public partial class ProgressViewModel : ViewModelBase
                 CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
                 UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
                 RuntimeStatusText: StatusWaitingText,
-                RuntimeStatusBackground: "#2A8B5A2B",
-                RuntimeStatusForeground: "#FFD59A",
+                RuntimeStatusTag: "waiting",
                 CanPlay: false,
                 CanPause: true,
                 CanStop: true);
         }
 
         var controlState = ResolveControlState(state.Id);
-        var (statusText, statusBackground, statusForeground, canPlay, canPause, canStop) = controlState switch
+        var (statusText, statusTag, canPlay, canPause, canStop) = controlState switch
         {
-            BackupJobControlState.Paused => (StatusPausedText, "#2A8B5A2B", "#FFD59A", true, false, true),
-            BackupJobControlState.StopRequested => (StatusStopRequestedText, "#2AAF3A3A", "#FFC8C8", false, false, false),
-            _ => (StatusRunningText, "#224A90E2", "#CFE8FF", false, true, true)
+            BackupJobControlState.Paused => (StatusPausedText, "paused", true, false, true),
+            BackupJobControlState.StopRequested => (StatusStopRequestedText, "stoprequested", false, false, false),
+            _ => (StatusRunningText, "running", false, true, true)
         };
 
         return new ActiveBackupPresentation(
@@ -509,8 +505,7 @@ public partial class ProgressViewModel : ViewModelBase
             CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
             UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
             RuntimeStatusText: statusText,
-            RuntimeStatusBackground: statusBackground,
-            RuntimeStatusForeground: statusForeground,
+            RuntimeStatusTag: statusTag,
             CanPlay: canPlay,
             CanPause: canPause,
             CanStop: canStop);
@@ -595,8 +590,7 @@ public partial class ProgressViewModel : ViewModelBase
         string CurrentDestinationPath,
         string UpdatedAtDisplay,
         string RuntimeStatusText,
-        string RuntimeStatusBackground,
-        string RuntimeStatusForeground,
+        string RuntimeStatusTag,
         bool CanPlay,
         bool CanPause,
         bool CanStop);

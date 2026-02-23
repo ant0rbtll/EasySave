@@ -78,6 +78,14 @@ namespace EasySave.GUI.Models
 			set { statusDisplay = value; OnNotifyPropertyChanged(nameof(StatusDisplay)); }
 		}
 
+		private string statusTag = BackupJobStatus.Inactive.ToString();
+
+		public string StatusTag
+		{
+			get { return statusTag; }
+			set { statusTag = value; OnNotifyPropertyChanged(nameof(StatusTag)); }
+		}
+
 		private bool isSelected;
 
 		public bool IsSelected

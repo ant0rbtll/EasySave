@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Configuration;
 using EasySave.Core;
+using EasySave.GUI.Services;
 using EasySave.Localization;
 using EasySave.Log;
 using EasySave.Persistence;
@@ -18,6 +19,7 @@ public partial class ConfigViewModel : ViewModelBase
     private readonly ILocalizationService _localizationService;
     private readonly IPathProvider _pathProvider;
     private readonly ILoggerRuntimeReloader _loggerRuntimeReloader;
+    private readonly ThemeService _themeService;
     private CancellationTokenSource? _statusMessageCts;
     private static readonly char[] ExtensionSeparators = [',', ' '];
     private static readonly char[] BusinessSoftwareSeparators = [',', ';'];
@@ -74,11 +76,20 @@ public partial class ConfigViewModel : ViewModelBase
     [ObservableProperty] private string priorityExtensionsWatermark = "";
     [ObservableProperty] private string priorityExtensionsAddText = "";
     [ObservableProperty] private string priorityExtensionsEmptyText = "";
+    [ObservableProperty] private string themeText = "";
+    [ObservableProperty] private string themeSystemText = "";
+    [ObservableProperty] private string themeLightText = "";
+    [ObservableProperty] private string themeDarkText = "";
+    [ObservableProperty] private ThemePreference selectedTheme;
 
     public ObservableCollection<string> EncryptedExtensions { get; } = [];
     public ObservableCollection<string> BusinessSoftwareProcesses { get; } = [];
     public ObservableCollection<string> PriorityExtensions { get; } = [];
     public ObservableCollection<TransferSizeUnitOption> AvailableTransferSizeUnits { get; } = [];
+
+    public bool IsSystemThemeSelected => SelectedTheme == ThemePreference.System;
+    public bool IsLightThemeSelected => SelectedTheme == ThemePreference.Light;
+    public bool IsDarkThemeSelected => SelectedTheme == ThemePreference.Dark;
 
     public bool IsJsonLogFormatSelected => SelectedLogFormat == LogFormat.Json;
     public bool IsXmlLogFormatSelected => SelectedLogFormat == LogFormat.Xml;
@@ -101,15 +112,18 @@ public partial class ConfigViewModel : ViewModelBase
         IUserPreferencesRepository preferencesRepository,
         ILocalizationService localizationService,
         IPathProvider pathProvider,
-        ILoggerRuntimeReloader loggerRuntimeReloader
+        ILoggerRuntimeReloader loggerRuntimeReloader,
+        ThemeService themeService
         )
     {
         _preferencesRepository = preferencesRepository;
         _localizationService = localizationService;
         _pathProvider = pathProvider;
         _loggerRuntimeReloader = loggerRuntimeReloader;
+        _themeService = themeService;
 
         var preferences = preferencesRepository.Load();
+        selectedTheme = preferences.ThemePreference;
         selectedLanguage = NormalizeLanguage(preferences.Language);
         selectedLogFormat = preferences.LogFormat;
         selectedLogMode = preferences.LogMode;
@@ -217,6 +231,10 @@ public partial class ConfigViewModel : ViewModelBase
         PriorityExtensionsWatermark = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_watermark);
         PriorityExtensionsAddText = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_add);
         PriorityExtensionsEmptyText = _localizationService.TranslateText(LocalizationKey.gui_config_priority_extensions_empty);
+        ThemeText = _localizationService.TranslateText(LocalizationKey.gui_config_theme);
+        ThemeSystemText = _localizationService.TranslateText(LocalizationKey.gui_config_theme_system);
+        ThemeLightText = _localizationService.TranslateText(LocalizationKey.gui_config_theme_light);
+        ThemeDarkText = _localizationService.TranslateText(LocalizationKey.gui_config_theme_dark);
         RefreshTransferSizeUnits();
         ValidatePath();
         ValidateLargeFileThreshold();
@@ -269,6 +287,15 @@ public partial class ConfigViewModel : ViewModelBase
         }
     }
 
+    partial void OnSelectedThemeChanged(ThemePreference value)
+    {
+        ClearStatusMessage();
+        OnPropertyChanged(nameof(IsSystemThemeSelected));
+        OnPropertyChanged(nameof(IsLightThemeSelected));
+        OnPropertyChanged(nameof(IsDarkThemeSelected));
+        _themeService.ApplyTheme(value);
+    }
+
     partial void OnSelectedLanguageChanged(string value)
     {
         ClearStatusMessage();
@@ -296,6 +323,7 @@ public partial class ConfigViewModel : ViewModelBase
         var logFormatChanged = preferences.LogFormat != SelectedLogFormat;
         var logModeChanged = preferences.LogMode != SelectedLogMode;
         var logServerUrlChanged = preferences.LogServerUrl != LogServerUrl;
+        preferences.ThemePreference = SelectedTheme;
         preferences.Language = language;
         preferences.LogFormat = SelectedLogFormat;
         preferences.LogMode = SelectedLogMode;
@@ -352,6 +380,15 @@ public partial class ConfigViewModel : ViewModelBase
     {
         LogDirectory = null;
     }
+
+    [RelayCommand]
+    private void SelectSystemTheme() => SelectedTheme = ThemePreference.System;
+
+    [RelayCommand]
+    private void SelectLightTheme() => SelectedTheme = ThemePreference.Light;
+
+    [RelayCommand]
+    private void SelectDarkTheme() => SelectedTheme = ThemePreference.Dark;
 
     [RelayCommand]
     private void SelectJsonLogFormat()
