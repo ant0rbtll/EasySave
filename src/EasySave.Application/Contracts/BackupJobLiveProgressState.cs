@@ -16,4 +16,6 @@ public readonly record struct BackupJobLiveProgressState(
     long RemainingSizeBytes,
     string? CurrentSourcePath,
     string? CurrentDestinationPath,
-    DateTime? LastUpdateAt);
+    DateTime? LastUpdateAt,
+    TimeSpan? EstimatedRemainingTime,
+    double? SmoothedThroughputBytesPerSecond);

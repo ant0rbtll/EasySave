@@ -20,7 +20,8 @@ public class BackupApplicationService(
     IBackupRunCoordinator? backupRunCoordinator = null,
     IBackupExecutionGuard? backupExecutionGuard = null,
     IStateWriter? stateWriter = null,
-    IUserPreferencesRepository? userPreferencesRepository = null)
+    IUserPreferencesRepository? userPreferencesRepository = null,
+    IBackupEtaEstimator? backupEtaEstimator = null)
 {
     private readonly IBackupJobRepository _repo = repo;
     private readonly IBackupEngine _engine = backupEngine;
@@ -30,6 +31,7 @@ public class BackupApplicationService(
     private readonly IBackupExecutionGuard _backupExecutionGuard = backupExecutionGuard ?? new NoOpBackupExecutionGuard();
     private readonly IStateWriter? _stateWriter = stateWriter;
     private readonly IUserPreferencesRepository? _userPreferencesRepository = userPreferencesRepository;
+    private readonly IBackupEtaEstimator _backupEtaEstimator = backupEtaEstimator ?? new BackupEtaEstimator();
     private int _activeStateReconciled;
 
     /// <summary>
@@ -139,6 +141,7 @@ public class BackupApplicationService(
         var jobNamesById = (_repo.GetAll() ?? [])
             .ToDictionary(j => j.Id, j => j.Name);
         var states = new Dictionary<int, BackupJobLiveProgressState>(entries.Count);
+        var trackedJobIds = new HashSet<int>();
         foreach (var (jobId, entry) in entries)
         {
             var shouldInclude = entry.Status == BackupStatus.Active
@@ -152,6 +155,16 @@ public class BackupApplicationService(
             }
 
             var jobName = ResolveNonEmptyJobName(entry.BackupName, jobId, jobNamesById);
+            var observedAtUtc = ToUtc(entry.Timestamp);
+            var etaSnapshot = _backupEtaEstimator.UpdateEstimate(
+                jobId,
+                entry.Status,
+                entry.TotalFiles,
+                entry.RemainingFiles,
+                entry.TotalSizeBytes,
+                entry.RemainingSizeBytes,
+                observedAtUtc);
+            trackedJobIds.Add(jobId);
             states[jobId] = new BackupJobLiveProgressState(
                 jobId,
                 jobName,
@@ -163,10 +176,23 @@ public class BackupApplicationService(
                 entry.RemainingSizeBytes,
                 entry.CurrentSourcePath,
                 entry.CurrentDestinationPath,
-                entry.Timestamp);
+                entry.Timestamp,
+                etaSnapshot.EstimatedRemainingTime,
+                etaSnapshot.SmoothedThroughputBytesPerSecond);
         }
 
+        _backupEtaEstimator.Prune(trackedJobIds);
         return states;
+    }
+
+    private static DateTime ToUtc(DateTime timestamp)
+    {
+        return timestamp.Kind switch
+        {
+            DateTimeKind.Utc => timestamp,
+            DateTimeKind.Local => timestamp.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(timestamp, DateTimeKind.Local).ToUniversalTime()
+        };
     }
 
     private static string ResolveNonEmptyJobName(string? stateName, int jobId, IReadOnlyDictionary<int, string> jobNamesById)

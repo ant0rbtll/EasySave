@@ -15,6 +15,7 @@ public class BackupApplicationServiceTests
     private readonly Mock<IBackupJobStateService> _backupJobStateServiceMock;
     private readonly Mock<IStateReader> _stateReaderMock;
     private readonly Mock<IStateWriter> _stateWriterMock;
+    private readonly Mock<IBackupEtaEstimator> _backupEtaEstimatorMock;
     private readonly BackupApplicationService _service;
 
     public BackupApplicationServiceTests()
@@ -25,16 +26,28 @@ public class BackupApplicationServiceTests
         _backupJobStateServiceMock = new Mock<IBackupJobStateService>();
         _stateReaderMock = new Mock<IStateReader>();
         _stateWriterMock = new Mock<IStateWriter>();
+        _backupEtaEstimatorMock = new Mock<IBackupEtaEstimator>();
         _engineMock
             .Setup(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()))
             .Returns(Task.CompletedTask);
         _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>());
+        _backupEtaEstimatorMock
+            .Setup(e => e.UpdateEstimate(
+                It.IsAny<int>(),
+                It.IsAny<BackupStatus>(),
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<long>(),
+                It.IsAny<long>(),
+                It.IsAny<DateTime>()))
+            .Returns(new BackupEtaSnapshot(null, null));
         _service = new BackupApplicationService(
             _repoMock.Object,
             _engineMock.Object,
             _backupJobStateServiceMock.Object,
             _stateReaderMock.Object,
-            stateWriter: _stateWriterMock.Object);
+            stateWriter: _stateWriterMock.Object,
+            backupEtaEstimator: _backupEtaEstimatorMock.Object);
     }
 
     /// <summary>
@@ -210,7 +223,40 @@ public class BackupApplicationServiceTests
         Assert.Equal("/src/a.txt", result[1].CurrentSourcePath);
         Assert.Equal("/dst/a.txt", result[1].CurrentDestinationPath);
         Assert.Equal(timestamp, result[1].LastUpdateAt);
+        Assert.Null(result[1].EstimatedRemainingTime);
+        Assert.Null(result[1].SmoothedThroughputBytesPerSecond);
         Assert.False(result.ContainsKey(2));
+    }
+
+    [Fact]
+    public void GetAllJobsLiveProgress_ShouldExposeEtaSnapshot()
+    {
+        _stateReaderMock.Setup(r => r.ReadEntries()).Returns(new Dictionary<int, StateEntry>
+        {
+            [1] = new()
+            {
+                BackupId = 1,
+                BackupName = "Job One",
+                Status = BackupStatus.Active,
+                RemainingSizeBytes = 1024
+            }
+        });
+        _backupEtaEstimatorMock
+            .Setup(e => e.UpdateEstimate(
+                1,
+                BackupStatus.Active,
+                It.IsAny<int>(),
+                It.IsAny<int>(),
+                It.IsAny<long>(),
+                1024,
+                It.IsAny<DateTime>()))
+            .Returns(new BackupEtaSnapshot(TimeSpan.FromSeconds(12), 512d));
+
+        var result = _service.GetAllJobsLiveProgress();
+
+        Assert.Equal(TimeSpan.FromSeconds(12), result[1].EstimatedRemainingTime);
+        Assert.Equal(512d, result[1].SmoothedThroughputBytesPerSecond);
+        _backupEtaEstimatorMock.Verify(e => e.Prune(It.Is<IReadOnlyCollection<int>>(ids => ids.Count == 1 && ids.Contains(1))), Times.Once);
     }
 
     [Fact]

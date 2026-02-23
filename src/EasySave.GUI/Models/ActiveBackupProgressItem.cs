@@ -74,6 +74,20 @@ public class ActiveBackupProgressItem : ModelBase
         }
     }
 
+    private string etaDisplay = string.Empty;
+    public string EtaDisplay
+    {
+        get => etaDisplay;
+        set
+        {
+            if (string.Equals(etaDisplay, value, StringComparison.Ordinal))
+                return;
+
+            etaDisplay = value;
+            OnNotifyPropertyChanged(nameof(EtaDisplay));
+        }
+    }
+
     private string currentSourcePath = string.Empty;
     public string CurrentSourcePath
     {
