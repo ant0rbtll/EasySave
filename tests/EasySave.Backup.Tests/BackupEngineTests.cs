@@ -3,6 +3,7 @@ using EasySave.State;
 using EasySave.System;
 using EasySave.Log;
 using Moq;
+using EasySave.Exceptions;
 
 namespace EasySave.Backup.Tests;
 
@@ -795,7 +796,7 @@ public class BackupEngineTests
 
         // Act & Assert
         
-        await Assert.ThrowsAsync<NotSupportedException>(() => _backupEngine.Execute(job));
+        await Assert.ThrowsAsync<EasysaveDefaultException>(() => _backupEngine.Execute(job));
     }
 
     private sealed class StubExecutionController(
@@ -927,7 +928,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 0, TransferTimeMs: 0, ErrorCode: 1)); // Error code != 0
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => _backupEngine.Execute(job));
+        var ex = await Assert.ThrowsAsync<EasysaveDefaultException>(() => _backupEngine.Execute(job));
         Assert.Contains("File transfer failed", ex.Message);
         Assert.Contains("error code 1", ex.Message);
 
@@ -1160,7 +1161,7 @@ public class BackupEngineTests
             .Returns(new TransferResult(FileSizeBytes: 0, TransferTimeMs: 0, ErrorCode: 5));
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _backupEngine.Execute(job));
+        await Assert.ThrowsAsync<EasysaveDefaultException>(() => _backupEngine.Execute(job));
 
         _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Once);
     }

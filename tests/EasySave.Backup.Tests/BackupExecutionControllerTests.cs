@@ -1,4 +1,5 @@
 using EasySave.Backup;
+using EasySave.Exceptions;
 
 namespace EasySave.Backup.Tests;
 
@@ -31,11 +32,10 @@ public class BackupExecutionControllerTests
         controller.BeginJob(1);
         controller.RequestStopAll();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => controller.WaitIfPausedOrThrowIfStopped());
+        var ex = Assert.Throws<EasysaveDefaultException>(() => controller.WaitIfPausedOrThrowIfStopped());
 
-        Assert.Equal("error_backup_stopped_by_user", ex.Message);
-        Assert.Equal("error_backup_stopped_by_user", ex.Data["errorKey"]);
-        Assert.Equal("action_backup_stopped_by_user", ex.Data["actionKey"]);
+        Assert.Equal(Localization.LocalizationKey.error_backup_stopped_by_user, ex.ErrorKey);
+        Assert.Equal("action_backup_stopped_by_user", ex.Options[0]);
     }
 
     [Fact]
@@ -97,10 +97,9 @@ public class BackupExecutionControllerTests
 
         controller.BeginJob(42);
 
-        var ex = Assert.Throws<InvalidOperationException>(() => controller.WaitIfPausedOrThrowIfStopped());
-        Assert.Equal("error_backup_stopped_by_user", ex.Message);
-        Assert.Equal("error_backup_stopped_by_user", ex.Data["errorKey"]);
-        Assert.Equal("action_backup_stopped_by_user", ex.Data["actionKey"]);
+        var ex = Assert.Throws<EasysaveDefaultException>(() => controller.WaitIfPausedOrThrowIfStopped());
+        Assert.Equal(Localization.LocalizationKey.error_backup_stopped_by_user, ex.ErrorKey);
+        Assert.Equal("action_backup_stopped_by_user", ex.Options[0]);
     }
 
     [Fact]
