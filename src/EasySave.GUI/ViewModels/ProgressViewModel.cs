@@ -64,6 +64,8 @@ public partial class ProgressViewModel : ViewModelBase
     public string EmptySubtitleText { get; private set; } = string.Empty;
     public string FilesLabelText { get; private set; } = string.Empty;
     public string SizeLabelText { get; private set; } = string.Empty;
+    public string EtaLabelText { get; private set; } = string.Empty;
+    public string EtaUnknownText { get; private set; } = string.Empty;
     public string CurrentSourceLabelText { get; private set; } = string.Empty;
     public string CurrentDestinationLabelText { get; private set; } = string.Empty;
     public string UpdatedAtLabelText { get; private set; } = string.Empty;
@@ -109,6 +111,8 @@ public partial class ProgressViewModel : ViewModelBase
         EmptySubtitleText = _localizationService.TranslateText(LocalizationKey.gui_progress_empty_subtitle);
         FilesLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_files);
         SizeLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_size);
+        EtaLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_eta);
+        EtaUnknownText = _localizationService.TranslateText(LocalizationKey.gui_progress_eta_unknown);
         CurrentSourceLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_current_source);
         CurrentDestinationLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_current_destination);
         UpdatedAtLabelText = _localizationService.TranslateText(LocalizationKey.gui_progress_label_updated_at);
@@ -138,6 +142,8 @@ public partial class ProgressViewModel : ViewModelBase
         OnPropertyChanged(nameof(EmptySubtitleText));
         OnPropertyChanged(nameof(FilesLabelText));
         OnPropertyChanged(nameof(SizeLabelText));
+        OnPropertyChanged(nameof(EtaLabelText));
+        OnPropertyChanged(nameof(EtaUnknownText));
         OnPropertyChanged(nameof(CurrentSourceLabelText));
         OnPropertyChanged(nameof(CurrentDestinationLabelText));
         OnPropertyChanged(nameof(UpdatedAtLabelText));
@@ -422,6 +428,7 @@ public partial class ProgressViewModel : ViewModelBase
             ProgressDisplay = presentation.ProgressDisplay,
             FilesDisplay = presentation.FilesDisplay,
             SizeDisplay = presentation.SizeDisplay,
+            EtaDisplay = presentation.EtaDisplay,
             CurrentSourcePath = presentation.CurrentSourcePath,
             CurrentDestinationPath = presentation.CurrentDestinationPath,
             UpdatedAtDisplay = presentation.UpdatedAtDisplay,
@@ -443,6 +450,7 @@ public partial class ProgressViewModel : ViewModelBase
         item.ProgressDisplay = presentation.ProgressDisplay;
         item.FilesDisplay = presentation.FilesDisplay;
         item.SizeDisplay = presentation.SizeDisplay;
+        item.EtaDisplay = presentation.EtaDisplay;
         item.CurrentSourcePath = presentation.CurrentSourcePath;
         item.CurrentDestinationPath = presentation.CurrentDestinationPath;
         item.UpdatedAtDisplay = presentation.UpdatedAtDisplay;
@@ -463,6 +471,7 @@ public partial class ProgressViewModel : ViewModelBase
                 ProgressDisplay: $"{state.ProgressPercent}%",
                 FilesDisplay: $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
                 SizeDisplay: $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes), _localizationService.Culture)}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes), _localizationService.Culture)}",
+                EtaDisplay: FormatEtaDisplay(state),
                 CurrentSourcePath: state.CurrentSourcePath ?? "-",
                 CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
                 UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
@@ -481,6 +490,7 @@ public partial class ProgressViewModel : ViewModelBase
                 ProgressDisplay: $"{state.ProgressPercent}%",
                 FilesDisplay: $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
                 SizeDisplay: $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes), _localizationService.Culture)}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes), _localizationService.Culture)}",
+                EtaDisplay: FormatEtaDisplay(state),
                 CurrentSourcePath: state.CurrentSourcePath ?? "-",
                 CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
                 UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
@@ -505,6 +515,7 @@ public partial class ProgressViewModel : ViewModelBase
             ProgressDisplay: $"{state.ProgressPercent}%",
             FilesDisplay: $"{Math.Max(0, state.TotalFiles - state.RemainingFiles)}/{Math.Max(0, state.TotalFiles)}",
             SizeDisplay: $"{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes - state.RemainingSizeBytes), _localizationService.Culture)}/{LogValueFormatter.FormatFileSize(Math.Max(0, state.TotalSizeBytes), _localizationService.Culture)}",
+            EtaDisplay: FormatEtaDisplay(state),
             CurrentSourcePath: state.CurrentSourcePath ?? "-",
             CurrentDestinationPath: state.CurrentDestinationPath ?? "-",
             UpdatedAtDisplay: FormatUpdatedAt(state.LastUpdateAt),
@@ -551,8 +562,24 @@ public partial class ProgressViewModel : ViewModelBase
             orderedStates.Select(s =>
             {
                 var controlState = ResolveControlState(s.Id);
-                return $"{s.Id}:{s.Name}:{s.Status}:{s.ProgressPercent}:{s.TotalFiles}:{s.TotalSizeBytes}:{s.RemainingFiles}:{s.RemainingSizeBytes}:{s.CurrentSourcePath}:{s.CurrentDestinationPath}:{controlState}";
+                return $"{s.Id}:{s.Name}:{s.Status}:{s.ProgressPercent}:{s.TotalFiles}:{s.TotalSizeBytes}:{s.RemainingFiles}:{s.RemainingSizeBytes}:{s.CurrentSourcePath}:{s.CurrentDestinationPath}:{s.EstimatedRemainingTime?.Ticks ?? -1}:{controlState}";
             }));
+    }
+
+    private string FormatEtaDisplay(BackupJobLiveProgressState state)
+    {
+        if (state.RemainingSizeBytes <= 0)
+            return "00:00:00";
+
+        if (!state.EstimatedRemainingTime.HasValue)
+            return EtaUnknownText;
+
+        var eta = state.EstimatedRemainingTime.Value;
+        if (eta < TimeSpan.Zero)
+            eta = TimeSpan.Zero;
+
+        var totalHours = Math.Max(0, (int)Math.Floor(eta.TotalHours));
+        return $"{totalHours:00}:{eta.Minutes:00}:{eta.Seconds:00}";
     }
 
     public bool IsStopSelectedMode => _isStopSelectedMode;
@@ -591,6 +618,7 @@ public partial class ProgressViewModel : ViewModelBase
         string ProgressDisplay,
         string FilesDisplay,
         string SizeDisplay,
+        string EtaDisplay,
         string CurrentSourcePath,
         string CurrentDestinationPath,
         string UpdatedAtDisplay,

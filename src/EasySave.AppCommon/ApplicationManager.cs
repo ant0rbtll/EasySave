@@ -69,6 +69,7 @@ namespace EasySave.AppCommon
             _services.AddSingleton<ILogReader, XmlLogReader>();
             _services.AddSingleton<IStateReader, JsonStateReader>();
             _services.AddSingleton<IBackupJobStateService, BackupJobStateService>();
+            _services.AddSingleton<IBackupEtaEstimator, BackupEtaEstimator>();
             _services.AddSingleton<IBackupExecutionGuard, BusinessSoftwareBackupExecutionGuard>();
             // Setup application service
             _services.AddSingleton<BackupApplicationService>();
