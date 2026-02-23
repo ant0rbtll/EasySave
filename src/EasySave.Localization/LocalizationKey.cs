@@ -120,7 +120,7 @@ public enum LocalizationKey
     error_parts_empty,
     error_parts_null,
     error_business_software_running,
-    error_unspported_log_format,
+    error_unsupported_log_format,
     error_job_already_exist,
     error_invalid_log_file,
     error_invalid_argument,
@@ -134,7 +134,7 @@ public enum LocalizationKey
     error_invalid_timestamp,
     error_invalid_event_type,
     error_invalid_numeric_value,
-    error_multiple_readers_registred,
+    error_multiple_readers_registered,
     error_unable_access_log,
     error_job_not_found_named,
 
@@ -201,6 +201,7 @@ public enum LocalizationKey
     gui_create_error_io,
     gui_create_error_unexpected,
     gui_create_success,
+    gui_manage_error_job_not_found_named,
 
     // Config - Log Mode
     gui_config_log_mode,

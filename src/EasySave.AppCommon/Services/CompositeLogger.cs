@@ -29,7 +29,7 @@ public sealed class CompositeLogger(params ILogger[] loggers) : ILogger, IDispos
 
         if (exceptions is { Count: > 0 })
         {
-            throw new EasysaveDefaultException(Localization.LocalizationKey.error_logger_failed, [ /*exceptions*/]);
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_logger_failed, [], exceptions.Count.ToString());
         }
     }
 

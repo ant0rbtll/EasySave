@@ -5,7 +5,7 @@
         public UnsupportedLogFormatException(
             string log_format
             ) : base(
-                Localization.LocalizationKey.error_unspported_log_format,
+                Localization.LocalizationKey.error_unsupported_log_format,
                 [log_format],
                 ""
                 )

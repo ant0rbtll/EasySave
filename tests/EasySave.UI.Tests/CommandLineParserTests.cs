@@ -1,3 +1,5 @@
+using EasySave.Exceptions;
+
 namespace EasySave.UI.Tests;
 
 public class CommandLineParserTests
@@ -7,15 +9,15 @@ public class CommandLineParserTests
     [Fact]
     public void Parse_WithNullArgs_ThrowsInvalidArgument()
     {
-        var ex = Assert.Throws<ArgumentException>(() => _parser.Parse(null!));
-        Assert.Equal("error_parser_arg_null", ex.Message);
+        var ex = Assert.Throws<InvalidArgumentException>(() => _parser.Parse(null!));
+        Assert.Equal(LocalizationKey.error_invalid_argument, ex.ErrorKey);
     }
 
     [Fact]
     public void Parse_WithEmptyArgs_ThrowsInvalidArgument()
     {
-        var ex = Assert.Throws<ArgumentException>(() => _parser.Parse([]));
-        Assert.Equal("error_parser_arg_null", ex.Message);
+        var ex = Assert.Throws<InvalidArgumentException>(() => _parser.Parse([]));
+        Assert.Equal(LocalizationKey.error_invalid_argument, ex.ErrorKey);
     }
 
     [Fact]
@@ -42,22 +44,22 @@ public class CommandLineParserTests
     [Fact]
     public void Parse_WithDescendingRange_ThrowsInvalidArgument()
     {
-        var ex = Assert.Throws<ArgumentException>(() => _parser.Parse(["4-2"]));
-        Assert.Equal("error_parser_arg_invalid", ex.Message);
+        var ex = Assert.Throws<InvalidArgumentException>(() => _parser.Parse(["4-2"]));
+        Assert.Equal(LocalizationKey.error_invalid_argument, ex.ErrorKey);
     }
 
     [Fact]
     public void Parse_WithInvalidRangeFormat_ThrowsInvalidArgument()
     {
-        var ex = Assert.Throws<ArgumentException>(() => _parser.Parse(["1-2-3"]));
-        Assert.Equal("error_parser_arg_invalid", ex.Message);
+        var ex = Assert.Throws<InvalidArgumentException>(() => _parser.Parse(["1-2-3"]));
+        Assert.Equal(LocalizationKey.error_invalid_argument, ex.ErrorKey);
     }
 
     [Fact]
     public void Parse_WithEmptySemicolonPart_ThrowsInvalidArgument()
     {
-        var ex = Assert.Throws<ArgumentException>(() => _parser.Parse(["1;;3"]));
-        Assert.Equal("error_parser_arg_invalid", ex.Message);
+        var ex = Assert.Throws<InvalidArgumentException>(() => _parser.Parse(["1;;3"]));
+        Assert.Equal(LocalizationKey.error_invalid_argument, ex.ErrorKey);
     }
 
     [Fact]

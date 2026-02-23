@@ -1,3 +1,4 @@
+using EasySave.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -11,7 +12,7 @@ public class StateSerializerTests
     public void ToPrettyJson_NullState_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => StateSerializer.ToPrettyJson(null!));
+        Assert.Throws<InvalidArgumentException>(() => StateSerializer.ToPrettyJson(null!));
     }
 
     [Fact]

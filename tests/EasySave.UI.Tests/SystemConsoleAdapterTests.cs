@@ -52,8 +52,8 @@ public class SystemConsoleAdapterTests
         var original = Console.ForegroundColor;
         var adapter = new SystemConsoleAdapter();
 
-        adapter.SetForegroundColor(ConsoleColor.Yellow);
-        Assert.Equal(ConsoleColor.Yellow, Console.ForegroundColor);
+        adapter.SetForegroundColor(ConsoleColor.Gray);
+        Assert.Equal(ConsoleColor.Gray, Console.ForegroundColor);
 
         adapter.ResetColor();
         Console.ForegroundColor = original;

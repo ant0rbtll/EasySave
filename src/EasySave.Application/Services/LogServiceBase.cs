@@ -20,7 +20,7 @@ namespace EasySave.Application.Services
             var duplicate = grouped.FirstOrDefault(static g => g.Count() > 1);
             if (duplicate is not null)
             {
-                throw new EasysaveDefaultException(Localization.LocalizationKey.error_multiple_readers_registred, [duplicate.Key.ToString()]);
+                throw new EasysaveDefaultException(Localization.LocalizationKey.error_multiple_readers_registered, [duplicate.Key.ToString()]);
             }
 
             _readerByFormat = grouped.ToDictionary(static g => g.Key, static g => g.Single());

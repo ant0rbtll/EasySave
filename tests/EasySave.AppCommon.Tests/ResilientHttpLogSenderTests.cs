@@ -1,5 +1,6 @@
 using System.Net;
 using EasySave.AppCommon.Tests.TestHelpers;
+using EasySave.Exceptions;
 
 namespace EasySave.AppCommon.Tests;
 
@@ -83,7 +84,7 @@ public class ResilientHttpLogSenderTests
         var notifier = new LogServerStatusNotifier();
         using var resilient = CreateResilient(handler, notifier);
 
-        Assert.Throws<ArgumentNullException>(() => resilient.Write(null!));
+        Assert.Throws<InvalidArgumentException>(() => resilient.Write(null!));
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using EasySave.Configuration;
+using EasySave.Exceptions;
 using Moq;
 
 namespace EasySave.State.Tests;
@@ -106,7 +107,7 @@ public class RealTimeStateWriterTests : IDisposable
         var writer = CreateWriter();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => writer.Update(null!));
+        Assert.Throws<InvalidArgumentException>(() => writer.Update(null!));
     }
 
     [Fact]
