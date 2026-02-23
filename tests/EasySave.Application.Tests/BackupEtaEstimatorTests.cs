@@ -17,7 +17,7 @@ public class BackupEtaEstimatorTests
         estimator.UpdateEstimate(1, BackupStatus.Active, 100, 97, 10_000, 9_700, t0.AddSeconds(9));
         estimator.UpdateEstimate(1, BackupStatus.Active, 100, 96, 10_000, 9_600, t0.AddSeconds(12));
         var beforeFractionTarget = estimator.UpdateEstimate(1, BackupStatus.Active, 100, 95, 10_000, 9_500, t0.AddSeconds(15));
-        var atFractionTarget = estimator.UpdateEstimate(1, BackupStatus.Active, 100, 94, 10_000, 9_400, t0.AddSeconds(18));
+        var atFractionTarget = estimator.UpdateEstimate(1, BackupStatus.Active, 100, 93, 10_000, 9_300, t0.AddSeconds(21));
 
         Assert.Null(beforeFractionTarget.EstimatedRemainingTime);
         Assert.NotNull(atFractionTarget.EstimatedRemainingTime);
@@ -50,9 +50,9 @@ public class BackupEtaEstimatorTests
         Assert.Null(s6.EstimatedRemainingTime);
         Assert.Null(s7.EstimatedRemainingTime);
         Assert.NotNull(snapshot.EstimatedRemainingTime);
-        Assert.Equal(TimeSpan.FromSeconds(4), TimeSpan.FromSeconds(Math.Round(snapshot.EstimatedRemainingTime!.Value.TotalSeconds)));
+        Assert.Equal(TimeSpan.FromSeconds(8), TimeSpan.FromSeconds(Math.Round(snapshot.EstimatedRemainingTime!.Value.TotalSeconds)));
         Assert.NotNull(snapshot.SmoothedThroughputBytesPerSecond);
-        Assert.InRange(snapshot.SmoothedThroughputBytesPerSecond!.Value, 99, 101);
+        Assert.InRange(snapshot.SmoothedThroughputBytesPerSecond!.Value, 49, 51);
     }
 
     [Fact]

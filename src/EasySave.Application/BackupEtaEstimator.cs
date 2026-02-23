@@ -7,7 +7,7 @@ namespace EasySave.Application;
 /// </summary>
 public sealed class BackupEtaEstimator : IBackupEtaEstimator
 {
-    private const double WarmupFileFraction = 0.07d;
+    private const int WarmupPercentage = 7;
     private const int MinimumWarmupFiles = 1;
     private const double WarmupSeconds = 15d;
     private const double MinDeltaSeconds = 0.05;
@@ -218,7 +218,8 @@ public sealed class BackupEtaEstimator : IBackupEtaEstimator
         if (totalFiles <= 0)
             return MinimumWarmupFiles;
 
-        var fractionalTarget = (int)Math.Ceiling(totalFiles * WarmupFileFraction);
+        // Exact ceil(totalFiles * WarmupPercentage / 100) with integer arithmetic.
+        var fractionalTarget = ((totalFiles * WarmupPercentage) + 99) / 100;
         return Math.Max(MinimumWarmupFiles, fractionalTarget);
     }
 

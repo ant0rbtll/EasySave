@@ -141,8 +141,7 @@ public class BackupApplicationService(
         var jobNamesById = (_repo.GetAll() ?? [])
             .ToDictionary(j => j.Id, j => j.Name);
         var states = new Dictionary<int, BackupJobLiveProgressState>(entries.Count);
-        var activeJobIds = new HashSet<int>();
-        var observedAtUtc = DateTime.UtcNow;
+        var trackedJobIds = new HashSet<int>();
         foreach (var (jobId, entry) in entries)
         {
             var shouldInclude = entry.Status == BackupStatus.Active
@@ -156,6 +155,7 @@ public class BackupApplicationService(
             }
 
             var jobName = ResolveNonEmptyJobName(entry.BackupName, jobId, jobNamesById);
+            var observedAtUtc = ToUtc(entry.Timestamp);
             var etaSnapshot = _backupEtaEstimator.UpdateEstimate(
                 jobId,
                 entry.Status,
@@ -164,7 +164,7 @@ public class BackupApplicationService(
                 entry.TotalSizeBytes,
                 entry.RemainingSizeBytes,
                 observedAtUtc);
-            activeJobIds.Add(jobId);
+            trackedJobIds.Add(jobId);
             states[jobId] = new BackupJobLiveProgressState(
                 jobId,
                 jobName,
@@ -181,8 +181,18 @@ public class BackupApplicationService(
                 etaSnapshot.SmoothedThroughputBytesPerSecond);
         }
 
-        _backupEtaEstimator.Prune(activeJobIds);
+        _backupEtaEstimator.Prune(trackedJobIds);
         return states;
+    }
+
+    private static DateTime ToUtc(DateTime timestamp)
+    {
+        return timestamp.Kind switch
+        {
+            DateTimeKind.Utc => timestamp,
+            DateTimeKind.Local => timestamp.ToUniversalTime(),
+            _ => DateTime.SpecifyKind(timestamp, DateTimeKind.Local).ToUniversalTime()
+        };
     }
 
     private static string ResolveNonEmptyJobName(string? stateName, int jobId, IReadOnlyDictionary<int, string> jobNamesById)
