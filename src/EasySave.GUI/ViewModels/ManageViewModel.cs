@@ -466,6 +466,26 @@ public partial class ManageViewModel : ViewModelBase
         }
         
 
+        // Multi-select filter logic
+        if (TypeFilters.Count != 0)
+        {
+            var selectedTypes = TypeFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
+            if (!TypeFilters[0].IsSelected && selectedTypes.Count > 0)
+            {
+                filtered = filtered.Where(j => selectedTypes.Contains(j.Type));
+            }
+        }
+        if(StatusFilters.Count != 0)
+        {
+            var selectedStatus = StatusFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
+            if (!StatusFilters[0].IsSelected && selectedStatus.Count > 0)
+            {
+                filtered = filtered.Where(j => selectedStatus.Contains(j.Status));
+            }
+
+        }
+        
+
         if (!string.IsNullOrEmpty(SortColumn))
         {
             if (SortColumn == "LastRun")
