@@ -163,7 +163,6 @@ translations:
   gui_manage_tooltip_pause: "Pause"
   gui_manage_tooltip_stop: "Stop"
   gui_manage_run_success: "Job {0} completed successfully"
-  gui_manage_error_job_not_found_named: "Job {0} does not exist"
   gui_manage_delete_success: "Job {0} deleted successfully"
   gui_create_add_success: "Backup job created successfully"
   gui_create_subtitle: "Create your backup job"
@@ -316,4 +315,5 @@ translations:
   error_invalid_numeric_value: "Invalid numeric value"
   error_multiple_readers_registered: "Multiple readers registered"
   error_unable_access_log: "Unable to access log"
-  error_job_not_found_named: "Named job not found"
+  error_job_not_found_named: "Job {0} does not exist"
+

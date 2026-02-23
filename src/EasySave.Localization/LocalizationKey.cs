@@ -201,7 +201,6 @@ public enum LocalizationKey
     gui_create_error_io,
     gui_create_error_unexpected,
     gui_create_success,
-    gui_manage_error_job_not_found_named,
 
     // Config - Log Mode
     gui_config_log_mode,
