@@ -38,6 +38,9 @@ public partial class EditJobViewModel : ViewModelBase
 
     public ObservableCollection<BackupTypeOption> BackupTypeOptions { get; } = [];
 
+    [ObservableProperty]
+    private BackupTypeOption? selectedBackupTypeOption;
+
     public EditJobViewModel(Models.BackupJob job, ILocalizationService localizationService)
     {
         _localizationService = localizationService;
@@ -68,7 +71,14 @@ public partial class EditJobViewModel : ViewModelBase
             _localizationService.TranslateText(LocalizationKey.backupjob_type_complete)));
         BackupTypeOptions.Add(new BackupTypeOption(BackupType.Differential,
             _localizationService.TranslateText(LocalizationKey.backupjob_type_differential)));
-        SelectedBackupType = current;
+
+        SelectedBackupTypeOption = BackupTypeOptions.FirstOrDefault(o => o.Value == current);
+    }
+
+    partial void OnSelectedBackupTypeOptionChanged(BackupTypeOption? value)
+    {
+        if (value is not null)
+            SelectedBackupType = value.Value;
     }
 
     // Live-clearing of errors when user types valid values
