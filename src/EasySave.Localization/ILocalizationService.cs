@@ -1,3 +1,4 @@
+
 namespace EasySave.Localization;
 
 /// <summary>
@@ -30,6 +31,5 @@ public interface ILocalizationService
     /// <param name="key">The translation key</param>
     /// <returns>The message translated</returns>
     string TranslateText(LocalizationKey key);
-
-
+    string GetTranslateTextException(Exception ex);
 }
