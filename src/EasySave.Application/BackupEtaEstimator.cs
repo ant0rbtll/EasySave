@@ -184,8 +184,11 @@ public sealed class BackupEtaEstimator : IBackupEtaEstimator
         var estimated = etaSeconds <= 0d
             ? TimeSpan.Zero
             : TimeSpan.FromSeconds(Math.Min(etaSeconds, MaxEta.TotalSeconds));
+        double? throughputForSnapshot = averageThroughputBytesPerSecond >= MinUsableThroughputBytesPerSecond
+            ? averageThroughputBytesPerSecond
+            : null;
 
-        return new BackupEtaSnapshot(estimated, averageThroughputBytesPerSecond);
+        return new BackupEtaSnapshot(estimated, throughputForSnapshot);
     }
 
     private static double EstimateEtaSeconds(
