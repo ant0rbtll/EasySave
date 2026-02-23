@@ -1,3 +1,4 @@
+using EasySave.Exceptions;
 using Moq;
 
 namespace EasySave.System.Tests;
@@ -22,7 +23,7 @@ public class DefaultTransferServiceTests
     public void Constructor_NullFileSystem_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new DefaultTransferService(null!));
+        Assert.Throws<InvalidArgumentException>(() => new DefaultTransferService(null!));
     }
 
     [Fact]

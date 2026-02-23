@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EasySave.Exceptions;
 using EasySave.LogServer.Tests.TestHelpers;
 
 namespace EasySave.LogServer.Tests;
@@ -10,7 +11,7 @@ public class EnrichedJsonLogFormatterTests
     [Fact]
     public void Format_ThrowsOnNull()
     {
-        Assert.Throws<ArgumentNullException>(() => _formatter.Format(null!));
+        Assert.Throws<InvalidArgumentException>(() => _formatter.Format(null!));
     }
 
     [Fact]

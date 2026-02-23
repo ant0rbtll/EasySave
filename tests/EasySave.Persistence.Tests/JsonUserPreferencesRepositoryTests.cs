@@ -1,4 +1,5 @@
 using EasySave.Configuration;
+using EasySave.Exceptions;
 using EasySave.Persistence;
 using Moq;
 
@@ -40,7 +41,7 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
     public void Constructor_WithNullPathProvider_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new JsonUserPreferencesRepository(null!));
+        Assert.Throws<InvalidArgumentException>(() => new JsonUserPreferencesRepository(null!));
     }
 
     [Fact]
@@ -190,7 +191,7 @@ public class JsonUserPreferencesRepositoryTests : IDisposable
         var repo = CreateRepository();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => repo.Save(null!));
+        Assert.Throws<InvalidArgumentException>(() => repo.Save(null!));
     }
 
     [Fact]

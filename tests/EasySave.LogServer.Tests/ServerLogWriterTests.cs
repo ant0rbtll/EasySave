@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EasySave.Exceptions;
 using EasySave.LogServer.Tests.TestHelpers;
 
 namespace EasySave.LogServer.Tests;
@@ -23,7 +24,7 @@ public class ServerLogWriterTests : IDisposable
     [Fact]
     public void Constructor_ThrowsOnNullPathProvider()
     {
-        Assert.Throws<ArgumentNullException>(() => new ServerLogWriter(null!, LogFormat.Json));
+        Assert.Throws<InvalidArgumentException>(() => new ServerLogWriter(null!, LogFormat.Json));
     }
 
     [Fact]
@@ -31,7 +32,7 @@ public class ServerLogWriterTests : IDisposable
     {
         using var writer = new ServerLogWriter(_pathProvider, LogFormat.Json);
 
-        Assert.Throws<ArgumentNullException>(() => writer.Write(null!));
+        Assert.Throws<InvalidArgumentException>(() => writer.Write(null!));
     }
 
     [Fact]

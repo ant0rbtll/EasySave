@@ -1,3 +1,4 @@
+using EasySave.Exceptions;
 using EasySave.Persistence;
 using Moq;
 
@@ -17,10 +18,9 @@ public class BusinessSoftwareBackupExecutionGuardTests
             preferencesRepositoryMock.Object,
             _ => true);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => guard.EnsureCanCopyNextFile());
-        Assert.Equal("error_business_software_running", exception.Message);
-        Assert.Equal("error_business_software_running", exception.Data["errorKey"]);
-        Assert.Equal("calc", exception.Data["0"]);
+        var exception = Assert.Throws<EasysaveDefaultException>(() => guard.EnsureCanCopyNextFile());
+        Assert.Equal(Localization.LocalizationKey.error_business_software_running, exception.ErrorKey);
+        Assert.Equal("calc", exception.Options[0]);
     }
 
     [Fact]
@@ -51,8 +51,8 @@ public class BusinessSoftwareBackupExecutionGuardTests
             preferencesRepositoryMock.Object,
             name => string.Equals(name, "excel", StringComparison.OrdinalIgnoreCase));
 
-        var exception = Assert.Throws<InvalidOperationException>(() => guard.EnsureCanCopyNextFile());
-        Assert.Equal("error_business_software_running", exception.Message);
-        Assert.Equal("excel", exception.Data["0"]);
+        var exception = Assert.Throws<EasysaveDefaultException>(() => guard.EnsureCanCopyNextFile());
+        Assert.Equal(Localization.LocalizationKey.error_business_software_running, exception.ErrorKey);
+        Assert.Equal("excel", exception.Options[0]);
     }
 }
