@@ -119,4 +119,24 @@ public class BackupEtaEstimatorTests
         Assert.NotNull(afterSlow.SmoothedThroughputBytesPerSecond);
         Assert.True(afterSlow.SmoothedThroughputBytesPerSecond < beforeSlow.SmoothedThroughputBytesPerSecond);
     }
+
+    [Fact]
+    public void UpdateEstimate_WhenOnlyZeroByteFilesRemain_ShouldEstimateFromPerFileOverhead()
+    {
+        var estimator = new BackupEtaEstimator();
+        var t0 = new DateTime(2026, 2, 23, 10, 0, 0, DateTimeKind.Utc);
+
+        // 7% of 100 files => 7 files warmup, each completed in ~3s, no bytes transferred.
+        estimator.UpdateEstimate(1, BackupStatus.Active, 100, 100, 0, 0, t0);
+        estimator.UpdateEstimate(1, BackupStatus.Active, 100, 99, 0, 0, t0.AddSeconds(3));
+        estimator.UpdateEstimate(1, BackupStatus.Active, 100, 98, 0, 0, t0.AddSeconds(6));
+        estimator.UpdateEstimate(1, BackupStatus.Active, 100, 97, 0, 0, t0.AddSeconds(9));
+        estimator.UpdateEstimate(1, BackupStatus.Active, 100, 96, 0, 0, t0.AddSeconds(12));
+        estimator.UpdateEstimate(1, BackupStatus.Active, 100, 95, 0, 0, t0.AddSeconds(15));
+        var snapshot = estimator.UpdateEstimate(1, BackupStatus.Active, 100, 93, 0, 0, t0.AddSeconds(21));
+
+        Assert.NotNull(snapshot.EstimatedRemainingTime);
+        Assert.True(snapshot.EstimatedRemainingTime!.Value.TotalSeconds > 0);
+        Assert.Null(snapshot.SmoothedThroughputBytesPerSecond);
+    }
 }

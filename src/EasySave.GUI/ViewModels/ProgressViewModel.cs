@@ -568,18 +568,20 @@ public partial class ProgressViewModel : ViewModelBase
 
     private string FormatEtaDisplay(BackupJobLiveProgressState state)
     {
-        if (state.RemainingSizeBytes <= 0)
+        if (state.EstimatedRemainingTime.HasValue)
+        {
+            var eta = state.EstimatedRemainingTime.Value;
+            if (eta < TimeSpan.Zero)
+                eta = TimeSpan.Zero;
+
+            var totalHours = Math.Max(0, (int)Math.Floor(eta.TotalHours));
+            return $"{totalHours:00}:{eta.Minutes:00}:{eta.Seconds:00}";
+        }
+
+        if (state.RemainingSizeBytes <= 0 && state.RemainingFiles <= 0)
             return "00:00:00";
 
-        if (!state.EstimatedRemainingTime.HasValue)
-            return EtaUnknownText;
-
-        var eta = state.EstimatedRemainingTime.Value;
-        if (eta < TimeSpan.Zero)
-            eta = TimeSpan.Zero;
-
-        var totalHours = Math.Max(0, (int)Math.Floor(eta.TotalHours));
-        return $"{totalHours:00}:{eta.Minutes:00}:{eta.Seconds:00}";
+        return EtaUnknownText;
     }
 
     public bool IsStopSelectedMode => _isStopSelectedMode;

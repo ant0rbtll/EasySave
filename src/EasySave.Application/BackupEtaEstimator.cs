@@ -64,7 +64,7 @@ public sealed class BackupEtaEstimator : IBackupEtaEstimator
 
             if (status == BackupStatus.Active
                 && completedFiles > tracked.LastCompletedFiles
-                && clampedRemainingBytes < tracked.LastRemainingBytes)
+                && clampedRemainingBytes <= tracked.LastRemainingBytes)
             {
                 // Use elapsed time since last completed-file event to include
                 // file read/write work and inter-file overhead.
@@ -147,8 +147,12 @@ public sealed class BackupEtaEstimator : IBackupEtaEstimator
         var averageThroughputBytesPerSecond = tracked.CumulativeActiveSeconds > 0
             ? tracked.CumulativeProcessedBytes / tracked.CumulativeActiveSeconds
             : 0d;
+        var remainingFiles = Math.Max(0, totalFiles - completedFiles);
+        var averageSecondsPerFile = tracked.CumulativeProcessedFiles > 0
+            ? tracked.CumulativeActiveSeconds / tracked.CumulativeProcessedFiles
+            : 0d;
 
-        if (remainingBytes <= 0 || totalSizeBytes <= 0)
+        if (remainingFiles <= 0)
         {
             return new BackupEtaSnapshot(TimeSpan.Zero, averageThroughputBytesPerSecond > 0d
                 ? averageThroughputBytesPerSecond
@@ -166,16 +170,16 @@ public sealed class BackupEtaEstimator : IBackupEtaEstimator
 
         if (completedFiles < warmupTarget
             || tracked.CumulativeActiveSeconds < WarmupSeconds
-            || averageThroughputBytesPerSecond < MinUsableThroughputBytesPerSecond)
+            || !HasUsableRate(averageThroughputBytesPerSecond, averageSecondsPerFile))
         {
             return new BackupEtaSnapshot(null, null);
         }
 
-        var remainingFiles = Math.Max(0, totalFiles - completedFiles);
         var etaSeconds = EstimateEtaSeconds(
             remainingBytes,
             remainingFiles,
             averageThroughputBytesPerSecond,
+            averageSecondsPerFile,
             tracked);
         var estimated = etaSeconds <= 0d
             ? TimeSpan.Zero
@@ -188,6 +192,7 @@ public sealed class BackupEtaEstimator : IBackupEtaEstimator
         long remainingBytes,
         int remainingFiles,
         double averageThroughputBytesPerSecond,
+        double averageSecondsPerFile,
         TrackedEtaState tracked)
     {
         var det = (tracked.SumBytesSquared * tracked.SumFilesSquared)
@@ -210,7 +215,23 @@ public sealed class BackupEtaEstimator : IBackupEtaEstimator
             }
         }
 
-        return remainingBytes / averageThroughputBytesPerSecond;
+        if (averageThroughputBytesPerSecond >= MinUsableThroughputBytesPerSecond)
+        {
+            return remainingBytes / averageThroughputBytesPerSecond;
+        }
+
+        if (averageSecondsPerFile >= MinUsableSecondsPerFile)
+        {
+            return remainingFiles * averageSecondsPerFile;
+        }
+
+        return 0d;
+    }
+
+    private static bool HasUsableRate(double averageThroughputBytesPerSecond, double averageSecondsPerFile)
+    {
+        return averageThroughputBytesPerSecond >= MinUsableThroughputBytesPerSecond
+            || averageSecondsPerFile >= MinUsableSecondsPerFile;
     }
 
     private static int ComputeWarmupTarget(int totalFiles)
