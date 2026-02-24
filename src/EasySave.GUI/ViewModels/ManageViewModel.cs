@@ -152,7 +152,6 @@ public partial class ManageViewModel : ViewModelBase
 
     private bool _updatingSelection;
     private bool _updatingFilters;
-    private readonly HashSet<int> _runningJobIds = [];
 
     public ObservableCollection<FilterItem<Core.BackupJobStatus>> StatusFilters { get; } = [];
     public ObservableCollection<FilterItem<Core.BackupType>> TypeFilters { get; } = [];
@@ -214,6 +213,8 @@ public partial class ManageViewModel : ViewModelBase
 
     private void InitializeFilters()
     {
+        foreach (var f in StatusFilters) f.OnChanged = null;
+        foreach (var f in TypeFilters) f.OnChanged = null;
         StatusFilters.Clear();
         TypeFilters.Clear();
 
@@ -221,18 +222,21 @@ public partial class ManageViewModel : ViewModelBase
         {
             Value = null,
             Label = FilterAllStatusLabel,
-            IsSelected = true
+            IsSelected = true,
+            OnChanged = OnStatusFilterChanged
         });
 
         foreach (var status in Enum.GetValues<Core.BackupJobStatus>())
         {
+            if (status == Core.BackupJobStatus.Done)
+                continue;
+
             string label = status switch
             {
                 Core.BackupJobStatus.Active => FilterStatusActive,
                 Core.BackupJobStatus.Paused => FilterStatusPaused,
                 Core.BackupJobStatus.Blocked => FilterStatusBlocked,
                 Core.BackupJobStatus.Inactive => FilterStatusInactive,
-                Core.BackupJobStatus.Done => FilterStatusDone,
                 Core.BackupJobStatus.Error => FilterStatusError,
                 Core.BackupJobStatus.Waiting => FilterStatusWaiting,
                 _ => FilterStatusDefault
@@ -241,7 +245,8 @@ public partial class ManageViewModel : ViewModelBase
             {
                 Value = status,
                 Label = label,
-                IsSelected = false
+                IsSelected = false,
+                OnChanged = OnStatusFilterChanged
             });
         }
 
@@ -249,7 +254,8 @@ public partial class ManageViewModel : ViewModelBase
         {
             Value = null,
             Label = _localizationService.TranslateText(LocalizationKey.gui_manage_filter_all_types),
-            IsSelected = true
+            IsSelected = true,
+            OnChanged = OnTypeFilterChanged
         });
 
         foreach (var type in Enum.GetValues<Core.BackupType>())
@@ -264,11 +270,11 @@ public partial class ManageViewModel : ViewModelBase
             {
                 Value = type,
                 Label = _localizationService.TranslateText(key),
-                IsSelected = false
+                IsSelected = false,
+                OnChanged = OnTypeFilterChanged
             });
         }
 
-        // Notify UI that the collections have changed
         OnPropertyChanged(nameof(StatusFilters));
         OnPropertyChanged(nameof(TypeFilters));
     }
@@ -356,9 +362,19 @@ public partial class ManageViewModel : ViewModelBase
         var query = SearchText.Trim();
 
         IEnumerable<Models.BackupJob> filtered = _allJobs;
+
         if (!string.IsNullOrEmpty(query))
             filtered = filtered.Where(j => _displayService.MatchesSearch(j, query));
 
+        if (StatusFilters.Count != 0)
+        {
+            var selectedStatus = StatusFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
+            if (!StatusFilters[0].IsSelected && selectedStatus.Count > 0)
+            {
+                filtered = filtered.Where(j => selectedStatus.Contains(j.Status));
+            }
+        }
+
         if (TypeFilters.Count != 0)
         {
             var selectedTypes = TypeFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
@@ -367,85 +383,10 @@ public partial class ManageViewModel : ViewModelBase
                 filtered = filtered.Where(j => selectedTypes.Contains(j.Type));
             }
         }
-        if(StatusFilters.Count != 0)
-        {
-            var selectedStatus = StatusFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
-            if (!StatusFilters[0].IsSelected && selectedStatus.Count > 0)
-            {
-                filtered = filtered.Where(j => selectedStatus.Contains(j.Status));
-            }
 
-        }
-        
-        if (TypeFilters.Count != 0)
-        {
-            var selectedTypes = TypeFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
-            if (!TypeFilters[0].IsSelected && selectedTypes.Count > 0)
-            {
-                filtered = filtered.Where(j => selectedTypes.Contains(j.Type));
-            }
-        }
-        if(StatusFilters.Count != 0)
-        {
-            var selectedStatus = StatusFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
-            if (!StatusFilters[0].IsSelected && selectedStatus.Count > 0)
-            {
-                filtered = filtered.Where(j => selectedStatus.Contains(j.Status));
-            }
-
-        }
-        
-        if (TypeFilters.Count != 0)
-        {
-            var selectedTypes = TypeFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
-            if (!TypeFilters[0].IsSelected && selectedTypes.Count > 0)
-            {
-                filtered = filtered.Where(j => selectedTypes.Contains(j.Type));
-            }
-        }
-        if(StatusFilters.Count != 0)
-        {
-            var selectedStatus = StatusFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
-            if (!StatusFilters[0].IsSelected && selectedStatus.Count > 0)
-            {
-                filtered = filtered.Where(j => selectedStatus.Contains(j.Status));
-            }
-
-        }
-        
-
-        if (!string.IsNullOrEmpty(SortColumn))
-        {
-            if (SortColumn == "LastRun")
-            {
-                filtered = SortAscending
-                    ? filtered
-                        .OrderBy(j => j.LastExecutionDate.HasValue ? 0 : 1)
-                        .ThenBy(j => j.LastExecutionDate)
-                    : filtered
-                        .OrderBy(j => j.LastExecutionDate.HasValue ? 0 : 1)
-                        .ThenByDescending(j => j.LastExecutionDate);
-            }
-            else
-            {
-                Func<Models.BackupJob, object> keySelector = SortColumn switch
-                {
-                    "Id" => j => j.Id,
-                    "Status" => j => j.Status,
-                    "Name" => j => j.Name,
-                    "Source" => j => j.Source,
-                    "Destination" => j => j.Destination,
-                    "Type" => j => j.Type,
-                    _ => j => j.Id
-                };
-
-                filtered = SortAscending
-                    ? filtered.OrderBy(keySelector)
-                    : filtered.OrderByDescending(keySelector);
-            }
-        }
-
-        var filteredJobs = filtered.ToList();
+        var filteredJobs = !string.IsNullOrEmpty(SortColumn)
+            ? _displayService.Sort(filtered, SortColumn, SortAscending)
+            : filtered.ToList();
         FilteredJobsCount = filteredJobs.Count;
 
         if (CurrentPage > TotalPages)
@@ -480,160 +421,6 @@ public partial class ManageViewModel : ViewModelBase
             PaginationItems.Add(item);
     }
 
-    private static List<PaginationItem> BuildVisibleItems(int currentPage, int totalPages)
-    {
-        if (totalPages <= 0)
-            return [];
-
-        if (totalPages <= 7)
-        {
-            var items = new List<PaginationItem>(totalPages);
-            for (var page = 1; page <= totalPages; page++)
-                items.Add(PaginationItem.Page(page, page == currentPage));
-            return items;
-        }
-
-        if (currentPage <= 4)
-        {
-            return
-            [
-                PaginationItem.Page(1, currentPage == 1),
-                PaginationItem.Page(2, currentPage == 2),
-                PaginationItem.Page(3, currentPage == 3),
-                PaginationItem.Page(4, currentPage == 4),
-                PaginationItem.Page(5, currentPage == 5),
-                PaginationItem.Ellipsis(),
-                PaginationItem.Page(totalPages, currentPage == totalPages)
-            ];
-        }
-
-        if (currentPage >= totalPages - 3)
-        {
-            return
-            [
-                PaginationItem.Page(1, currentPage == 1),
-                PaginationItem.Ellipsis(),
-                PaginationItem.Page(totalPages - 4, currentPage == totalPages - 4),
-                PaginationItem.Page(totalPages - 3, currentPage == totalPages - 3),
-                PaginationItem.Page(totalPages - 2, currentPage == totalPages - 2),
-                PaginationItem.Page(totalPages - 1, currentPage == totalPages - 1),
-                PaginationItem.Page(totalPages, currentPage == totalPages)
-            ];
-        }
-
-        return
-        [
-            PaginationItem.Page(1, currentPage == 1),
-            PaginationItem.Ellipsis(),
-            PaginationItem.Page(currentPage - 1, false),
-            PaginationItem.Page(currentPage, true),
-            PaginationItem.Page(currentPage + 1, false),
-            PaginationItem.Ellipsis(),
-            PaginationItem.Page(totalPages, currentPage == totalPages)
-        ];
-    }
-
-    private bool TryGetCurrentControlJobId(out int jobId)
-    {
-        if (_runningJobIds.Count == 1)
-        {
-            jobId = _runningJobIds.First();
-            return true;
-        }
-
-        if (PendingJob is not null && _runningJobIds.Contains(PendingJob.Id))
-        {
-            jobId = PendingJob.Id;
-            return true;
-        }
-
-        jobId = default;
-        return false;
-    }
-
-    private void RefreshPauseStateFromController()
-    {
-        if (_runningJobIds.Count == 0)
-        {
-            IsPaused = false;
-            PauseRunningCommand.NotifyCanExecuteChanged();
-            PlayRunningCommand.NotifyCanExecuteChanged();
-            StopRunningCommand.NotifyCanExecuteChanged();
-            return;
-        }
-
-        if (TryGetCurrentControlJobId(out var jobId)
-            && TryGetRuntimeControlState(jobId, out var controlState))
-        {
-            IsPaused = controlState == BackupJobControlState.Paused;
-            PauseRunningCommand.NotifyCanExecuteChanged();
-            PlayRunningCommand.NotifyCanExecuteChanged();
-            StopRunningCommand.NotifyCanExecuteChanged();
-            return;
-        }
-
-        var allPaused = _runningJobIds.Count > 0
-            && _runningJobIds.All(id =>
-                TryGetRuntimeControlState(id, out var state)
-                && state == BackupJobControlState.Paused);
-        IsPaused = allPaused;
-        PauseRunningCommand.NotifyCanExecuteChanged();
-        PlayRunningCommand.NotifyCanExecuteChanged();
-        StopRunningCommand.NotifyCanExecuteChanged();
-    }
-
-    private bool SyncRunningJobsFromRuntimeStates(IReadOnlyDictionary<int, BackupJobRuntimeState> runtimeStates)
-    {
-        var activeJobIds = runtimeStates
-            .Where(pair => pair.Value.IsActive)
-            .Select(pair => pair.Key)
-            .ToHashSet();
-
-        if (_runningJobIds.SetEquals(activeJobIds))
-            return false;
-
-        _runningJobIds.Clear();
-        foreach (var id in activeJobIds)
-        {
-            _runningJobIds.Add(id);
-        }
-
-        RefreshRunningState();
-        RunJobCommand.NotifyCanExecuteChanged();
-        RunSelectedCommand.NotifyCanExecuteChanged();
-        return true;
-    }
-
-    private bool TryGetRuntimeControlState(int jobId, out BackupJobControlState controlState)
-    {
-        if (_backupExecutionController.TryGetCurrentJobControlState(jobId, out controlState))
-            return true;
-
-        if (_runningJobIds.Contains(jobId))
-        {
-            controlState = BackupJobControlState.Running;
-            return true;
-        }
-
-        controlState = default;
-        return false;
-    }
-
-    private string ResolveRunningJobLabel(int jobId)
-    {
-        var job = _allJobs.FirstOrDefault(j => j.Id == jobId);
-        if (job is not null && !string.IsNullOrWhiteSpace(job.Name))
-            return job.Name;
-
-        return $"#{jobId}";
-    }
-
-    private bool IsJobRunnable(Models.BackupJob job)
-    {
-        return job.Status is not (Core.BackupJobStatus.Active or Core.BackupJobStatus.Waiting or Core.BackupJobStatus.Paused or Core.BackupJobStatus.Blocked)
-            && !_runningJobIds.Contains(job.Id);
-    }
-
     public partial class FilterItem<T> : ObservableObject
     where T : struct
     {
@@ -641,8 +428,15 @@ public partial class ManageViewModel : ViewModelBase
 
         public string Label { get; init; } = string.Empty;
 
+        public Action<FilterItem<T>>? OnChanged { get; set; }
+
         [ObservableProperty]
         private bool isSelected;
+
+        partial void OnIsSelectedChanged(bool value)
+        {
+            OnChanged?.Invoke(this);
+        }
     }
 }
 
