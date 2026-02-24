@@ -15,7 +15,7 @@ public class DailyFileLoggerTests
     {
         using var tempDir = new TempDirectory();
         var timestamp = new DateTime(2026, 2, 5, 10, 11, 12, DateTimeKind.Unspecified);
-        var expectedDate = DateTime.SpecifyKind(timestamp, DateTimeKind.Utc).Date;
+        var expectedDate = DateTime.SpecifyKind(timestamp, DateTimeKind.Local).Date;
         var logPath = GetLogPath(tempDir, expectedDate);
 
         using var logger = CreateLogger(tempDir, logPath, out var pathProviderMock, out var formatterMock);
@@ -40,9 +40,9 @@ public class DailyFileLoggerTests
 
         var logged = entries.Single(e => e.BackupName == "JobA");
 
-        var expectedTimestamp = DateTime.SpecifyKind(timestamp, DateTimeKind.Utc);
+        var expectedTimestamp = DateTime.SpecifyKind(timestamp, DateTimeKind.Local);
         Assert.Equal(expectedTimestamp, logged.Timestamp);
-        Assert.Equal(DateTimeKind.Utc, logged.Timestamp.Kind);
+        Assert.Equal(DateTimeKind.Local, logged.Timestamp.Kind);
         Assert.Equal("C:\\Source", logged.SourcePathUNC);
         Assert.Equal("D:\\Dest", logged.DestinationPathUNC);
 
@@ -209,11 +209,11 @@ public class DailyFileLoggerTests
     }
 
     [Fact]
-    public void Write_ConvertsLocalTimeToUtc()
+    public void Write_PreservesLocalTimestamp()
     {
         using var tempDir = new TempDirectory();
         var local = DateTime.SpecifyKind(new DateTime(2026, 2, 5, 8, 0, 0), DateTimeKind.Local);
-        var logPath = GetLogPath(tempDir, local.ToUniversalTime().Date);
+        var logPath = GetLogPath(tempDir, local.Date);
 
         using var logger = CreateLogger(tempDir, logPath, out var pathProviderMock, out _);
 
@@ -230,9 +230,9 @@ public class DailyFileLoggerTests
 
         var logged = ReadLogEntries(logPath).Single();
 
-        Assert.Equal(local.ToUniversalTime(), logged.Timestamp);
-        Assert.Equal(DateTimeKind.Utc, logged.Timestamp.Kind);
-        pathProviderMock.Verify(p => p.GetDailyLogPath(local.ToUniversalTime().Date, LogFormat.Json), Times.Once);
+        Assert.Equal(local, logged.Timestamp);
+        Assert.Equal(DateTimeKind.Local, logged.Timestamp.Kind);
+        pathProviderMock.Verify(p => p.GetDailyLogPath(local.Date, LogFormat.Json), Times.Once);
     }
 
     [Fact]
@@ -277,11 +277,11 @@ public class DailyFileLoggerTests
     }
 
     [Fact]
-    public void Write_UsesUtcDateForDailyLogPath()
+    public void Write_UsesLocalDateForDailyLogPath()
     {
         using var tempDir = new TempDirectory();
         var local = DateTime.SpecifyKind(new DateTime(2026, 2, 5, 23, 30, 0), DateTimeKind.Local);
-        var expectedDate = local.ToUniversalTime().Date;
+        var expectedDate = local.Date;
         var logPath = GetLogPath(tempDir, expectedDate);
 
         using var logger = CreateLogger(tempDir, logPath, out var pathProviderMock, out _);

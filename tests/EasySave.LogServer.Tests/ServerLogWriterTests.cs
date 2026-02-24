@@ -1,5 +1,6 @@
 using System.Text.Json;
 using EasySave.Exceptions;
+using System.Globalization;
 using EasySave.LogServer.Tests.TestHelpers;
 
 namespace EasySave.LogServer.Tests;
@@ -191,7 +192,7 @@ public class ServerLogWriterTests : IDisposable
     }
 
     [Fact]
-    public void Write_NormalizesTimestampToUtc()
+    public void Write_NormalizesUnspecifiedTimestampToLocal()
     {
         using var writer = new ServerLogWriter(_pathProvider, LogFormat.Json);
         var localTime = new DateTime(2025, 3, 15, 10, 30, 0, DateTimeKind.Unspecified);
@@ -201,7 +202,14 @@ public class ServerLogWriterTests : IDisposable
 
         var path = _pathProvider.GetDailyLogPath(localTime.Date, LogFormat.Json);
         var content = File.ReadAllText(path);
-        Assert.Contains("2025-03-15T10:30:00Z", content);
+        var doc = JsonDocument.Parse(content);
+        var rawTimestamp = doc.RootElement[0].GetProperty("timestamp").GetString();
+
+        Assert.NotNull(rawTimestamp);
+        var parsedTimestamp = DateTime.Parse(rawTimestamp!, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind);
+        var expectedTimestamp = DateTime.SpecifyKind(localTime, DateTimeKind.Local);
+        Assert.Equal(expectedTimestamp, parsedTimestamp);
+        Assert.Equal(DateTimeKind.Local, parsedTimestamp.Kind);
     }
 
     [Fact]
