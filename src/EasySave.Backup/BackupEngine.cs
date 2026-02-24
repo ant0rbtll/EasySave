@@ -33,7 +33,6 @@ public class BackupEngine(
     private readonly IFileSystem _fileSystem = fileSystem;
     private readonly ITransferService _transferService = transferService;
     private readonly IStateWriter _stateWriter = stateWriter;
-    private readonly ILogger _logger = logger;
     private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver ?? new NoOpEncryptionProviderResolver();
     private readonly IBackupExecutionGuard _executionGuard = executionGuard ?? new NoOpBackupExecutionGuard();
@@ -41,6 +40,7 @@ public class BackupEngine(
     private readonly IBackupFilePlanner _filePlanner = filePlanner ?? new DefaultBackupFilePlanner(fileSystem);
     private readonly IBackupExecutionController _executionController = executionController ?? new NoOpBackupExecutionController();
     private readonly ILargeFileTransferBarrier _largeFileTransferBarrier = largeFileTransferBarrier ?? new NoOpLargeFileTransferBarrier();
+    private readonly BackupExecutionReporter _reporter = new(stateWriter, logger);
     private const string BusinessSoftwareErrorKey = BackupRuntimeKeys.ErrorBusinessSoftwareRunning;
     private const int BusinessSoftwareRetryDelayMs = 500;
     private const int PriorityBarrierPollDelayMs = 100;
@@ -80,8 +80,8 @@ public class BackupEngine(
             int remainingFiles = totalFiles;
             long remainingSize = totalSize;
 
-            UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
-            Log(job.Id, job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
+            _reporter.UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, 0, "", "");
+            _reporter.Log(job.Id, job.Name, LogEventType.StartBackup, "", "", totalSize, 0);
 
             _priorityFilesBarrier.RegisterJob(job.Id, plannedFiles.Count(f => f.ShouldCopy && f.IsPriority));
             barrierRegistered = true;
@@ -90,7 +90,7 @@ public class BackupEngine(
             foreach (var planned in plannedFiles)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                LogPendingUserActions(job);
+                _reporter.LogPendingUserActions(job, _executionController);
 
                 WaitForRuntimeControlAndSyncState(
                     job,
@@ -113,7 +113,7 @@ public class BackupEngine(
                     var hasWaited = !waitTask.IsCompleted;
                     if (hasWaited)
                     {
-                        UpdateState(
+                        _reporter.UpdateState(
                             job,
                             BackupStatus.Waiting,
                             totalFiles,
@@ -138,7 +138,7 @@ public class BackupEngine(
 
                     if (hasWaited)
                     {
-                        UpdateState(
+                        _reporter.UpdateState(
                             job,
                             BackupStatus.Active,
                             totalFiles,
@@ -165,7 +165,7 @@ public class BackupEngine(
                 if (!_fileSystem.DirectoryExists(destinationDir))
                 {
                     _fileSystem.CreateDirectory(destinationDir);
-                    Log(
+                    _reporter.Log(
                         job.Id,
                         job.Name,
                         LogEventType.CreateDirectory,
@@ -205,7 +205,7 @@ public class BackupEngine(
 
                 long encryptionTimeMs = EncryptTransferredFileIfRequired(planned.DestinationFile, encryptionPolicy);
 
-                Log(job.Id,
+                _reporter.Log(job.Id,
                     job.Name,
                     LogEventType.TransferFile,
                     planned.SourceFile,
@@ -227,21 +227,21 @@ public class BackupEngine(
                     ? (int)(100.0 * (totalFiles - remainingFiles) / totalFiles)
                     : 0;
 
-                UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, planned.SourceFile, planned.DestinationFile);
-                    LogPendingUserActions(job);
-                    WaitForRuntimeControlAndSyncState(
-                        job,
-                        totalFiles,
-                        totalSize,
-                        remainingFiles,
-                        remainingSize,
-                        planned.SourceFile,
-                        planned.DestinationFile);
+                _reporter.UpdateState(job, BackupStatus.Active, totalFiles, totalSize, remainingFiles, remainingSize, progress, planned.SourceFile, planned.DestinationFile);
+                _reporter.LogPendingUserActions(job, _executionController);
+                WaitForRuntimeControlAndSyncState(
+                    job,
+                    totalFiles,
+                    totalSize,
+                    remainingFiles,
+                    remainingSize,
+                    planned.SourceFile,
+                    planned.DestinationFile);
             }
             backupLoopTimer.Stop();
             totalDurationMs = backupLoopTimer.ElapsedMilliseconds;
 
-            LogPendingUserActions(job);
+            _reporter.LogPendingUserActions(job, _executionController);
             WaitForRuntimeControlAndSyncState(
                 job,
                 totalFiles,
@@ -250,8 +250,8 @@ public class BackupEngine(
                 remainingSize,
                 string.Empty,
                 string.Empty);
-            UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
-            Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, totalDurationMs);
+            _reporter.UpdateState(job, BackupStatus.Done, totalFiles, totalSize, 0, 0, 100, "", "");
+            _reporter.Log(job.Id, job.Name, LogEventType.EndBackup, "", "", totalSize, totalDurationMs);
             _stateWriter.MarkInactive(job.Id);
         }
         catch (Exception ex)
@@ -274,7 +274,7 @@ public class BackupEngine(
             }
             else
             {
-                UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, sourceContext, destinationContext);
+                _reporter.UpdateState(job, BackupStatus.Error, 0, 0, 0, 0, 0, sourceContext, destinationContext);
             }
 
             var eventType = stoppedByUser
@@ -282,7 +282,7 @@ public class BackupEngine(
                 : blockedByBusinessSoftware
                 ? LogEventType.BusinessSoftwareDetected
                 : LogEventType.Error;
-            Log(
+            _reporter.Log(
                 job.Id,
                 job.Name,
                 eventType,
@@ -318,7 +318,7 @@ public class BackupEngine(
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            LogPendingUserActions(job);
+            _reporter.LogPendingUserActions(job, _executionController);
             var resumedFromPause = WaitForRuntimeControlAndSyncState(
                 job,
                 totalFiles,
@@ -336,7 +336,7 @@ public class BackupEngine(
 
             if (resumedFromPause)
             {
-                UpdateState(
+                _reporter.UpdateState(
                     job,
                     BackupStatus.Waiting,
                     totalFiles,
@@ -368,7 +368,7 @@ public class BackupEngine(
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            LogPendingUserActions(job);
+            _reporter.LogPendingUserActions(job, _executionController);
             var resumedFromPause = WaitForRuntimeControlAndSyncState(
                 job,
                 totalFiles,
@@ -387,7 +387,7 @@ public class BackupEngine(
             {
                 if (waitingStateDisplayed)
                 {
-                    UpdateState(
+                    _reporter.UpdateState(
                         job,
                         BackupStatus.Active,
                         totalFiles,
@@ -405,7 +405,7 @@ public class BackupEngine(
             if (!waitingStateDisplayed || resumedFromPause)
             {
                 waitingStateDisplayed = true;
-                UpdateState(
+                _reporter.UpdateState(
                     job,
                     BackupStatus.Waiting,
                     totalFiles,
@@ -418,101 +418,6 @@ public class BackupEngine(
             }
 
             Task.Delay(LargeFileBarrierPollDelayMs, cancellationToken).GetAwaiter().GetResult();
-        }
-    }
-
-    /// <summary>
-    /// Updates the state of the current backup.
-    /// </summary>
-    /// <param name="job">Backup job.</param>
-    /// <param name="status">Current backup status.</param>
-    /// <param name="totalFiles">Total number of files.</param>
-    /// <param name="totalSize">Total size in bytes.</param>
-    /// <param name="remainingFiles">Number of remaining files.</param>
-    /// <param name="remainingSize">Remaining size in bytes.</param>
-    /// <param name="progress">Progress percentage.</param>
-    /// <param name="src">Current source file path.</param>
-    /// <param name="dst">Current destination file path.</param>
-    private void UpdateState(
-        BackupJob job,
-        BackupStatus status,
-        int totalFiles,
-        long totalSize,
-        int remainingFiles,
-        long remainingSize,
-        int progress,
-        string src,
-        string dst)
-    {
-        _stateWriter.Update(new StateEntry
-        {
-            BackupId = job.Id,
-            BackupName = job.Name,
-            Timestamp = DateTime.Now,
-            Status = status,
-            TotalFiles = totalFiles,
-            TotalSizeBytes = totalSize,
-            RemainingFiles = remainingFiles,
-            RemainingSizeBytes = remainingSize,
-            ProgressPercent = progress,
-            CurrentSourcePath = src,
-            CurrentDestinationPath = dst
-        });
-    }
-
-    /// <summary>
-    /// Logs a backup operation entry.
-    /// </summary>
-    /// <param name="backupName">Backup name.</param>
-    /// <param name="eventType">Event type.</param>
-    /// <param name="sourcePath">Source file path.</param>
-    /// <param name="destinationPath">Destination file path.</param>
-    /// <param name="fileSizeBytes">File size in bytes.</param>
-    /// <param name="transferTimeMs">Transfer time in milliseconds.</param>
-    /// <param name="encryptionTimeMs">Encryption time in milliseconds.</param>
-    private void Log(
-        int backupId,
-        string backupName,
-        LogEventType eventType,
-        string sourcePath,
-        string destinationPath,
-        long fileSizeBytes,
-        long transferTimeMs,
-        long encryptionTimeMs = 0)
-    {
-        try
-        {
-            _logger.Write(new LogEntry(
-                DateTime.Now,
-                backupId,
-                backupName,
-                eventType,
-                sourcePath,
-                destinationPath,
-                fileSizeBytes,
-                transferTimeMs,
-                encryptionTimeMs
-            )
-            );
-        }
-        catch (Exception)
-        {
-            // Logging failures must not interrupt backup execution.
-        }
-    }
-
-    private void LogPendingUserActions(BackupJob job)
-    {
-        while (_executionController.TryDequeueAction(out var actionKey))
-        {
-            Log(
-                job.Id,
-                job.Name,
-                LogEventType.Action,
-                actionKey,
-                string.Empty,
-                0,
-                0);
         }
     }
 
@@ -530,7 +435,7 @@ public class BackupEngine(
         while (true)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            LogPendingUserActions(job);
+            _reporter.LogPendingUserActions(job, _executionController);
             WaitForRuntimeControlAndSyncState(
                 job,
                 totalFiles,
@@ -550,7 +455,7 @@ public class BackupEngine(
                 var blockedProcess = ex.Data["0"]?.ToString() ?? string.Empty;
 
                 // Keep the backup active and expose the temporary block in live state.
-                UpdateState(
+                _reporter.UpdateState(
                     job,
                     BackupStatus.Blocked,
                     totalFiles,
@@ -564,7 +469,7 @@ public class BackupEngine(
                 if (!blockedLogged)
                 {
                     blockedLogged = true;
-                    Log(
+                    _reporter.Log(
                         job.Id,
                         job.Name,
                         LogEventType.BusinessSoftwareDetected,
@@ -643,7 +548,7 @@ public class BackupEngine(
         if (isPaused)
         {
             _priorityFilesBarrier.PauseJob(job.Id);
-            UpdateState(
+            _reporter.UpdateState(
                 job,
                 BackupStatus.Paused,
                 totalFiles,
@@ -660,7 +565,7 @@ public class BackupEngine(
         if (isPaused)
         {
             _priorityFilesBarrier.ResumeJob(job.Id);
-            UpdateState(
+            _reporter.UpdateState(
                 job,
                 BackupStatus.Active,
                 totalFiles,
