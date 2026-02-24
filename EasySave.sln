@@ -59,7 +59,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.AppCommon.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.LogServer.Tests", "tests\EasySave.LogServer.Tests\EasySave.LogServer.Tests.csproj", "{443794F6-B41E-4507-9340-750AC3A855E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Exceptions", "EasySave.Exception\EasySave.Exceptions.csproj", "{342D9A2D-C7C7-4385-86C1-0FBC278FF44E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EasySave.Exceptions", "src\EasySave.Exception\EasySave.Exceptions.csproj", "{342D9A2D-C7C7-4385-86C1-0FBC278FF44E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

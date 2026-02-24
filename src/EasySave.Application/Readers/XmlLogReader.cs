@@ -23,7 +23,7 @@ public sealed class XmlLogReader : LogReaderBase
         {
             document = XDocument.Parse(log, LoadOptions.None);
         }
-        catch (XmlException ex)
+        catch (XmlException)
         {
             throw new InvalidLogFileException(filePath, "XML");
         }

@@ -77,7 +77,7 @@ public sealed class HttpLogSender : ILogger, IDisposable
                 .GetAwaiter()
                 .GetResult();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             throw new EasysaveDefaultException(Localization.LocalizationKey.error_log_sent_failed, []);
         }

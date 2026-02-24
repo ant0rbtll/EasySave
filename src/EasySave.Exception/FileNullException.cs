@@ -18,7 +18,7 @@
         {
             if (string.IsNullOrWhiteSpace(path) || string.IsNullOrEmpty(path))
             {
-                throw new FileNullException(path, pathType);
+                throw new FileNullException(path ?? string.Empty, pathType);
             }
         }
     }

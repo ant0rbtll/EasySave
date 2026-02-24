@@ -172,7 +172,7 @@ public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
         {
             decoded = Convert.FromBase64String(base64Value);
         }
-        catch (FormatException ex)
+        catch (FormatException)
         {
             throw new EncodingFailedException($"{valueName} must be a valid Base64 string.");
         }

@@ -5,7 +5,8 @@ namespace EasySave.Backup;
 /// </summary>
 public sealed class EncryptionProviderResolver : IEncryptionProviderResolver
 {
-    private readonly IReadOnlyDictionary<string, IEncryptionProvider> _providers;
+    private readonly IReadOnlyDictionary<string, IEncryptionProvider> _providers =
+        new Dictionary<string, IEncryptionProvider>(StringComparer.OrdinalIgnoreCase);
 
     /// <inheritdoc />
     public IEncryptionProvider? Resolve(string providerName)

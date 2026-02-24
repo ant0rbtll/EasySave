@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\EasySave.Localization\EasySave.Localization.csproj" />
+    <ProjectReference Include="..\EasySave.Localization\EasySave.Localization.csproj" />
   </ItemGroup>
 
 </Project>

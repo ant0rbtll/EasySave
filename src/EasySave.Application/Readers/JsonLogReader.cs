@@ -27,7 +27,7 @@ public sealed class JsonLogReader : LogReaderBase
         {
             return JsonSerializer.Deserialize<List<LogEntry>>(log, s_jsonOptions) ?? [];
         }
-        catch (JsonException ex)
+        catch (JsonException)
         {
             throw new InvalidLogFileException(filePath, "JSON");
         }
