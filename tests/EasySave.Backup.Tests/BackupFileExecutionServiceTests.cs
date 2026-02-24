@@ -1,4 +1,6 @@
 using EasySave.Core;
+using EasySave.Exceptions;
+using EasySave.Localization;
 using EasySave.System;
 using Moq;
 
@@ -40,7 +42,7 @@ public class BackupFileExecutionServiceTests
     }
 
     [Fact]
-    public void TransferAndEncrypt_WhenTransferFails_ThrowsWithContextData()
+    public void TransferAndEncrypt_WhenTransferFails_ThrowsTranslatedException()
     {
         var plan = new BackupFilePlan("/src/a.txt", "/dst/a.txt", 10, false, true);
         _transferServiceMock
@@ -48,13 +50,13 @@ public class BackupFileExecutionServiceTests
             .Returns(new TransferResult(0, 0, 42));
         var service = CreateService();
 
-        var ex = Assert.Throws<InvalidOperationException>(() => service.TransferAndEncrypt(plan, EncryptionPolicy.Disabled));
+        var ex = Assert.Throws<EasysaveDefaultException>(() => service.TransferAndEncrypt(plan, EncryptionPolicy.Disabled));
 
-        Assert.Contains("File transfer failed", ex.Message);
-        Assert.Equal("error_file_transfer_failed", ex.Data["errorKey"]);
-        Assert.Equal(plan.SourceFile, ex.Data["0_from"]);
-        Assert.Equal(plan.DestinationFile, ex.Data["1_destination"]);
-        Assert.Equal(42, ex.Data["2_errorCode"]);
+        Assert.Equal(LocalizationKey.error_file_transfer_failed, ex.ErrorKey);
+        Assert.Equal(3, ex.Options.Count);
+        Assert.Equal(plan.SourceFile, ex.Options[0]);
+        Assert.Equal(plan.DestinationFile, ex.Options[1]);
+        Assert.Equal("42", ex.Options[2]);
     }
 
     [Fact]

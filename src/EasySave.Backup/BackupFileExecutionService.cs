@@ -1,4 +1,6 @@
 using EasySave.Core;
+using EasySave.Exceptions;
+using EasySave.Localization;
 using EasySave.System;
 
 namespace EasySave.Backup;
@@ -38,19 +40,15 @@ public sealed class BackupFileExecutionService(
     /// <param name="plan">File execution plan.</param>
     /// <param name="policy">Runtime encryption policy.</param>
     /// <returns>Transfer and encryption execution result.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when file transfer fails.</exception>
+    /// <exception cref="EasysaveDefaultException">Thrown when file transfer fails.</exception>
     public BackupFileTransferExecutionResult TransferAndEncrypt(BackupFilePlan plan, EncryptionPolicy policy)
     {
         var transferResult = _transferService.TransferFile(plan.SourceFile, plan.DestinationFile, overwrite: true);
         if (!transferResult.IsSuccess)
         {
-            var message = $"File transfer failed from {plan.SourceFile} to {plan.DestinationFile} with error code {transferResult.ErrorCode}";
-            var exception = new InvalidOperationException(message);
-            exception.Data["errorKey"] = "error_file_transfer_failed";
-            exception.Data["0_from"] = plan.SourceFile;
-            exception.Data["1_destination"] = plan.DestinationFile;
-            exception.Data["2_errorCode"] = transferResult.ErrorCode;
-            throw exception;
+            throw new EasysaveDefaultException(
+                LocalizationKey.error_file_transfer_failed,
+                [plan.SourceFile, plan.DestinationFile, transferResult.ErrorCode.ToString()]);
         }
 
         var encryptionTimeMs = EncryptTransferredFileIfRequired(plan.DestinationFile, policy);
