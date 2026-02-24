@@ -15,37 +15,11 @@
         ExtendClientAreaChromeHints="PreferSystemChrome"
         ExtendClientAreaTitleBarHeightHint="40">
 
-    <Window.Styles>
-        <Style Selector="Button.window-control">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Width" Value="46"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="CornerRadius" Value="0"/>
-        </Style>
-        <Style Selector="Button.window-control:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#33FFFFFF"/>
-        </Style>
-        <Style Selector="Button.window-control:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#55FFFFFF"/>
-        </Style>
-        <Style Selector="Button.window-close:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#E81123"/>
-        </Style>
-        <Style Selector="Button.window-close:pressed /template/ ContentPresenter">
-            <Setter Property="Background" Value="#F1707A"/>
-        </Style>
-    </Window.Styles>
-
     <Grid x:Name="MainLayoutGrid" RowDefinitions="40,Auto,*">
         <!-- Barre de titre custom -->
         <Grid x:Name="TitleBarGrid" Grid.Row="0"
               ColumnDefinitions="Auto,Auto,*,Auto"
-              Background="#1E1E2E">
+              Background="{DynamicResource EsTitleBar}">
 
             <!-- Icone + Titre de l'app -->
             <StackPanel x:Name="TitleBarBrand" Grid.Column="0" Grid.ColumnSpan="2"
@@ -58,7 +32,7 @@
                        Source="/Assets/easysave-icon.png"
                        Width="20" Height="20"/>
                 <TextBlock Text="EasySave"
-                           Foreground="White" FontWeight="SemiBold" FontSize="14"
+                           Foreground="{DynamicResource EsTextPrimary}" FontWeight="SemiBold" FontSize="14"
                            VerticalAlignment="Center"/>
             </StackPanel>
 
@@ -76,7 +50,7 @@
                         ToolTip.Tip="{Binding TooltipMinimize}">
                     <PathIcon Data="M20 14H4v-2h16"
                               Width="10" Height="10"
-                              Foreground="White"/>
+                              Foreground="{DynamicResource EsTextPrimary}"/>
                 </Button>
                 <Button Classes="window-control"
                         x:Name="MaximizeButton"
@@ -84,40 +58,51 @@
                     <PathIcon x:Name="MaximizeIcon"
                               Data="M4 4h16v16H4V4m2 2v12h12V6H6z"
                               Width="10" Height="10"
-                              Foreground="White"/>
+                              Foreground="{DynamicResource EsTextPrimary}"/>
                 </Button>
                 <Button Classes="window-control window-close"
                         x:Name="CloseButton"
                         ToolTip.Tip="{Binding TooltipClose}">
                     <PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
                               Width="10" Height="10"
-                              Foreground="White"/>
+                              Foreground="{DynamicResource EsTextPrimary}"/>
                 </Button>
             </StackPanel>
         </Grid>
 
         <!-- Log server warning banner -->
         <Border Grid.Row="1"
-                Background="#33FFA726"
+                Background="{DynamicResource EsWarningBg}"
                 Padding="12,8"
                 IsVisible="{Binding IsLogServerWarningVisible}">
             <StackPanel Orientation="Horizontal" Spacing="8">
                 <PathIcon Data="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"
                           Width="16" Height="16"
-                          Foreground="#FFA726"
+                          Foreground="{DynamicResource EsWarningFg}"
                           VerticalAlignment="Center"/>
                 <TextBlock Text="{Binding LogServerWarningMessage}"
-                           Foreground="#FFA726"
+                           Foreground="{DynamicResource EsWarningFg}"
                            FontWeight="SemiBold"
                            FontSize="13"
                            VerticalAlignment="Center"/>
             </StackPanel>
         </Border>
 
-        <Grid Grid.Row="2" ColumnDefinitions="250,*" MinHeight="0">
-            <views:SidebarView Grid.Column="0"
-                               MinHeight="0"
-                               DataContext="{Binding Sidebar}"/>
+        <Grid Grid.Row="2" ColumnDefinitions="Auto,*" MinHeight="0">
+            <Border Grid.Column="0"
+                    Width="{Binding SidebarWidth}"
+                    Background="{DynamicResource EsSidebarBackground}"
+                    BorderBrush="{DynamicResource EsBorderSubtle}"
+                    BorderThickness="0,0,1,0"
+                    MinHeight="0">
+                <Border.Transitions>
+                    <Transitions>
+                        <DoubleTransition Property="Width" Duration="0:0:0.25" Easing="CubicEaseInOut"/>
+                    </Transitions>
+                </Border.Transitions>
+                <views:SidebarView MinHeight="0"
+                                   DataContext="{Binding Sidebar}"/>
+            </Border>
             <ScrollViewer Grid.Column="1"
                           MinHeight="0"
                           IsVisible="{Binding UseGlobalScroll}"
@@ -136,10 +121,10 @@
                             Content="{Binding FixedPage}"/>
         </Grid>
 
-        <Border Grid.RowSpan="2"
-                Background="#AA000000"
+        <Border Grid.RowSpan="3"
+                Background="{DynamicResource EsSurfaceOverlay}"
                 IsVisible="{Binding IsCloseDialogOpen}">
-            <Border Background="#2D2D3D"
+            <Border Background="{DynamicResource EsDialogBg}"
                     CornerRadius="10"
                     Padding="32,24"
                     MaxWidth="480"
@@ -153,7 +138,7 @@
                                HorizontalAlignment="Center"/>
                     <TextBlock Text="{Binding CloseDialogMessage}"
                                FontSize="14"
-                               Foreground="#BBBBBB"
+                               Foreground="{DynamicResource EsDialogText}"
                                HorizontalAlignment="Center"
                                TextAlignment="Center"
                                TextWrapping="Wrap"
@@ -164,14 +149,14 @@
                         <Button Content="{Binding CloseDialogCancelText}"
                                 Command="{Binding CancelCloseDialogCommand}"
                                 Padding="20,8"
-                                Background="#44FFFFFF"
-                                Foreground="White"
+                                Background="{DynamicResource EsDialogSecondaryBtn}"
+                                Foreground="{DynamicResource EsTextPrimary}"
                                 CornerRadius="6"/>
                         <Button Content="{Binding CloseDialogConfirmText}"
                                 Command="{Binding ConfirmCloseDialogCommand}"
                                 Padding="20,8"
-                                Background="#EF5350"
-                                Foreground="White"
+                                Background="{DynamicResource EsErrorFg}"
+                                Foreground="{DynamicResource EsTextOnAccent}"
                                 FontWeight="SemiBold"
                                 CornerRadius="6"/>
                     </StackPanel>

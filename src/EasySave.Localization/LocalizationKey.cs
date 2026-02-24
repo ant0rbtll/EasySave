@@ -120,6 +120,7 @@ public enum LocalizationKey
     gui_sidebar_progress,
     gui_sidebar_log,
     gui_sidebar_config,
+    gui_sidebar_toggle,
     gui_config_title,
     gui_config_language,
     gui_config_log_format,
@@ -326,4 +327,10 @@ public enum LocalizationKey
     gui_config_priority_extensions_watermark,
     gui_config_priority_extensions_add,
     gui_config_priority_extensions_empty,
+
+    // Config - Theme
+    gui_config_theme,
+    gui_config_theme_system,
+    gui_config_theme_light,
+    gui_config_theme_dark,
 }

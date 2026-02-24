@@ -21,6 +21,7 @@ namespace EasySave.GUI
             // GUI-specific services
             services.AddSingleton<IBackupJobDisplayService, BackupJobDisplayService>();
             services.AddSingleton<IBackupRunningStateTracker, BackupRunningStateTracker>();
+            services.AddSingleton<ThemeService>();
 
             // GUI-specific ViewModels
             services.AddSingleton<MainWindowViewModel>();

@@ -5,57 +5,12 @@
              x:Class="EasySave.GUI.Views.ProgressView"
              x:DataType="vm:ProgressViewModel">
 
-    <UserControl.Styles>
-        <Style Selector="Border.progress-card">
-            <Setter Property="Background" Value="#0FFFFFFF"/>
-            <Setter Property="BorderBrush" Value="#1EFFFFFF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="14"/>
-        </Style>
-        <Style Selector="TextBlock.meta-label">
-            <Setter Property="Foreground" Value="#8FA3B8"/>
-            <Setter Property="FontSize" Value="11"/>
-        </Style>
-        <Style Selector="TextBlock.meta-value">
-            <Setter Property="Foreground" Value="#D3E4F6"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-        </Style>
-        <Style Selector="ProgressBar.active-progress">
-            <Setter Property="Height" Value="8"/>
-            <Setter Property="Minimum" Value="0"/>
-            <Setter Property="Maximum" Value="100"/>
-        </Style>
-        <Style Selector="Button.runtime-control-btn">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="6"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="CornerRadius" Value="4"/>
-        </Style>
-        <Style Selector="Button.runtime-control-btn:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#22FFFFFF"/>
-        </Style>
-        <Style Selector="Button.runtime-control-btn:disabled">
-            <Setter Property="Opacity" Value="0.35"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-        <Style Selector="Button.batch-btn">
-            <Setter Property="Cursor" Value="Hand"/>
-        </Style>
-        <Style Selector="Button.batch-btn:disabled">
-            <Setter Property="Opacity" Value="0.3"/>
-            <Setter Property="Cursor" Value="Arrow"/>
-        </Style>
-    </UserControl.Styles>
-
     <Grid RowDefinitions="Auto,Auto,*" Margin="24">
         <!-- Header row with title + bulk action buttons -->
         <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="0,0,0,0">
             <StackPanel Grid.Column="0" Spacing="4">
                 <TextBlock Text="{Binding TitleText}" FontSize="22" FontWeight="Bold"/>
-                <TextBlock Text="{Binding SubtitleText}" FontSize="13" Foreground="#8FA3B8"/>
+                <TextBlock Text="{Binding SubtitleText}" FontSize="13" Foreground="{DynamicResource EsTextTertiary}"/>
             </StackPanel>
 
             <Button Grid.Column="1"
@@ -66,13 +21,13 @@
                     VerticalAlignment="Center"
                     Margin="0,0,8,0"
                     Padding="10,6"
-                    Background="#1A66BB6A"
+                    Background="{DynamicResource EsBatchPlayBg}"
                     BorderThickness="0"
                     CornerRadius="6">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
+                    <PathIcon Data="M8 5v14l11-7z" Foreground="{DynamicResource EsBatchPlayFg}" Width="14" Height="14"/>
                     <TextBlock Text="{Binding PlaySelectedText}"
-                               Foreground="#66BB6A"
+                               Foreground="{DynamicResource EsBatchPlayFg}"
                                FontSize="13"
                                VerticalAlignment="Center"/>
                 </StackPanel>
@@ -86,13 +41,13 @@
                     VerticalAlignment="Center"
                     Margin="0,0,8,0"
                     Padding="10,6"
-                    Background="#1AFFB74D"
+                    Background="{DynamicResource EsBatchPauseBg}"
                     BorderThickness="0"
                     CornerRadius="6">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M6 5h4v14H6zM14 5h4v14h-4z" Foreground="#FFB74D" Width="14" Height="14"/>
+                    <PathIcon Data="M6 5h4v14H6zM14 5h4v14h-4z" Foreground="{DynamicResource EsBatchPauseFg}" Width="14" Height="14"/>
                     <TextBlock Text="{Binding PauseSelectedText}"
-                               Foreground="#FFB74D"
+                               Foreground="{DynamicResource EsBatchPauseFg}"
                                FontSize="13"
                                VerticalAlignment="Center"/>
                 </StackPanel>
@@ -106,13 +61,13 @@
                     VerticalAlignment="Center"
                     Margin="0,0,8,0"
                     Padding="10,6"
-                    Background="#1AEF5350"
+                    Background="{DynamicResource EsBatchStopBg}"
                     BorderThickness="0"
                     CornerRadius="6">
                 <StackPanel Orientation="Horizontal" Spacing="6">
-                    <PathIcon Data="M6 6h12v12H6z" Foreground="#EF5350" Width="14" Height="14"/>
+                    <PathIcon Data="M6 6h12v12H6z" Foreground="{DynamicResource EsBatchStopFg}" Width="14" Height="14"/>
                     <TextBlock Text="{Binding StopSelectedText}"
-                               Foreground="#EF5350"
+                               Foreground="{DynamicResource EsBatchStopFg}"
                                FontSize="13"
                                VerticalAlignment="Center"/>
                 </StackPanel>
@@ -128,7 +83,7 @@
         <!-- Empty state -->
         <Border Grid.Row="2"
                 Margin="0,18,0,0"
-                BorderBrush="#22FFFFFF"
+                BorderBrush="{DynamicResource EsBorderSubtle}"
                 BorderThickness="1"
                 CornerRadius="8"
                 IsVisible="{Binding !HasActiveBackups}">
@@ -137,17 +92,17 @@
                         Spacing="8"
                         Margin="0,80">
                 <PathIcon Data="M3 13h2v8H3v-8zm8-6h2v14h-2V7zm8-4h2v18h-2V3z"
-                          Foreground="#5E7A95"
+                          Foreground="{DynamicResource EsEmptyIcon}"
                           Width="44"
                           Height="44"/>
                 <TextBlock Text="{Binding EmptyTitleText}"
                            FontSize="18"
                            FontWeight="SemiBold"
-                           Foreground="#AAC0D3"
+                           Foreground="{DynamicResource EsEmptyTitle}"
                            HorizontalAlignment="Center"/>
                 <TextBlock Text="{Binding EmptySubtitleText}"
                            FontSize="13"
-                           Foreground="#7E96AE"
+                           Foreground="{DynamicResource EsEmptySubtitle}"
                            HorizontalAlignment="Center"
                            TextAlignment="Center"
                            MaxWidth="500"
@@ -180,7 +135,7 @@
                                            Text="{Binding Name}"
                                            FontSize="15"
                                            FontWeight="SemiBold"
-                                           Foreground="#E7F1FB"
+                                           Foreground="{DynamicResource EsProgressName}"
                                            VerticalAlignment="Center"/>
                                 <StackPanel Grid.Row="0"
                                             Grid.Column="2"
@@ -188,43 +143,36 @@
                                             Spacing="6"
                                             HorizontalAlignment="Right"
                                             VerticalAlignment="Center">
-                                    <Border Background="{Binding RuntimeStatusBackground}"
-                                            CornerRadius="999"
-                                            Padding="8,2"
+                                    <Border Classes="runtime-status-badge"
+                                            Tag="{Binding RuntimeStatusTag}"
                                             VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding RuntimeStatusText}"
-                                                   Foreground="{Binding RuntimeStatusForeground}"
-                                                   FontSize="11"
-                                                   FontWeight="SemiBold"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   TextAlignment="Center"/>
+                                        <TextBlock Text="{Binding RuntimeStatusText}"/>
                                     </Border>
                                     <TextBlock Text="{Binding ProgressDisplay}"
                                                FontSize="13"
                                                FontWeight="Bold"
-                                               Foreground="#74B3FF"
+                                               Foreground="{DynamicResource EsProgressPercent}"
                                                VerticalAlignment="Center"/>
                                     <Button Classes="runtime-control-btn"
                                             ToolTip.Tip="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).TooltipPlay}"
                                             Click="PlayJob_Click"
                                             IsEnabled="{Binding CanPlay}"
                                             CommandParameter="{Binding Id}">
-                                        <PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
+                                        <PathIcon Data="M8 5v14l11-7z" Foreground="{DynamicResource EsBatchPlayFg}" Width="14" Height="14"/>
                                     </Button>
                                     <Button Classes="runtime-control-btn"
                                             ToolTip.Tip="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).TooltipPause}"
                                             Click="PauseJob_Click"
                                             IsEnabled="{Binding CanPause}"
                                             CommandParameter="{Binding Id}">
-                                        <PathIcon Data="M6 5h4v14H6zM14 5h4v14h-4z" Foreground="#FFB74D" Width="14" Height="14"/>
+                                        <PathIcon Data="M6 5h4v14H6zM14 5h4v14h-4z" Foreground="{DynamicResource EsBatchPauseFg}" Width="14" Height="14"/>
                                     </Button>
                                     <Button Classes="runtime-control-btn"
                                             ToolTip.Tip="{Binding $parent[UserControl].((vm:ProgressViewModel)DataContext).TooltipStop}"
                                             Click="StopJob_Click"
                                             IsEnabled="{Binding CanStop}"
                                             CommandParameter="{Binding Id}">
-                                        <PathIcon Data="M6 6h12v12H6z" Foreground="#EF5350" Width="14" Height="14"/>
+                                        <PathIcon Data="M6 6h12v12H6z" Foreground="{DynamicResource EsBatchStopFg}" Width="14" Height="14"/>
                                     </Button>
                                 </StackPanel>
 
@@ -268,9 +216,9 @@
 
         <!-- Stop confirmation dialog -->
         <Border Grid.RowSpan="3"
-                Background="#AA000000"
+                Background="{DynamicResource EsSurfaceOverlay}"
                 IsVisible="{Binding IsStopDialogOpen}">
-            <Border Background="#2D2D3D"
+            <Border Background="{DynamicResource EsDialogBg}"
                     CornerRadius="10"
                     Padding="32,24"
                     MaxWidth="420"
@@ -289,19 +237,19 @@
                                 IsVisible="{Binding !IsStopSelectedMode}">
                         <TextBlock Text="{Binding ConfirmStopMessageText}"
                                    FontSize="14"
-                                   Foreground="#BBBBBB"/>
+                                   Foreground="{DynamicResource EsDialogText}"/>
                         <TextBlock Text="{Binding PendingStopJobName}"
                                    FontSize="14"
                                    FontWeight="SemiBold"
-                                   Foreground="White"/>
+                                   Foreground="{DynamicResource EsTextOnAccent}"/>
                         <TextBlock Text="?"
                                    FontSize="14"
-                                   Foreground="#BBBBBB"/>
+                                   Foreground="{DynamicResource EsDialogText}"/>
                     </StackPanel>
                     <!-- Multi stop message -->
                     <TextBlock Text="{Binding ConfirmStopSelectedMessageText}"
                                FontSize="14"
-                               Foreground="#BBBBBB"
+                               Foreground="{DynamicResource EsDialogText}"
                                HorizontalAlignment="Center"
                                IsVisible="{Binding IsStopSelectedMode}"/>
                     <StackPanel Orientation="Horizontal"
@@ -310,15 +258,15 @@
                         <Button Content="{Binding CancelText}"
                                 Command="{Binding CancelStopJobCommand}"
                                 Padding="20,8"
-                                Background="#44FFFFFF"
-                                Foreground="White"
+                                Background="{DynamicResource EsDialogSecondaryBtn}"
+                                Foreground="{DynamicResource EsTextOnAccent}"
                                 CornerRadius="6"/>
                         <!-- Single stop confirm -->
                         <Button Content="{Binding StopText}"
                                 Command="{Binding ConfirmStopJobCommand}"
                                 Padding="20,8"
-                                Background="#EF5350"
-                                Foreground="White"
+                                Background="{DynamicResource EsBatchStopFg}"
+                                Foreground="{DynamicResource EsTextOnAccent}"
                                 FontWeight="SemiBold"
                                 CornerRadius="6"
                                 IsVisible="{Binding !IsStopSelectedMode}"/>
@@ -326,8 +274,8 @@
                         <Button Content="{Binding StopText}"
                                 Command="{Binding ConfirmStopSelectedCommand}"
                                 Padding="20,8"
-                                Background="#EF5350"
-                                Foreground="White"
+                                Background="{DynamicResource EsBatchStopFg}"
+                                Foreground="{DynamicResource EsTextOnAccent}"
                                 FontWeight="SemiBold"
                                 CornerRadius="6"
                                 IsVisible="{Binding IsStopSelectedMode}"/>

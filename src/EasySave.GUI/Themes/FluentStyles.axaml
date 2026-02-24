@@ -1,0 +1,757 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--             WINDOW CONTROL BUTTONS                 -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Button.window-control">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Width" Value="46"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="CornerRadius" Value="0"/>
+    </Style>
+    <Style Selector="Button.window-control:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsWindowControlHover}"/>
+    </Style>
+    <Style Selector="Button.window-control:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsWindowControlPressed}"/>
+    </Style>
+    <Style Selector="Button.window-close:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsWindowCloseHover}"/>
+    </Style>
+    <Style Selector="Button.window-close:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsWindowClosePressed}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--               SIDEBAR ITEMS                        -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Button.sidebar-item">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsTextPrimary}"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.sidebar-item:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsSidebarHover}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsTextPrimary}"/>
+    </Style>
+    <Style Selector="Button.sidebar-item:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsSidebarPressed}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsTextPrimary}"/>
+    </Style>
+    <Style Selector="Button.sidebar-item PathIcon">
+        <Setter Property="Foreground" Value="{DynamicResource EsTextPrimary}"/>
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
+    </Style>
+    <!-- Active sidebar item: teal background + left accent bar -->
+    <Style Selector="Button.sidebar-item.active">
+        <Setter Property="Background" Value="{DynamicResource EsSidebarActive}"/>
+    </Style>
+    <Style Selector="Button.sidebar-item.active /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsSidebarActive}"/>
+    </Style>
+    <Style Selector="Button.sidebar-item.active PathIcon">
+        <Setter Property="Foreground" Value="{DynamicResource EsAccentForeground}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--              PRIMARY / SECONDARY BUTTONS            -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Button.btn-primary">
+        <Setter Property="Background" Value="{DynamicResource EsAccent}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsTextOnAccent}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="24,10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.btn-primary:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsAccentHover}"/>
+    </Style>
+    <Style Selector="Button.btn-primary:pressed /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsAccentPressed}"/>
+    </Style>
+    <Style Selector="Button.btn-primary:disabled /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsAccentSubtle}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsTextDisabled}"/>
+    </Style>
+
+    <Style Selector="Button.btn-secondary">
+        <Setter Property="Background" Value="{DynamicResource EsHoverBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsAccentForeground}"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="24,10"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.btn-secondary:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsPressedBg}"/>
+    </Style>
+
+    <Style Selector="Button.btn-browse">
+        <Setter Property="Background" Value="{DynamicResource EsHoverBg}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsBrowseFg}"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="14,8"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="BorderThickness" Value="0"/>
+    </Style>
+    <Style Selector="Button.btn-browse:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsPressedBg}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--                  FORM ELEMENTS                     -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="TextBlock.field-label">
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsFormLabel}"/>
+    </Style>
+    <Style Selector="TextBlock.field-error">
+        <Setter Property="Foreground" Value="{DynamicResource EsErrorFg}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Margin" Value="2,2,0,0"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--             CONFIG RADIO BUTTON TOGGLE              -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="RadioButton.log-format">
+        <Setter Property="MinWidth" Value="96"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Background" Value="{DynamicResource EsRadioBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsRadioBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Border Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}"
+                        CornerRadius="{TemplateBinding CornerRadius}"
+                        Padding="{TemplateBinding Padding}">
+                    <ContentPresenter Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                      RecognizesAccessKey="True"/>
+                </Border>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="RadioButton.log-format:pointerover">
+        <Setter Property="Background" Value="{DynamicResource EsRadioHoverBg}"/>
+    </Style>
+    <Style Selector="RadioButton.log-format:checked /template/ ContentPresenter">
+        <Setter Property="Foreground" Value="{DynamicResource EsTextOnAccent}"/>
+    </Style>
+    <Style Selector="RadioButton.log-format:checked">
+        <Setter Property="Background" Value="{DynamicResource EsRadioCheckedBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsRadioCheckedBorder}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--                 STATUS BADGES                      -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.status-badge">
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,3"/>
+        <Setter Property="MinWidth" Value="66"/>
+    </Style>
+    <Style Selector="Border.status-badge TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Inactive]">
+        <Setter Property="Background" Value="{DynamicResource EsStatusInactiveBg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Inactive] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsStatusInactiveFg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Active]">
+        <Setter Property="Background" Value="{DynamicResource EsStatusActiveBg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Active] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsStatusActiveFg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Paused]">
+        <Setter Property="Background" Value="{DynamicResource EsStatusPausedBg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Paused] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsStatusPausedFg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Done]">
+        <Setter Property="Background" Value="{DynamicResource EsStatusDoneBg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Done] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsStatusDoneFg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Error]">
+        <Setter Property="Background" Value="{DynamicResource EsStatusErrorBg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Error] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsStatusErrorFg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Blocked]">
+        <Setter Property="Background" Value="{DynamicResource EsStatusBlockedBg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Blocked] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsStatusBlockedFg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Waiting]">
+        <Setter Property="Background" Value="{DynamicResource EsStatusWaitingBg}"/>
+    </Style>
+    <Style Selector="Border.status-badge[Tag=Waiting] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsStatusWaitingFg}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--              ID / TYPE BADGES                      -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.id-badge">
+        <Setter Property="Background" Value="{DynamicResource EsIdBadgeBg}"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,3"/>
+        <Setter Property="MinWidth" Value="36"/>
+    </Style>
+    <Style Selector="Border.id-badge TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsIdBadgeFg}"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style Selector="Border.type-badge">
+        <Setter Property="Background" Value="{DynamicResource EsTypeBadgeBg}"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="8,3"/>
+    </Style>
+    <Style Selector="Border.type-badge TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsTypeBadgeFg}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--              ROW / TABLE STYLES                    -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.job-row">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.job-row:pointerover">
+        <Setter Property="Background" Value="{DynamicResource EsRowHoverBg}"/>
+    </Style>
+
+    <Style Selector="TextBlock.path-text">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsPathText}"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--              COLUMN HEADERS                        -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Button.col-header">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.col-header:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+    <Style Selector="Button.col-header TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsColHeaderFg}"/>
+    </Style>
+    <Style Selector="Button.col-header:pointerover TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsColHeaderHoverFg}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--              ACTION BUTTONS                        -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Button.action-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.15"/>
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Button.action-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsHoverBg}"/>
+    </Style>
+    <Style Selector="Button.action-btn PathIcon">
+        <Setter Property="Width" Value="14"/>
+        <Setter Property="Height" Value="14"/>
+    </Style>
+    <Style Selector="Button.action-btn:disabled">
+        <Setter Property="Opacity" Value="0.3"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+
+    <Style Selector="Button.run-selected-btn">
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.run-selected-btn:disabled">
+        <Setter Property="Opacity" Value="0.3"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--             BATCH BUTTONS                          -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Button.batch-btn">
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.batch-btn:disabled">
+        <Setter Property="Opacity" Value="0.3"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--             PAGINATION                             -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.pagination-row">
+        <Setter Property="Background" Value="{DynamicResource EsPaginationBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsPaginationBorder}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    </Style>
+    <Style Selector="Button.page-nav-btn">
+        <Setter Property="Width" Value="30"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsPaginationBtnBorder}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsPaginationBtnFg}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector="Button.page-nav-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsPaginationBtnHoverBg}"/>
+    </Style>
+    <Style Selector="Button.page-nav-btn:disabled">
+        <Setter Property="Opacity" Value="0.35"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+    <Style Selector="Button.page-item-btn">
+        <Setter Property="MinWidth" Value="28"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsPaginationBtnBorder}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsPaginationBtnFg}"/>
+        <Setter Property="Padding" Value="8,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+    <Style Selector="Button.page-item-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsPaginationBtnHoverBg}"/>
+    </Style>
+    <Style Selector="Button.page-item-btn.current">
+        <Setter Property="Background" Value="{DynamicResource EsPaginationCurrentBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsPaginationCurrentBorder}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsPaginationCurrentFg}"/>
+    </Style>
+    <Style Selector="TextBlock.page-ellipsis">
+        <Setter Property="Foreground" Value="{DynamicResource EsPaginationEllipsis}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="2,0"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+    <Style Selector="TextBlock.page-meta">
+        <Setter Property="Foreground" Value="{DynamicResource EsPaginationMeta}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="TextBox.page-input">
+        <Setter Property="Width" Value="56"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Button.page-go-btn">
+        <Setter Property="Width" Value="34"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Background" Value="{DynamicResource EsPaginationGoBg}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsPaginationBtnBorder}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsPaginationBtnFg}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+    <Style Selector="Button.page-go-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsPressedBg}"/>
+    </Style>
+    <Style Selector="ComboBox.page-size">
+        <Setter Property="Width" Value="72"/>
+        <Setter Property="Height" Value="30"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--             META LABELS / VALUES                   -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="TextBlock.meta-label">
+        <Setter Property="Foreground" Value="{DynamicResource EsMetaLabel}"/>
+        <Setter Property="FontSize" Value="11"/>
+    </Style>
+    <Style Selector="TextBlock.meta-value">
+        <Setter Property="Foreground" Value="{DynamicResource EsMetaValue}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--            PROGRESS VIEW                           -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.progress-card">
+        <Setter Property="Background" Value="{DynamicResource EsProgressCardBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsProgressCardBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="14"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #15000000"/>
+    </Style>
+    <Style Selector="ProgressBar.active-progress">
+        <Setter Property="Height" Value="8"/>
+        <Setter Property="Minimum" Value="0"/>
+        <Setter Property="Maximum" Value="100"/>
+    </Style>
+    <Style Selector="ProgressBar.active-progress /template/ Border#PART_Indicator">
+        <Setter Property="Background" Value="{DynamicResource EsAccent}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--         RUNTIME STATUS BADGES (Tag-based)          -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.runtime-status-badge">
+        <Setter Property="CornerRadius" Value="999"/>
+        <Setter Property="Padding" Value="8,2"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=running]">
+        <Setter Property="Background" Value="{DynamicResource EsRuntimeRunningBg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=running] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRuntimeRunningFg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=paused]">
+        <Setter Property="Background" Value="{DynamicResource EsRuntimePausedBg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=paused] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRuntimePausedFg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=blocked]">
+        <Setter Property="Background" Value="{DynamicResource EsRuntimeBlockedBg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=blocked] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRuntimeBlockedFg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=waiting]">
+        <Setter Property="Background" Value="{DynamicResource EsRuntimeWaitingBg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=waiting] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRuntimeWaitingFg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=stoprequested]">
+        <Setter Property="Background" Value="{DynamicResource EsRuntimeStopRequestedBg}"/>
+    </Style>
+    <Style Selector="Border.runtime-status-badge[Tag=stoprequested] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRuntimeStopRequestedFg}"/>
+    </Style>
+    <Style Selector="Button.runtime-control-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+    <Style Selector="Button.runtime-control-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsHoverBg}"/>
+    </Style>
+    <Style Selector="Button.runtime-control-btn:disabled">
+        <Setter Property="Opacity" Value="0.35"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--           LOG VIEW: CALENDAR                       -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Button.calendar-nav-btn">
+        <Setter Property="Width" Value="30"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="{DynamicResource EsCalNavBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsCalNavBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="7"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.calendar-nav-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsHoverBg}"/>
+    </Style>
+    <Style Selector="ComboBox.year-picker-combo">
+        <Setter Property="Width" Value="120"/>
+        <Setter Property="Height" Value="30"/>
+    </Style>
+    <Style Selector="Button.month-picker-btn">
+        <Setter Property="MinWidth" Value="56"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Padding" Value="8,0"/>
+        <Setter Property="Background" Value="{DynamicResource EsCalMonthBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsCalMonthBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsCalMonthFg}"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+    <Style Selector="Button.month-picker-btn:disabled">
+        <Setter Property="Opacity" Value="0.5"/>
+    </Style>
+    <Style Selector="Button.month-picker-btn.available">
+        <Setter Property="BorderBrush" Value="{DynamicResource EsCalMonthAvailBorder}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsCalMonthAvailFg}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.month-picker-btn.available:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsCalMonthAvailHoverBg}"/>
+    </Style>
+    <Style Selector="Button.month-picker-btn.selected">
+        <Setter Property="Background" Value="{DynamicResource EsCalMonthSelectedBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsCalMonthSelectedBorder}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsTextOnAccent}"/>
+    </Style>
+    <Style Selector="Button.calendar-day-btn">
+        <Setter Property="MinWidth" Value="42"/>
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="{DynamicResource EsCalDayBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsCalDayBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsCalDayFg}"/>
+        <Setter Property="Cursor" Value="Arrow"/>
+    </Style>
+    <Style Selector="Button.calendar-day-btn:disabled">
+        <Setter Property="Opacity" Value="0.45"/>
+    </Style>
+    <Style Selector="Button.calendar-day-btn.current-month">
+        <Setter Property="Foreground" Value="{DynamicResource EsCalDayCurrentMonthFg}"/>
+    </Style>
+    <Style Selector="Button.calendar-day-btn.has-log">
+        <Setter Property="Background" Value="{DynamicResource EsCalHasLogBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsCalHasLogBorder}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsCalHasLogFg}"/>
+    </Style>
+    <Style Selector="Button.calendar-day-btn.has-log:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource EsCalHasLogHoverBg}"/>
+    </Style>
+    <Style Selector="Button.calendar-day-btn.selected">
+        <Setter Property="Background" Value="{DynamicResource EsCalSelectedBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsCalSelectedBorder}"/>
+        <Setter Property="Foreground" Value="{DynamicResource EsTextOnAccent}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--           LOG VIEW: JOB/DRAWER CARDS               -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.job-card">
+        <Setter Property="BorderBrush" Value="{DynamicResource EsLogJobCardBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Margin" Value="0,0,0,10"/>
+        <Setter Property="Background" Value="{DynamicResource EsLogJobCardBg}"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #15000000"/>
+    </Style>
+    <Style Selector="Border.drawer-card">
+        <Setter Property="Background" Value="{DynamicResource EsDrawerBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsDrawerBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="BoxShadow" Value="0 2 8 0 #15000000"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--           LOG VIEW: RUN STATUS BADGES              -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.run-status-badge">
+        <Setter Property="CornerRadius" Value="999"/>
+        <Setter Property="Padding" Value="10,4"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="MinWidth" Value="110"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.run-status-badge TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=completed]">
+        <Setter Property="Background" Value="{DynamicResource EsRunCompletedBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsRunCompletedBorder}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=completed] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRunCompletedFg}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=inprogress]">
+        <Setter Property="Background" Value="{DynamicResource EsRunInProgressBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsRunInProgressBorder}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=inprogress] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRunInProgressFg}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=paused]">
+        <Setter Property="Background" Value="{DynamicResource EsRunPausedBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsRunPausedBorder}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=paused] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRunPausedFg}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=blocked]">
+        <Setter Property="Background" Value="{DynamicResource EsRunBlockedBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsRunBlockedBorder}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=blocked] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRunBlockedFg}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=error]">
+        <Setter Property="Background" Value="{DynamicResource EsRunErrorBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsRunErrorBorder}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=error] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRunErrorFg}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=stopped]">
+        <Setter Property="Background" Value="{DynamicResource EsRunStoppedBg}"/>
+        <Setter Property="BorderBrush" Value="{DynamicResource EsRunStoppedBorder}"/>
+    </Style>
+    <Style Selector="Border.run-status-badge[Tag=stopped] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsRunStoppedFg}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--           LOG VIEW: RUN ROW                        -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Button.run-row-btn">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+    </Style>
+    <Style Selector="Button.run-row-btn:pointerover Border">
+        <Setter Property="Background" Value="{DynamicResource EsDrawerRowHover}"/>
+    </Style>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!--           LOG VIEW: EVENT TYPE BADGES              -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <Style Selector="Border.log-event-badge">
+        <Setter Property="CornerRadius" Value="4"/>
+        <Setter Property="Padding" Value="7,2"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.log-event-badge TextBlock">
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=TransferFile]">
+        <Setter Property="Background" Value="{DynamicResource EsLogTransferBg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=TransferFile] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsLogTransferFg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=CreateDirectory]">
+        <Setter Property="Background" Value="{DynamicResource EsLogDirectoryBg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=CreateDirectory] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsLogDirectoryFg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=Error]">
+        <Setter Property="Background" Value="{DynamicResource EsLogErrorBg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=Error] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsLogErrorFg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=StartBackup]">
+        <Setter Property="Background" Value="{DynamicResource EsLogStartBg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=StartBackup] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsLogStartFg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=EndBackup]">
+        <Setter Property="Background" Value="{DynamicResource EsLogEndBg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=EndBackup] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsLogEndFg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=Action]">
+        <Setter Property="Background" Value="{DynamicResource EsLogActionBg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=Action] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsLogActionFg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=Stopped]">
+        <Setter Property="Background" Value="{DynamicResource EsLogStoppedBg}"/>
+    </Style>
+    <Style Selector="Border.log-event-badge[Tag=Stopped] TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource EsLogStoppedFg}"/>
+    </Style>
+
+</Styles>

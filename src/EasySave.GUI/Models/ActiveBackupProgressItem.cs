@@ -144,31 +144,17 @@ public class ActiveBackupProgressItem : ModelBase
         }
     }
 
-    private string runtimeStatusBackground = "#224A90E2";
-    public string RuntimeStatusBackground
+    private string runtimeStatusTag = "running";
+    public string RuntimeStatusTag
     {
-        get => runtimeStatusBackground;
+        get => runtimeStatusTag;
         set
         {
-            if (string.Equals(runtimeStatusBackground, value, StringComparison.Ordinal))
+            if (string.Equals(runtimeStatusTag, value, StringComparison.Ordinal))
                 return;
 
-            runtimeStatusBackground = value;
-            OnNotifyPropertyChanged(nameof(RuntimeStatusBackground));
-        }
-    }
-
-    private string runtimeStatusForeground = "#CFE8FF";
-    public string RuntimeStatusForeground
-    {
-        get => runtimeStatusForeground;
-        set
-        {
-            if (string.Equals(runtimeStatusForeground, value, StringComparison.Ordinal))
-                return;
-
-            runtimeStatusForeground = value;
-            OnNotifyPropertyChanged(nameof(RuntimeStatusForeground));
+            runtimeStatusTag = value;
+            OnNotifyPropertyChanged(nameof(RuntimeStatusTag));
         }
     }
 

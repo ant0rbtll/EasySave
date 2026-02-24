@@ -5,6 +5,7 @@ using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using EasySave.Application;
 using EasySave.Configuration;
+using EasySave.GUI.Services;
 using EasySave.GUI.ViewModels;
 using EasySave.GUI.Views;
 using EasySave.Localization;
@@ -55,6 +56,10 @@ public partial class App : Avalonia.Application
                 : "fr";
             localizationService.Culture = language;
             pathProvider.SetLogDirectoryOverride(preferences.LogDirectory);
+
+            var themeService = _services.GetRequiredService<ThemeService>();
+            themeService.ApplyTheme(preferences.ThemePreference);
+
             backupApplicationService.ReconcileStartupState();
 
             desktop.MainWindow = new MainWindow

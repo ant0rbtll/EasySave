@@ -6,246 +6,23 @@
              x:Class="EasySave.GUI.Views.ManageView"
              x:DataType="vm:ManageViewModel">
 
-	<UserControl.Styles>
-		<!-- Style for the type badge -->
-		<Style Selector="Border.type-badge">
-			<Setter Property="Background" Value="#33FFFFFF"/>
-			<Setter Property="CornerRadius" Value="4"/>
-			<Setter Property="Padding" Value="8,3"/>
-		</Style>
-
-		<!-- Style for status badges -->
-		<Style Selector="Border.status-badge">
-			<Setter Property="CornerRadius" Value="4"/>
-			<Setter Property="Padding" Value="8,3"/>
-			<Setter Property="MinWidth" Value="66"/>
-		</Style>
-		<Style Selector="Border.status-badge TextBlock">
-			<Setter Property="FontSize" Value="11"/>
-			<Setter Property="HorizontalAlignment" Value="Center"/>
-			<Setter Property="TextAlignment" Value="Center"/>
-			<Setter Property="FontWeight" Value="SemiBold"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Inactive]">
-			<Setter Property="Background" Value="#22FFFFFF"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Inactive] TextBlock">
-			<Setter Property="Foreground" Value="#9AA8B5"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Active]">
-			<Setter Property="Background" Value="#1A42A5F5"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Active] TextBlock">
-			<Setter Property="Foreground" Value="#7AB8FF"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Paused]">
-			<Setter Property="Background" Value="#1F5A4A1A"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Paused] TextBlock">
-			<Setter Property="Foreground" Value="#FFE082"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Done]">
-			<Setter Property="Background" Value="#1A66BB6A"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Done] TextBlock">
-			<Setter Property="Foreground" Value="#66BB6A"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Error]">
-			<Setter Property="Background" Value="#1AEF5350"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Error] TextBlock">
-			<Setter Property="Foreground" Value="#EF5350"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Blocked]">
-			<Setter Property="Background" Value="#2AAF3A3A"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Blocked] TextBlock">
-			<Setter Property="Foreground" Value="#FFC8C8"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Waiting]">
-			<Setter Property="Background" Value="#2A8B5A2B"/>
-		</Style>
-		<Style Selector="Border.status-badge[Tag=Waiting] TextBlock">
-			<Setter Property="Foreground" Value="#FFD59A"/>
-		</Style>
-		<Style Selector="Border.type-badge TextBlock">
-			<Setter Property="FontSize" Value="11"/>
-			<Setter Property="Foreground" Value="#BBBBBB"/>
-		</Style>
-
-		<!-- Style for the ID badge -->
-		<Style Selector="Border.id-badge">
-			<Setter Property="Background" Value="#2200AAFF"/>
-			<Setter Property="CornerRadius" Value="4"/>
-			<Setter Property="Padding" Value="8,3"/>
-			<Setter Property="MinWidth" Value="36"/>
-		</Style>
-		<Style Selector="Border.id-badge TextBlock">
-			<Setter Property="FontSize" Value="12"/>
-			<Setter Property="Foreground" Value="#66BBFF"/>
-			<Setter Property="HorizontalAlignment" Value="Center"/>
-			<Setter Property="FontWeight" Value="SemiBold"/>
-		</Style>
-
-		<!-- Row hover effect -->
-		<Style Selector="Border.job-row">
-			<Setter Property="Background" Value="Transparent"/>
-		</Style>
-		<Style Selector="Border.job-row:pointerover">
-			<Setter Property="Background" Value="#11FFFFFF"/>
-		</Style>
-
-		<!-- Path text style -->
-		<Style Selector="TextBlock.path-text">
-			<Setter Property="FontSize" Value="12"/>
-			<Setter Property="Foreground" Value="#888888"/>
-			<Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-		</Style>
-
-		<!-- Column header button style -->
-		<Style Selector="Button.col-header">
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="0"/>
-			<Setter Property="Padding" Value="0"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="HorizontalContentAlignment" Value="Center"/>
-		</Style>
-		<Style Selector="Button.col-header:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="Transparent"/>
-		</Style>
-		<Style Selector="Button.col-header TextBlock">
-			<Setter Property="FontSize" Value="11"/>
-			<Setter Property="FontWeight" Value="SemiBold"/>
-			<Setter Property="Foreground" Value="#999"/>
-		</Style>
-		<Style Selector="Button.col-header:pointerover TextBlock">
-			<Setter Property="Foreground" Value="#CCC"/>
-		</Style>
-
-		<!-- Action button style -->
-		<Style Selector="Button.action-btn">
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="0"/>
-			<Setter Property="Padding" Value="6"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="CornerRadius" Value="4"/>
-		</Style>
-		<Style Selector="Button.action-btn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#22FFFFFF"/>
-		</Style>
-		<Style Selector="Button.action-btn PathIcon">
-			<Setter Property="Width" Value="14"/>
-			<Setter Property="Height" Value="14"/>
-		</Style>
-		<Style Selector="Button.action-btn:disabled">
-			<Setter Property="Opacity" Value="0.3"/>
-			<Setter Property="Cursor" Value="Arrow"/>
-		</Style>
-		<Style Selector="Button.run-selected-btn">
-			<Setter Property="Cursor" Value="Hand"/>
-		</Style>
-		<Style Selector="Button.run-selected-btn:disabled">
-			<Setter Property="Opacity" Value="0.3"/>
-			<Setter Property="Cursor" Value="Arrow"/>
-		</Style>
-
-		<!-- Pagination style -->
-		<Style Selector="Border.pagination-row">
-			<Setter Property="Background" Value="#0AFFFFFF"/>
-			<Setter Property="BorderBrush" Value="#11FFFFFF"/>
-			<Setter Property="BorderThickness" Value="0,1,0,0"/>
-		</Style>
-		<Style Selector="Button.page-nav-btn">
-			<Setter Property="Width" Value="30"/>
-			<Setter Property="Height" Value="30"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
-			<Setter Property="Foreground" Value="#BBBBBB"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="Padding" Value="0"/>
-		</Style>
-		<Style Selector="Button.page-nav-btn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#18FFFFFF"/>
-		</Style>
-		<Style Selector="Button.page-nav-btn:disabled">
-			<Setter Property="Opacity" Value="0.35"/>
-			<Setter Property="Cursor" Value="Arrow"/>
-		</Style>
-		<Style Selector="Button.page-item-btn">
-			<Setter Property="MinWidth" Value="28"/>
-			<Setter Property="Height" Value="28"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Background" Value="Transparent"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
-			<Setter Property="Foreground" Value="#BBBBBB"/>
-			<Setter Property="Padding" Value="8,0"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="FontSize" Value="12"/>
-		</Style>
-		<Style Selector="Button.page-item-btn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#18FFFFFF"/>
-		</Style>
-		<Style Selector="Button.page-item-btn.current">
-			<Setter Property="Background" Value="#1F42A5F5"/>
-			<Setter Property="BorderBrush" Value="#6042A5F5"/>
-			<Setter Property="Foreground" Value="#D3E9FF"/>
-		</Style>
-		<Style Selector="TextBlock.page-ellipsis">
-			<Setter Property="Foreground" Value="#7D8B99"/>
-			<Setter Property="VerticalAlignment" Value="Center"/>
-			<Setter Property="Margin" Value="2,0"/>
-			<Setter Property="FontSize" Value="13"/>
-		</Style>
-		<Style Selector="TextBlock.page-meta">
-			<Setter Property="Foreground" Value="#8FA3B8"/>
-			<Setter Property="FontSize" Value="12"/>
-			<Setter Property="VerticalAlignment" Value="Center"/>
-		</Style>
-		<Style Selector="TextBox.page-input">
-			<Setter Property="Width" Value="56"/>
-			<Setter Property="Height" Value="30"/>
-			<Setter Property="HorizontalContentAlignment" Value="Center"/>
-		</Style>
-		<Style Selector="Button.page-go-btn">
-			<Setter Property="Width" Value="34"/>
-			<Setter Property="Height" Value="30"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Background" Value="#18FFFFFF"/>
-			<Setter Property="BorderThickness" Value="1"/>
-			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
-			<Setter Property="Foreground" Value="#BBBBBB"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="Padding" Value="0"/>
-		</Style>
-		<Style Selector="Button.page-go-btn:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#22FFFFFF"/>
-		</Style>
-		<Style Selector="ComboBox.page-size">
-			<Setter Property="Width" Value="72"/>
-			<Setter Property="Height" Value="30"/>
-		</Style>
-	</UserControl.Styles>
-
 	<Panel>
 		<Grid RowDefinitions="Auto,Auto,Auto,*" Margin="24">
 
 			<!-- Running banner -->
 			<Border Grid.Row="0"
-					Background="#1A42A5F5"
+					Background="{DynamicResource EsInfoBg}"
 					CornerRadius="6"
 					Padding="12,8"
 					Margin="0,0,0,12"
 					IsVisible="{Binding IsRunning}">
 				<StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
 					<TextBlock Text="{Binding RunningLabel}"
-							   Foreground="#42A5F5"
+							   Foreground="{DynamicResource EsInfoFg}"
 							   FontWeight="SemiBold"
 							   VerticalAlignment="Center"/>
 					<TextBlock Text="{Binding RunningJobName}"
-							   Foreground="#42A5F5"
+							   Foreground="{DynamicResource EsInfoFg}"
 							   FontWeight="Bold"
 							   VerticalAlignment="Center"/>
 				</StackPanel>
@@ -253,7 +30,7 @@
 
 			<!-- Status banner (success) -->
 			<Border Grid.Row="1"
-					Background="#1A66BB6A"
+					Background="{DynamicResource EsSuccessBg}"
 					CornerRadius="6"
 					Padding="12,8"
 					Margin="0,0,0,12"
@@ -261,7 +38,7 @@
 				<Grid ColumnDefinitions="*,Auto">
 					<TextBlock Grid.Column="0"
 							   Text="{Binding StatusMessage}"
-							   Foreground="#66BB6A"
+							   Foreground="{DynamicResource EsSuccessFg}"
 							   FontWeight="SemiBold"
 							   VerticalAlignment="Center"
 							   HorizontalAlignment="Center"/>
@@ -270,7 +47,7 @@
 							Command="{Binding DismissStatusBannerCommand}"
 							Background="Transparent"
 							BorderThickness="0"
-							Foreground="#66BB6A"
+							Foreground="{DynamicResource EsSuccessFg}"
 							FontSize="14"
 							Padding="4"
 							Cursor="Hand"
@@ -280,7 +57,7 @@
 
 			<!-- Status banner (error) -->
 			<Border Grid.Row="1"
-					Background="#1AEF5350"
+					Background="{DynamicResource EsErrorBg}"
 					CornerRadius="6"
 					Padding="12,8"
 					Margin="0,0,0,12"
@@ -288,7 +65,7 @@
 				<Grid ColumnDefinitions="*,Auto">
 					<TextBlock Grid.Column="0"
 							   Text="{Binding StatusMessage}"
-							   Foreground="#EF5350"
+							   Foreground="{DynamicResource EsErrorFg}"
 							   FontWeight="SemiBold"
 							   VerticalAlignment="Center"
 							   HorizontalAlignment="Center"/>
@@ -297,7 +74,7 @@
 							Command="{Binding DismissStatusBannerCommand}"
 							Background="Transparent"
 							BorderThickness="0"
-							Foreground="#EF5350"
+							Foreground="{DynamicResource EsErrorFg}"
 							FontSize="14"
 							Padding="4"
 							Cursor="Hand"
@@ -314,7 +91,7 @@
 							   Margin="0,0,0,4"/>
 					<TextBlock Text="{Binding SubtitleText}"
 							   FontSize="13"
-							   Foreground="#888"/>
+							   Foreground="{DynamicResource EsTextTertiary}"/>
 				</StackPanel>
 
 				<Button Grid.Column="1"
@@ -324,13 +101,13 @@
 						VerticalAlignment="Center"
 						Margin="0,0,12,0"
 						Padding="10,6"
-						Background="#1A66BB6A"
+						Background="{DynamicResource EsSuccessBg}"
 						BorderThickness="0"
 						CornerRadius="6">
 					<StackPanel Orientation="Horizontal" Spacing="6">
-						<PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A" Width="14" Height="14"/>
+						<PathIcon Data="M8 5v14l11-7z" Foreground="{DynamicResource EsBatchPlayFg}" Width="14" Height="14"/>
 						<TextBlock Text="{Binding RunSelectedText}"
-								   Foreground="#66BB6A"
+								   Foreground="{DynamicResource EsBatchPlayFg}"
 								   FontSize="13"
 								   VerticalAlignment="Center"/>
 					</StackPanel>
@@ -343,13 +120,13 @@
 						VerticalAlignment="Center"
 						Margin="0,0,12,0"
 						Padding="10,6"
-						Background="#1AEF5350"
+						Background="{DynamicResource EsErrorBg}"
 						BorderThickness="0"
 						CornerRadius="6">
 					<StackPanel Orientation="Horizontal" Spacing="6">
-						<PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350" Width="14" Height="14"/>
+						<PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="{DynamicResource EsBatchStopFg}" Width="14" Height="14"/>
 						<TextBlock Text="{Binding DeleteSelectedText}"
-								   Foreground="#EF5350"
+								   Foreground="{DynamicResource EsBatchStopFg}"
 								   FontSize="13"
 								   VerticalAlignment="Center"/>
 					</StackPanel>
@@ -378,7 +155,7 @@
 								VerticalAlignment="Center">
 							<PathIcon Data="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"
 									  Width="12" Height="12"
-									  Foreground="#888"/>
+									  Foreground="{DynamicResource EsTextTertiary}"/>
 						</Button>
 					</TextBox.InnerRightContent>
 				</TextBox>
@@ -386,7 +163,7 @@
 
 			<!-- Empty state -->
 			<Border Grid.Row="3"
-					BorderBrush="#22FFFFFF"
+					BorderBrush="{DynamicResource EsBorderSubtle}"
 					BorderThickness="1"
 					CornerRadius="8"
 					IsVisible="{Binding !HasJobs}">
@@ -395,16 +172,16 @@
 							Spacing="12"
 							Margin="0,80">
 					<PathIcon Data="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"
-							  Foreground="#555"
+							  Foreground="{DynamicResource EsEmptyIcon}"
 							  Width="48" Height="48"/>
 					<TextBlock Text="{Binding EmptyTitleText}"
 							   FontSize="18"
 							   FontWeight="SemiBold"
-							   Foreground="#AAAAAA"
+							   Foreground="{DynamicResource EsEmptyTitle}"
 							   HorizontalAlignment="Center"/>
 					<TextBlock Text="{Binding EmptySubtitleText}"
 							   FontSize="13"
-							   Foreground="#777777"
+							   Foreground="{DynamicResource EsEmptySubtitle}"
 							   HorizontalAlignment="Center"
 							   TextAlignment="Center"
 							   MaxWidth="400"
@@ -414,7 +191,7 @@
 
 			<!-- Column headers + list -->
 			<Border Grid.Row="3"
-					BorderBrush="#22FFFFFF"
+					BorderBrush="{DynamicResource EsBorderSubtle}"
 					BorderThickness="1"
 					CornerRadius="8"
 					ClipToBounds="True"
@@ -423,7 +200,7 @@
 
 					<!-- Column headers -->
 					<Border Grid.Row="0"
-							Background="#11FFFFFF"
+							Background="{DynamicResource EsColHeaderBg}"
 							Padding="16,10">
 						<Grid ColumnDefinitions="40,50,90,*,1.5*,1.5*,100,180,130">
 							<CheckBox Grid.Column="0"
@@ -482,7 +259,7 @@
 							<ItemsControl.ItemTemplate>
 								<DataTemplate x:DataType="models:BackupJob">
 									<Border Classes="job-row"
-											BorderBrush="#11FFFFFF"
+											BorderBrush="{DynamicResource EsRowBorder}"
 											BorderThickness="0,0,0,1"
 											Padding="16,10">
 										<Grid ColumnDefinitions="40,50,90,*,1.5*,1.5*,100,180,130"
@@ -502,10 +279,10 @@
 												<TextBlock Text="{Binding Id}"/>
 											</Border>
 
-											<!-- Status -->
-												<Border Grid.Column="2"
-														Classes="status-badge"
-														Tag="{Binding Status}"
+										<!-- Status -->
+											<Border Grid.Column="2"
+													Classes="status-badge"
+													Tag="{Binding StatusTag}"
 														HorizontalAlignment="Center"
 														VerticalAlignment="Center">
 												<TextBlock Text="{Binding StatusDisplay}"/>
@@ -556,7 +333,7 @@
 													   HorizontalAlignment="Center"
 													   VerticalAlignment="Center"
 													   FontSize="12"
-													   Foreground="#8FA3B8"
+													   Foreground="{DynamicResource EsMetaLabel}"
 													   Text="{Binding LastExecutionDisplay}"/>
 
 											<!-- Actions -->
@@ -569,19 +346,19 @@
 														ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipRun}"
 														Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).RunJobCommand}"
 														CommandParameter="{Binding}">
-													<PathIcon Data="M8 5v14l11-7z" Foreground="#66BB6A"/>
+													<PathIcon Data="M8 5v14l11-7z" Foreground="{DynamicResource EsBatchPlayFg}"/>
 												</Button>
 												<Button Classes="action-btn"
 														ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipModify}"
 														Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ModifyJobCommand}"
 														CommandParameter="{Binding}">
-													<PathIcon Data="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" Foreground="#42A5F5"/>
+													<PathIcon Data="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 000-1.41l-2.34-2.34a1 1 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" Foreground="{DynamicResource EsEditFg}"/>
 												</Button>
 												<Button Classes="action-btn"
 														ToolTip.Tip="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).TooltipDelete}"
 														Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).DeleteJobCommand}"
 														CommandParameter="{Binding}">
-													<PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="#EF5350"/>
+													<PathIcon Data="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" Foreground="{DynamicResource EsBatchStopFg}"/>
 												</Button>
 											</StackPanel>
 										</Grid>
@@ -681,9 +458,9 @@
 		</Grid>
 
 		<!-- Confirmation overlay -->
-		<Border Background="#AA000000"
+		<Border Background="{DynamicResource EsSurfaceOverlay}"
 				IsVisible="{Binding IsConfirmDialogOpen}">
-			<Border Background="#2D2D3D"
+			<Border Background="{DynamicResource EsDialogBg}"
 					CornerRadius="10"
 					Padding="32,24"
 					MaxWidth="420"
@@ -698,14 +475,14 @@
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
 						<TextBlock Text="{Binding ConfirmRunMessage}"
 								   FontSize="14"
-								   Foreground="#BBBBBB"/>
+								   Foreground="{DynamicResource EsDialogText}"/>
 						<TextBlock Text="{Binding PendingJob.Name}"
 								   FontSize="14"
 								   FontWeight="SemiBold"
-								   Foreground="White"/>
+								   Foreground="{DynamicResource EsTextPrimary}"/>
 						<TextBlock Text="?"
 								   FontSize="14"
-								   Foreground="#BBBBBB"/>
+								   Foreground="{DynamicResource EsDialogText}"/>
 					</StackPanel>
 					<StackPanel Orientation="Horizontal"
 								Spacing="12"
@@ -713,14 +490,14 @@
 						<Button Content="{Binding BtnCancelText}"
 								Command="{Binding CancelRunCommand}"
 								Padding="20,8"
-								Background="#44FFFFFF"
-								Foreground="White"
+								Background="{DynamicResource EsDialogSecondaryBtn}"
+								Foreground="{DynamicResource EsTextOnAccent}"
 								CornerRadius="6"/>
 						<Button Content="{Binding BtnConfirmText}"
 								Command="{Binding ConfirmRunCommand}"
 								Padding="20,8"
-								Background="#66BB6A"
-								Foreground="White"
+								Background="{DynamicResource EsSuccessFg}"
+								Foreground="{DynamicResource EsTextOnAccent}"
 								FontWeight="SemiBold"
 								CornerRadius="6"/>
 					</StackPanel>
@@ -729,9 +506,9 @@
 		</Border>
 
 		<!-- Run selected confirmation overlay -->
-		<Border Background="#AA000000"
+		<Border Background="{DynamicResource EsSurfaceOverlay}"
 				IsVisible="{Binding IsConfirmRunSelectedDialogOpen}">
-			<Border Background="#2D2D3D"
+			<Border Background="{DynamicResource EsDialogBg}"
 					CornerRadius="10"
 					Padding="32,24"
 					MaxWidth="420"
@@ -745,7 +522,7 @@
 							   HorizontalAlignment="Center"/>
 					<TextBlock Text="{Binding ConfirmRunSelectedMessage}"
 							   FontSize="14"
-							   Foreground="#BBBBBB"
+							   Foreground="{DynamicResource EsDialogText}"
 							   HorizontalAlignment="Center"/>
 					<StackPanel Orientation="Horizontal"
 								Spacing="12"
@@ -753,14 +530,14 @@
 						<Button Content="{Binding BtnCancelText}"
 								Command="{Binding CancelRunSelectedCommand}"
 								Padding="20,8"
-								Background="#44FFFFFF"
-								Foreground="White"
+								Background="{DynamicResource EsDialogSecondaryBtn}"
+								Foreground="{DynamicResource EsTextOnAccent}"
 								CornerRadius="6"/>
 						<Button Content="{Binding BtnConfirmText}"
 								Command="{Binding ConfirmRunSelectedCommand}"
 								Padding="20,8"
-								Background="#66BB6A"
-								Foreground="White"
+								Background="{DynamicResource EsSuccessFg}"
+								Foreground="{DynamicResource EsTextOnAccent}"
 								FontWeight="SemiBold"
 								CornerRadius="6"/>
 					</StackPanel>
@@ -769,9 +546,9 @@
 		</Border>
 
 		<!-- Delete selected confirmation overlay -->
-		<Border Background="#AA000000"
+		<Border Background="{DynamicResource EsSurfaceOverlay}"
 				IsVisible="{Binding IsConfirmDeleteSelectedDialogOpen}">
-			<Border Background="#2D2D3D"
+			<Border Background="{DynamicResource EsDialogBg}"
 					CornerRadius="10"
 					Padding="32,24"
 					MaxWidth="420"
@@ -785,7 +562,7 @@
 							   HorizontalAlignment="Center"/>
 					<TextBlock Text="{Binding ConfirmDeleteSelectedMessage}"
 							   FontSize="14"
-							   Foreground="#BBBBBB"
+							   Foreground="{DynamicResource EsDialogText}"
 							   HorizontalAlignment="Center"/>
 					<StackPanel Orientation="Horizontal"
 								Spacing="12"
@@ -793,14 +570,14 @@
 						<Button Content="{Binding BtnCancelText}"
 								Command="{Binding CancelDeleteSelectedCommand}"
 								Padding="20,8"
-								Background="#44FFFFFF"
-								Foreground="White"
+								Background="{DynamicResource EsDialogSecondaryBtn}"
+								Foreground="{DynamicResource EsTextOnAccent}"
 								CornerRadius="6"/>
 						<Button Content="{Binding BtnDeleteText}"
 								Command="{Binding ConfirmDeleteSelectedCommand}"
 								Padding="20,8"
-								Background="#EF5350"
-								Foreground="White"
+								Background="{DynamicResource EsErrorFg}"
+								Foreground="{DynamicResource EsTextOnAccent}"
 								FontWeight="SemiBold"
 								CornerRadius="6"/>
 					</StackPanel>
@@ -809,9 +586,9 @@
 		</Border>
 
 		<!-- Delete confirmation overlay -->
-		<Border Background="#AA000000"
+		<Border Background="{DynamicResource EsSurfaceOverlay}"
 				IsVisible="{Binding IsDeleteDialogOpen}">
-			<Border Background="#2D2D3D"
+			<Border Background="{DynamicResource EsDialogBg}"
 					CornerRadius="10"
 					Padding="32,24"
 					MaxWidth="420"
@@ -826,14 +603,14 @@
 					<StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="4">
 						<TextBlock Text="{Binding ConfirmDeleteMessage}"
 								   FontSize="14"
-								   Foreground="#BBBBBB"/>
+								   Foreground="{DynamicResource EsDialogText}"/>
 						<TextBlock Text="{Binding PendingDeleteJob.Name}"
 								   FontSize="14"
 								   FontWeight="SemiBold"
-								   Foreground="White"/>
+								   Foreground="{DynamicResource EsTextPrimary}"/>
 						<TextBlock Text="?"
 								   FontSize="14"
-								   Foreground="#BBBBBB"/>
+								   Foreground="{DynamicResource EsDialogText}"/>
 					</StackPanel>
 					<StackPanel Orientation="Horizontal"
 								Spacing="12"
@@ -841,14 +618,14 @@
 						<Button Content="{Binding BtnCancelText}"
 								Command="{Binding CancelDeleteCommand}"
 								Padding="20,8"
-								Background="#44FFFFFF"
-								Foreground="White"
+								Background="{DynamicResource EsDialogSecondaryBtn}"
+								Foreground="{DynamicResource EsTextOnAccent}"
 								CornerRadius="6"/>
 						<Button Content="{Binding BtnDeleteText}"
 								Command="{Binding ConfirmDeleteCommand}"
 								Padding="20,8"
-								Background="#EF5350"
-								Foreground="White"
+								Background="{DynamicResource EsErrorFg}"
+								Foreground="{DynamicResource EsTextOnAccent}"
 								FontWeight="SemiBold"
 								CornerRadius="6"/>
 					</StackPanel>
@@ -857,9 +634,9 @@
 		</Border>
 
 		<!-- Edit job overlay -->
-		<Border Background="#AA000000"
+		<Border Background="{DynamicResource EsSurfaceOverlay}"
 				IsVisible="{Binding IsEditDialogOpen}">
-			<Border Background="#2D2D3D"
+			<Border Background="{DynamicResource EsDialogBg}"
 					CornerRadius="10"
 					Padding="32,24"
 					MaxWidth="500"
@@ -880,16 +657,16 @@
 
 						<!-- Backup Name -->
 						<StackPanel Spacing="6">
-							<TextBlock Text="{Binding NameLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+							<TextBlock Text="{Binding NameLabel}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource EsFormLabel}"/>
 							<TextBox Text="{Binding Name}" LostFocus="EditName_LostFocus"/>
 							<TextBlock Text="{Binding JobNameError}"
-									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+									   Foreground="{DynamicResource EsErrorFg}" FontSize="11" Margin="2,2,0,0"
 									   IsVisible="{Binding JobNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
 						</StackPanel>
 
 						<!-- Source Path -->
 						<StackPanel Spacing="6">
-							<TextBlock Text="{Binding SourceLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+							<TextBlock Text="{Binding SourceLabel}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource EsFormLabel}"/>
 							<Grid ColumnDefinitions="*,Auto">
 								<TextBox Grid.Column="0"
 										 Text="{Binding SourcePath}"
@@ -897,19 +674,19 @@
 								<Button Grid.Column="1"
 										Content="{Binding BrowseButtonLabel}"
 										Click="EditBrowseSource_Click"
-										Background="#22FFFFFF" Foreground="#BBBBBB"
+										Background="{DynamicResource EsHoverBg}" Foreground="{DynamicResource EsTextSecondary}"
 										CornerRadius="6" Padding="14,8"
 										Cursor="Hand" BorderThickness="0"
 										Margin="8,0,0,0"/>
 							</Grid>
 							<TextBlock Text="{Binding SourcePathError}"
-									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+									   Foreground="{DynamicResource EsErrorFg}" FontSize="11" Margin="2,2,0,0"
 									   IsVisible="{Binding SourcePathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
 						</StackPanel>
 
 						<!-- Destination Path -->
 						<StackPanel Spacing="6">
-							<TextBlock Text="{Binding DestinationLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+							<TextBlock Text="{Binding DestinationLabel}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource EsFormLabel}"/>
 							<Grid ColumnDefinitions="*,Auto">
 								<TextBox Grid.Column="0"
 										 Text="{Binding DestinationPath}"
@@ -917,19 +694,19 @@
 								<Button Grid.Column="1"
 										Content="{Binding BrowseButtonLabel}"
 										Click="EditBrowseDestination_Click"
-										Background="#22FFFFFF" Foreground="#BBBBBB"
+										Background="{DynamicResource EsHoverBg}" Foreground="{DynamicResource EsTextSecondary}"
 										CornerRadius="6" Padding="14,8"
 										Cursor="Hand" BorderThickness="0"
 										Margin="8,0,0,0"/>
 							</Grid>
 							<TextBlock Text="{Binding DestinationPathError}"
-									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+									   Foreground="{DynamicResource EsErrorFg}" FontSize="11" Margin="2,2,0,0"
 									   IsVisible="{Binding DestinationPathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
 						</StackPanel>
 
 						<!-- Backup Type -->
 						<StackPanel Spacing="6">
-							<TextBlock Text="{Binding BackupTypeLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
+							<TextBlock Text="{Binding BackupTypeLabel}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource EsFormLabel}"/>
 							<ComboBox ItemsSource="{Binding BackupTypeOptions}"
 									  SelectedValueBinding="{Binding Value}"
 									  SelectedValue="{Binding SelectedBackupType}"
@@ -944,14 +721,14 @@
 							<Button Content="{Binding CancelButtonLabel}"
 									Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).CancelEditCommand}"
 									Padding="20,8"
-									Background="#44FFFFFF"
-									Foreground="White"
+									Background="{DynamicResource EsDialogSecondaryBtn}"
+									Foreground="{DynamicResource EsTextOnAccent}"
 									CornerRadius="6"/>
 							<Button Content="{Binding SaveButtonLabel}"
 									Command="{Binding $parent[UserControl].((vm:ManageViewModel)DataContext).ConfirmEditCommand}"
 									Padding="20,8"
-									Background="#42A5F5"
-									Foreground="White"
+									Background="{DynamicResource EsAccent}"
+									Foreground="{DynamicResource EsTextOnAccent}"
 									FontWeight="SemiBold"
 									CornerRadius="6"/>
 						</StackPanel>

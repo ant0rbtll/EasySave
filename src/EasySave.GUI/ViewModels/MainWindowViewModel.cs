@@ -51,6 +51,22 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private string closeDialogCancelText = string.Empty;
 
+    private bool _isSidebarCollapsed;
+    public bool IsSidebarCollapsed
+    {
+        get => _isSidebarCollapsed;
+        set
+        {
+            if (_isSidebarCollapsed == value) return;
+            _isSidebarCollapsed = value;
+            OnPropertyChanged(nameof(IsSidebarCollapsed));
+            OnPropertyChanged(nameof(SidebarWidth));
+            Sidebar.IsCollapsed = value;
+        }
+    }
+
+    public double SidebarWidth => _isSidebarCollapsed ? 56 : 250;
+
     private readonly ILocalizationService _localizationService;
     private readonly ILogServerStatusNotifier _logServerStatusNotifier;
     private readonly BackupApplicationService _backupApplicationService;
@@ -162,6 +178,14 @@ public partial class MainWindowViewModel : ViewModelBase, IDisposable
             "conf" => _configViewModel,
             _ => CurrentPage
         };
+
+        Sidebar.ActivePage = page;
+    }
+
+    [RelayCommand]
+    private void ToggleSidebar()
+    {
+        IsSidebarCollapsed = !IsSidebarCollapsed;
     }
 
     partial void OnCurrentPageChanged(ViewModelBase value)

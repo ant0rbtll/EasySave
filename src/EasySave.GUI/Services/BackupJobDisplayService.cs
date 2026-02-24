@@ -28,7 +28,8 @@ public class BackupJobDisplayService(
                     LastExecutionDisplay = FormatLastExecution(job.LastExecutionDate),
                     IsActive = job.IsActive,
                     Status = job.Status,
-                    StatusDisplay = FormatStatus(job.Status)
+                    StatusDisplay = FormatStatus(job.Status),
+                    StatusTag = job.Status.ToString()
                 })];
         }
         catch (Exception)

@@ -1,0 +1,541 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.ThemeDictionaries>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!--                DARK MODE                   -->
+        <!-- ══════════════════════════════════════════ -->
+        <ResourceDictionary x:Key='Dark'>
+
+            <!-- Backgrounds -->
+            <SolidColorBrush x:Key="EsBackground">#1A1A2E</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSurfaceBase">#222238</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSurfaceElevated">#2A2A42</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSurfaceOverlay">#AA000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTitleBar">#161626</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSidebarBackground">#1E1E32</SolidColorBrush>
+
+            <!-- Borders -->
+            <SolidColorBrush x:Key="EsBorderSubtle">#1EFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBorderMedium">#33FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBorderStrong">#55FFFFFF</SolidColorBrush>
+
+            <!-- Text -->
+            <SolidColorBrush x:Key="EsTextPrimary">#F0F0F5</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTextSecondary">#B0B0C0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTextTertiary">#8090A8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTextDisabled">#505868</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTextOnAccent">#FFFFFF</SolidColorBrush>
+
+            <!-- Accent (Teal) -->
+            <SolidColorBrush x:Key="EsAccent">#00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentHover">#00CFC0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentPressed">#009A8E</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentSubtle">#1A00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentForeground">#6FE8DC</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentBorderSubtle">#5500B4A6</SolidColorBrush>
+
+            <!-- Semantic: Success -->
+            <SolidColorBrush x:Key="EsSuccessBg">#1A66BB6A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSuccessFg">#66BB6A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSuccessBorder">#4CAF50</SolidColorBrush>
+
+            <!-- Semantic: Error -->
+            <SolidColorBrush x:Key="EsErrorBg">#1AEF5350</SolidColorBrush>
+            <SolidColorBrush x:Key="EsErrorFg">#EF5350</SolidColorBrush>
+            <SolidColorBrush x:Key="EsErrorBorder">#EF5350</SolidColorBrush>
+
+            <!-- Semantic: Warning -->
+            <SolidColorBrush x:Key="EsWarningBg">#33FFA726</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWarningFg">#FFA726</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWarningBorder">#FFB74D</SolidColorBrush>
+
+            <!-- Semantic: Pause -->
+            <SolidColorBrush x:Key="EsPauseBg">#1F5A4A1A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPauseFg">#FFE082</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPauseBorder">#5AFFD54F</SolidColorBrush>
+
+            <!-- Semantic: Info/Active -->
+            <SolidColorBrush x:Key="EsInfoBg">#1A42A5F5</SolidColorBrush>
+            <SolidColorBrush x:Key="EsInfoFg">#7AB8FF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsInfoBorder">#5A64B5F6</SolidColorBrush>
+
+            <!-- Interactive -->
+            <SolidColorBrush x:Key="EsHoverBg">#15FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPressedBg">#22FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSelectedBg">#1A00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSelectedBorder">#6000B4A6</SolidColorBrush>
+
+            <!-- Sidebar -->
+            <SolidColorBrush x:Key="EsSidebarHover">#22FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSidebarPressed">#33FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSidebarActive">#1A00B4A6</SolidColorBrush>
+
+            <!-- Window Controls -->
+            <SolidColorBrush x:Key="EsWindowControlHover">#33FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWindowControlPressed">#55FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWindowCloseHover">#E81123</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWindowClosePressed">#F1707A</SolidColorBrush>
+
+            <!-- Dialog -->
+            <SolidColorBrush x:Key="EsDialogBg">#2A2A42</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDialogSecondaryBtn">#44FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDialogText">#BBBBBB</SolidColorBrush>
+
+            <!-- Column Header -->
+            <SolidColorBrush x:Key="EsColHeaderBg">#11FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsColHeaderFg">#999999</SolidColorBrush>
+            <SolidColorBrush x:Key="EsColHeaderHoverFg">#CCCCCC</SolidColorBrush>
+
+            <!-- Row -->
+            <SolidColorBrush x:Key="EsRowBorder">#11FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRowHoverBg">#11FFFFFF</SolidColorBrush>
+
+            <!-- Badges: Status -->
+            <SolidColorBrush x:Key="EsStatusInactiveBg">#22FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusInactiveFg">#9AA8B5</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusActiveBg">#1A42A5F5</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusActiveFg">#7AB8FF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusPausedBg">#1F5A4A1A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusPausedFg">#FFE082</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusDoneBg">#1A66BB6A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusDoneFg">#66BB6A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusErrorBg">#1AEF5350</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusErrorFg">#EF5350</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusBlockedBg">#2AAF3A3A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusBlockedFg">#FFC8C8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusWaitingBg">#2A8B5A2B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusWaitingFg">#FFD59A</SolidColorBrush>
+
+            <!-- Badges: ID -->
+            <SolidColorBrush x:Key="EsIdBadgeBg">#2200B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsIdBadgeFg">#6FE8DC</SolidColorBrush>
+
+            <!-- Badges: Type -->
+            <SolidColorBrush x:Key="EsTypeBadgeBg">#33FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTypeBadgeFg">#BBBBBB</SolidColorBrush>
+
+            <!-- Path Text -->
+            <SolidColorBrush x:Key="EsPathText">#888888</SolidColorBrush>
+
+            <!-- Pagination -->
+            <SolidColorBrush x:Key="EsPaginationBg">#0AFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationBorder">#11FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationBtnBorder">#22FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationBtnFg">#BBBBBB</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationBtnHoverBg">#18FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationCurrentBg">#1F00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationCurrentBorder">#6000B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationCurrentFg">#D3F5F0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationEllipsis">#7D8B99</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationMeta">#8FA3B8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationGoBg">#18FFFFFF</SolidColorBrush>
+
+            <!-- Meta Labels/Values -->
+            <SolidColorBrush x:Key="EsMetaLabel">#8FA3B8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsMetaValue">#D3E4F6</SolidColorBrush>
+
+            <!-- Form -->
+            <SolidColorBrush x:Key="EsFormLabel">#CCCCCC</SolidColorBrush>
+            <SolidColorBrush x:Key="EsFormCardBg">#08FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsFormCardBorder">#22FFFFFF</SolidColorBrush>
+
+            <!-- Empty State -->
+            <SolidColorBrush x:Key="EsEmptyIcon">#5E7A95</SolidColorBrush>
+            <SolidColorBrush x:Key="EsEmptyTitle">#AAC0D3</SolidColorBrush>
+            <SolidColorBrush x:Key="EsEmptySubtitle">#7E96AE</SolidColorBrush>
+
+            <!-- Progress -->
+            <SolidColorBrush x:Key="EsProgressCardBg">#0FFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsProgressCardBorder">#1EFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsProgressName">#E7F1FB</SolidColorBrush>
+            <SolidColorBrush x:Key="EsProgressPercent">#74B3FF</SolidColorBrush>
+
+            <!-- Runtime Status Tag (ProgressView badges) -->
+            <SolidColorBrush x:Key="EsRuntimeRunningBg">#224A90E2</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeRunningFg">#CFE8FF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimePausedBg">#2A8B5A2B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimePausedFg">#FFD59A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeBlockedBg">#2AAF3A3A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeBlockedFg">#FFC8C8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeWaitingBg">#2A8B5A2B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeWaitingFg">#FFD59A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeStopRequestedBg">#2AAF3A3A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeStopRequestedFg">#FFC8C8</SolidColorBrush>
+
+            <!-- Batch Buttons -->
+            <SolidColorBrush x:Key="EsBatchPlayBg">#1A66BB6A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchPlayFg">#66BB6A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchPauseBg">#1AFFB74D</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchPauseFg">#FFB74D</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchStopBg">#1AEF5350</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchStopFg">#EF5350</SolidColorBrush>
+
+            <!-- Browse/Action Button Foreground -->
+            <SolidColorBrush x:Key="EsBrowseFg">#6FE8DC</SolidColorBrush>
+            <SolidColorBrush x:Key="EsEditFg">#00B4A6</SolidColorBrush>
+
+            <!-- Config: Radio Toggle -->
+            <SolidColorBrush x:Key="EsRadioBg">#1AFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRadioBorder">#3AFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRadioHoverBg">#2AFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRadioCheckedBg">#00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRadioCheckedBorder">#00B4A6</SolidColorBrush>
+
+            <!-- Config: List Item -->
+            <SolidColorBrush x:Key="EsListItemBg">#22FFFFFF</SolidColorBrush>
+
+            <!-- Calendar -->
+            <SolidColorBrush x:Key="EsCalNavBg">#16FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalNavBorder">#22FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthBg">#0BFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthBorder">#16FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthFg">#667F99</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthAvailBorder">#2A00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthAvailFg">#D0F0EB</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthAvailHoverBg">#1B2A4769</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthSelectedBg">#2A00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthSelectedBorder">#7C00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDayBg">#08FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDayBorder">#11FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDayFg">#8C9CB0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDayCurrentMonthFg">#D2DEE9</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalHasLogBg">#1300B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalHasLogBorder">#2A00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalHasLogFg">#D9F5F0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalHasLogHoverBg">#1E00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalSelectedBg">#2700B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalSelectedBorder">#6C00B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalWeekdayFg">#7890AA</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDateDisplay">#9BB5CE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalRefreshIcon">#6FE8DC</SolidColorBrush>
+
+            <!-- Log: Job Card -->
+            <SolidColorBrush x:Key="EsLogJobCardBg">#08111F</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobCardBorder">#1CFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobIdBg">#163E6B9A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobIdBorder">#2C72A8DC</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobIdFg">#9FD4FF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobSubtitle">#88A3BC</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogColHeader">#7E96AE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogNoSize">#667E95</SolidColorBrush>
+
+            <!-- Log: Drawer -->
+            <SolidColorBrush x:Key="EsDrawerBg">#0A111A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerBorder">#1FFFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerHeaderBg">#0F1824</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerHeaderBorder">#16FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerRunTitle">#9AB3CB</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerRunFormat">#8BA4BF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerTimestamp">#CAE5FF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerEmptyText">#91A6BD</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerEmptyHint">#6F879F</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerRowHover">#0FFFFFFF</SolidColorBrush>
+
+            <!-- Log: Run Status Badge -->
+            <SolidColorBrush x:Key="EsRunCompletedBg">#1E2E7D32</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunCompletedBorder">#5A4CAF50</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunCompletedFg">#9BE7A2</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunInProgressBg">#1F2E4A68</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunInProgressBorder">#5A64B5F6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunInProgressFg">#9FD3FF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunPausedBg">#1F5A4A1A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunPausedBorder">#5AFFD54F</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunPausedFg">#FFE082</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunBlockedBg">#1F5A2323</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunBlockedBorder">#5AE57373</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunBlockedFg">#FFB3B3</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunErrorBg">#1F5A2323</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunErrorBorder">#5AE57373</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunErrorFg">#FFB3B3</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunStoppedBg">#1F6A341F</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunStoppedBorder">#5AFFA65C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunStoppedFg">#FFD8B5</SolidColorBrush>
+
+            <!-- Log: Event Type Badges -->
+            <SolidColorBrush x:Key="EsLogTransferBg">#224CAF50</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogTransferFg">#81C784</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogDirectoryBg">#2200B4A6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogDirectoryFg">#64D5C8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogErrorBg">#22EF5350</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogErrorFg">#EF9A9A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogStartBg">#229C27B0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogStartFg">#CE93D8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogEndBg">#22009688</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogEndFg">#80CBC4</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogActionBg">#22FFB74D</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogActionFg">#FFD180</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogStoppedBg">#22FF7043</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogStoppedFg">#FFCCBC</SolidColorBrush>
+
+        </ResourceDictionary>
+
+        <!-- ══════════════════════════════════════════ -->
+        <!--               LIGHT MODE                   -->
+        <!-- ══════════════════════════════════════════ -->
+        <ResourceDictionary x:Key='Light'>
+
+            <!-- Backgrounds -->
+            <SolidColorBrush x:Key="EsBackground">#F5F5FA</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSurfaceBase">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSurfaceElevated">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSurfaceOverlay">#66000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTitleBar">#E8E8F0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSidebarBackground">#EEEEF6</SolidColorBrush>
+
+            <!-- Borders -->
+            <SolidColorBrush x:Key="EsBorderSubtle">#18000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBorderMedium">#22000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBorderStrong">#44000000</SolidColorBrush>
+
+            <!-- Text -->
+            <SolidColorBrush x:Key="EsTextPrimary">#1A1A2E</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTextSecondary">#555568</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTextTertiary">#7080A0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTextDisabled">#A0A8B0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTextOnAccent">#FFFFFF</SolidColorBrush>
+
+            <!-- Accent (Teal) -->
+            <SolidColorBrush x:Key="EsAccent">#00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentHover">#00A89A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentPressed">#007368</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentSubtle">#1A00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentForeground">#00695C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsAccentBorderSubtle">#5500897B</SolidColorBrush>
+
+            <!-- Semantic: Success -->
+            <SolidColorBrush x:Key="EsSuccessBg">#E8F5E9</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSuccessFg">#2E7D32</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSuccessBorder">#4CAF50</SolidColorBrush>
+
+            <!-- Semantic: Error -->
+            <SolidColorBrush x:Key="EsErrorBg">#FFEBEE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsErrorFg">#C62828</SolidColorBrush>
+            <SolidColorBrush x:Key="EsErrorBorder">#EF5350</SolidColorBrush>
+
+            <!-- Semantic: Warning -->
+            <SolidColorBrush x:Key="EsWarningBg">#FFF3E0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWarningFg">#E65100</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWarningBorder">#FFB74D</SolidColorBrush>
+
+            <!-- Semantic: Pause -->
+            <SolidColorBrush x:Key="EsPauseBg">#FFFDE7</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPauseFg">#F57F17</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPauseBorder">#FBC02D</SolidColorBrush>
+
+            <!-- Semantic: Info/Active -->
+            <SolidColorBrush x:Key="EsInfoBg">#E3F2FD</SolidColorBrush>
+            <SolidColorBrush x:Key="EsInfoFg">#1565C0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsInfoBorder">#42A5F5</SolidColorBrush>
+
+            <!-- Interactive -->
+            <SolidColorBrush x:Key="EsHoverBg">#0A000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPressedBg">#14000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSelectedBg">#1A00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSelectedBorder">#4400897B</SolidColorBrush>
+
+            <!-- Sidebar -->
+            <SolidColorBrush x:Key="EsSidebarHover">#18000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSidebarPressed">#22000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsSidebarActive">#1A00897B</SolidColorBrush>
+
+            <!-- Window Controls -->
+            <SolidColorBrush x:Key="EsWindowControlHover">#18000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWindowControlPressed">#22000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWindowCloseHover">#E81123</SolidColorBrush>
+            <SolidColorBrush x:Key="EsWindowClosePressed">#F1707A</SolidColorBrush>
+
+            <!-- Dialog -->
+            <SolidColorBrush x:Key="EsDialogBg">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDialogSecondaryBtn">#E0E0E8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDialogText">#555568</SolidColorBrush>
+
+            <!-- Column Header -->
+            <SolidColorBrush x:Key="EsColHeaderBg">#08000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsColHeaderFg">#707888</SolidColorBrush>
+            <SolidColorBrush x:Key="EsColHeaderHoverFg">#404858</SolidColorBrush>
+
+            <!-- Row -->
+            <SolidColorBrush x:Key="EsRowBorder">#0E000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRowHoverBg">#08000000</SolidColorBrush>
+
+            <!-- Badges: Status -->
+            <SolidColorBrush x:Key="EsStatusInactiveBg">#F0F0F0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusInactiveFg">#78909C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusActiveBg">#E3F2FD</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusActiveFg">#1565C0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusPausedBg">#FFFDE7</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusPausedFg">#F57F17</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusDoneBg">#E8F5E9</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusDoneFg">#2E7D32</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusErrorBg">#FFEBEE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusErrorFg">#C62828</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusBlockedBg">#FBE9E7</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusBlockedFg">#BF360C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusWaitingBg">#FFF3E0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsStatusWaitingFg">#E65100</SolidColorBrush>
+
+            <!-- Badges: ID -->
+            <SolidColorBrush x:Key="EsIdBadgeBg">#1A00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsIdBadgeFg">#00564E</SolidColorBrush>
+
+            <!-- Badges: Type -->
+            <SolidColorBrush x:Key="EsTypeBadgeBg">#F0F0F0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsTypeBadgeFg">#555568</SolidColorBrush>
+
+            <!-- Path Text -->
+            <SolidColorBrush x:Key="EsPathText">#78909C</SolidColorBrush>
+
+            <!-- Pagination -->
+            <SolidColorBrush x:Key="EsPaginationBg">#08000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationBorder">#0E000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationBtnBorder">#18000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationBtnFg">#555568</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationBtnHoverBg">#0E000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationCurrentBg">#1A00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationCurrentBorder">#5500897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationCurrentFg">#00564E</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationEllipsis">#90A4AE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationMeta">#607D8B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsPaginationGoBg">#0E000000</SolidColorBrush>
+
+            <!-- Meta Labels/Values -->
+            <SolidColorBrush x:Key="EsMetaLabel">#607D8B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsMetaValue">#37474F</SolidColorBrush>
+
+            <!-- Form -->
+            <SolidColorBrush x:Key="EsFormLabel">#555568</SolidColorBrush>
+            <SolidColorBrush x:Key="EsFormCardBg">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsFormCardBorder">#18000000</SolidColorBrush>
+
+            <!-- Empty State -->
+            <SolidColorBrush x:Key="EsEmptyIcon">#90A4AE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsEmptyTitle">#546E7A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsEmptySubtitle">#78909C</SolidColorBrush>
+
+            <!-- Progress -->
+            <SolidColorBrush x:Key="EsProgressCardBg">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsProgressCardBorder">#18000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsProgressName">#1A1A2E</SolidColorBrush>
+            <SolidColorBrush x:Key="EsProgressPercent">#00897B</SolidColorBrush>
+
+            <!-- Runtime Status Tag (ProgressView badges) -->
+            <SolidColorBrush x:Key="EsRuntimeRunningBg">#E3F2FD</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeRunningFg">#1565C0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimePausedBg">#FFFDE7</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimePausedFg">#F57F17</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeBlockedBg">#FFEBEE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeBlockedFg">#C62828</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeWaitingBg">#FFF3E0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeWaitingFg">#E65100</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeStopRequestedBg">#FFEBEE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRuntimeStopRequestedFg">#C62828</SolidColorBrush>
+
+            <!-- Batch Buttons -->
+            <SolidColorBrush x:Key="EsBatchPlayBg">#E8F5E9</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchPlayFg">#2E7D32</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchPauseBg">#FFF3E0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchPauseFg">#E65100</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchStopBg">#FFEBEE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsBatchStopFg">#C62828</SolidColorBrush>
+
+            <!-- Browse/Action Button Foreground -->
+            <SolidColorBrush x:Key="EsBrowseFg">#00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsEditFg">#00897B</SolidColorBrush>
+
+            <!-- Config: Radio Toggle -->
+            <SolidColorBrush x:Key="EsRadioBg">#F0F0F5</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRadioBorder">#D0D0D8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRadioHoverBg">#E0E0E8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRadioCheckedBg">#00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRadioCheckedBorder">#00897B</SolidColorBrush>
+
+            <!-- Config: List Item -->
+            <SolidColorBrush x:Key="EsListItemBg">#F0F0F5</SolidColorBrush>
+
+            <!-- Calendar -->
+            <SolidColorBrush x:Key="EsCalNavBg">#F0F0F5</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalNavBorder">#D0D0D8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthBg">#FAFAFA</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthBorder">#E0E0E0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthFg">#90A4AE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthAvailBorder">#2A00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthAvailFg">#00564E</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthAvailHoverBg">#1A00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthSelectedBg">#2A00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalMonthSelectedBorder">#7C00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDayBg">#FAFAFA</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDayBorder">#E8E8E8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDayFg">#B0BEC5</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDayCurrentMonthFg">#37474F</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalHasLogBg">#1300897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalHasLogBorder">#2A00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalHasLogFg">#00564E</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalHasLogHoverBg">#1E00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalSelectedBg">#2700897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalSelectedBorder">#6C00897B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalWeekdayFg">#78909C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalDateDisplay">#607D8B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsCalRefreshIcon">#00897B</SolidColorBrush>
+
+            <!-- Log: Job Card -->
+            <SolidColorBrush x:Key="EsLogJobCardBg">#FFFFFF</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobCardBorder">#18000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobIdBg">#E0F2F1</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobIdBorder">#80CBC4</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobIdFg">#00695C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogJobSubtitle">#78909C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogColHeader">#607D8B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogNoSize">#B0BEC5</SolidColorBrush>
+
+            <!-- Log: Drawer -->
+            <SolidColorBrush x:Key="EsDrawerBg">#FAFAFA</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerBorder">#18000000</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerHeaderBg">#F0F0F8</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerHeaderBorder">#E0E0E0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerRunTitle">#607D8B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerRunFormat">#78909C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerTimestamp">#1A1A2E</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerEmptyText">#78909C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerEmptyHint">#90A4AE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsDrawerRowHover">#08000000</SolidColorBrush>
+
+            <!-- Log: Run Status Badge -->
+            <SolidColorBrush x:Key="EsRunCompletedBg">#E8F5E9</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunCompletedBorder">#81C784</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunCompletedFg">#2E7D32</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunInProgressBg">#E3F2FD</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunInProgressBorder">#64B5F6</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunInProgressFg">#1565C0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunPausedBg">#FFFDE7</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunPausedBorder">#FBC02D</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunPausedFg">#F57F17</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunBlockedBg">#FBE9E7</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunBlockedBorder">#FF8A65</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunBlockedFg">#BF360C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunErrorBg">#FFEBEE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunErrorBorder">#EF9A9A</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunErrorFg">#C62828</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunStoppedBg">#FFF3E0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunStoppedBorder">#FFB74D</SolidColorBrush>
+            <SolidColorBrush x:Key="EsRunStoppedFg">#E65100</SolidColorBrush>
+
+            <!-- Log: Event Type Badges -->
+            <SolidColorBrush x:Key="EsLogTransferBg">#E8F5E9</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogTransferFg">#2E7D32</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogDirectoryBg">#E0F2F1</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogDirectoryFg">#00695C</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogErrorBg">#FFEBEE</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogErrorFg">#C62828</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogStartBg">#F3E5F5</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogStartFg">#7B1FA2</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogEndBg">#E0F2F1</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogEndFg">#00796B</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogActionBg">#FFF3E0</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogActionFg">#E65100</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogStoppedBg">#FBE9E7</SolidColorBrush>
+            <SolidColorBrush x:Key="EsLogStoppedFg">#D84315</SolidColorBrush>
+
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

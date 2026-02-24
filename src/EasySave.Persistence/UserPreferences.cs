@@ -15,6 +15,11 @@ public class UserPreferences
     private long _parallelLargeFileThresholdValue;
 
     /// <summary>
+    /// Gets or sets the application theme preference.
+    /// </summary>
+    public ThemePreference ThemePreference { get; set; } = ThemePreference.System;
+
+    /// <summary>
     /// Gets or sets the application language/culture.
     /// </summary>
     public string Language { get; set; } = "fr";

@@ -6,66 +6,6 @@
     x:Class="EasySave.GUI.Views.CreateView"
     x:DataType="vm:CreateViewModel">
 
-	<UserControl.Styles>
-		<!-- Browse button -->
-		<Style Selector="Button.btn-browse">
-			<Setter Property="Background" Value="#22FFFFFF"/>
-			<Setter Property="Foreground" Value="#51A2F2"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Padding" Value="14,8"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="BorderThickness" Value="0"/>
-		</Style>
-		<Style Selector="Button.btn-browse:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#33FFFFFF"/>
-		</Style>
-
-		<!-- Primary action button -->
-		<Style Selector="Button.btn-primary">
-			<Setter Property="Background" Value="#42A5F5"/>
-			<Setter Property="Foreground" Value="White"/>
-			<Setter Property="FontWeight" Value="SemiBold"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Padding" Value="24,10"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="BorderThickness" Value="0"/>
-		</Style>
-		<Style Selector="Button.btn-primary:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#5BB1F7"/>
-		</Style>
-		<Style Selector="Button.btn-primary:disabled /template/ ContentPresenter">
-			<Setter Property="Background" Value="#1A42A5F5"/>
-			<Setter Property="Foreground" Value="#66FFFFFF"/>
-		</Style>
-
-		<!-- Secondary button -->
-		<Style Selector="Button.btn-secondary">
-			<Setter Property="Background" Value="#22FFFFFF"/>
-			<Setter Property="Foreground" Value="#51A2F2"/>
-			<Setter Property="CornerRadius" Value="6"/>
-			<Setter Property="Padding" Value="24,10"/>
-			<Setter Property="Cursor" Value="Hand"/>
-			<Setter Property="BorderThickness" Value="0"/>
-		</Style>
-		<Style Selector="Button.btn-secondary:pointerover /template/ ContentPresenter">
-			<Setter Property="Background" Value="#33FFFFFF"/>
-		</Style>
-
-		<!-- Form field label -->
-		<Style Selector="TextBlock.field-label">
-			<Setter Property="FontWeight" Value="SemiBold"/>
-			<Setter Property="FontSize" Value="13"/>
-			<Setter Property="Foreground" Value="#CCCCCC"/>
-		</Style>
-
-		<!-- Error text -->
-		<Style Selector="TextBlock.field-error">
-			<Setter Property="Foreground" Value="#EF5350"/>
-			<Setter Property="FontSize" Value="11"/>
-			<Setter Property="Margin" Value="2,2,0,0"/>
-		</Style>
-	</UserControl.Styles>
-
 	<StackPanel Spacing="20" MaxWidth="800" Margin="24">
 
 		<StackPanel>
@@ -73,7 +13,7 @@
 			<Grid Grid.Row="2" ColumnDefinitions="*,Auto" Margin="0,0,0,16">
 				<StackPanel Spacing="4" Margin="0,0,0,4">
 					<TextBlock Text="{Binding Title}" FontSize="22" FontWeight="Bold"/>
-					<TextBlock Text="{Binding Subtitle}" FontSize="13" Foreground="#888"/>
+					<TextBlock Text="{Binding Subtitle}" FontSize="13" Foreground="{DynamicResource EsTextTertiary}"/>
 				</StackPanel>
 			</Grid>
 			<StackPanel Spacing="20" MaxWidth="800">
@@ -81,14 +21,14 @@
 				<!-- SUCCESS BANNER -->
 				<Border
 					IsVisible="{Binding IsSuccessMessageVisible}"
-					Background="#1A66BB6A"
-					BorderBrush="#66BB6A"
+					Background="{DynamicResource EsSuccessBg}"
+					BorderBrush="{DynamicResource EsSuccessBorder}"
 					BorderThickness="1"
 					CornerRadius="6"
 					Padding="12,10">
 					<TextBlock
 						Text="{Binding SuccessMessage}"
-						Foreground="#66BB6A"
+						Foreground="{DynamicResource EsSuccessFg}"
 						FontWeight="SemiBold"
 						TextAlignment="Center"/>
 				</Border>
@@ -96,13 +36,13 @@
 				<!-- ERROR BANNER -->
 				<Border
 					IsVisible="{Binding IsErrorMessageVisible}"
-					Background="#1AEF5350"
+					Background="{DynamicResource EsErrorBg}"
 					CornerRadius="6"
 					Padding="12,8">
 					<Grid ColumnDefinitions="*,Auto">
 						<TextBlock Grid.Column="0"
 								   Text="{Binding ErrorMessage}"
-								   Foreground="#EF5350"
+								   Foreground="{DynamicResource EsErrorFg}"
 								   FontWeight="SemiBold"
 								   VerticalAlignment="Center"
 								   HorizontalAlignment="Center"/>
@@ -111,7 +51,7 @@
 								Command="{Binding DismissErrorCommand}"
 								Background="Transparent"
 								BorderThickness="0"
-								Foreground="#EF5350"
+								Foreground="{DynamicResource EsErrorFg}"
 								FontSize="14"
 								Padding="4"
 								Cursor="Hand"
@@ -121,11 +61,11 @@
 
 				<!-- FORM CARD -->
 				<Border
-					BorderBrush="#22FFFFFF"
+					BorderBrush="{DynamicResource EsFormCardBorder}"
 					BorderThickness="1"
 					CornerRadius="8"
 					Padding="24,20"
-					Background="#08FFFFFF">
+					Background="{DynamicResource EsFormCardBg}">
 					<StackPanel Spacing="18">
 
 						<!-- Backup Name -->
