@@ -19,6 +19,10 @@ translations:
   menu_job_update_source: "Modifier le chemin source"
   menu_job_update_destination: "Modifier le chemin de destination"
   menu_job_update_type: "Modifier le type de sauvegarde"
+  gui_manage_filter_by_status: "Filtrer par état"
+  gui_manage_filter_all_status: "Tous les états"
+  gui_manage_filter_by_type: "Filtrer par type"
+  gui_manage_filter_all_types: "Tous les types"
   menu_job_update_save: "Sauvegarder les modifications"
   back: "Retour"
   backupjob_create_name: "Veuillez renseigner le nom du BackupJob"
@@ -317,4 +321,3 @@ translations:
   error_multiple_readers_registered: "Plusieurs lecteurs sont enregistrés"
   error_unable_access_log: "Impossible d'accéder au log"
   error_job_not_found_named: "Le job {0} n'existe pas"
-

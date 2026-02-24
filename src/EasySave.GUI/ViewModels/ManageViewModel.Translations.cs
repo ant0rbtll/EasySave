@@ -90,6 +90,18 @@ public partial class ManageViewModel
     [ObservableProperty]
     private string emptySubtitleText = string.Empty;
 
+    // Status filter texts
+    private string filterByStatusLabel = string.Empty;
+    private string filterAllStatusLabel = string.Empty;
+    private string filterStatusActive = string.Empty;
+    private string filterStatusPaused = string.Empty;
+    private string filterStatusBlocked = string.Empty;
+    private string filterStatusInactive = string.Empty;
+    private string filterStatusDone = string.Empty;
+    private string filterStatusError = string.Empty;
+    private string filterStatusWaiting = string.Empty;
+    private string filterStatusDefault = string.Empty;
+
     private string _idLabel = "ID";
     private string _statusLabel = string.Empty;
     private string _nameLabel = string.Empty;
@@ -140,6 +152,16 @@ public partial class ManageViewModel
         SelectAllTooltip = _localizationService.TranslateText(LocalizationKey.gui_manage_select_all);
         EmptyTitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_title);
         EmptySubtitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_subtitle);
+        filterByStatusLabel = _localizationService.TranslateText(LocalizationKey.gui_manage_filter_by_status);
+        filterAllStatusLabel = _localizationService.TranslateText(LocalizationKey.gui_manage_filter_all_status);
+        filterStatusActive = _localizationService.TranslateText(LocalizationKey.backupjob_active);
+        filterStatusPaused = _localizationService.TranslateText(LocalizationKey.backupjob_paused);
+        filterStatusBlocked = _localizationService.TranslateText(LocalizationKey.backupjob_blocked);
+        filterStatusInactive = _localizationService.TranslateText(LocalizationKey.backupjob_inactive);
+        filterStatusDone = _localizationService.TranslateText(LocalizationKey.backupjob_done);
+        filterStatusError = _localizationService.TranslateText(LocalizationKey.backupjob_error);
+        filterStatusWaiting = _localizationService.TranslateText(LocalizationKey.backupjob_waiting);
+        filterStatusDefault = _localizationService.TranslateText(LocalizationKey.backupjob_status);
 
         _idLabel = _localizationService.TranslateText(LocalizationKey.backupjob_id);
         _statusLabel = _localizationService.TranslateText(LocalizationKey.backupjob_status);
@@ -155,6 +177,19 @@ public partial class ManageViewModel
         OnPropertyChanged(nameof(DestinationHeader));
         OnPropertyChanged(nameof(TypeHeader));
         OnPropertyChanged(nameof(LastRunHeader));
+        OnPropertyChanged(nameof(StatusFilters));
+        OnPropertyChanged(nameof(TypeFilters));
+        InitializeFilters();
         ApplyJobs(_displayService.FetchJobs());
     }
+
+    public string FilterAllStatusLabel => filterAllStatusLabel;
+    public string FilterStatusActive => filterStatusActive;
+    public string FilterStatusPaused => filterStatusPaused;
+    public string FilterStatusBlocked => filterStatusBlocked;
+    public string FilterStatusInactive => filterStatusInactive;
+    public string FilterStatusDone => filterStatusDone;
+    public string FilterStatusError => filterStatusError;
+    public string FilterStatusWaiting => filterStatusWaiting;
+    public string FilterStatusDefault => filterStatusDefault;
 }

@@ -121,6 +121,8 @@ public partial class ManageViewModel : ViewModelBase
 
     public bool IsSuccessBannerVisible => IsStatusBannerVisible && !IsStatusError;
     public bool IsErrorBannerVisible => IsStatusBannerVisible && IsStatusError;
+    public string FilterByStatusLabel => _localizationService.TranslateText(LocalizationKey.gui_manage_filter_by_status);
+    public string FilterByTypeLabel => _localizationService.TranslateText(LocalizationKey.gui_manage_filter_by_type);
 
     [ObservableProperty]
     private bool isDeleteDialogOpen;
@@ -208,7 +210,6 @@ public partial class ManageViewModel : ViewModelBase
         _displayService = displayService;
         _stateTracker = stateTracker;
         RefreshTranslations();
-        InitializeFilters();
     }
 
     private void InitializeFilters()
@@ -219,16 +220,27 @@ public partial class ManageViewModel : ViewModelBase
         StatusFilters.Add(new FilterItem<Core.BackupJobStatus>
         {
             Value = null,
-            Label = "All",
+            Label = FilterAllStatusLabel,
             IsSelected = true
         });
 
         foreach (var status in Enum.GetValues<Core.BackupJobStatus>())
         {
+            string label = status switch
+            {
+                Core.BackupJobStatus.Active => FilterStatusActive,
+                Core.BackupJobStatus.Paused => FilterStatusPaused,
+                Core.BackupJobStatus.Blocked => FilterStatusBlocked,
+                Core.BackupJobStatus.Inactive => FilterStatusInactive,
+                Core.BackupJobStatus.Done => FilterStatusDone,
+                Core.BackupJobStatus.Error => FilterStatusError,
+                Core.BackupJobStatus.Waiting => FilterStatusWaiting,
+                _ => FilterStatusDefault
+            };
             StatusFilters.Add(new FilterItem<Core.BackupJobStatus>
             {
                 Value = status,
-                Label = _displayService.FormatStatus(status),
+                Label = label,
                 IsSelected = false
             });
         }
@@ -236,36 +248,29 @@ public partial class ManageViewModel : ViewModelBase
         TypeFilters.Add(new FilterItem<Core.BackupType>
         {
             Value = null,
-            Label = "All",
+            Label = _localizationService.TranslateText(LocalizationKey.gui_manage_filter_all_types),
             IsSelected = true
         });
 
         foreach (var type in Enum.GetValues<Core.BackupType>())
         {
+            LocalizationKey key = type switch
+            {
+                Core.BackupType.Complete => LocalizationKey.backupjob_type_complete,
+                Core.BackupType.Differential => LocalizationKey.backupjob_type_differential,
+                _ => LocalizationKey.backupjob_type
+            };
             TypeFilters.Add(new FilterItem<Core.BackupType>
             {
                 Value = type,
-                Label = type.ToString(),
+                Label = _localizationService.TranslateText(key),
                 IsSelected = false
             });
         }
 
-        foreach (var filter in StatusFilters)
-        {
-            filter.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(FilterItem<Core.BackupJobStatus>.IsSelected))
-                    OnStatusFilterChanged((FilterItem<Core.BackupJobStatus>)s!);
-            };
-        }
-        foreach (var filter in TypeFilters)
-        {
-            filter.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(FilterItem<Core.BackupType>.IsSelected))
-                    OnTypeFilterChanged((FilterItem<Core.BackupType>)s!);
-            };
-        }
+        // Notify UI that the collections have changed
+        OnPropertyChanged(nameof(StatusFilters));
+        OnPropertyChanged(nameof(TypeFilters));
     }
 
     private void OnStatusFilterChanged(FilterItem<Core.BackupJobStatus> changed)
@@ -488,10 +493,6 @@ public partial class ManageViewModel : ViewModelBase
             return items;
         }
 
-        // Standard 7-slot pagination:
-        // Start:  1 2 3 4 5 ... N
-        // Middle: 1 ... p-1 p p+1 ... N
-        // End:    1 ... N-4 N-3 N-2 N-1 N
         if (currentPage <= 4)
         {
             return

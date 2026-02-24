@@ -440,7 +440,7 @@
                                 <ComboBox Width="180"
                                           ItemsSource="{Binding StatusFilters}"
                                           SelectedItem="{x:Null}"
-                                          PlaceholderText="Filter by status"
+                                          PlaceholderText="{Binding FilterByStatusLabel}"
                                           Classes.filter-active="{Binding !IsStatusAllSelected}"
                                           SelectionChanged="FilterComboBox_SelectionChanged">
                                     <ComboBox.SelectionBoxItemTemplate>
@@ -463,7 +463,7 @@
                                 <ComboBox Width="180"
                                           ItemsSource="{Binding TypeFilters}"
                                           SelectedItem="{x:Null}"
-                                          PlaceholderText="Filter by type"
+                                          PlaceholderText="{Binding FilterByTypeLabel}"
                                           SelectionChanged="FilterComboBox_SelectionChanged">
                                     <ComboBox.SelectionBoxItemTemplate>
                                         <DataTemplate>
