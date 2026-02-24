@@ -1,5 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using EasySave.Application;
+using EasySave.Exceptions;
 
 namespace EasySave.AppCommon
 {
@@ -21,7 +22,7 @@ namespace EasySave.AppCommon
         /// Starts the application in console or GUI mode based on arguments and environment.
         /// </summary>
         /// <param name="args">Command-line arguments.</param>
-        /// <exception cref="ArgumentException">Thrown when the requested host type is unknown.</exception>
+        /// <exception cref="InvalidArgumentException">Thrown when the requested host type is unknown.</exception>
         [STAThread]
         public static void Main(string[] args)
         {
@@ -42,7 +43,7 @@ namespace EasySave.AppCommon
             {
                 "gui" => new GUI.Host(),
                 "console" => new UI.Host(),
-                _ => throw new ArgumentException($"Unknown host type: {hostType}")
+                _ => throw new InvalidArgumentException(hostType, "Unknown host type")
             };
 
             // Run

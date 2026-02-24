@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Security.Cryptography;
 using EasySave.Core;
+using EasySave.Exceptions;
 
 namespace EasySave.Backup;
 
@@ -22,6 +23,7 @@ public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
     public string Name => EncryptionProviderNames.DotNet;
 
     /// <inheritdoc />
+    #region EncryptAsync
     public async Task<EncryptionResult> EncryptAsync(
         string filePath,
         EncryptionPolicy policy,
@@ -74,7 +76,12 @@ public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
             return EncryptionResult.Failure(GetNegativeElapsed(stopwatch), ex.HResult, ex.Message);
         }
     }
+    #endregion
 
+    /// <summary>
+    /// Encryption of the transfered files.
+    /// </summary>
+    #region EncryptFileToTemporaryAsync
     private static async Task EncryptFileToTemporaryAsync(
         string sourceFilePath,
         string encryptedFilePath,
@@ -114,7 +121,12 @@ public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
 
         await destination.FlushAsync(cancellationToken);
     }
+    #endregion
 
+    /// <summary>
+    /// Temporary files for encryption.
+    /// </summary>
+    #region TemporaryFile
     private static string BuildTempFilePath(string filePath)
     {
         string directory = Path.GetDirectoryName(filePath) ?? string.Empty;
@@ -136,12 +148,22 @@ public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
             // Best-effort cleanup only.
         }
     }
+    #endregion
 
+    /// <summary>
+    /// Provides helper methods for time measurement and elapsed time calculations.
+    /// </summary>
+    #region GetNegativeElapsed
     private static long GetNegativeElapsed(Stopwatch stopwatch)
     {
         return -(long)Math.Max(1, stopwatch.ElapsedMilliseconds);
     }
+    #endregion
 
+    /// <summary>
+    /// Contains helper methods for working with elapsed time values.
+    /// </summary>
+    #region CreateFixedBytes
     private static byte[] CreateFixedBytes(string base64Value, int expectedLength, string valueName)
     {
         byte[] decoded;
@@ -150,16 +172,17 @@ public sealed class DotNetAesEncryptionProvider : IEncryptionProvider
         {
             decoded = Convert.FromBase64String(base64Value);
         }
-        catch (FormatException ex)
+        catch (FormatException)
         {
-            throw new InvalidOperationException($"{valueName} must be a valid Base64 string.", ex);
+            throw new EncodingFailedException($"{valueName} must be a valid Base64 string.");
         }
 
         if (decoded.Length != expectedLength)
         {
-            throw new InvalidOperationException($"{valueName} must decode to {expectedLength} bytes.");
+            throw new EncodingFailedException($"{valueName} must decode to {expectedLength} bytes.");
         }
 
         return decoded;
     }
+    #endregion
 }

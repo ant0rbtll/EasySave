@@ -1,4 +1,5 @@
 using EasySave.Configuration;
+using EasySave.Exceptions;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -26,7 +27,7 @@ public class RealTimeStateWriter(
     #region Update
     public void Update(StateEntry entry)
     {
-        ArgumentNullException.ThrowIfNull(entry);
+        EasysaveDefaultException.ThrowIfNull(entry);
 
         lock (_sync)
         {

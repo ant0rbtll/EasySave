@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using EasySave.Configuration;
+using EasySave.Exceptions;
 
 namespace EasySave.Persistence;
 
@@ -19,7 +20,7 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
     /// <param name="pathProvider">Path provider for the preferences file location.</param>
     public JsonUserPreferencesRepository(IPathProvider pathProvider)
     {
-        ArgumentNullException.ThrowIfNull(pathProvider);
+        EasysaveDefaultException.ThrowIfNull(pathProvider);
 
         _pathProvider = pathProvider;
         _jsonOptions = new JsonSerializerOptions
@@ -74,7 +75,7 @@ public class JsonUserPreferencesRepository : IUserPreferencesRepository
     /// </remarks>
     public void Save(UserPreferences preferences)
     {
-        ArgumentNullException.ThrowIfNull(preferences);
+        EasysaveDefaultException.ThrowIfNull(preferences);
 
         string path = _pathProvider.GetUserPreferencesPath();
         string? directory = Path.GetDirectoryName(path);

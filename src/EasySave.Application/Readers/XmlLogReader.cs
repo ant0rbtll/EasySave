@@ -2,47 +2,30 @@ using System.Globalization;
 using System.Xml;
 using System.Xml.Linq;
 using EasySave.Core;
+using EasySave.Exceptions;
 using EasySave.Log;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Readers;
 
 /// <summary>
 /// Reads XML daily logs.
 /// </summary>
-public sealed class XmlLogReader : ILogReader
+public sealed class XmlLogReader : LogReaderBase
 {
-    private const long MaxLogFileSizeBytes = 50L * 1024 * 1024; // 50 MB
+    /// <inheritdoc />
+    public override LogFormat Format => LogFormat.Xml;
 
     /// <inheritdoc />
-    public LogFormat Format => LogFormat.Xml;
-
-    /// <inheritdoc />
-    public IReadOnlyList<LogEntry> ReadEntries(string filePath)
+    protected override IReadOnlyList<LogEntry> GetEntries(string log, string filePath)
     {
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            throw new ArgumentException("File path must not be empty.", nameof(filePath));
-        }
-
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException("Log file not found.", filePath);
-        }
-
-        string xml = FileReadResilience.ReadAllTextWithRetry(filePath, MaxLogFileSizeBytes);
-        if (string.IsNullOrWhiteSpace(xml))
-        {
-            return [];
-        }
-
         XDocument document;
         try
         {
-            document = XDocument.Parse(xml, LoadOptions.None);
+            document = XDocument.Parse(log, LoadOptions.None);
         }
-        catch (XmlException ex)
+        catch (XmlException)
         {
-            throw new InvalidDataException($"Invalid XML log file '{filePath}'.", ex);
+            throw new InvalidLogFileException(filePath, "XML");
         }
 
         var root = document.Root;
@@ -53,7 +36,7 @@ public sealed class XmlLogReader : ILogReader
 
         if (!string.Equals(root.Name.LocalName, "Logs", StringComparison.Ordinal))
         {
-            throw new InvalidDataException($"Unexpected root element '{root.Name.LocalName}' in '{filePath}'.");
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_unexpected_element, [root.Name.LocalName, filePath]);
         }
 
         var entries = new List<LogEntry>();
@@ -109,7 +92,7 @@ public sealed class XmlLogReader : ILogReader
             return value;
         }
 
-        throw new InvalidDataException($"Invalid timestamp '{raw}' in '{filePath}'.");
+        throw new EasysaveDefaultException(Localization.LocalizationKey.error_invalid_timestamp, [raw, filePath]);
     }
 
     /// <summary>
@@ -132,7 +115,7 @@ public sealed class XmlLogReader : ILogReader
             return parsed;
         }
 
-        throw new InvalidDataException($"Invalid event type '{raw}' in '{filePath}'.");
+        throw new EasysaveDefaultException(Localization.LocalizationKey.error_invalid_event_type, [raw, filePath]);
     }
 
     /// <summary>
@@ -156,7 +139,7 @@ public sealed class XmlLogReader : ILogReader
             return parsed;
         }
 
-        throw new InvalidDataException($"Invalid numeric value '{raw}' for '{name}' in '{filePath}'.");
+        throw new EasysaveDefaultException(Localization.LocalizationKey.error_invalid_numeric_value, [raw, name, filePath]);
     }
 
     /// <summary>

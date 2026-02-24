@@ -1,4 +1,6 @@
 namespace EasySave.Application.Tests;
+using EasySave.Application.Readers;
+using EasySave.Exceptions;
 
 public class LogReadersTests
 {
@@ -26,7 +28,7 @@ public class LogReadersTests
 
         var reader = new JsonLogReader();
 
-        Assert.Throws<InvalidDataException>(() => reader.ReadEntries(path));
+        Assert.Throws<InvalidLogFileException>(() => reader.ReadEntries(path));
     }
 
     [Fact]
@@ -38,7 +40,7 @@ public class LogReadersTests
 
         var reader = new JsonLogReader();
 
-        Assert.Throws<InvalidDataException>(() => reader.ReadEntries(path));
+        Assert.Throws<EasysaveDefaultException>(() => reader.ReadEntries(path));
     }
 
     [Fact]
@@ -50,7 +52,7 @@ public class LogReadersTests
 
         var reader = new XmlLogReader();
 
-        Assert.Throws<InvalidDataException>(() => reader.ReadEntries(path));
+        Assert.Throws<EasysaveDefaultException>(() => reader.ReadEntries(path));
     }
 
     private static void CreateLargeFile(string path, long length)

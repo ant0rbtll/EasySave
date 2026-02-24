@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using EasySave.AppCommon.Tests.TestHelpers;
+using EasySave.Exceptions;
 
 namespace EasySave.AppCommon.Tests;
 
@@ -65,7 +66,7 @@ public class HttpLogSenderTests : IDisposable
             throw new HttpRequestException("Connection refused"));
         using var networkSender = new HttpLogSender(networkHandler, "http://localhost:9999", LogFormat.Json);
 
-        Assert.Throws<InvalidOperationException>(() => networkSender.Write(entry));
+        Assert.Throws<EasysaveDefaultException>(() => networkSender.Write(entry));
     }
 
     [Fact]
@@ -73,7 +74,7 @@ public class HttpLogSenderTests : IDisposable
     {
         using var sender = CreateSender();
 
-        Assert.Throws<ArgumentNullException>(() => sender.Write(null!));
+        Assert.Throws<InvalidArgumentException>(() => sender.Write(null!));
     }
 
     [Fact]
@@ -102,6 +103,6 @@ public class HttpLogSenderTests : IDisposable
     [InlineData("   ")]
     public void Constructor_EmptyOrWhitespaceUrl_ThrowsArgumentException(string url)
     {
-        Assert.ThrowsAny<ArgumentException>(() => new HttpLogSender(url, LogFormat.Json));
+        Assert.ThrowsAny<InvalidArgumentException>(() => new HttpLogSender(url, LogFormat.Json));
     }
 }

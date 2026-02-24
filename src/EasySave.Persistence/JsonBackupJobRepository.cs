@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using EasySave.Configuration;
 using EasySave.Core;
+using EasySave.Exceptions;
 
 namespace EasySave.Persistence;
 
@@ -35,7 +36,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="JobAlreadyExistException">
     /// Thrown if the maximum number of jobs is reached or if the ID already exists.
     /// </exception>
     public void Add(BackupJob job)
@@ -49,10 +50,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
 
         if (all.Any(j => j.Id == job.Id))
         {
-            var e = new InvalidOperationException($"Job with ID {job.Id} already exists.");
-            e.Data["errorKey"] = "error_add_exists";
-            e.Data["job_id"] = job.Id;
-            throw e;
+            throw new JobAlreadyExistException(job.Id);
         }
 
         all.Add(job);
@@ -60,7 +58,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public void Remove(int id)
     {
         var all = Load();
@@ -69,10 +67,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
 
         if (job == null)
         {
-            var e = new KeyNotFoundException($"Job with ID {id} not found");
-            e.Data["errorKey"] = "error_job_not_found";
-            e.Data["job_id"] = id;
-            throw e;
+            throw new JobNotFoundException(id);
         }
 
         all.Remove(job);
@@ -99,7 +94,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public void Update(BackupJob job)
     {
         var all = Load();
@@ -108,10 +103,7 @@ public class JsonBackupJobRepository : IBackupJobRepository
 
         if (existing == null)
         {
-            var e = new KeyNotFoundException($"Job with ID {job.Id} not found");
-            e.Data["errorKey"] = "error_job_not_found";
-            e.Data["job_id"] = job.Id;
-            throw e;
+            throw new JobNotFoundException(job.Id);
         }
 
         existing.Name = job.Name;

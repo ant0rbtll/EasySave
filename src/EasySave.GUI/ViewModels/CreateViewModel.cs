@@ -1,11 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using EasySave.Core;
-using EasySave.Application;
 using EasySave.GUI.Helpers;
 using EasySave.Localization;
 using static EasySave.GUI.Helpers.PathValidation;
 using System.Collections.ObjectModel;
+using EasySave.Application.Services;
+using EasySave.Exceptions;
 
 namespace EasySave.GUI.ViewModels;
 
@@ -122,13 +123,13 @@ public partial class CreateViewModel : ViewModelBase
             Cancel();
             ShowSuccessMessage(_localizationService.TranslateText(LocalizationKey.gui_create_add_success));
         }
-        catch (ArgumentException ex)
+        catch (InvalidArgumentException ex)
         {
-            JobNameError = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            JobNameError = _localizationService.GetTranslateTextException(ex);
         }
         catch (Exception ex)
         {
-            ShowErrorMessage(ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService));
+            ShowErrorMessage(_localizationService.GetTranslateTextException(ex));
         }
     }
 

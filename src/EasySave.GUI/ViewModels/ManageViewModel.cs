@@ -2,10 +2,12 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using EasySave.Application;
 using EasySave.Backup;
+using EasySave.Application.Services;
 using EasySave.GUI.Helpers;
 using EasySave.GUI.Models;
 using EasySave.GUI.Services;
 using EasySave.Localization;
+using EasySave.Exceptions;
 
 namespace EasySave.GUI.ViewModels;
 
@@ -246,8 +248,7 @@ public partial class ManageViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsAllSelected));
         _updatingSelection = false;
     }
-
-    private void ApplyJobs(List<BackupJob> jobs)
+    private void ApplyJobs(List<Models.BackupJob> jobs)
     {
         _allJobs.Clear();
         _allJobs.AddRange(jobs);
@@ -256,7 +257,6 @@ public partial class ManageViewModel : ViewModelBase
         RunJobCommand.NotifyCanExecuteChanged();
         RunSelectedCommand.NotifyCanExecuteChanged();
     }
-
     private void RebuildPaginationItems()
     {
         PaginationItems.Clear();

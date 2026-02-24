@@ -4,6 +4,9 @@ using EasySave.Persistence;
 using EasySave.Core;
 using EasySave.State;
 using EasySave.System;
+using EasySave.Application.Services;
+using EasySave.Application.Readers;
+using EasySave.Exceptions;
 
 namespace EasySave.Application.Tests;
 
@@ -435,11 +438,10 @@ public class BackupApplicationServiceTests
     {
         _repoMock.Setup(r => r.GetById(888)).Returns((BackupJob?)null);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.RunJob(888));
+        var exception = await Assert.ThrowsAsync<JobNotFoundException>(() => _service.RunJob(888));
 
-        Assert.Equal("error_job_not_found", exception.Message);
-        Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
-        Assert.Equal("888", exception.Data["0"]);
+        Assert.Equal(Localization.LocalizationKey.error_job_not_found, exception.ErrorKey);
+        Assert.Equal("888", exception.Options[0]);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
 
@@ -529,11 +531,10 @@ public class BackupApplicationServiceTests
         _repoMock.Setup(r => r.GetById(1)).Returns(new BackupJob { Id = 1, Name = "Job1", Source = "/src1", Destination = "/dst1", Type = BackupType.Complete });
         _repoMock.Setup(r => r.GetById(99)).Returns((BackupJob?)null);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.RunJobs(new int[] { 1, 99 }));
+        var exception = await Assert.ThrowsAsync<JobNotFoundException>(() => _service.RunJobs(new int[] { 1, 99 }));
 
-        Assert.Equal("error_job_not_found", exception.Message);
-        Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
-        Assert.Equal("99", exception.Data["0"]);
+        Assert.Equal(Localization.LocalizationKey.error_job_not_found, exception.ErrorKey);
+        Assert.Equal("99", exception.Options[0]);
         _repoMock.Verify(r => r.GetById(1), Times.Once);
         _repoMock.Verify(r => r.GetById(99), Times.Once);
     }
@@ -572,11 +573,10 @@ public class BackupApplicationServiceTests
     {
         _repoMock.Setup(r => r.GetById(It.IsAny<int>())).Returns((BackupJob?)null);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.RunJob(99));
+        var exception = await Assert.ThrowsAsync<JobNotFoundException>(() => _service.RunJob(99));
 
-        Assert.Equal("error_job_not_found", exception.Message);
-        Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
-        Assert.Equal("99", exception.Data["0"]);
+        Assert.Equal(Localization.LocalizationKey.error_job_not_found, exception.ErrorKey);
+        Assert.Equal("99", exception.Options[0]);
         _repoMock.Verify(r => r.GetById(99), Times.Once);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
@@ -661,11 +661,10 @@ public class BackupApplicationServiceTests
     {
         _repoMock.Setup(r => r.GetById(1)).Returns((BackupJob?)null);
 
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _service.RunJob(1));
+        var exception = await Assert.ThrowsAsync<JobNotFoundException>(() => _service.RunJob(1));
 
-        Assert.Equal("error_job_not_found", exception.Message);
-        Assert.Equal("error_job_not_found", exception.Data["errorKey"]);
-        Assert.Equal("1", exception.Data["0"]);
+        Assert.Equal(Localization.LocalizationKey.error_job_not_found, exception.ErrorKey);
+        Assert.Equal("1", exception.Options[0]);
         _engineMock.Verify(e => e.Execute(It.IsAny<BackupJob>(), It.IsAny<CancellationToken>(), It.IsAny<BackupExecutionContext?>()), Times.Never);
     }
 

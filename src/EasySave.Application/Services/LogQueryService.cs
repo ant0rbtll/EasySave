@@ -1,16 +1,15 @@
+using EasySave.Application.Readers;
 using EasySave.Configuration;
 using EasySave.Core;
 using EasySave.Log;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Reads log files by date using pluggable format readers.
 /// </summary>
-public sealed class LogQueryService : ILogQueryService
+public sealed class LogQueryService : LogServiceBase, ILogQueryService
 {
-    private readonly IPathProvider _pathProvider;
-    private readonly IReadOnlyDictionary<LogFormat, ILogReader> _readerByFormat;
 
     /// <summary>
     /// Initializes a log query service with path resolution and format-specific readers.
@@ -18,20 +17,8 @@ public sealed class LogQueryService : ILogQueryService
     /// <param name="pathProvider">Provider used to resolve the logs directory.</param>
     /// <param name="readers">Registered readers keyed by log format.</param>
     public LogQueryService(IPathProvider pathProvider, IEnumerable<ILogReader> readers)
+        : base(pathProvider, readers)
     {
-        ArgumentNullException.ThrowIfNull(pathProvider);
-        ArgumentNullException.ThrowIfNull(readers);
-
-        _pathProvider = pathProvider;
-
-        var grouped = readers.GroupBy(static r => r.Format).ToList();
-        var duplicate = grouped.FirstOrDefault(static g => g.Count() > 1);
-        if (duplicate is not null)
-        {
-            throw new InvalidOperationException($"Multiple log readers are registered for format '{duplicate.Key}'.");
-        }
-
-        _readerByFormat = grouped.ToDictionary(static g => g.Key, static g => g.Single());
     }
 
     /// <inheritdoc />

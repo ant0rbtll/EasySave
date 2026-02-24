@@ -1,3 +1,5 @@
+using EasySave.Exceptions;
+
 namespace EasySave.UI.Tests;
 
 internal sealed class FakeLocalizationService : ILocalizationService
@@ -30,6 +32,16 @@ internal sealed class FakeLocalizationService : ILocalizationService
         }
 
         return key.ToString();
+    }
+
+    public string GetTranslateTextException(Exception exception)
+    {
+        if(exception is EasysaveDefaultException easysaveException)
+        {
+            return TranslateText(easysaveException.ErrorKey);
+        }
+      
+        return exception.Message;
     }
 }
 

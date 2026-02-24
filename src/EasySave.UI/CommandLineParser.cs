@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EasySave.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -19,7 +20,7 @@ namespace EasySave.UI
         {
             if (args == null || args.Length == 0)
             {
-                throw new ArgumentException("error_parser_arg_null");
+                throw new InvalidArgumentException(nameof(args),"The argument array must not be null or empty.");
             }
             string input = args[0];
             List<int> numbers = new List<int>();
@@ -30,7 +31,7 @@ namespace EasySave.UI
 
                 if (parts.Any(string.IsNullOrWhiteSpace))
                 {
-                    throw new ArgumentException("error_parser_arg_invalid");
+                    throw new InvalidArgumentException(nameof(parts));
                 }
 
                 foreach (string part in parts)
@@ -43,15 +44,15 @@ namespace EasySave.UI
                 string[] parts = input.Split('-');
                 if (parts.Length != 2 || parts.Any(string.IsNullOrWhiteSpace))
                 {
-                    throw new ArgumentException("error_parser_arg_invalid");
+                    throw new InvalidArgumentException(nameof(parts));
                 }
-                
+
                 int start = int.Parse(parts[0]);
                 int end = int.Parse(parts[1]);
 
                 if (end < start)
                 {
-                    throw new ArgumentException("error_parser_arg_invalid");
+                    throw new InvalidArgumentException(nameof(parts));
                 }
 
                 for (int i = start; i <= end; i++)

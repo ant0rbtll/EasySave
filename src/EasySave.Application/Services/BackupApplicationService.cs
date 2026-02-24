@@ -4,8 +4,10 @@ using EasySave.Core;
 using EasySave.State;
 using EasySave.System;
 using System.Threading;
+using EasySave.Application.Readers;
+using EasySave.Exceptions;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Initializes a new instance of the <see cref="BackupApplicationService"/> class.
@@ -73,10 +75,7 @@ public class BackupApplicationService(
         var job = _repo.GetById(id);
         if (job is null)
         {
-            var exception = new InvalidOperationException("error_job_not_found");
-            exception.Data["errorKey"] = "error_job_not_found";
-            exception.Data["0"] = id.ToString();
-            throw exception;
+            throw new JobNotFoundException(id);
         }
 
         await RunJobInternalAsync(job, cancellationToken);
@@ -89,7 +88,7 @@ public class BackupApplicationService(
     /// <param name="cancellationToken">Cancellation token.</param>
     public async Task RunJobs(int[] ids, CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(ids);
+        EasysaveDefaultException.ThrowIfNull(ids);
         await Task.WhenAll(ids.Select(id => RunJob(id, cancellationToken)));
     }
 

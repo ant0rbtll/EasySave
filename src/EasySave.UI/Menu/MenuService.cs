@@ -1,4 +1,5 @@
-﻿using EasySave.Localization;
+﻿using EasySave.Exceptions;
+using EasySave.Localization;
 using EasySave.UI.Services;
 
 namespace EasySave.UI.Menu
@@ -173,7 +174,7 @@ namespace EasySave.UI.Menu
             }
             else
             {
-                throw new ArgumentException("MenuConfig must have either ItemsAsStrings or Items set.", nameof(menuConfig));
+                throw new InvalidArgumentException(nameof(menuConfig),"MenuConfig must have either ItemsAsStrings or Items set.");
             }
         }
 

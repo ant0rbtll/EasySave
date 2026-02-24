@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Exceptions;
 
 namespace EasySave.Persistence;
 
@@ -8,7 +9,7 @@ namespace EasySave.Persistence;
 public class SequentialJobIdProvider : IJobIdProvider
 {
     /// <inheritdoc />
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="EasysaveDefaultException">
     /// Thrown if the maximum ID value has been reached.
     /// </exception>
     public int NextId(List<BackupJob> existing)
@@ -35,7 +36,7 @@ public class SequentialJobIdProvider : IJobIdProvider
 
         // No gap, return the next ID after max
         if (nextId == int.MaxValue) 
-            throw new InvalidOperationException("error_max_id");
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_max_id, []);
         
         return nextId;
     }

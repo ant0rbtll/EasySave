@@ -1,7 +1,9 @@
+using EasySave.Application.Readers;
 using EasySave.Core;
+using EasySave.Exceptions;
 using EasySave.State;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Enriches backup jobs with runtime metadata loaded from state persistence.
@@ -13,7 +15,7 @@ public sealed class BackupJobStateService(IStateReader stateReader) : IBackupJob
     /// <inheritdoc />
     public void ApplyState(BackupJob job)
     {
-        ArgumentNullException.ThrowIfNull(job);
+        EasysaveDefaultException.ThrowIfNull(job);
 
         var entries = _stateReader.ReadEntries();
         ApplyState(job, entries);
@@ -22,7 +24,7 @@ public sealed class BackupJobStateService(IStateReader stateReader) : IBackupJob
     /// <inheritdoc />
     public void ApplyState(IEnumerable<BackupJob> jobs)
     {
-        ArgumentNullException.ThrowIfNull(jobs);
+        EasysaveDefaultException.ThrowIfNull(jobs);
 
         var entries = _stateReader.ReadEntries();
         foreach (var job in jobs)

@@ -1,3 +1,4 @@
+using EasySave.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EasySave.UI.Tests;

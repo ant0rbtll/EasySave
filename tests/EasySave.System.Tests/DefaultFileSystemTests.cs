@@ -1,3 +1,5 @@
+using EasySave.Exceptions;
+
 namespace EasySave.System.Tests;
 
 public class DefaultFileSystemTests : IDisposable
@@ -47,7 +49,7 @@ public class DefaultFileSystemTests : IDisposable
     public void DirectoryExists_InvalidPath_ThrowsArgumentException(string? path)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.DirectoryExists(path!));
+        Assert.Throws<FileNullException>(() => _fileSystem.DirectoryExists(path!));
     }
 
     #endregion
@@ -87,7 +89,7 @@ public class DefaultFileSystemTests : IDisposable
     public void CreateDirectory_InvalidPath_ThrowsArgumentException(string? path)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.CreateDirectory(path!));
+        Assert.Throws<FileNullException>(() => _fileSystem.CreateDirectory(path!));
     }
 
     #endregion
@@ -122,7 +124,7 @@ public class DefaultFileSystemTests : IDisposable
     public void FileExists_InvalidPath_ThrowsArgumentException(string? path)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.FileExists(path!));
+        Assert.Throws<FileNullException>(() => _fileSystem.FileExists(path!));
     }
 
     #endregion
@@ -165,7 +167,7 @@ public class DefaultFileSystemTests : IDisposable
         var path = Path.Combine(_testDirectory, "nonexistent.txt");
 
         // Act & Assert
-        Assert.Throws<FileNotFoundException>(() => _fileSystem.GetFileSize(path));
+        Assert.Throws<FileNullException>(() => _fileSystem.GetFileSize(path));
     }
 
     [Theory]
@@ -175,7 +177,7 @@ public class DefaultFileSystemTests : IDisposable
     public void GetFileSize_InvalidPath_ThrowsArgumentException(string? path)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.GetFileSize(path!));
+        Assert.Throws<FileNullException>(() => _fileSystem.GetFileSize(path!));
     }
 
     #endregion
@@ -234,7 +236,7 @@ public class DefaultFileSystemTests : IDisposable
     public void CopyFile_InvalidSourcePath_ThrowsArgumentException(string? source, string dest)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.CopyFile(source!, dest, true));
+        Assert.Throws<FileNullException>(() => _fileSystem.CopyFile(source!, dest, true));
     }
 
     [Theory]
@@ -244,7 +246,7 @@ public class DefaultFileSystemTests : IDisposable
     public void CopyFile_InvalidDestinationPath_ThrowsArgumentException(string source, string? dest)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.CopyFile(source, dest!, true));
+        Assert.Throws<FileNullException>(() => _fileSystem.CopyFile(source, dest!, true));
     }
 
     #endregion
@@ -282,7 +284,7 @@ public class DefaultFileSystemTests : IDisposable
     public void EnsureDirectoryForFileExists_InvalidPath_ThrowsArgumentException(string? path)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.EnsureDirectoryForFileExists(path!));
+        Assert.Throws<FileNullException>(() => _fileSystem.EnsureDirectoryForFileExists(path!));
     }
 
     #endregion
@@ -325,7 +327,7 @@ public class DefaultFileSystemTests : IDisposable
         var path = Path.Combine(_testDirectory, "nonexistent");
 
         // Act & Assert
-        Assert.Throws<DirectoryNotFoundException>(() => _fileSystem.EnumerateFilesRecursive(path).ToList());
+        Assert.Throws<DirectoryNullOrNotFoundException>(() => _fileSystem.EnumerateFilesRecursive(path).ToList());
     }
 
     [Theory]
@@ -335,7 +337,7 @@ public class DefaultFileSystemTests : IDisposable
     public void EnumerateFilesRecursive_InvalidPath_ThrowsArgumentException(string? path)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.EnumerateFilesRecursive(path!).ToList());
+        Assert.Throws<FileNullException>(() => _fileSystem.EnumerateFilesRecursive(path!).ToList());
     }
 
     #endregion
@@ -373,7 +375,7 @@ public class DefaultFileSystemTests : IDisposable
         var path = Path.Combine(_testDirectory, "nonexistent");
 
         // Act & Assert
-        Assert.Throws<DirectoryNotFoundException>(() => _fileSystem.EnumerateDirectoriesRecursive(path).ToList());
+        Assert.Throws<DirectoryNullOrNotFoundException>(() => _fileSystem.EnumerateDirectoriesRecursive(path).ToList());
     }
 
     [Theory]
@@ -383,7 +385,7 @@ public class DefaultFileSystemTests : IDisposable
     public void EnumerateDirectoriesRecursive_InvalidPath_ThrowsArgumentException(string? path)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.EnumerateDirectoriesRecursive(path!).ToList());
+        Assert.Throws<FileNullException>(() => _fileSystem.EnumerateDirectoriesRecursive(path!).ToList());
     }
 
     #endregion
@@ -404,21 +406,21 @@ public class DefaultFileSystemTests : IDisposable
     public void Combine_NullParts_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _fileSystem.Combine(null!));
+        Assert.Throws<InvalidArgumentException>(() => _fileSystem.Combine(null!));
     }
 
     [Fact]
     public void Combine_EmptyParts_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.Combine(Array.Empty<string>()));
+        Assert.Throws<EasysaveDefaultException>(() => _fileSystem.Combine(Array.Empty<string>()));
     }
 
     [Fact]
     public void Combine_PartsWithWhitespace_ThrowsArgumentException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.Combine("path", "   ", "file.txt"));
+        Assert.Throws<EasysaveDefaultException>(() => _fileSystem.Combine("path", "   ", "file.txt"));
     }
 
     #endregion
@@ -462,7 +464,7 @@ public class DefaultFileSystemTests : IDisposable
     public void NormalizePath_InvalidPath_ThrowsArgumentException(string? path)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.NormalizePath(path!));
+        Assert.Throws<FileNullException>(() => _fileSystem.NormalizePath(path!));
     }
 
     #endregion
@@ -490,7 +492,7 @@ public class DefaultFileSystemTests : IDisposable
     public void GetRelativePath_InvalidRootPath_ThrowsArgumentException(string? rootPath, string fullPath)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.GetRelativePath(rootPath!, fullPath));
+        Assert.Throws<FileNullException>(() => _fileSystem.GetRelativePath(rootPath!, fullPath));
     }
 
     [Theory]
@@ -500,7 +502,7 @@ public class DefaultFileSystemTests : IDisposable
     public void GetRelativePath_InvalidFullPath_ThrowsArgumentException(string rootPath, string? fullPath)
     {
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => _fileSystem.GetRelativePath(rootPath, fullPath!));
+        Assert.Throws<FileNullException>(() => _fileSystem.GetRelativePath(rootPath, fullPath!));
     }
 
     #endregion

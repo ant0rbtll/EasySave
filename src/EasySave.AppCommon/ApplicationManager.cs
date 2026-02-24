@@ -9,6 +9,8 @@ using EasySave.System;
 using EasySave.AppCommon.Services;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using EasySave.Application.Services;
+using EasySave.Application.Readers;
 
 namespace EasySave.AppCommon
 {

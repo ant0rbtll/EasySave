@@ -1,5 +1,7 @@
-using System.Threading;
 using EasySave.Core;
+using EasySave.Exceptions;
+using System;
+using System.Threading;
 
 namespace EasySave.Backup;
 
@@ -211,7 +213,7 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
                 return;
 
             if (stopRequested)
-                throw CreateStoppedByUserException();
+                throw new EasysaveDefaultException(Localization.LocalizationKey.error_backup_stopped_by_user, [StopActionKey]);
 
             if (!isPaused)
                 return;
@@ -307,14 +309,6 @@ public sealed class BackupExecutionController : IBackupExecutionController, IDis
         {
             state.ResumeEvent.Dispose();
         }
-    }
-
-    private static Exception CreateStoppedByUserException()
-    {
-        var exception = new InvalidOperationException(BackupRuntimeKeys.ErrorBackupStoppedByUser);
-        exception.Data["errorKey"] = BackupRuntimeKeys.ErrorBackupStoppedByUser;
-        exception.Data["actionKey"] = StopActionKey;
-        return exception;
     }
 
     private static void ApplyPause(JobControlState state)

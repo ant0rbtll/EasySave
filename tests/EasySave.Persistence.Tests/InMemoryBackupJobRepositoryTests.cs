@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Exceptions;
 using Moq;
 
 namespace EasySave.Persistence.Tests;
@@ -91,8 +92,8 @@ public class InMemoryBackupJobRepositoryTests
         repo.Add(job1);
 
         // Act & Assert
-        var ex = Assert.Throws<InvalidOperationException>(() => repo.Add(job2));
-        Assert.Contains("already exists", ex.Message);
+        var ex = Assert.Throws<JobAlreadyExistException>(() => repo.Add(job2));
+        Assert.Equal(Localization.LocalizationKey.error_job_already_exist, ex.ErrorKey);
 
     }
     
@@ -123,8 +124,8 @@ public class InMemoryBackupJobRepositoryTests
         var repo = CreateRepository();
 
         // Act & Assert
-        var ex = Assert.Throws<KeyNotFoundException>(() => repo.Remove(999));
-        Assert.Contains("not found", ex.Message);
+        var ex = Assert.Throws<JobNotFoundException>(() => repo.Remove(999));
+        Assert.Equal(Localization.LocalizationKey.error_job_not_found, ex.ErrorKey);
     }
 
     [Fact]
@@ -175,8 +176,8 @@ public class InMemoryBackupJobRepositoryTests
         var repo = CreateRepository();
 
         // Act & Assert
-        var ex = Assert.Throws<KeyNotFoundException>(() => repo.GetById(999));
-        Assert.Contains("not found", ex.Message);
+        var ex = Assert.Throws<JobNotFoundException>(() => repo.GetById(999));
+        Assert.Equal(Localization.LocalizationKey.error_job_not_found, ex.ErrorKey);
     }
 
     #endregion
@@ -283,8 +284,8 @@ public class InMemoryBackupJobRepositoryTests
         };
 
         // Act & Assert
-        var ex = Assert.Throws<KeyNotFoundException>(() => repo.Update(job));
-        Assert.Contains("not found", ex.Message);
+        var ex = Assert.Throws<JobNotFoundException>(() => repo.Update(job));
+        Assert.Equal(Localization.LocalizationKey.error_job_not_found, ex.ErrorKey);
     }
 
     [Fact]

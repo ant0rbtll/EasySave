@@ -1,3 +1,7 @@
+using EasySave.Exceptions;
+using System;
+using System.IO;
+
 namespace EasySave.System;
 
 /// <summary>
@@ -7,55 +11,32 @@ public sealed class DefaultFileSystem : IFileSystem
 {
     public bool DirectoryExists(string path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = path;
-            e.Data["1_type"] = "";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(path, "");
+
         return Directory.Exists(path);
     }
 
     public void CreateDirectory(string path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = path;
-            e.Data["1_type"] = "";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(path, "");
+
         Directory.CreateDirectory(path);
     }
 
     public bool FileExists(string path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = path;
-            e.Data["1_type"] = "";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(path, "");
+
         return File.Exists(path);
     }
 
     public long GetFileSize(string path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = path;
-            e.Data["1_type"] = "";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(path, "");
+
         if (!File.Exists(path))
         {
-            var e = new FileNotFoundException("error_file_not_found");
-            e.Data["0_path"] = path;
-            e.Data["1_type"] = "";
-            throw e;
+            throw new FileNullException(path, "", "File not found");
         }
 
         return new FileInfo(path).Length;
@@ -63,33 +44,15 @@ public sealed class DefaultFileSystem : IFileSystem
 
     public void CopyFile(string sourcePath, string destinationPath, bool overwrite)
     {
-        if (string.IsNullOrWhiteSpace(sourcePath))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = sourcePath;
-            e.Data["1_type"] = "Source";
-            throw e;
-        }
-        if (string.IsNullOrWhiteSpace(destinationPath))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = destinationPath;
-            e.Data["1_type"] = "Destination";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(sourcePath, "Source");
+        FileNullException.ThrowIfNullOrWhiteSpace(destinationPath, "Destination");
 
         File.Copy(sourcePath, destinationPath, overwrite);
     }
 
     public void EnsureDirectoryForFileExists(string filePath)
     {
-        if (string.IsNullOrWhiteSpace(filePath))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = filePath;
-            e.Data["1_type"] = "File";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(filePath, "File");
 
         var destDir = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrWhiteSpace(destDir) && !Directory.Exists(destDir))
@@ -98,18 +61,11 @@ public sealed class DefaultFileSystem : IFileSystem
 
     public IEnumerable<string> EnumerateFilesRecursive(string rootPath, IEnumerable<string>? priorityExtensions = null)
     {
-        if (string.IsNullOrWhiteSpace(rootPath))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = rootPath;
-            e.Data["1_type"] = "Root";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(rootPath, "Root");
+
         if (!Directory.Exists(rootPath))
         {
-            var e = new DirectoryNotFoundException("error_directory_not_found");
-            e.Data["directory"] = rootPath;
-            throw e;
+            throw new DirectoryNullOrNotFoundException(rootPath);
         }
         var allFiles = Directory.EnumerateFiles(rootPath, "*", SearchOption.AllDirectories).ToList();
 
@@ -128,18 +84,11 @@ public sealed class DefaultFileSystem : IFileSystem
 
     public IEnumerable<string> EnumerateDirectoriesRecursive(string rootPath)
     {
-        if (string.IsNullOrWhiteSpace(rootPath))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = rootPath;
-            e.Data["1_type"] = "Root";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(rootPath, "Root");
+
         if (!Directory.Exists(rootPath))
         {
-            var e = new DirectoryNotFoundException("error_directory_not_found");
-            e.Data["directory"] = rootPath;
-            throw e;
+            throw new DirectoryNullOrNotFoundException(rootPath);
         }
 
         return Directory.EnumerateDirectories(rootPath, "*", SearchOption.AllDirectories);
@@ -148,13 +97,13 @@ public sealed class DefaultFileSystem : IFileSystem
     public string Combine(params string[] parts)
     {
         if (parts is null)
-            throw new ArgumentNullException(nameof(parts));
+            throw new InvalidArgumentException(nameof(parts));
         if (parts.Length == 0)
-            throw new ArgumentException("error_parts_empty");
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_parts_empty, []);
         foreach (var part in parts)
         {
             if (string.IsNullOrWhiteSpace(part))
-                throw new ArgumentException("error_parts_null");
+                throw new EasysaveDefaultException(Localization.LocalizationKey.error_parts_null, []);
         }
 
         return Path.Combine(parts);
@@ -162,13 +111,7 @@ public sealed class DefaultFileSystem : IFileSystem
 
     public string NormalizePath(string path)
     {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = path;
-            e.Data["1_type"] = "";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(path, "");
         var p = path.Trim();
         p = p.Replace('\\', Path.DirectorySeparatorChar)
              .Replace('/', Path.DirectorySeparatorChar);
@@ -178,20 +121,8 @@ public sealed class DefaultFileSystem : IFileSystem
 
     public string GetRelativePath(string rootPath, string fullPath)
     {
-        if (string.IsNullOrWhiteSpace(rootPath))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = rootPath;
-            e.Data["1_type"] = "Root";
-            throw e;
-        }
-        if (string.IsNullOrWhiteSpace(fullPath))
-        {
-            var e = new ArgumentException("error_file_null");
-            e.Data["0_path"] = fullPath;
-            e.Data["1_type"] = "Full";
-            throw e;
-        }
+        FileNullException.ThrowIfNullOrWhiteSpace(rootPath, "Root");
+        FileNullException.ThrowIfNullOrWhiteSpace(fullPath, "Full");
 
         return Path.GetRelativePath(rootPath, fullPath);
     }

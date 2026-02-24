@@ -1,3 +1,4 @@
+using EasySave.Exceptions;
 using EasySave.Persistence;
 using EasySave.System;
 using System.Diagnostics;
@@ -26,7 +27,7 @@ public sealed class BusinessSoftwareBackupExecutionGuard(
         {
             if (_isBusinessSoftwareRunning(configuredProcessName))
             {
-                throw CreateBusinessSoftwareRunningException(configuredProcessName);
+                throw new EasysaveDefaultException(Localization.LocalizationKey.error_business_software_running, [configuredProcessName]);
             }
         }
     }
@@ -41,14 +42,6 @@ public sealed class BusinessSoftwareBackupExecutionGuard(
         {
             return [];
         }
-    }
-
-    private static InvalidOperationException CreateBusinessSoftwareRunningException(string configuredProcessName)
-    {
-        var exception = new InvalidOperationException("error_business_software_running");
-        exception.Data["errorKey"] = "error_business_software_running";
-        exception.Data["0"] = configuredProcessName;
-        return exception;
     }
 
     private static bool IsProcessRunning(string processName)

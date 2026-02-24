@@ -1,3 +1,4 @@
+using EasySave.Exceptions;
 using EasySave.Log;
 
 namespace EasySave.AppCommon.Services;
@@ -7,7 +8,7 @@ namespace EasySave.AppCommon.Services;
 /// </summary>
 public sealed class CompositeLogger(params ILogger[] loggers) : ILogger, IDisposable
 {
-    private readonly ILogger[] _loggers = loggers ?? throw new ArgumentNullException(nameof(loggers));
+    private readonly ILogger[] _loggers = loggers ?? throw new InvalidArgumentException(nameof(loggers));
 
     public void Write(LogEntry entry)
     {
@@ -28,7 +29,7 @@ public sealed class CompositeLogger(params ILogger[] loggers) : ILogger, IDispos
 
         if (exceptions is { Count: > 0 })
         {
-            throw new AggregateException("One or more loggers failed.", exceptions);
+            throw new EasysaveDefaultException(Localization.LocalizationKey.error_logger_failed, [], exceptions.Count.ToString());
         }
     }
 
@@ -54,6 +55,7 @@ public sealed class CompositeLogger(params ILogger[] loggers) : ILogger, IDispos
         
         if (firstException != null)
         {
+            //TO EXCEPTION
             throw firstException;
         }
     }

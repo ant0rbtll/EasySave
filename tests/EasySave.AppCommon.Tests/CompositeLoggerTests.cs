@@ -1,4 +1,5 @@
 using EasySave.AppCommon.Tests.TestHelpers;
+using EasySave.Exceptions;
 
 namespace EasySave.AppCommon.Tests;
 
@@ -37,15 +38,15 @@ public class CompositeLoggerTests
     {
         var throwing = new Mock<ILogger>();
         throwing.Setup(l => l.Write(It.IsAny<LogEntry>()))
-            .Throws(new InvalidOperationException("boom"));
+            .Throws(new EasysaveDefaultException(Localization.LocalizationKey.error_unable_access_log, []));
         var spy = new SpyLogger();
         using var composite = new CompositeLogger(throwing.Object, spy);
         var entry = LogEntryFactory.Create();
 
-        var ex = Assert.Throws<AggregateException>(() => composite.Write(entry));
+        var ex = Assert.Throws<EasysaveDefaultException>(() => composite.Write(entry));
 
-        Assert.Single(ex.InnerExceptions);
-        Assert.IsType<InvalidOperationException>(ex.InnerExceptions[0]);
+        Assert.Single(ex.Details);
+        Assert.IsType<EasysaveDefaultException>(ex);
         Assert.Single(spy.WrittenEntries);
     }
 
@@ -54,16 +55,16 @@ public class CompositeLoggerTests
     {
         var throwing1 = new Mock<ILogger>();
         throwing1.Setup(l => l.Write(It.IsAny<LogEntry>()))
-            .Throws(new InvalidOperationException("first"));
+            .Throws(new EasysaveDefaultException(Localization.LocalizationKey.error_unable_access_log, []));
         var throwing2 = new Mock<ILogger>();
         throwing2.Setup(l => l.Write(It.IsAny<LogEntry>()))
-            .Throws(new InvalidOperationException("second"));
+            .Throws(new EasysaveDefaultException(Localization.LocalizationKey.error_unable_access_log, []));
         using var composite = new CompositeLogger(throwing1.Object, throwing2.Object);
         var entry = LogEntryFactory.Create();
 
-        var ex = Assert.Throws<AggregateException>(() => composite.Write(entry));
+        var ex = Assert.Throws<EasysaveDefaultException>(() => composite.Write(entry));
 
-        Assert.Equal(2, ex.InnerExceptions.Count);
+        Assert.Equal("2", ex.Details);
     }
 
     [Fact]

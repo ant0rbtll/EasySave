@@ -4,7 +4,7 @@ using System.Diagnostics;
 using EasySave.Configuration;
 using EasySave.State;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Readers;
 
 /// <summary>
 /// Reads state entries from the JSON state file.

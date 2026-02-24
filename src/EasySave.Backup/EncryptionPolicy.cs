@@ -68,6 +68,7 @@ public sealed class EncryptionPolicy
     /// </summary>
     /// <param name="filePath">Target file path.</param>
     /// <returns><see langword="true"/> when encryption is configured for this extension.</returns>
+    #region EncrytpionTools
     public bool ShouldEncrypt(string filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath) || _encryptedExtensions.Count == 0)
@@ -104,4 +105,5 @@ public sealed class EncryptionPolicy
 
         return trimmed.ToLowerInvariant();
     }
+    #endregion
 }

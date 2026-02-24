@@ -158,13 +158,13 @@ public partial class ManageViewModel
             if (ex.Data["errorKey"]?.ToString() == "error_job_not_found")
             {
                 errorMessage = _localizationService.TranslateTextWithParams(
-                    LocalizationKey.gui_manage_error_job_not_found_named,
+                    LocalizationKey.error_job_not_found_named,
                     [job.Name]);
             }
             else
             {
                 stoppedByUser = IsStoppedByUser(ex);
-                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+                errorMessage = _localizationService.GetTranslateTextException(ex);
             }
         }
         finally
@@ -280,7 +280,7 @@ public partial class ManageViewModel
         catch (Exception ex)
         {
             stoppedByUser = IsStoppedByUser(ex);
-            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            errorMessage = _localizationService.GetTranslateTextException(ex);
             success = false;
         }
 
@@ -358,7 +358,7 @@ public partial class ManageViewModel
             }
             catch (Exception ex)
             {
-                errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+                errorMessage = _localizationService.GetTranslateTextException(ex);
                 success = false;
                 break;
             }
@@ -435,7 +435,7 @@ public partial class ManageViewModel
         }
         catch (Exception ex)
         {
-            errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            errorMessage = _localizationService.GetTranslateTextException(ex);
         }
         finally
         {
@@ -502,7 +502,7 @@ public partial class ManageViewModel
         }
         catch (Exception ex)
         {
-            var errorMessage = ExceptionLocalizer.GetLocalizedMessage(ex, _localizationService);
+            var errorMessage = _localizationService.GetTranslateTextException(ex);
             StatusMessage = errorMessage;
             IsStatusError = true;
             IsStatusBannerVisible = true;

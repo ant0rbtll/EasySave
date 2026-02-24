@@ -1,4 +1,5 @@
 using EasySave.Backup;
+using EasySave.Exceptions;
 using EasySave.Persistence;
 
 namespace EasySave.Application;
@@ -16,7 +17,7 @@ public sealed class UserPreferencesEncryptionPolicyProvider : IEncryptionPolicyP
     /// <param name="preferencesRepository">Preferences repository.</param>
     public UserPreferencesEncryptionPolicyProvider(IUserPreferencesRepository preferencesRepository)
     {
-        _preferencesRepository = preferencesRepository ?? throw new ArgumentNullException(nameof(preferencesRepository));
+        _preferencesRepository = preferencesRepository ?? throw new InvalidArgumentException(nameof(preferencesRepository));
     }
 
     /// <inheritdoc />

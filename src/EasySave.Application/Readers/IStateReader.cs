@@ -1,6 +1,6 @@
 using EasySave.State;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Readers;
 
 /// <summary>
 /// Reads the runtime backup state from persistence.

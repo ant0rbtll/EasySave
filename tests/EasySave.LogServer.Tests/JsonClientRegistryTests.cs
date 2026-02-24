@@ -1,3 +1,5 @@
+using EasySave.Exceptions;
+
 namespace EasySave.LogServer.Tests;
 
 public class JsonClientRegistryTests : IDisposable
@@ -23,7 +25,7 @@ public class JsonClientRegistryTests : IDisposable
     [InlineData("   ")]
     public void Constructor_ThrowsOnInvalidPath(string? path)
     {
-        Assert.ThrowsAny<ArgumentException>(() => new JsonClientRegistry(path!));
+        Assert.ThrowsAny<InvalidArgumentException>(() => new JsonClientRegistry(path!));
     }
 
     [Fact]

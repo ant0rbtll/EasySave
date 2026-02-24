@@ -13,6 +13,7 @@ COPY src/EasySave.Application/*.csproj ./src/EasySave.Application/
 COPY src/EasySave.Backup/*.csproj ./src/EasySave.Backup/
 COPY src/EasySave.Persistence/*.csproj ./src/EasySave.Persistence/
 COPY src/EasySave.Localization/*.csproj ./src/EasySave.Localization/
+COPY src/EasySave.Exception/*.csproj ./src/EasySave.Exception/
 COPY src/EasySave.Configuration/*.csproj ./src/EasySave.Configuration/
 COPY src/EasySave.System/*.csproj ./src/EasySave.System/
 COPY src/EasySave.State/*.csproj ./src/EasySave.State/

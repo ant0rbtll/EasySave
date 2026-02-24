@@ -1,18 +1,17 @@
+using EasySave.Application.Readers;
 using EasySave.Configuration;
 using EasySave.Core;
 using EasySave.Log;
 
-namespace EasySave.Application;
+namespace EasySave.Application.Services;
 
 /// <summary>
 /// Provides hierarchical log navigation with file-level caching.
 /// </summary>
-public sealed class LogNavigationService : ILogNavigationService
+public sealed class LogNavigationService : LogServiceBase, ILogNavigationService
 {
     private const string PauseActionKey = BackupRuntimeKeys.ActionBackupPausedByUser;
 
-    private readonly IPathProvider _pathProvider;
-    private readonly IReadOnlyDictionary<LogFormat, ILogReader> _readerByFormat;
     private readonly object _sync = new();
     private readonly Dictionary<FileCacheKey, FileCacheValue> _fileCache = new();
     private readonly Dictionary<DateOnly, DayIndexCacheValue> _dayIndexCache = new();
@@ -22,21 +21,9 @@ public sealed class LogNavigationService : ILogNavigationService
     /// </summary>
     /// <param name="pathProvider">Provider used to resolve the logs directory.</param>
     /// <param name="readers">Registered readers keyed by log format.</param>
-    public LogNavigationService(IPathProvider pathProvider, IEnumerable<ILogReader> readers)
+    public LogNavigationService(IPathProvider pathProvider, IEnumerable<ILogReader> readers) 
+        : base(pathProvider, readers)
     {
-        ArgumentNullException.ThrowIfNull(pathProvider);
-        ArgumentNullException.ThrowIfNull(readers);
-
-        _pathProvider = pathProvider;
-
-        var grouped = readers.GroupBy(static r => r.Format).ToList();
-        var duplicate = grouped.FirstOrDefault(static g => g.Count() > 1);
-        if (duplicate is not null)
-        {
-            throw new InvalidOperationException($"Multiple log readers are registered for format '{duplicate.Key}'.");
-        }
-
-        _readerByFormat = grouped.ToDictionary(static g => g.Key, static g => g.Single());
     }
 
     /// <inheritdoc />

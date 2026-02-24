@@ -1,4 +1,5 @@
 using System.Text.Json;
+using EasySave.Exceptions;
 using EasySave.LogServer.Models;
 
 namespace EasySave.LogServer.Services;
@@ -21,7 +22,7 @@ public sealed class JsonClientRegistry : IClientRegistry, IDisposable
 
     public JsonClientRegistry(string filePath)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        EasysaveDefaultException.ThrowIfNullOrWhiteSpace(filePath);
         _filePath = filePath;
 
         var dir = Path.GetDirectoryName(filePath);

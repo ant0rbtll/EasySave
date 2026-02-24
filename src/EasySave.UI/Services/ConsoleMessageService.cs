@@ -18,26 +18,15 @@ internal class ConsoleMessageService(
     public void Write(LocalizationKey key, bool writeLine = true)
     {
         var message = _localizationService.TranslateText(key);
-        if (writeLine)
-        {
-            _consoleAdapter.WriteLine(message);
-            return;
-        }
+        InternalWrite(message, writeLine);
 
-        _consoleAdapter.Write(message);
     }
 
     /// <inheritdoc />
     public void WriteWithParams(LocalizationKey key, string[] parameters, bool writeLine = true)
     {
         var message = _localizationService.TranslateTextWithParams(key, parameters);
-        if (writeLine)
-        {
-            _consoleAdapter.WriteLine(message);
-            return;
-        }
-
-        _consoleAdapter.Write(message);
+        InternalWrite(message, writeLine);
     }
 
     /// <inheritdoc />
@@ -53,28 +42,19 @@ internal class ConsoleMessageService(
         _consoleAdapter.SetForegroundColor(ConsoleColor.Red);
         Write(LocalizationKey.error);
 
-        var messageKey = exception.Message;
-        if (exception.Data.Contains("errorKey") && exception.Data["errorKey"] is string dataKey)
-        {
-            messageKey = dataKey;
-        }
-
-        if (_errorManager.TryGetMessage(messageKey, out var localizationKey))
-        {
-            WriteWithParams(
-                localizationKey,
-                exception.Data.Keys
-                    .Cast<string>()
-                    .Where(key => !string.Equals(key, "errorKey", StringComparison.Ordinal))
-                    .OrderBy(key => key)
-                    .Select(key => exception.Data[key]?.ToString() ?? string.Empty)
-                    .ToArray());
-        }
-        else
-        {
-            _consoleAdapter.WriteLine(exception.Message);
-        }
-
+        string exceptionMessage = _localizationService.GetTranslateTextException(exception);
+        InternalWrite(exceptionMessage, true);
         _consoleAdapter.ResetColor();
+    }
+
+    private void InternalWrite(string message, bool writeLine)
+    {
+        if (writeLine)
+        {
+            _consoleAdapter.WriteLine(message);
+            return;
+        }
+
+        _consoleAdapter.Write(message);
     }
 }

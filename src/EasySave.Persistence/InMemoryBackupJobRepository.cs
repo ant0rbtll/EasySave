@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Exceptions;
 
 namespace EasySave.Persistence;
 
@@ -21,7 +22,7 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="JobAlreadyExistException">
     /// Thrown if the maximum number of jobs is reached or if the ID already exists.
     /// </exception>
     public void Add(BackupJob job)
@@ -33,37 +34,28 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
 
         if (_jobs.ContainsKey(job.Id))
         {
-            var e = new InvalidOperationException($"Job with ID {job.Id} already exists.");
-            e.Data["errorKey"] = "error_add_exists";
-            e.Data["job_id"] = job.Id;
-            throw e;
+            throw new JobAlreadyExistException(job.Id);
         }
         _jobs[job.Id] = job;
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public void Remove(int id)
     {
         if (!_jobs.Remove(id))
         {
-            var e = new KeyNotFoundException($"Job with ID {id} not found");
-            e.Data["errorKey"] = "error_job_not_found";
-            e.Data["job_id"] = id;
-            throw e;
+            throw new JobNotFoundException(id);
         }
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public BackupJob GetById(int id)
     {
         if (!_jobs.TryGetValue(id, out var job))
         {
-            var e = new KeyNotFoundException($"Job with ID {id} not found");
-            e.Data["errorKey"] = "error_job_not_found";
-            e.Data["job_id"] = id;
-            throw e;
+            throw new JobNotFoundException(id);
         }
         return job;
     }
@@ -81,15 +73,12 @@ public class InMemoryBackupJobRepository : IBackupJobRepository
     }
 
     /// <inheritdoc />
-    /// <exception cref="KeyNotFoundException">Thrown if the job does not exist.</exception>
+    /// <exception cref="JobNotFoundException">Thrown if the job does not exist.</exception>
     public void Update(BackupJob job)
     {
         if (!_jobs.ContainsKey(job.Id))
         {
-            var e = new KeyNotFoundException($"Job with ID {job.Id} not found");
-            e.Data["errorKey"] = "error_job_not_found";
-            e.Data["job_id"] = job.Id;
-            throw e;
+            throw new JobNotFoundException(job.Id);
         }
         _jobs[job.Id] = job;
     }

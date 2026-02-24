@@ -5,6 +5,7 @@ namespace EasySave.Localization;
 /// </summary>
 public enum LocalizationKey
 {
+    // MENU
     menu_create,
     menu_list,
     menu_save,
@@ -27,6 +28,7 @@ public enum LocalizationKey
     menu_job_update_type,
     menu_job_update_save,
     back,
+    // Backup Job
     backupjob_create_name,
     backupjob_create_source,
     backupjob_create_destination,
@@ -43,8 +45,11 @@ public enum LocalizationKey
     backupjob_completed,
     backupjob_updated,
     backupjob_delete_confirm,
+
+    // CONFIG
     config_locale_fr,
     config_locale_en,
+
     ask_log_path,
     ask_large_file_threshold_value,
     log_path_updated,
@@ -97,6 +102,8 @@ public enum LocalizationKey
     job_update_unsaved_question,
     job_update_unsaved_save_and_quit,
     job_update_unsaved_discard_and_quit,
+
+    //ERROR
     error,
     error_add_exists,
     error_parser_arg_null,
@@ -113,6 +120,23 @@ public enum LocalizationKey
     error_parts_empty,
     error_parts_null,
     error_business_software_running,
+    error_unsupported_log_format,
+    error_job_already_exist,
+    error_invalid_log_file,
+    error_invalid_argument,
+    error_encryption_failed,
+    error_logger_failed,
+    error_log_sent_failed,
+    error_job_already_running,
+    error_out_of_range,
+    error_file_too_large,
+    error_unexpected_element,
+    error_invalid_timestamp,
+    error_invalid_event_type,
+    error_invalid_numeric_value,
+    error_multiple_readers_registered,
+    error_unable_access_log,
+    error_job_not_found_named,
 
     // GUI
     gui_sidebar_create,
@@ -157,7 +181,6 @@ public enum LocalizationKey
     gui_manage_tooltip_pause,
     gui_manage_tooltip_stop,
     gui_manage_run_success,
-    gui_manage_error_job_not_found_named,
     gui_manage_delete_success,
     gui_create_add_success,
     gui_create_subtitle,
