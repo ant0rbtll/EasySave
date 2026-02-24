@@ -929,8 +929,9 @@ public class BackupEngineTests
 
         // Act & Assert
         var ex = await Assert.ThrowsAsync<EasysaveDefaultException>(() => _backupEngine.Execute(job));
-        Assert.Contains("File transfer failed", ex.Message);
-        Assert.Contains("error code 1", ex.Message);
+        Assert.Equal(Localization.LocalizationKey.error_file_transfer_failed, ex.ErrorKey);
+        Assert.Equal(3, ex.Options.Count);
+        Assert.Equal("1", ex.Options[2]);
 
     }
 
