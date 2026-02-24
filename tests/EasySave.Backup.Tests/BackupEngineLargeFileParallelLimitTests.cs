@@ -84,7 +84,7 @@ public class BackupEngineLargeFileParallelLimitTests
         ILogger logger,
         ILargeFileTransferBarrier barrier)
     {
-        return new BackupEngine(
+        return BackupEngineFactory.Create(
             fileSystem,
             transferService,
             stateWriter,
