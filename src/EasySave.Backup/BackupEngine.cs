@@ -172,7 +172,7 @@ public class BackupEngine(
                            parallelLargeFileThresholdBytes,
                            cancellationToken))
                 {
-                    fileExecutionResult = _fileExecutionService.TransferAndEncrypt(planned, encryptionPolicy);
+                    fileExecutionResult = _fileExecutionService.TransferAndEncrypt(planned, encryptionPolicy, cancellationToken);
                 }
 
                 _runtimeGate.Log(job.Id,

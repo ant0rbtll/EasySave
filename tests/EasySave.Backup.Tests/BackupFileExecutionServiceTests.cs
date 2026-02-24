@@ -148,6 +148,26 @@ public class BackupFileExecutionServiceTests
         Assert.Equal(-1, result.EncryptionTimeMs);
     }
 
+    [Fact]
+    public void TransferAndEncrypt_WhenProviderIsCanceled_PropagatesOperationCanceledException()
+    {
+        var plan = new BackupFilePlan("/src/a.txt", "/dst/a.txt", 120, false, true);
+        _transferServiceMock
+            .Setup(ts => ts.TransferFile(plan.SourceFile, plan.DestinationFile, true))
+            .Returns(new TransferResult(120, 10, 0));
+        _resolverMock.Setup(r => r.Resolve(EncryptionProviderNames.DotNet)).Returns(_providerMock.Object);
+
+        using var cts = new CancellationTokenSource();
+        _providerMock
+            .Setup(p => p.EncryptAsync(plan.DestinationFile, It.IsAny<EncryptionPolicy>(), cts.Token))
+            .ThrowsAsync(new OperationCanceledException(cts.Token));
+
+        var service = CreateService();
+        var policy = new EncryptionPolicy([".txt"], EncryptionProviderNames.DotNet, null);
+
+        Assert.Throws<OperationCanceledException>(() => service.TransferAndEncrypt(plan, policy, cts.Token));
+    }
+
     private BackupFileExecutionService CreateService()
         => new(_fileSystemMock.Object, _transferServiceMock.Object, _resolverMock.Object);
 }

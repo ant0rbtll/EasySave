@@ -39,9 +39,13 @@ public sealed class BackupFileExecutionService(
     /// </summary>
     /// <param name="plan">File execution plan.</param>
     /// <param name="policy">Runtime encryption policy.</param>
+    /// <param name="cancellationToken">Cancellation token propagated to encryption provider.</param>
     /// <returns>Transfer and encryption execution result.</returns>
     /// <exception cref="EasysaveDefaultException">Thrown when file transfer fails.</exception>
-    public BackupFileTransferExecutionResult TransferAndEncrypt(BackupFilePlan plan, EncryptionPolicy policy)
+    public BackupFileTransferExecutionResult TransferAndEncrypt(
+        BackupFilePlan plan,
+        EncryptionPolicy policy,
+        CancellationToken cancellationToken = default)
     {
         var transferResult = _transferService.TransferFile(plan.SourceFile, plan.DestinationFile, overwrite: true);
         if (!transferResult.IsSuccess)
@@ -51,11 +55,14 @@ public sealed class BackupFileExecutionService(
                 [plan.SourceFile, plan.DestinationFile, transferResult.ErrorCode.ToString()]);
         }
 
-        var encryptionTimeMs = EncryptTransferredFileIfRequired(plan.DestinationFile, policy);
+        var encryptionTimeMs = EncryptTransferredFileIfRequired(plan.DestinationFile, policy, cancellationToken);
         return new BackupFileTransferExecutionResult(transferResult, encryptionTimeMs);
     }
 
-    private long EncryptTransferredFileIfRequired(string destinationFile, EncryptionPolicy policy)
+    private long EncryptTransferredFileIfRequired(
+        string destinationFile,
+        EncryptionPolicy policy,
+        CancellationToken cancellationToken)
     {
         if (!policy.ShouldEncrypt(destinationFile))
         {
@@ -71,7 +78,7 @@ public sealed class BackupFileExecutionService(
         try
         {
             // Encryption is intentionally serialized/synchronous due to product constraints on the provider.
-            var result = provider.EncryptAsync(destinationFile, policy).GetAwaiter().GetResult();
+            var result = provider.EncryptAsync(destinationFile, policy, cancellationToken).GetAwaiter().GetResult();
             if (result.IsSuccess)
             {
                 return Math.Max(0, result.EncryptionTimeMs);
@@ -80,6 +87,10 @@ public sealed class BackupFileExecutionService(
             return result.EncryptionTimeMs < 0
                 ? result.EncryptionTimeMs
                 : -Math.Max(1, result.EncryptionTimeMs);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception)
         {
