@@ -15,17 +15,33 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
         : "ProSoft_EasySave_CryptoSoft_SingleInstance";
 
     private static readonly TimeSpan DefaultMutexWaitTimeout = TimeSpan.FromMinutes(5);
+    private static readonly TimeSpan DefaultProcessExecutionTimeout = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan MutexWaitPollInterval = TimeSpan.FromMilliseconds(100);
 
     private readonly IExternalCryptoProcessRunner _processRunner;
     private readonly string _mutexName;
     private readonly TimeSpan _mutexWaitTimeout;
+    private readonly TimeSpan _processExecutionTimeout;
 
     /// <summary>
     /// Initializes a new instance using the default process runner and mutex settings.
     /// </summary>
     public ExternalEncryptionProvider()
-        : this(new ExternalCryptoProcessRunner(), DefaultMutexName, DefaultMutexWaitTimeout)
+        : this(new ExternalCryptoProcessRunner(), DefaultMutexName, DefaultMutexWaitTimeout, DefaultProcessExecutionTimeout)
+    {
+    }
+
+    /// <summary>
+    /// Initializes a new instance with explicit process runner and mutex settings.
+    /// </summary>
+    /// <param name="processRunner">Process runner used to invoke CryptoSoft.</param>
+    /// <param name="mutexName">Named mutex used for cross-process mono-instance enforcement.</param>
+    /// <param name="mutexWaitTimeout">Maximum time to wait for the mutex before failing.</param>
+    public ExternalEncryptionProvider(
+        IExternalCryptoProcessRunner processRunner,
+        string mutexName,
+        TimeSpan mutexWaitTimeout)
+        : this(processRunner, mutexName, mutexWaitTimeout, DefaultProcessExecutionTimeout)
     {
     }
 
@@ -35,10 +51,12 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
     /// <param name="processRunner">Process runner used to invoke CryptoSoft.</param>
     /// <param name="mutexName">Named mutex used for cross-process mono-instance enforcement.</param>
     /// <param name="mutexWaitTimeout">Maximum time to wait for the mutex before failing.</param>
+    /// <param name="processExecutionTimeout">Maximum execution time allowed for one CryptoSoft process.</param>
     public ExternalEncryptionProvider(
         IExternalCryptoProcessRunner processRunner,
         string mutexName,
-        TimeSpan mutexWaitTimeout)
+        TimeSpan mutexWaitTimeout,
+        TimeSpan processExecutionTimeout)
     {
         _processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
         _mutexName = string.IsNullOrWhiteSpace(mutexName)
@@ -47,6 +65,9 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
         _mutexWaitTimeout = mutexWaitTimeout <= TimeSpan.Zero
             ? throw new ArgumentOutOfRangeException(nameof(mutexWaitTimeout), "Mutex wait timeout must be greater than zero.")
             : mutexWaitTimeout;
+        _processExecutionTimeout = processExecutionTimeout <= TimeSpan.Zero
+            ? throw new ArgumentOutOfRangeException(nameof(processExecutionTimeout), "Process execution timeout must be greater than zero.")
+            : processExecutionTimeout;
     }
 
     /// <inheritdoc />
@@ -108,7 +129,23 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
                     errorMessage: $"Timeout while waiting for CryptoSoft mono-instance lock ({_mutexWaitTimeout.TotalSeconds:F0}s)."));
             }
 
-            var runResult = _processRunner.Run(executablePath, filePath, cancellationToken);
+            using var processTimeoutCts = new CancellationTokenSource();
+            processTimeoutCts.CancelAfter(_processExecutionTimeout);
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, processTimeoutCts.Token);
+
+            ExternalCryptoProcessRunResult runResult;
+            try
+            {
+                runResult = _processRunner.Run(executablePath, filePath, linkedCts.Token);
+            }
+            catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested && processTimeoutCts.IsCancellationRequested)
+            {
+                return Task.FromResult(EncryptionResult.Failure(
+                    encryptionTimeMs: GetNegativeElapsed(stopwatch),
+                    errorCode: -1,
+                    errorMessage: $"CryptoSoft execution timed out after {FormatTimeout(_processExecutionTimeout)}."));
+            }
+
             if (runResult.IsSuccess)
             {
                 return Task.FromResult(EncryptionResult.Success(stopwatch.ElapsedMilliseconds));
@@ -184,5 +221,15 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
     private static int NormalizeErrorCode(int errorCode)
     {
         return errorCode == 0 ? -1 : errorCode;
+    }
+
+    private static string FormatTimeout(TimeSpan timeout)
+    {
+        if (timeout.TotalSeconds >= 1)
+        {
+            return $"{Math.Ceiling(timeout.TotalSeconds):F0}s";
+        }
+
+        return $"{Math.Ceiling(timeout.TotalMilliseconds):F0}ms";
     }
 }

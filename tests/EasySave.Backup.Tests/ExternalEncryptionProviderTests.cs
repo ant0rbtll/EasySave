@@ -154,6 +154,43 @@ public sealed class ExternalEncryptionProviderTests : IDisposable
         }
     }
 
+    [Fact]
+    public async Task EncryptAsync_WhenExecutionTimeoutIsReached_ReturnsFailureAndReleasesMutex()
+    {
+        var runner = new BlockingRunner();
+        var mutexName = $"EasySave_Test_CryptoSoft_Mutex_{Guid.NewGuid():N}";
+        var provider = new ExternalEncryptionProvider(
+            runner,
+            mutexName,
+            TimeSpan.FromSeconds(2),
+            TimeSpan.FromMilliseconds(120));
+
+        var executablePath = CreateFile("cryptosoft.exe", "fake binary");
+        var targetFile = CreateFile("data-timeout.txt", "payload");
+        var policy = new EncryptionPolicy([".txt"], EncryptionProviderNames.External, executablePath);
+
+        var result = await provider.EncryptAsync(targetFile, policy);
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.EncryptionTimeMs < 0);
+        Assert.Contains("CryptoSoft execution timed out", result.ErrorMessage, StringComparison.Ordinal);
+        Assert.Equal(1, runner.InvocationCount);
+
+        var mutexAcquiredFromOtherThread = await Task.Run(() =>
+        {
+            using var probeMutex = new Mutex(false, mutexName);
+            var acquired = probeMutex.WaitOne(TimeSpan.FromMilliseconds(400));
+            if (acquired)
+            {
+                probeMutex.ReleaseMutex();
+            }
+
+            return acquired;
+        });
+
+        Assert.True(mutexAcquiredFromOtherThread);
+    }
+
     private ExternalEncryptionProvider CreateProvider(TestRunner runner)
     {
         return new ExternalEncryptionProvider(
