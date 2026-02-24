@@ -15,6 +15,11 @@ public sealed class BackupFileExecutionService(
     private readonly ITransferService _transferService = transferService;
     private readonly IEncryptionProviderResolver _encryptionProviderResolver = encryptionProviderResolver;
 
+    /// <summary>
+    /// Ensures the destination directory exists for a file to copy.
+    /// </summary>
+    /// <param name="destinationFile">Destination file path.</param>
+    /// <returns>Information indicating whether a directory was created and which directory was targeted.</returns>
     public BackupDirectoryPreparationResult PrepareDestinationDirectory(string destinationFile)
     {
         var destinationDirectory = Path.GetDirectoryName(destinationFile)!;
@@ -27,6 +32,13 @@ public sealed class BackupFileExecutionService(
         return new BackupDirectoryPreparationResult(true, destinationDirectory);
     }
 
+    /// <summary>
+    /// Executes file transfer and optional post-transfer encryption.
+    /// </summary>
+    /// <param name="plan">File execution plan.</param>
+    /// <param name="policy">Runtime encryption policy.</param>
+    /// <returns>Transfer and encryption execution result.</returns>
+    /// <exception cref="InvalidOperationException">Thrown when file transfer fails.</exception>
     public BackupFileTransferExecutionResult TransferAndEncrypt(BackupFilePlan plan, EncryptionPolicy policy)
     {
         var transferResult = _transferService.TransferFile(plan.SourceFile, plan.DestinationFile, overwrite: true);
@@ -79,8 +91,18 @@ public sealed class BackupFileExecutionService(
     }
 }
 
+/// <summary>
+/// Result of destination directory preparation before file transfer.
+/// </summary>
+/// <param name="Created">Whether the directory was created by the operation.</param>
+/// <param name="DirectoryPath">Destination directory path.</param>
 public sealed record BackupDirectoryPreparationResult(bool Created, string DirectoryPath);
 
+/// <summary>
+/// Aggregates transfer and encryption execution outcomes for one file.
+/// </summary>
+/// <param name="TransferResult">Transfer result payload.</param>
+/// <param name="EncryptionTimeMs">Measured encryption time in milliseconds.</param>
 public sealed record BackupFileTransferExecutionResult(
     TransferResult TransferResult,
     long EncryptionTimeMs);

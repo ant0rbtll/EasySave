@@ -26,18 +26,55 @@ public sealed class BackupRuntimeGate(
     private const int PriorityBarrierPollDelayMs = 100;
     private const int LargeFileBarrierPollDelayMs = 100;
 
+    /// <summary>
+    /// Initializes runtime state for a running job.
+    /// </summary>
+    /// <param name="jobId">Backup job identifier.</param>
     public void BeginJob(int jobId) => _executionController.BeginJob(jobId);
 
+    /// <summary>
+    /// Clears runtime state for a completed/stopped job.
+    /// </summary>
+    /// <param name="jobId">Backup job identifier.</param>
     public void EndJob(int jobId) => _executionController.EndJob(jobId);
 
+    /// <summary>
+    /// Registers the number of pending priority files for one running job.
+    /// </summary>
+    /// <param name="jobId">Backup job identifier.</param>
+    /// <param name="pendingPriorityFiles">Pending priority file count.</param>
     public void RegisterPriorityJob(int jobId, int pendingPriorityFiles) => _priorityFilesBarrier.RegisterJob(jobId, pendingPriorityFiles);
 
+    /// <summary>
+    /// Marks one priority file as processed for a job.
+    /// </summary>
+    /// <param name="jobId">Backup job identifier.</param>
     public void MarkPriorityFileCompleted(int jobId) => _priorityFilesBarrier.MarkPriorityFileCompleted(jobId);
 
+    /// <summary>
+    /// Unregisters a job from the priority-file barrier.
+    /// </summary>
+    /// <param name="jobId">Backup job identifier.</param>
     public void UnregisterPriorityJob(int jobId) => _priorityFilesBarrier.UnregisterJob(jobId);
 
+    /// <summary>
+    /// Logs pending user actions emitted by runtime controls (pause/stop).
+    /// </summary>
+    /// <param name="job">Backup job context.</param>
     public void LogPendingUserActions(BackupJob job) => _reporter.LogPendingUserActions(job, _executionController);
 
+    /// <summary>
+    /// Forwards a state update to the execution reporter.
+    /// </summary>
+    /// <param name="job">Backup job context.</param>
+    /// <param name="status">Current backup status.</param>
+    /// <param name="totalFiles">Total file count for this run.</param>
+    /// <param name="totalSize">Total size in bytes for this run.</param>
+    /// <param name="remainingFiles">Remaining file count.</param>
+    /// <param name="remainingSize">Remaining size in bytes.</param>
+    /// <param name="progress">Progress percentage.</param>
+    /// <param name="sourcePath">Current source path context.</param>
+    /// <param name="destinationPath">Current destination path context.</param>
     public void UpdateState(
         BackupJob job,
         BackupStatus status,
@@ -59,6 +96,17 @@ public sealed class BackupRuntimeGate(
             sourcePath,
             destinationPath);
 
+    /// <summary>
+    /// Forwards one log entry to the execution reporter.
+    /// </summary>
+    /// <param name="backupId">Backup identifier.</param>
+    /// <param name="backupName">Backup name.</param>
+    /// <param name="eventType">Log event type.</param>
+    /// <param name="sourcePath">Source path context.</param>
+    /// <param name="destinationPath">Destination path context.</param>
+    /// <param name="fileSizeBytes">Transferred file size in bytes.</param>
+    /// <param name="transferTimeMs">Transfer duration in milliseconds.</param>
+    /// <param name="encryptionTimeMs">Encryption duration in milliseconds.</param>
     public void Log(
         int backupId,
         string backupName,
@@ -78,9 +126,25 @@ public sealed class BackupRuntimeGate(
             transferTimeMs,
             encryptionTimeMs);
 
+    /// <summary>
+    /// Waits asynchronously until no priority files remain pending across running jobs.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public Task WaitUntilNoPriorityPendingAsync(CancellationToken cancellationToken = default)
         => _priorityFilesBarrier.WaitUntilNoPriorityPendingAsync(cancellationToken);
 
+    /// <summary>
+    /// Waits for priority-file barrier release while keeping pause/stop responsive and state synchronized.
+    /// </summary>
+    /// <param name="waitTask">Barrier wait task.</param>
+    /// <param name="job">Backup job context.</param>
+    /// <param name="totalFiles">Total file count for this run.</param>
+    /// <param name="totalSize">Total size in bytes for this run.</param>
+    /// <param name="remainingFiles">Remaining file count.</param>
+    /// <param name="remainingSize">Remaining size in bytes.</param>
+    /// <param name="sourceFile">Current source file.</param>
+    /// <param name="destinationFile">Current destination file.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public void WaitUntilPriorityBarrierAllowsCopy(
         Task waitTask,
         BackupJob job,
@@ -129,6 +193,20 @@ public sealed class BackupRuntimeGate(
         }
     }
 
+    /// <summary>
+    /// Acquires a large-file transfer lease when required while keeping pause/stop responsive.
+    /// </summary>
+    /// <param name="job">Backup job context.</param>
+    /// <param name="totalFiles">Total file count for this run.</param>
+    /// <param name="totalSize">Total size in bytes for this run.</param>
+    /// <param name="remainingFiles">Remaining file count.</param>
+    /// <param name="remainingSize">Remaining size in bytes.</param>
+    /// <param name="sourceFile">Current source file.</param>
+    /// <param name="destinationFile">Current destination file.</param>
+    /// <param name="sourceFileSizeBytes">Current source file size in bytes.</param>
+    /// <param name="thresholdBytes">Large-file threshold in bytes.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A lease to dispose when a slot was acquired; otherwise <see langword="null"/>.</returns>
     public IDisposable? WaitUntilLargeFileBarrierAllowsCopy(
         BackupJob job,
         int totalFiles,
@@ -198,6 +276,17 @@ public sealed class BackupRuntimeGate(
         }
     }
 
+    /// <summary>
+    /// Blocks execution while configured business software is running, with live blocked state updates.
+    /// </summary>
+    /// <param name="job">Backup job context.</param>
+    /// <param name="sourceFile">Current source file.</param>
+    /// <param name="destinationFile">Current destination file.</param>
+    /// <param name="totalFiles">Total file count for this run.</param>
+    /// <param name="totalSize">Total size in bytes for this run.</param>
+    /// <param name="remainingFiles">Remaining file count.</param>
+    /// <param name="remainingSize">Remaining size in bytes.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
     public void WaitUntilBusinessSoftwareAllowsCopy(
         BackupJob job,
         string sourceFile,
@@ -260,11 +349,27 @@ public sealed class BackupRuntimeGate(
         }
     }
 
+    /// <summary>
+    /// Determines whether an exception indicates business software blocking.
+    /// </summary>
+    /// <param name="ex">Exception to inspect.</param>
+    /// <returns><see langword="true"/> when the exception carries the business-software error key.</returns>
     public bool IsBusinessSoftwareBlocked(Exception ex)
     {
         return string.Equals(ex.Data["errorKey"]?.ToString(), BusinessSoftwareErrorKey, StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Applies runtime pause/stop control and keeps priority barrier + state synchronized.
+    /// </summary>
+    /// <param name="job">Backup job context.</param>
+    /// <param name="totalFiles">Total file count for this run.</param>
+    /// <param name="totalSize">Total size in bytes for this run.</param>
+    /// <param name="remainingFiles">Remaining file count.</param>
+    /// <param name="remainingSize">Remaining size in bytes.</param>
+    /// <param name="sourcePath">Current source path context.</param>
+    /// <param name="destinationPath">Current destination path context.</param>
+    /// <returns><see langword="true"/> when execution resumed from paused state.</returns>
     public bool WaitForRuntimeControlAndSyncState(
         BackupJob job,
         int totalFiles,
