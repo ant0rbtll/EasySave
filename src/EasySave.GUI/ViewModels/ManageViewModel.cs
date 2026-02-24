@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
 using EasySave.Backup;
 using EasySave.Application.Services;
@@ -157,12 +158,9 @@ public partial class ManageViewModel : ViewModelBase
 
     public bool IsStatusAllSelected => StatusFilters.Count == 0 || StatusFilters[0].IsSelected;
     public bool IsTypeAllSelected => TypeFilters.Count == 0 || TypeFilters[0].IsSelected;
-
-    // Remove single selected filter properties, use multi-select logic instead
     [RelayCommand]
     private void ResetFilters()
     {
-        // Set only 'All' checked, others unchecked
         if (StatusFilters.Count > 0)
         {
             StatusFilters[0].IsSelected = true;
@@ -213,72 +211,6 @@ public partial class ManageViewModel : ViewModelBase
         InitializeFilters();
     }
 
-    public void StartLiveRefresh()
-    {
-        if (_liveRefreshCts is not null)
-            return;
-
-        _liveRefreshCts = new CancellationTokenSource();
-        _liveRefreshTask = RunLiveRefreshLoopAsync(_liveRefreshCts.Token);
-    }
-
-    public void StopLiveRefresh()
-    {
-        var cts = _liveRefreshCts;
-        if (cts is null)
-            return;
-
-        _liveRefreshCts = null;
-        cts.Cancel();
-        cts.Dispose();
-        _liveRefreshTask = null;
-    }
-
-    public void RefreshTranslations()
-    {
-        TitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_title);
-        SubtitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_subtitle);
-        SearchWatermark = _localizationService.TranslateText(LocalizationKey.gui_manage_search);
-        ActionsHeader = _localizationService.TranslateText(LocalizationKey.gui_manage_actions);
-        RunningLabel = _localizationService.TranslateText(LocalizationKey.gui_manage_running);
-        ConfirmRunTitle = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_run_title);
-        ConfirmRunMessage = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_run_message);
-        ConfirmDeleteTitle = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_delete_title);
-        ConfirmDeleteMessage = _localizationService.TranslateText(LocalizationKey.gui_manage_confirm_delete_message);
-        BtnConfirmText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_confirm);
-        BtnCancelText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_cancel);
-        BtnDeleteText = _localizationService.TranslateText(LocalizationKey.gui_manage_btn_delete);
-        TooltipRun = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_run);
-        TooltipModify = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_modify);
-        TooltipDelete = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_delete);
-        PlayText = _localizationService.TranslateText(LocalizationKey.gui_manage_play);
-        PauseText = _localizationService.TranslateText(LocalizationKey.gui_manage_pause);
-        StopText = _localizationService.TranslateText(LocalizationKey.gui_manage_stop);
-        TooltipPlay = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_play);
-        TooltipPause = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_pause);
-        TooltipStop = _localizationService.TranslateText(LocalizationKey.gui_manage_tooltip_stop);
-        RunSelectedText = _localizationService.TranslateText(LocalizationKey.gui_manage_run_selected);
-        DeleteSelectedText = _localizationService.TranslateText(LocalizationKey.gui_manage_delete_selected);
-        SelectAllTooltip = _localizationService.TranslateText(LocalizationKey.gui_manage_select_all);
-        EmptyTitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_title);
-        EmptySubtitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_subtitle);
-
-        _idLabel = _localizationService.TranslateText(LocalizationKey.backupjob_id);
-        _statusLabel = _localizationService.TranslateText(LocalizationKey.backupjob_status);
-        _nameLabel = _localizationService.TranslateText(LocalizationKey.backupjob_name);
-        _sourceLabel = _localizationService.TranslateText(LocalizationKey.backupjob_source);
-        _destinationLabel = _localizationService.TranslateText(LocalizationKey.backupjob_destination);
-        _typeLabel = _localizationService.TranslateText(LocalizationKey.backupjob_type);
-        _lastRunLabel = _localizationService.TranslateText(LocalizationKey.backupjob_last_executed);
-        OnPropertyChanged(nameof(IdHeader));
-        OnPropertyChanged(nameof(StatusHeader));
-        OnPropertyChanged(nameof(NameHeader));
-        OnPropertyChanged(nameof(SourceHeader));
-        OnPropertyChanged(nameof(DestinationHeader));
-        OnPropertyChanged(nameof(TypeHeader));
-        OnPropertyChanged(nameof(LastRunHeader));
-        ApplyJobs(FetchJobs());
-    }
     private void InitializeFilters()
     {
         StatusFilters.Clear();
@@ -296,7 +228,7 @@ public partial class ManageViewModel : ViewModelBase
             StatusFilters.Add(new FilterItem<Core.BackupJobStatus>
             {
                 Value = status,
-                Label = FormatStatus(status),
+                Label = _displayService.FormatStatus(status),
                 IsSelected = false
             });
         }
@@ -318,7 +250,6 @@ public partial class ManageViewModel : ViewModelBase
             });
         }
 
-        // Subscribe to IsSelected changes for filter logic
         foreach (var filter in StatusFilters)
         {
             filter.PropertyChanged += (s, e) =>
@@ -344,16 +275,13 @@ public partial class ManageViewModel : ViewModelBase
         _updatingFilters = true;
         if (changed == StatusFilters[0] && changed.IsSelected)
         {
-            // If 'All' is checked, uncheck others
             for (int i = 1; i < StatusFilters.Count; i++)
                 StatusFilters[i].IsSelected = false;
         }
         else if (changed != StatusFilters[0] && changed.IsSelected)
         {
-            // If any other is checked, uncheck 'All'
             StatusFilters[0].IsSelected = false;
         }
-        // If none are checked, check 'All'
         if (StatusFilters.Count > 1 && StatusFilters.Skip(1).All(f => !f.IsSelected))
             StatusFilters[0].IsSelected = true;
         _updatingFilters = false;
@@ -426,7 +354,6 @@ public partial class ManageViewModel : ViewModelBase
         if (!string.IsNullOrEmpty(query))
             filtered = filtered.Where(j => _displayService.MatchesSearch(j, query));
 
-        // Multi-select filter logic
         if (TypeFilters.Count != 0)
         {
             var selectedTypes = TypeFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
@@ -445,8 +372,6 @@ public partial class ManageViewModel : ViewModelBase
 
         }
         
-
-        // Multi-select filter logic
         if (TypeFilters.Count != 0)
         {
             var selectedTypes = TypeFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
@@ -465,8 +390,6 @@ public partial class ManageViewModel : ViewModelBase
 
         }
         
-
-        // Multi-select filter logic
         if (TypeFilters.Count != 0)
         {
             var selectedTypes = TypeFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
@@ -710,11 +633,6 @@ public partial class ManageViewModel : ViewModelBase
             && !_runningJobIds.Contains(job.Id);
     }
 
-    private static bool IsStoppedByUser(Exception ex)
-    {
-        return string.Equals(ex.Data["errorKey"]?.ToString(), BackupRuntimeKeys.ErrorBackupStoppedByUser, StringComparison.Ordinal)
-            || string.Equals(ex.Data["actionKey"]?.ToString(), BackupRuntimeKeys.ActionBackupStoppedByUser, StringComparison.Ordinal);
-    }
     public partial class FilterItem<T> : ObservableObject
     where T : struct
     {
@@ -727,35 +645,3 @@ public partial class ManageViewModel : ViewModelBase
     }
 }
 
-public sealed class PaginationItem
-{
-    private PaginationItem()
-    {
-    }
-
-    public int PageNumber { get; init; }
-    public string Label { get; init; } = string.Empty;
-    public bool IsEllipsis { get; init; }
-    public bool IsCurrent { get; init; }
-    public bool IsPage => !IsEllipsis;
-    public bool IsSelectable => !IsEllipsis && !IsCurrent;
-
-    public static PaginationItem Page(int pageNumber, bool isCurrent)
-    {
-        return new PaginationItem
-        {
-            PageNumber = pageNumber,
-            Label = pageNumber.ToString(CultureInfo.InvariantCulture),
-            IsCurrent = isCurrent
-        };
-    }
-
-    public static PaginationItem Ellipsis()
-    {
-        return new PaginationItem
-        {
-            Label = "...",
-            IsEllipsis = true
-        };
-    }
-}
