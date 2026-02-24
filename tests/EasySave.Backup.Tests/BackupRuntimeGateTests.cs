@@ -143,6 +143,13 @@ public class BackupRuntimeGateTests
     {
         var stateWriterMock = new Mock<IStateWriter>();
         var priorityBarrierMock = new Mock<IPriorityFilesBarrier>();
+        using var cts = new CancellationTokenSource();
+
+        // Deterministic exit: as soon as Waiting is reported, cancel the loop token.
+        stateWriterMock
+            .Setup(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Waiting)))
+            .Callback(() => cts.Cancel());
+
         var executionController = new Mock<IBackupExecutionController>();
         executionController
             .Setup(c => c.TryGetCurrentJobControlState(_job.Id, out It.Ref<BackupJobControlState>.IsAny))
@@ -156,15 +163,9 @@ public class BackupRuntimeGateTests
             priorityBarrier: priorityBarrierMock.Object,
             executionController: executionController.Object);
 
-        var tcs = new TaskCompletionSource<bool>();
-        _ = Task.Run(async () =>
-        {
-            await Task.Delay(40);
-            tcs.TrySetResult(true);
-        });
-
-        gate.WaitUntilPriorityBarrierAllowsCopy(
-            tcs.Task,
+        var neverCompleted = new TaskCompletionSource<bool>();
+        Assert.ThrowsAny<OperationCanceledException>(() => gate.WaitUntilPriorityBarrierAllowsCopy(
+            neverCompleted.Task,
             _job,
             4,
             40,
@@ -172,7 +173,7 @@ public class BackupRuntimeGateTests
             30,
             "/src/a.txt",
             "/dst/a.txt",
-            CancellationToken.None);
+            cts.Token));
 
         stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Waiting)), Times.AtLeastOnce);
     }
