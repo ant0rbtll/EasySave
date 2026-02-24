@@ -61,6 +61,23 @@ public sealed class ExternalEncryptionProviderTests : IDisposable
     }
 
     [Fact]
+    public async Task EncryptAsync_WhenExecutableFileDoesNotExist_ReturnsFailure()
+    {
+        var runner = new TestRunner();
+        var provider = CreateProvider(runner);
+        var missingExecutable = Path.Combine(_tempDirectory, "missing-cryptosoft.exe");
+        var targetFile = CreateFile("data.txt", "payload");
+        var policy = new EncryptionPolicy([".txt"], EncryptionProviderNames.External, missingExecutable);
+
+        var result = await provider.EncryptAsync(targetFile, policy);
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.EncryptionTimeMs < 0);
+        Assert.Contains("CryptoSoft executable not found", result.ErrorMessage, StringComparison.Ordinal);
+        Assert.Equal(0, runner.InvocationCount);
+    }
+
+    [Fact]
     public async Task EncryptAsync_WhenRunnerFails_PropagatesFailureCode()
     {
         var runner = new TestRunner(ExternalCryptoProcessRunResult.Failure(42, "CryptoSoft failed"));

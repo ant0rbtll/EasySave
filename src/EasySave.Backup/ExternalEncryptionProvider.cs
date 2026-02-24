@@ -126,7 +126,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
                 return Task.FromResult(EncryptionResult.Failure(
                     encryptionTimeMs: GetNegativeElapsed(stopwatch),
                     errorCode: -1,
-                    errorMessage: $"Timeout while waiting for CryptoSoft mono-instance lock ({_mutexWaitTimeout.TotalSeconds:F0}s)."));
+                    errorMessage: $"Timeout while waiting for CryptoSoft mono-instance lock ({FormatTimeout(_mutexWaitTimeout)})."));
             }
 
             using var processTimeoutCts = new CancellationTokenSource();
