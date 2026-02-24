@@ -101,18 +101,4 @@ public partial class ManageView : UserControl
         if (DataContext is ManageViewModel mvm)
             mvm.OnJobSelectionChanged();
     }
-    private void FilterComboBox_SelectionChanged(object? sender, Avalonia.Controls.SelectionChangedEventArgs e)
-    {
-        if (sender is Avalonia.Controls.ComboBox cb)
-            cb.SelectedItem = null;
-    }
-    private void FilterCheckBox_PointerPressed(object? sender, Avalonia.Input.PointerPressedEventArgs e)
-    {
-        // Toggle the checkbox and prevent ComboBox from closing/selecting
-        if (sender is Avalonia.Controls.CheckBox cb)
-        {
-            cb.IsChecked = !cb.IsChecked;
-            e.Handled = true;
-        }
-    }
 }
