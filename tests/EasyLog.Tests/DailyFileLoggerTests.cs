@@ -29,7 +29,23 @@ public class DailyFileLoggerTests
             Entries = []
         };
         var stateWriter = new RealTimeStateWriter(pathProvider, state);
-        var engine = new BackupEngine(fs, transfer, stateWriter, logger);
+        var planner = new DefaultBackupFilePlanner(fs);
+        var fileExecutionService = new BackupFileExecutionService(
+            fs,
+            transfer,
+            new NoOpEncryptionProviderResolver());
+        var runtimeGate = new BackupRuntimeGate(
+            new NoOpBackupExecutionController(),
+            new NoOpPriorityFilesBarrier(),
+            new NoOpLargeFileTransferBarrier(),
+            new NoOpBackupExecutionGuard(),
+            new BackupExecutionReporter(stateWriter, logger));
+        var engine = new BackupEngine(
+            stateWriter,
+            new NoOpEncryptionPolicyProvider(),
+            planner,
+            fileExecutionService,
+            runtimeGate);
 
         var sourceDir = Path.Combine(tempDir.Path, "source");
         var destDir = Path.Combine(tempDir.Path, "dest");

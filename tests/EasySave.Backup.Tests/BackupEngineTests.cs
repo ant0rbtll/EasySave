@@ -30,7 +30,7 @@ public class BackupEngineTests
             .Setup(p => p.GetPolicy())
             .Returns(EncryptionPolicy.Disabled);
 
-        _backupEngine = new BackupEngine(
+        _backupEngine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -447,7 +447,7 @@ public class BackupEngineTests
                 }
             });
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -493,7 +493,7 @@ public class BackupEngineTests
                 return ex;
             });
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -532,7 +532,7 @@ public class BackupEngineTests
         var executionController = new StubExecutionController(
             actions: ["action_backup_paused_by_user"]);
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -570,7 +570,7 @@ public class BackupEngineTests
         var executionController = new StubExecutionController(
             controlStates: [BackupJobControlState.Paused, BackupJobControlState.Running]);
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -608,7 +608,7 @@ public class BackupEngineTests
         var executionController = new StubExecutionController(
             controlStates: [BackupJobControlState.Paused, BackupJobControlState.Running]);
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -644,7 +644,7 @@ public class BackupEngineTests
         stopException.Data["actionKey"] = "action_backup_stopped_by_user";
         var executionController = new StubExecutionController(waitException: stopException);
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -685,7 +685,7 @@ public class BackupEngineTests
             .Returns(neverCompleted.Task);
 
         var executionController = new StopOnSecondWaitExecutionController();
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -719,7 +719,7 @@ public class BackupEngineTests
 
         var executionController = new StopOnSecondWaitExecutionController();
         var alwaysBusyLargeBarrier = new AlwaysBusyLargeFileTransferBarrier();
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -761,7 +761,7 @@ public class BackupEngineTests
         var executionController = new StubExecutionController(
             controlStates: [BackupJobControlState.Running, BackupJobControlState.Paused, BackupJobControlState.Running]);
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,

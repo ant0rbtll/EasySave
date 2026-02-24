@@ -13,36 +13,23 @@ namespace EasySave.Backup;
 /// <remarks>
 /// Initializes a new instance of the backup engine.
 /// </remarks>
-/// <param name="fileSystem">File system management service.</param>
-/// <param name="transferService">File transfer service.</param>
 /// <param name="stateWriter">Backup state writer service.</param>
-/// <param name="logger">Logging service.</param>
+/// <param name="encryptionPolicyProvider">Encryption policy provider.</param>
+/// <param name="filePlanner">Backup file planner.</param>
+/// <param name="fileExecutionService">File execution service.</param>
+/// <param name="runtimeGate">Runtime gate for pause/stop and barriers.</param>
 public class BackupEngine(
-    IFileSystem fileSystem,
-    ITransferService transferService,
     IStateWriter stateWriter,
-    ILogger logger,
-    IEncryptionPolicyProvider? encryptionPolicyProvider = null,
-    IEncryptionProviderResolver? encryptionProviderResolver = null,
-    IBackupExecutionGuard? executionGuard = null,
-    IPriorityFilesBarrier? priorityFilesBarrier = null,
-    IBackupFilePlanner? filePlanner = null,
-    IBackupExecutionController? executionController = null,
-    ILargeFileTransferBarrier? largeFileTransferBarrier = null) : IBackupEngine
+    IEncryptionPolicyProvider encryptionPolicyProvider,
+    IBackupFilePlanner filePlanner,
+    BackupFileExecutionService fileExecutionService,
+    BackupRuntimeGate runtimeGate) : IBackupEngine
 {
     private readonly IStateWriter _stateWriter = stateWriter;
-    private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider ?? new NoOpEncryptionPolicyProvider();
-    private readonly IBackupFilePlanner _filePlanner = filePlanner ?? new DefaultBackupFilePlanner(fileSystem);
-    private readonly BackupFileExecutionService _fileExecutionService = new(
-        fileSystem,
-        transferService,
-        encryptionProviderResolver ?? new NoOpEncryptionProviderResolver());
-    private readonly BackupRuntimeGate _runtimeGate = new(
-        executionController ?? new NoOpBackupExecutionController(),
-        priorityFilesBarrier ?? new NoOpPriorityFilesBarrier(),
-        largeFileTransferBarrier ?? new NoOpLargeFileTransferBarrier(),
-        executionGuard ?? new NoOpBackupExecutionGuard(),
-        new BackupExecutionReporter(stateWriter, logger));
+    private readonly IEncryptionPolicyProvider _encryptionPolicyProvider = encryptionPolicyProvider;
+    private readonly IBackupFilePlanner _filePlanner = filePlanner;
+    private readonly BackupFileExecutionService _fileExecutionService = fileExecutionService;
+    private readonly BackupRuntimeGate _runtimeGate = runtimeGate;
 
     /// <summary>
     /// Executes a complete or differential backup.

@@ -48,7 +48,7 @@ public class BackupEngineEncryptionTests
             .Setup(p => p.EncryptAsync("/destination/report.txt", policy, It.IsAny<CancellationToken>()))
             .ReturnsAsync(EncryptionResult.Failure(-5, 999, "crypto error"));
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -91,7 +91,7 @@ public class BackupEngineEncryptionTests
         _policyProviderMock.Setup(p => p.GetPolicy())
             .Returns(new EncryptionPolicy([".txt"], EncryptionProviderNames.DotNet, null));
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -139,7 +139,7 @@ public class BackupEngineEncryptionTests
         _providerResolverMock.Setup(r => r.Resolve(EncryptionProviderNames.External))
             .Returns((IEncryptionProvider?)null);
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
@@ -187,7 +187,7 @@ public class BackupEngineEncryptionTests
             .Setup(p => p.EncryptAsync("/destination/report.txt", policy, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("unexpected encryption crash"));
 
-        var engine = new BackupEngine(
+        var engine = BackupEngineFactory.Create(
             _fileSystemMock.Object,
             _transferServiceMock.Object,
             _stateWriterMock.Object,
