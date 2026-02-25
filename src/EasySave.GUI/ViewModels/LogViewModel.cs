@@ -617,7 +617,7 @@ public partial class LogViewModel : ViewModelBase
         {
             _allLogEntries.Add(new LogDisplayModel
             {
-                Timestamp = log.Timestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
+                Timestamp = ToMachineLocalTime(log.Timestamp).ToString("HH:mm:ss", CultureInfo.InvariantCulture),
                 BackupName = log.BackupName,
                 EventType = log.EventType.ToString(),
                 EventTypeLabel = GetEventTypeLabel(log.EventType),
@@ -745,8 +745,10 @@ public partial class LogViewModel : ViewModelBase
             RunId = run.RunId,
             BackupId = run.BackupId,
             BackupName = run.BackupName,
-            StartTime = run.StartTimestamp.ToString("HH:mm:ss", CultureInfo.InvariantCulture),
-            EndTime = run.EndTimestamp?.ToString("HH:mm:ss", CultureInfo.InvariantCulture) ?? StatusInProgress,
+            StartTime = ToMachineLocalTime(run.StartTimestamp).ToString("HH:mm:ss", CultureInfo.InvariantCulture),
+            EndTime = run.EndTimestamp is DateTime endTimestamp
+                ? ToMachineLocalTime(endTimestamp).ToString("HH:mm:ss", CultureInfo.InvariantCulture)
+                : StatusInProgress,
             Status = GetRunStatusText(run),
             StatusTone = GetRunStatusTone(run.Status),
             TotalDuration = GetRunTotalDurationText(run),
@@ -756,6 +758,16 @@ public partial class LogViewModel : ViewModelBase
             Format = run.Format.ToString().ToUpperInvariant(),
             IsInProgress = run.Status == LogRunStatus.InProgress,
             IsError = run.Status == LogRunStatus.Error
+        };
+    }
+
+    private static DateTime ToMachineLocalTime(DateTime timestamp)
+    {
+        return timestamp.Kind switch
+        {
+            DateTimeKind.Utc => timestamp.ToLocalTime(),
+            DateTimeKind.Local => timestamp,
+            _ => DateTime.SpecifyKind(timestamp, DateTimeKind.Local)
         };
     }
 

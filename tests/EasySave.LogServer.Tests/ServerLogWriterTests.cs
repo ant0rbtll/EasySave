@@ -199,7 +199,7 @@ public class ServerLogWriterTests : IDisposable
 
         writer.Write(entry);
 
-        var path = _pathProvider.GetDailyLogPath(localTime.Date, LogFormat.Json);
+        var path = _pathProvider.GetDailyLogPath(DateTime.SpecifyKind(localTime, DateTimeKind.Utc).Date, LogFormat.Json);
         var content = File.ReadAllText(path);
         Assert.Contains("2025-03-15T10:30:00Z", content);
     }
