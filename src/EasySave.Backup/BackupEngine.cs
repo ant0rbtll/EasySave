@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Localization;
 using EasySave.Log;
 using EasySave.System;
 using EasySave.State;
@@ -233,12 +234,12 @@ public class BackupEngine(
 
             bool stoppedByUser = IsStoppedByUser(ex);
             bool blockedByBusinessSoftware = _runtimeGate.IsBusinessSoftwareBlocked(ex);
-            string sourceContext = ex.Data["errorKey"]?.ToString() ?? ex.GetType().Name;
-            string destinationContext = ex.Data["0"]?.ToString() ?? ex.Message;
+            string sourceContext = ResolveErrorKey(ex);
+            string destinationContext = ResolveFirstOption(ex);
 
             if (stoppedByUser)
             {
-                sourceContext = ex.Data["actionKey"]?.ToString() ?? BackupRuntimeKeys.ActionBackupStoppedByUser;
+                sourceContext = ResolveStopActionKey(ex);
                 destinationContext = string.Empty;
                 _stateWriter.MarkInactive(job.Id);
             }
@@ -279,7 +280,60 @@ public class BackupEngine(
     {
         return string.Equals(ex.Data["errorKey"]?.ToString(), BackupRuntimeKeys.ErrorBackupStoppedByUser, StringComparison.Ordinal)
             || string.Equals(ex.Data["actionKey"]?.ToString(), BackupRuntimeKeys.ActionBackupStoppedByUser, StringComparison.Ordinal)
-            || string.Equals(ex.Message, BackupRuntimeKeys.ErrorBackupStoppedByUser, StringComparison.Ordinal);
+            || string.Equals(ex.Message, BackupRuntimeKeys.ErrorBackupStoppedByUser, StringComparison.Ordinal)
+            || ex is ITranslatableException translatable
+            && translatable.ErrorKey == LocalizationKey.error_backup_stopped_by_user;
+    }
+
+    private static string ResolveErrorKey(Exception ex)
+    {
+        var dataKey = ex.Data["errorKey"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(dataKey))
+        {
+            return dataKey;
+        }
+
+        if (ex is ITranslatableException translatable)
+        {
+            return translatable.ErrorKey.ToString();
+        }
+
+        return ex.GetType().Name;
+    }
+
+    private static string ResolveFirstOption(Exception ex)
+    {
+        var fromData = ex.Data["0"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(fromData))
+        {
+            return fromData;
+        }
+
+        if (ex is ITranslatableException translatable && translatable.Options.Count > 0)
+        {
+            return translatable.Options[0];
+        }
+
+        return ex.Message;
+    }
+
+    private static string ResolveStopActionKey(Exception ex)
+    {
+        var fromData = ex.Data["actionKey"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(fromData))
+        {
+            return fromData;
+        }
+
+        if (ex is ITranslatableException translatable
+            && translatable.ErrorKey == LocalizationKey.error_backup_stopped_by_user
+            && translatable.Options.Count > 0
+            && !string.IsNullOrWhiteSpace(translatable.Options[0]))
+        {
+            return translatable.Options[0];
+        }
+
+        return BackupRuntimeKeys.ActionBackupStoppedByUser;
     }
 
 }

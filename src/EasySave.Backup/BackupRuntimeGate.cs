@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Localization;
 using EasySave.Log;
 using EasySave.System;
 using EasySave.State;
@@ -318,7 +319,7 @@ public sealed class BackupRuntimeGate(
             }
             catch (Exception ex) when (IsBusinessSoftwareBlocked(ex))
             {
-                var blockedProcess = ex.Data["0"]?.ToString() ?? string.Empty;
+                var blockedProcess = GetBusinessSoftwareProcessName(ex);
 
                 _reporter.UpdateState(
                     job,
@@ -356,7 +357,27 @@ public sealed class BackupRuntimeGate(
     /// <returns><see langword="true"/> when the exception carries the business-software error key.</returns>
     public bool IsBusinessSoftwareBlocked(Exception ex)
     {
-        return string.Equals(ex.Data["errorKey"]?.ToString(), BusinessSoftwareErrorKey, StringComparison.Ordinal);
+        return string.Equals(ex.Data["errorKey"]?.ToString(), BusinessSoftwareErrorKey, StringComparison.Ordinal)
+            || ex is ITranslatableException translatable
+            && translatable.ErrorKey == LocalizationKey.error_business_software_running;
+    }
+
+    private static string GetBusinessSoftwareProcessName(Exception ex)
+    {
+        var fromData = ex.Data["0"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(fromData))
+        {
+            return fromData;
+        }
+
+        if (ex is ITranslatableException translatable
+            && translatable.ErrorKey == LocalizationKey.error_business_software_running
+            && translatable.Options.Count > 0)
+        {
+            return translatable.Options[0];
+        }
+
+        return string.Empty;
     }
 
     /// <summary>

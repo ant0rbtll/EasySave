@@ -1,5 +1,7 @@
 using EasySave.Core;
+using EasySave.Exceptions;
 using EasySave.Log;
+using EasySave.Localization;
 using EasySave.State;
 using EasySave.System;
 using Moq;
@@ -277,6 +279,17 @@ public class BackupRuntimeGateTests
 
         Assert.True(gate.IsBusinessSoftwareBlocked(blocked));
         Assert.False(gate.IsBusinessSoftwareBlocked(other));
+    }
+
+    [Fact]
+    public void IsBusinessSoftwareBlocked_WhenUsingTranslatableException_ReturnsTrue()
+    {
+        var gate = CreateGate();
+        var blocked = new EasysaveDefaultException(
+            LocalizationKey.error_business_software_running,
+            ["calc"]);
+
+        Assert.True(gate.IsBusinessSoftwareBlocked(blocked));
     }
 
     private BackupRuntimeGate CreateGate(
