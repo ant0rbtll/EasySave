@@ -92,6 +92,8 @@ public partial class ManageViewModel
 
     // Status filter texts
     private string filterByStatusLabel = string.Empty;
+    private string filterByTypeLabel = string.Empty;
+    private string resetFiltersLabel = string.Empty;
     private string filterAllStatusLabel = string.Empty;
     private string filterStatusActive = string.Empty;
     private string filterStatusPaused = string.Empty;
@@ -153,6 +155,8 @@ public partial class ManageViewModel
         EmptyTitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_title);
         EmptySubtitleText = _localizationService.TranslateText(LocalizationKey.gui_manage_empty_subtitle);
         filterByStatusLabel = _localizationService.TranslateText(LocalizationKey.gui_manage_filter_by_status);
+        filterByTypeLabel = _localizationService.TranslateText(LocalizationKey.gui_manage_filter_by_type);
+        resetFiltersLabel = _localizationService.TranslateText(LocalizationKey.gui_config_reset);
         filterAllStatusLabel = _localizationService.TranslateText(LocalizationKey.gui_manage_filter_all_status);
         filterStatusActive = _localizationService.TranslateText(LocalizationKey.backupjob_active);
         filterStatusPaused = _localizationService.TranslateText(LocalizationKey.backupjob_paused);
@@ -177,12 +181,18 @@ public partial class ManageViewModel
         OnPropertyChanged(nameof(DestinationHeader));
         OnPropertyChanged(nameof(TypeHeader));
         OnPropertyChanged(nameof(LastRunHeader));
+        OnPropertyChanged(nameof(FilterByStatusLabel));
+        OnPropertyChanged(nameof(FilterByTypeLabel));
+        OnPropertyChanged(nameof(ResetFiltersLabel));
         OnPropertyChanged(nameof(StatusFilters));
         OnPropertyChanged(nameof(TypeFilters));
         InitializeFilters();
         ApplyJobs(_displayService.FetchJobs());
     }
 
+    public string FilterByStatusLabel => filterByStatusLabel;
+    public string FilterByTypeLabel => filterByTypeLabel;
+    public string ResetFiltersLabel => resetFiltersLabel;
     public string FilterAllStatusLabel => filterAllStatusLabel;
     public string FilterStatusActive => filterStatusActive;
     public string FilterStatusPaused => filterStatusPaused;

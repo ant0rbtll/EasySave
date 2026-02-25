@@ -546,7 +546,7 @@
 								</ItemsControl>
 
 								<!-- Reset link -->
-								<Button Content="Reset"
+								<Button Content="{Binding ResetFiltersLabel}"
 										Command="{Binding ResetFiltersCommand}"
 										Background="Transparent"
 										BorderThickness="0"

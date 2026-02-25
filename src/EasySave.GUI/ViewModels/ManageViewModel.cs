@@ -121,8 +121,6 @@ public partial class ManageViewModel : ViewModelBase
 
     public bool IsSuccessBannerVisible => IsStatusBannerVisible && !IsStatusError;
     public bool IsErrorBannerVisible => IsStatusBannerVisible && IsStatusError;
-    public string FilterByStatusLabel => _localizationService.TranslateText(LocalizationKey.gui_manage_filter_by_status);
-    public string FilterByTypeLabel => _localizationService.TranslateText(LocalizationKey.gui_manage_filter_by_type);
 
     [ObservableProperty]
     private bool isDeleteDialogOpen;
@@ -439,4 +437,3 @@ public partial class ManageViewModel : ViewModelBase
         }
     }
 }
-
