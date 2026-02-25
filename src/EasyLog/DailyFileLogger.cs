@@ -95,8 +95,8 @@ public sealed class DailyFileLogger : ILogger, IDisposable
     private static LogEntry NormalizeEntry(LogEntry e)
     {
         var ts = e.Timestamp.Kind == DateTimeKind.Unspecified
-            ? DateTime.SpecifyKind(e.Timestamp, DateTimeKind.Local)
-            : e.Timestamp;
+            ? DateTime.SpecifyKind(e.Timestamp, DateTimeKind.Utc)
+            : e.Timestamp.ToUniversalTime();
 
         return e with
         {

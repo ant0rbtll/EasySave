@@ -11,11 +11,12 @@ namespace EasyLog.Tests;
 public class DailyFileLoggerUnitTests
 {
     [Fact]
-    public void Write_NormalizesPathsAndPreservesLocalTimestamp()
+    public void Write_NormalizesPathsAndUtcTimestamp()
     {
         using var tempDir = new TempDirectory();
         var local = DateTime.SpecifyKind(new DateTime(2026, 2, 5, 8, 30, 0), DateTimeKind.Local);
-        var expectedDate = local.Date;
+        var expectedUtc = local.ToUniversalTime();
+        var expectedDate = expectedUtc.Date;
 
         var pathProvider = new TestPathProvider(tempDir.Path);
         using var logger = new DailyFileLogger(
@@ -39,8 +40,8 @@ public class DailyFileLoggerUnitTests
         var logPath = pathProvider.GetDailyLogPath(expectedDate);
         var logged = ReadLogEntries(logPath).Single();
 
-        Assert.Equal(local, logged.Timestamp);
-        Assert.Equal(DateTimeKind.Local, logged.Timestamp.Kind);
+        Assert.Equal(expectedUtc, logged.Timestamp);
+        Assert.Equal(DateTimeKind.Utc, logged.Timestamp.Kind);
         Assert.Equal("\\a\\b", logged.SourcePathUNC);
         Assert.Equal("c:\\d\\e", logged.DestinationPathUNC);
     }

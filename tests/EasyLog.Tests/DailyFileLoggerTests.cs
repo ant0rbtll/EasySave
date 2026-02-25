@@ -75,7 +75,7 @@ public class DailyFileLoggerTests
             Type = BackupType.Complete
         };
 
-        var today = DateTime.Now.Date;
+        var today = DateTime.UtcNow.Date;
 
         engine.Execute(job).GetAwaiter().GetResult();
 

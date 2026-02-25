@@ -59,8 +59,8 @@ public sealed class ServerLogWriter(ServerPathProvider pathProvider, LogFormat d
     private static EnrichedLogEntry NormalizeEntry(EnrichedLogEntry e)
     {
         var ts = e.Timestamp.Kind == DateTimeKind.Unspecified
-            ? DateTime.SpecifyKind(e.Timestamp, DateTimeKind.Local)
-            : e.Timestamp;
+            ? DateTime.SpecifyKind(e.Timestamp, DateTimeKind.Utc)
+            : e.Timestamp.ToUniversalTime();
 
         return e with
         {
