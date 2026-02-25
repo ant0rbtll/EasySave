@@ -83,7 +83,9 @@ public class SettingsFlowServiceAdditionalTests
 
         service.ConfigureParams(() => { });
         menuService.ShownMenuConfigs[0].Actions[0]();
-        menuService.ShownMenuConfigs[1].Actions[2]();
+        var localeMenu = menuService.ShownMenuConfigs[1];
+        var backIndex = localeMenu.Actions.Keys.Max();
+        localeMenu.Actions[backIndex]();
 
         Assert.Equal(LocalizationKey.menu_params, menuService.ShownMenuConfigs.Last().Label);
     }
