@@ -6,6 +6,62 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [3.0.0] - 2026-02-25
+
+Version majeure: execution parallele, du pilotage runtime, de la supervision multi-jobs et de la centralisation des logs.
+
+### Added
+
+#### Execution / Runtime
+- Execution parallele de plusieurs jobs (`RunJobs`, `RunAllJobs`, `Task.WhenAll`) avec anti-duplication par identifiant via `IBackupRunCoordinator` / `InMemoryBackupRunCoordinator`. (`1cb9646`)
+- Ajout du pilotage runtime pause/reprise/arret (par job et global) via `IBackupExecutionController` / `BackupExecutionController` avec prise en compte dans le moteur et la GUI. (`b8ba6e9`)
+- Ajout de la vue de progression live multi-jobs (`ProgressViewModel`) et du modele `BackupJobLiveProgressState`. (`7fd8939`, `2ccc588`)
+- Ajout de l'estimation de temps restant (ETA) via `IBackupEtaEstimator` / `BackupEtaEstimator`. (`00b9c39`)
+
+#### Orchestration de copie
+- Ajout des extensions prioritaires avec barriere globale inter-jobs (`PriorityExtensions`, `IPriorityFilesBarrier`, `InMemoryPriorityFilesBarrier`) et statut `Waiting`. (`1959b71`)
+- Ajout d'un limiteur global pour les gros transferts en parallele (`ILargeFileTransferBarrier`) avec seuil configurable (Ko/Mo/Go). (`756b388`)
+- Ajout des metadonnees runtime `RemainingFiles` et `RemainingSizeBytes` dans l'etat temps reel pour la supervision fine et l'ETA.
+
+#### Logs centralises
+- Ajout du mode de logs centralises/hybrides via `LogMode` (`Local`, `Centralized`, `LocalAndCentralized`). (`93e9571`)
+- Ajout de `HttpLogSender`, `ResilientHttpLogSender`, `CompositeLogger`, `LogServerStatusNotifier` et integration dans `ReloadableLogger`.
+- Ajout du projet `EasySave.LogServer` (API HTTP de collecte des logs, registre clients, ecriture journaliere enrichie JSON/XML). (`93e9571`)
+- Ajout des artefacts Docker dedies au serveur de logs: `Dockerfile.logserver`, `compose.logserver.yaml`. (`93e9571`)
+
+#### Chiffrement externe
+- Ajout de `ExternalCryptoProcessRunner` et enforcement mono-instance de CryptoSoft via mutex nomme et timeouts de securite dans `ExternalEncryptionProvider`. (`6da2781`)
+
+#### GUI / I18N
+- Ajout des filtres par statut/type dans `ManageViewModel` avec reset des filtres. (`4284959`)
+- Ajout de la langue italienne (`translations.it.yaml`) et prise en charge de la culture `it`. (`4284959`)
+- Ajout d'ameliorations UX de configuration (messages de statut auto-nettoyes, validation URL serveur, etc.). (`56244d9`)
+
+### Changed
+
+#### Architecture
+- Refonte du moteur en composants specialises: `BackupRuntimeGate`, `BackupExecutionReporter`, `BackupFileExecutionService`, `DefaultBackupFilePlanner`. (`816a070`)
+- Reorganisation de la couche application en `Readers/` et `Services/`, avec socles communs de lecture/traitement des logs. (`93caa02`)
+- Decoupage massif de `ManageViewModel` (commands/live-refresh/translations) et introduction de services GUI dedies (`BackupRunningStateTracker`, `BackupJobDisplayService`). (`b5bdd4e`)
+
+#### Robustesse technique
+- Introduction du projet `EasySave.Exception` pour centraliser les exceptions metier partagees et leur traduction.
+- Uniformisation des contrats de status runtime (`Inactive`, `Active`, `Waiting`, `Done`, `Error`, `Paused`, `Blocked`) entre coeur, state writer et GUI.
+
+### Fixed
+
+- Correction de l'actualisation de `LastExecutionDate` et de la reconciliation d'etats actifs. (`4d5519a`)
+- Correction du calcul/remontee des durees de transfert dans les logs de fin d'execution. (`ae9d2e2`)
+- Correction de la coherence des timestamps (GUI / logs serveur). (`26918e6`)
+- Correctifs de revue et stabilisation des parcours de supervision/execution (`6a77f9d`, `b5bdd4e`).
+
+### Tests
+
+- Extension de la couverture avec des suites dediees `EasySave.AppCommon.Tests` et `EasySave.LogServer.Tests`.
+- Validation de la suite complete (`dotnet test` le 2026-02-25):
+  - 12 projets de tests
+  - 688 tests passes, 0 echec, 0 ignores
+
 ## [2.0.0] - 2026-02-15
 
 Version majeure: passage a une architecture multi-host (GUI + console) et extension des capacites de supervision/execution.
@@ -306,4 +362,5 @@ Version initiale de production d'EasySave.
 
 [1.0.0]: https://github.com/ant0rbtll/easysave/releases/tag/v1.0.0
 [1.1.0]: https://github.com/ant0rbtll/easysave/compare/v1.0.0...v1.1.0
-[2.0.0]: https://github.com/ant0rbtll/easysave/compare/v1.1.0...HEAD
+[2.0.0]: https://github.com/ant0rbtll/easysave/compare/v1.1.0...v2.0
+[3.0.0]: https://github.com/ant0rbtll/easysave/compare/v2.0...HEAD

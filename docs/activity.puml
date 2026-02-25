@@ -1,53 +1,75 @@
 @startuml
-title EasySave 2.0 - Activite : execution d'un backup avec garde metier et chiffrement
+title EasySave 3.0 - Activite : execution d'un backup avec controles runtime
 
 start
 
 :Charger le job;
-:Verifier les processus metier interdits (pre-check);
-
-if (Processus metier detecte ?) then (Oui)
-  :Lever exception
-(error_business_software_running);
-  :Logger BusinessSoftwareDetected;
-  :Etat = Error;
-  stop
-endif
-
-:Enumerer les fichiers source;
-:Charger la policy de chiffrement;
+:Charger le contexte d'execution
+(priorites, seuil gros fichier, policy chiffrement);
+:Planifier les fichiers (ordre + priorites + shouldCopy);
+:RegisterPriorityJob(jobId, pendingPriorityFiles);
 :Etat = Active (0%);
 :Logger StartBackup;
 
 repeat
-  :Determiner le fichier suivant;
+  :Selectionner le fichier suivant;
 
-  if (Type Differential et fichier inchange ?) then (Oui)
+  :Verifier pause/reprise/arret utilisateur;
+  if (Arret demande ?) then (Oui)
+    :Logger Stopped;
+    :MarkInactive(jobId);
+    :UnregisterPriorityJob(jobId);
+    stop
+  endif
+
+  if (Fichier a copier ?) then (Non)
     :Passer au fichier suivant;
-  else (Non)
-    :Verifier processus metier\navant copie du fichier;
-    if (Processus metier detecte ?) then (Oui)
-      :Lever exception\n(error_business_software_running);
-      :Logger BusinessSoftwareDetected;
-      :Etat = Error;
-      stop
+  else (Oui)
+
+    if (Fichier non prioritaire
+et priorites globales en attente ?) then (Oui)
+      :Etat = Waiting;
+      :Attendre liberation
+barriere priorites;
+      :Etat = Active;
+    endif
+
+    while (Logiciel metier detecte ?) is (Oui)
+      :Etat = Blocked;
+      :Logger BusinessSoftwareDetected (une fois);
+      :Attendre puis re-verifier;
+    endwhile (Non)
+
+    if (Fichier > seuil gros fichiers ?) then (Oui)
+      while (Slot gros fichier indisponible ?) is (Oui)
+        :Etat = Waiting;
+        :Attendre slot ILargeFileTransferBarrier;
+      endwhile (Non)
+      :Etat = Active;
     endif
 
     :Creer dossier destination si absent;
     :Transferer le fichier;
 
-    if (Transfert OK ?) then (Oui)
+    if (Transfert OK ?) then (Non)
+      :Etat = Error;
+      :Logger Error;
+      :UnregisterPriorityJob(jobId);
+      stop
+    else (Oui)
       if (Extension chiffree ?) then (Oui)
         :Resoudre provider;
-        :Chiffrer le fichier transfere;
+        :Chiffrer le fichier
+(echec chiffrement non bloquant);
       endif
-      :Logger TransferFile;
-      :Mettre a jour progression;
+
+      if (Fichier prioritaire ?) then (Oui)
+        :MarkPriorityFileCompleted(jobId);
+      endif
+
+      :Mettre a jour remaining/progress;
       :Etat = Active;
-    else (Non)
-      :Logger Error;
-      :Etat = Error;
-      stop
+      :Logger TransferFile;
     endif
   endif
 
@@ -56,6 +78,7 @@ repeat while (Fichiers restants ?)
 :Etat = Done (100%);
 :Logger EndBackup;
 :MarkInactive(jobId);
+:UnregisterPriorityJob(jobId);
 
 stop
 @enduml

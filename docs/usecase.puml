@@ -1,59 +1,97 @@
-﻿@startuml
+@startuml
 left to right direction
 skinparam packageStyle rectangle
 skinparam shadowing false
 
 actor "Utilisateur" as User
+actor "Administrateur Support" as Admin
 
-rectangle "EasySave 2.0" {
+rectangle "EasySave 3.0" {
   usecase "Lancer l'application" as UC_Start
-  usecase "Utiliser l'interface GUI" as UC_GUI
-  usecase "Executer un job\n(en une ligne CLI)" as UC_CLI_OneLine
+  usecase "Utiliser GUI" as UC_GUI
+  usecase "Utiliser Console/CLI" as UC_Console
 
   usecase "Gerer les jobs" as UC_Manage
   usecase "Creer un job" as UC_Create
   usecase "Modifier un job" as UC_Update
   usecase "Supprimer un job" as UC_Delete
-  usecase "Executer un job" as UC_RunOne
+  usecase "Executer des jobs" as UC_Run
+  usecase "Executer des jobs en parallele" as UC_RunParallel
+
+  usecase "Piloter l'execution" as UC_RuntimeControl
+  usecase "Pause/Reprise" as UC_PauseResume
+  usecase "Arret" as UC_Stop
+
+  usecase "Suivre la progression live" as UC_Progress
+  usecase "Afficher ETA" as UC_Eta
 
   usecase "Consulter les logs" as UC_Logs
   usecase "Naviguer logs par date/job/run" as UC_LogNav
 
   usecase "Configurer l'application" as UC_Config
-  usecase "Configurer langue" as UC_Language
-  usecase "Configurer format de log" as UC_LogFormat
+  usecase "Configurer langue FR/EN/IT" as UC_Language
+  usecase "Configurer format log JSON/XML" as UC_LogFormat
+  usecase "Configurer mode log local/centralise" as UC_LogMode
+  usecase "Configurer URL serveur de logs" as UC_LogServerUrl
   usecase "Configurer dossier de logs" as UC_LogDir
   usecase "Configurer extensions chiffrees" as UC_EncExtensions
-  usecase "Configurer logiciels metier surveilles" as UC_BusinessProc
+  usecase "Configurer extensions prioritaires" as UC_PriorityExtensions
+  usecase "Configurer seuil gros fichiers" as UC_LargeFileThreshold
+  usecase "Configurer logiciels metier" as UC_BusinessProc
 
-  usecase "Bloquer execution si logiciel metier detecte" as UC_BusinessGuard
-  usecase "Chiffrer fichiers selon policy" as UC_Encrypt
+  usecase "Bloquer si logiciel metier detecte" as UC_BusinessGuard
+  usecase "Chiffrer fichiers post-transfert" as UC_Encrypt
+  usecase "Limiter transferts paralleles gros fichiers" as UC_LargeFileBarrier
+  usecase "Prioriser extensions globales" as UC_PriorityBarrier
+
+  usecase "Envoyer logs au serveur central" as UC_SendCentralLogs
+  usecase "Exploiter serveur de logs" as UC_LogServerOps
+  usecase "Lister clients" as UC_ListClients
+  usecase "Renommer client" as UC_RenameClient
 }
 
 User --> UC_Start
-User --> UC_CLI_OneLine
+User --> UC_Console
+User --> UC_Config
+User --> UC_Logs
+User --> UC_Progress
+
+Admin --> UC_LogServerOps
 
 UC_Start .> UC_GUI : <<include>>
+UC_Start .> UC_Console : <<include>>
 
 UC_GUI .> UC_Manage : <<include>>
-UC_GUI .> UC_Logs : <<include>>
-UC_GUI .> UC_Config : <<include>>
-
 UC_Manage .> UC_Create : <<include>>
 UC_Manage .> UC_Update : <<include>>
 UC_Manage .> UC_Delete : <<include>>
-UC_Manage .> UC_RunOne : <<include>>
+UC_Manage .> UC_Run : <<include>>
+UC_Run .> UC_RunParallel : <<include>>
+
+UC_Progress .> UC_RuntimeControl : <<include>>
+UC_RuntimeControl .> UC_PauseResume : <<include>>
+UC_RuntimeControl .> UC_Stop : <<include>>
+UC_Progress .> UC_Eta : <<include>>
 
 UC_Logs .> UC_LogNav : <<include>>
 
 UC_Config .> UC_Language : <<include>>
 UC_Config .> UC_LogFormat : <<include>>
+UC_Config .> UC_LogMode : <<include>>
+UC_Config .> UC_LogServerUrl : <<include>>
 UC_Config .> UC_LogDir : <<include>>
 UC_Config .> UC_EncExtensions : <<include>>
+UC_Config .> UC_PriorityExtensions : <<include>>
+UC_Config .> UC_LargeFileThreshold : <<include>>
 UC_Config .> UC_BusinessProc : <<include>>
 
-UC_RunOne .> UC_BusinessGuard : <<include>>
-UC_RunOne .> UC_Encrypt : <<include>>
-UC_CLI_OneLine .> UC_RunOne : <<include>>
+UC_Run .> UC_BusinessGuard : <<include>>
+UC_Run .> UC_Encrypt : <<include>>
+UC_Run .> UC_PriorityBarrier : <<include>>
+UC_Run .> UC_LargeFileBarrier : <<include>>
+UC_Run .> UC_SendCentralLogs : <<include>>
+
+UC_LogServerOps .> UC_ListClients : <<include>>
+UC_LogServerOps .> UC_RenameClient : <<include>>
 
 @enduml
