@@ -663,6 +663,45 @@ public class BackupEngineTests
     }
 
     [Fact]
+    public async Task Execute_WhenStoppedByUserWithTranslatableException_MarksInactiveAndLogsStoppedEvent()
+    {
+        var job = new BackupJob
+        {
+            Id = 1,
+            Name = "TestBackup",
+            Source = "/source",
+            Destination = "/destination",
+            Type = BackupType.Complete
+        };
+
+        _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
+            .Returns(new List<string> { "/source/file1.txt" });
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
+            .Returns(1000);
+
+        var stopException = new EasysaveDefaultException(
+            Localization.LocalizationKey.error_backup_stopped_by_user,
+            [BackupRuntimeKeys.ActionBackupStoppedByUser]);
+        var executionController = new StubExecutionController(waitException: stopException);
+
+        var engine = BackupEngineFactory.Create(
+            _fileSystemMock.Object,
+            _transferServiceMock.Object,
+            _stateWriterMock.Object,
+            _loggerMock.Object,
+            executionController: executionController);
+
+        var exThrown = await Assert.ThrowsAsync<EasysaveDefaultException>(() => engine.Execute(job));
+        Assert.Equal(Localization.LocalizationKey.error_backup_stopped_by_user, exThrown.ErrorKey);
+
+        _stateWriterMock.Verify(sw => sw.MarkInactive(1), Times.Once);
+        _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Never);
+        _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
+            le.EventType == LogEventType.Stopped &&
+            le.SourcePathUNC == BackupRuntimeKeys.ActionBackupStoppedByUser)), Times.Once);
+    }
+
+    [Fact]
     public async Task Execute_WhenStopRequestedDuringPriorityWait_ShouldStopWithoutWaitingBarrierCompletion()
     {
         var job = new BackupJob

@@ -155,7 +155,7 @@ public partial class ManageViewModel
         }
         catch (Exception ex)
         {
-            if (ex.Data["errorKey"]?.ToString() == "error_job_not_found")
+            if (IsJobNotFound(ex))
             {
                 errorMessage = _localizationService.TranslateTextWithParams(
                     LocalizationKey.error_job_not_found_named,
@@ -542,6 +542,15 @@ public partial class ManageViewModel
     private static bool IsStoppedByUser(Exception ex)
     {
         return string.Equals(ex.Data["errorKey"]?.ToString(), BackupRuntimeKeys.ErrorBackupStoppedByUser, StringComparison.Ordinal)
-            || string.Equals(ex.Data["actionKey"]?.ToString(), BackupRuntimeKeys.ActionBackupStoppedByUser, StringComparison.Ordinal);
+            || string.Equals(ex.Data["actionKey"]?.ToString(), BackupRuntimeKeys.ActionBackupStoppedByUser, StringComparison.Ordinal)
+            || ex is ITranslatableException translatable
+            && translatable.ErrorKey == LocalizationKey.error_backup_stopped_by_user;
+    }
+
+    private static bool IsJobNotFound(Exception ex)
+    {
+        return string.Equals(ex.Data["errorKey"]?.ToString(), LocalizationKey.error_job_not_found.ToString(), StringComparison.Ordinal)
+            || ex is ITranslatableException translatable
+            && translatable.ErrorKey == LocalizationKey.error_job_not_found;
     }
 }
