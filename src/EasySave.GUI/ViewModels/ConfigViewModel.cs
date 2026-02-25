@@ -95,6 +95,7 @@ public partial class ConfigViewModel : ViewModelBase
     [
         new LanguageOption("fr", "Français"),
         new LanguageOption("en", "English"),
+        new LanguageOption("it", "Italiano"),
     ];
 
     public ConfigViewModel(

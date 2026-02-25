@@ -227,6 +227,74 @@
 			<Setter Property="Width" Value="72"/>
 			<Setter Property="Height" Value="30"/>
 		</Style>
+		<!-- ToggleButton filter chip base style -->
+		<Style Selector="ToggleButton.filter-chip">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+			<Setter Property="Foreground" Value="#9AA8B5"/>
+			<Setter Property="BorderBrush" Value="#22FFFFFF"/>
+			<Setter Property="BorderThickness" Value="1"/>
+			<Setter Property="CornerRadius" Value="12"/>
+			<Setter Property="Padding" Value="10,4"/>
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="FontSize" Value="12"/>
+			<Setter Property="FontWeight" Value="SemiBold"/>
+			<Setter Property="MinHeight" Value="0"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip:pointerover /template/ ContentPresenter">
+			<Setter Property="Background" Value="#33FFFFFF"/>
+		</Style>
+		<!-- Generic checked state (used for type chips and "All" chips) -->
+		<Style Selector="ToggleButton.filter-chip:checked /template/ ContentPresenter">
+			<Setter Property="Background" Value="#1A42A5F5"/>
+			<Setter Property="BorderBrush" Value="#4042A5F5"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip:checked">
+			<Setter Property="Foreground" Value="#7AB8FF"/>
+		</Style>
+
+		<!-- Status chip colored variants by Tag -->
+		<Style Selector="ToggleButton.filter-chip[Tag=Active]:checked /template/ ContentPresenter">
+			<Setter Property="Background" Value="#1A42A5F5"/>
+			<Setter Property="BorderBrush" Value="#4042A5F5"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Active]:checked">
+			<Setter Property="Foreground" Value="#7AB8FF"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Paused]:checked /template/ ContentPresenter">
+			<Setter Property="Background" Value="#1F5A4A1A"/>
+			<Setter Property="BorderBrush" Value="#405A4A1A"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Paused]:checked">
+			<Setter Property="Foreground" Value="#FFE082"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Error]:checked /template/ ContentPresenter">
+			<Setter Property="Background" Value="#1AEF5350"/>
+			<Setter Property="BorderBrush" Value="#40EF5350"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Error]:checked">
+			<Setter Property="Foreground" Value="#EF5350"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Blocked]:checked /template/ ContentPresenter">
+			<Setter Property="Background" Value="#2AAF3A3A"/>
+			<Setter Property="BorderBrush" Value="#40AF3A3A"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Blocked]:checked">
+			<Setter Property="Foreground" Value="#FFC8C8"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Waiting]:checked /template/ ContentPresenter">
+			<Setter Property="Background" Value="#2A8B5A2B"/>
+			<Setter Property="BorderBrush" Value="#408B5A2B"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Waiting]:checked">
+			<Setter Property="Foreground" Value="#FFD59A"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Inactive]:checked /template/ ContentPresenter">
+			<Setter Property="Background" Value="#22FFFFFF"/>
+			<Setter Property="BorderBrush" Value="#44FFFFFF"/>
+		</Style>
+		<Style Selector="ToggleButton.filter-chip[Tag=Inactive]:checked">
+			<Setter Property="Foreground" Value="#9AA8B5"/>
+		</Style>
 	</UserControl.Styles>
 
 	<Panel>
@@ -419,10 +487,80 @@
 					CornerRadius="8"
 					ClipToBounds="True"
 					IsVisible="{Binding HasJobs}">
-				<Grid RowDefinitions="Auto,*,Auto">
+				<Grid RowDefinitions="Auto,Auto,*,Auto">
+
+					<!-- Filter bar -->
+					<Border Grid.Row="0"
+							Background="#0FFFFFFF"
+							Padding="16,10"
+							BorderBrush="#11FFFFFF"
+							BorderThickness="0,0,0,1">
+
+						<StackPanel Spacing="8">
+							<!-- Status filters -->
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<TextBlock Text="{Binding FilterByStatusLabel}"
+										   FontSize="12"
+										   Foreground="#7D8B99"
+										   VerticalAlignment="Center"
+										   Width="100"/>
+								<ItemsControl ItemsSource="{Binding StatusFilters}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<WrapPanel Orientation="Horizontal"/>
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<ToggleButton Classes="filter-chip"
+														  Content="{Binding Label}"
+														  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+														  Tag="{Binding Value}"
+														  Margin="0,0,6,0"/>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</StackPanel>
+
+							<!-- Type filters -->
+							<StackPanel Orientation="Horizontal" Spacing="8">
+								<TextBlock Text="{Binding FilterByTypeLabel}"
+										   FontSize="12"
+										   Foreground="#7D8B99"
+										   VerticalAlignment="Center"
+										   Width="100"/>
+								<ItemsControl ItemsSource="{Binding TypeFilters}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<WrapPanel Orientation="Horizontal"/>
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<ToggleButton Classes="filter-chip"
+														  Content="{Binding Label}"
+														  IsChecked="{Binding IsSelected, Mode=TwoWay}"
+														  Margin="0,0,6,0"/>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+
+								<!-- Reset link -->
+								<Button Content="{Binding ResetFiltersLabel}"
+										Command="{Binding ResetFiltersCommand}"
+										Background="Transparent"
+										BorderThickness="0"
+										Foreground="#7D8B99"
+										FontSize="12"
+										Padding="8,4"
+										Cursor="Hand"
+										VerticalAlignment="Center"/>
+							</StackPanel>
+						</StackPanel>
+					</Border>
 
 					<!-- Column headers -->
-					<Border Grid.Row="0"
+					<Border Grid.Row="1"
 							Background="#11FFFFFF"
 							Padding="16,10">
 						<Grid ColumnDefinitions="40,50,90,*,1.5*,1.5*,100,180,130">
@@ -475,7 +613,7 @@
 					</Border>
 
 					<!-- Job list -->
-					<ScrollViewer Grid.Row="1"
+					<ScrollViewer Grid.Row="2"
 								  HorizontalScrollBarVisibility="Disabled"
 								  VerticalScrollBarVisibility="Auto">
 						<ItemsControl ItemsSource="{Binding Jobs}">
@@ -503,15 +641,15 @@
 											</Border>
 
 											<!-- Status -->
-												<Border Grid.Column="2"
-														Classes="status-badge"
-														Tag="{Binding Status}"
-														HorizontalAlignment="Center"
-														VerticalAlignment="Center">
+											<Border Grid.Column="2"
+													Classes="status-badge"
+													Tag="{Binding Status}"
+													HorizontalAlignment="Center"
+													VerticalAlignment="Center">
 												<TextBlock Text="{Binding StatusDisplay}"/>
 											</Border>
 
-											<!-- Name + execution info -->
+											<!-- Name -->
 											<StackPanel Grid.Column="3"
 														Spacing="2"
 														HorizontalAlignment="Center"
@@ -592,7 +730,7 @@
 					</ScrollViewer>
 
 					<!-- Pagination -->
-					<Border Grid.Row="2"
+					<Border Grid.Row="3"
 							Classes="pagination-row"
 							Padding="12,8"
 							IsVisible="{Binding IsPaginationVisible}">
@@ -682,7 +820,7 @@
 
 		<!-- Confirmation overlay -->
 		<Border Background="#AA000000"
-				IsVisible="{Binding IsConfirmDialogOpen}">
+				IsVisible="{Binding IsConfirmDialogOpen}" Margin="-24">
 			<Border Background="#2D2D3D"
 					CornerRadius="10"
 					Padding="32,24"
@@ -882,9 +1020,9 @@
 						<StackPanel Spacing="6">
 							<TextBlock Text="{Binding NameLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
 							<TextBox Text="{Binding Name}" LostFocus="EditName_LostFocus"/>
-							<TextBlock Text="{Binding JobNameError}"
-									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
-									   IsVisible="{Binding JobNameError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+									<TextBlock Text="{Binding JobNameError}"
+											   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+											   IsVisible="{Binding JobNameError, Converter={x:Static conv:ObjectConverters.IsNotNull}}"/>
 						</StackPanel>
 
 						<!-- Source Path -->
@@ -902,9 +1040,9 @@
 										Cursor="Hand" BorderThickness="0"
 										Margin="8,0,0,0"/>
 							</Grid>
-							<TextBlock Text="{Binding SourcePathError}"
-									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
-									   IsVisible="{Binding SourcePathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+											<TextBlock Text="{Binding SourcePathError}"
+											   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+											   IsVisible="{Binding SourcePathError, Converter={x:Static conv:ObjectConverters.IsNotNull}}"/>
 						</StackPanel>
 
 						<!-- Destination Path -->
@@ -922,17 +1060,16 @@
 										Cursor="Hand" BorderThickness="0"
 										Margin="8,0,0,0"/>
 							</Grid>
-							<TextBlock Text="{Binding DestinationPathError}"
-									   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
-									   IsVisible="{Binding DestinationPathError, Converter={x:Static conv:StringConverters.IsNotNullOrEmpty}}"/>
+											<TextBlock Text="{Binding DestinationPathError}"
+											   Foreground="#EF5350" FontSize="11" Margin="2,2,0,0"
+											   IsVisible="{Binding DestinationPathError, Converter={x:Static conv:ObjectConverters.IsNotNull}}"/>
 						</StackPanel>
 
 						<!-- Backup Type -->
 						<StackPanel Spacing="6">
 							<TextBlock Text="{Binding BackupTypeLabel}" FontWeight="SemiBold" FontSize="13" Foreground="#CCCCCC"/>
 							<ComboBox ItemsSource="{Binding BackupTypeOptions}"
-									  SelectedValueBinding="{Binding Value}"
-									  SelectedValue="{Binding SelectedBackupType}"
+									  SelectedItem="{Binding SelectedBackupTypeOption}"
 									  HorizontalAlignment="Stretch"/>
 						</StackPanel>
 

@@ -19,6 +19,10 @@ translations:
   menu_job_update_source: "Modifier le chemin source"
   menu_job_update_destination: "Modifier le chemin de destination"
   menu_job_update_type: "Modifier le type de sauvegarde"
+  gui_manage_filter_by_status: "Filtrer par état"
+  gui_manage_filter_all_status: "Tous les états"
+  gui_manage_filter_by_type: "Filtrer par type"
+  gui_manage_filter_all_types: "Tous les types"
   menu_job_update_save: "Sauvegarder les modifications"
   back: "Retour"
   backupjob_create_name: "Veuillez renseigner le nom du BackupJob"
@@ -39,6 +43,7 @@ translations:
   backupjob_delete_confirm: "Êtes-vous sûr de vouloir supprimer ce BackupJob ? (Appuyez sur Y pour confirmer)"
   config_locale_fr: "Français"
   config_locale_en: "Anglais"
+  config_locale_it: "Italien"
   ask_log_path: "Veuillez indiquer le dossier des logs (ou tapez 'default' pour réinitialiser)"
   ask_large_file_threshold_value: "Indiquez le seuil (0 pour désactiver)"
   log_path_updated: "Le dossier des logs a été mis à jour."
@@ -317,4 +322,3 @@ translations:
   error_multiple_readers_registered: "Plusieurs lecteurs sont enregistrés"
   error_unable_access_log: "Impossible d'accéder au log"
   error_job_not_found_named: "Le job {0} n'existe pas"
-

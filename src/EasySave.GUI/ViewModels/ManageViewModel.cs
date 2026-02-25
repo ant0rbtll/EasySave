@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using EasySave.Application;
 using EasySave.Backup;
 using EasySave.Application.Services;
@@ -148,8 +149,33 @@ public partial class ManageViewModel : ViewModelBase
     private bool hasJobs;
 
     private bool _updatingSelection;
+    private bool _updatingFilters;
 
+    public ObservableCollection<FilterItem<Core.BackupJobStatus>> StatusFilters { get; } = [];
+    public ObservableCollection<FilterItem<Core.BackupType>> TypeFilters { get; } = [];
     private bool _isAllSelected;
+
+    public bool IsStatusAllSelected => StatusFilters.Count == 0 || StatusFilters[0].IsSelected;
+    public bool IsTypeAllSelected => TypeFilters.Count == 0 || TypeFilters[0].IsSelected;
+    [RelayCommand]
+    private void ResetFilters()
+    {
+        if (StatusFilters.Count > 0)
+        {
+            StatusFilters[0].IsSelected = true;
+            for (int i = 1; i < StatusFilters.Count; i++)
+                StatusFilters[i].IsSelected = false;
+        }
+        if (TypeFilters.Count > 0)
+        {
+            TypeFilters[0].IsSelected = true;
+            for (int i = 1; i < TypeFilters.Count; i++)
+                TypeFilters[i].IsSelected = false;
+        }
+        SearchText = string.Empty;
+        CurrentPage = 1;
+        Refresh();
+    }
     public bool IsAllSelected
     {
         get => _isAllSelected;
@@ -183,6 +209,117 @@ public partial class ManageViewModel : ViewModelBase
         RefreshTranslations();
     }
 
+    private void InitializeFilters()
+    {
+        foreach (var f in StatusFilters) f.OnChanged = null;
+        foreach (var f in TypeFilters) f.OnChanged = null;
+        StatusFilters.Clear();
+        TypeFilters.Clear();
+
+        StatusFilters.Add(new FilterItem<Core.BackupJobStatus>
+        {
+            Value = null,
+            Label = FilterAllStatusLabel,
+            IsSelected = true,
+            OnChanged = OnStatusFilterChanged
+        });
+
+        foreach (var status in Enum.GetValues<Core.BackupJobStatus>())
+        {
+            if (status == Core.BackupJobStatus.Done)
+                continue;
+
+            string label = status switch
+            {
+                Core.BackupJobStatus.Active => FilterStatusActive,
+                Core.BackupJobStatus.Paused => FilterStatusPaused,
+                Core.BackupJobStatus.Blocked => FilterStatusBlocked,
+                Core.BackupJobStatus.Inactive => FilterStatusInactive,
+                Core.BackupJobStatus.Error => FilterStatusError,
+                Core.BackupJobStatus.Waiting => FilterStatusWaiting,
+                _ => FilterStatusDefault
+            };
+            StatusFilters.Add(new FilterItem<Core.BackupJobStatus>
+            {
+                Value = status,
+                Label = label,
+                IsSelected = false,
+                OnChanged = OnStatusFilterChanged
+            });
+        }
+
+        TypeFilters.Add(new FilterItem<Core.BackupType>
+        {
+            Value = null,
+            Label = _localizationService.TranslateText(LocalizationKey.gui_manage_filter_all_types),
+            IsSelected = true,
+            OnChanged = OnTypeFilterChanged
+        });
+
+        foreach (var type in Enum.GetValues<Core.BackupType>())
+        {
+            LocalizationKey key = type switch
+            {
+                Core.BackupType.Complete => LocalizationKey.backupjob_type_complete,
+                Core.BackupType.Differential => LocalizationKey.backupjob_type_differential,
+                _ => LocalizationKey.backupjob_type
+            };
+            TypeFilters.Add(new FilterItem<Core.BackupType>
+            {
+                Value = type,
+                Label = _localizationService.TranslateText(key),
+                IsSelected = false,
+                OnChanged = OnTypeFilterChanged
+            });
+        }
+
+        OnPropertyChanged(nameof(StatusFilters));
+        OnPropertyChanged(nameof(TypeFilters));
+    }
+
+    private void OnStatusFilterChanged(FilterItem<Core.BackupJobStatus> changed)
+    {
+        if (_updatingFilters) return;
+        if (StatusFilters.Count == 0) return;
+        _updatingFilters = true;
+        if (changed == StatusFilters[0] && changed.IsSelected)
+        {
+            for (int i = 1; i < StatusFilters.Count; i++)
+                StatusFilters[i].IsSelected = false;
+        }
+        else if (changed != StatusFilters[0] && changed.IsSelected)
+        {
+            StatusFilters[0].IsSelected = false;
+        }
+        if (StatusFilters.Count > 1 && StatusFilters.Skip(1).All(f => !f.IsSelected))
+            StatusFilters[0].IsSelected = true;
+        _updatingFilters = false;
+        OnPropertyChanged(nameof(IsStatusAllSelected));
+        CurrentPage = 1;
+        Refresh();
+    }
+
+    private void OnTypeFilterChanged(FilterItem<Core.BackupType> changed)
+    {
+        if (_updatingFilters) return;
+        if (TypeFilters.Count == 0) return;
+        _updatingFilters = true;
+        if (changed == TypeFilters[0] && changed.IsSelected)
+        {
+            for (int i = 1; i < TypeFilters.Count; i++)
+                TypeFilters[i].IsSelected = false;
+        }
+        else if (changed != TypeFilters[0] && changed.IsSelected)
+        {
+            TypeFilters[0].IsSelected = false;
+        }
+        if (TypeFilters.Count > 1 && TypeFilters.Skip(1).All(f => !f.IsSelected))
+            TypeFilters[0].IsSelected = true;
+        _updatingFilters = false;
+        OnPropertyChanged(nameof(IsTypeAllSelected));
+        CurrentPage = 1;
+        Refresh();
+    }
     partial void OnSearchTextChanged(string value)
     {
         CurrentPage = 1;
@@ -222,10 +359,28 @@ public partial class ManageViewModel : ViewModelBase
         Jobs.Clear();
         var query = SearchText.Trim();
 
-        IEnumerable<BackupJob> filtered = _allJobs;
+        IEnumerable<Models.BackupJob> filtered = _allJobs;
 
         if (!string.IsNullOrEmpty(query))
             filtered = filtered.Where(j => _displayService.MatchesSearch(j, query));
+
+        if (StatusFilters.Count != 0)
+        {
+            var selectedStatus = StatusFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
+            if (!StatusFilters[0].IsSelected && selectedStatus.Count > 0)
+            {
+                filtered = filtered.Where(j => selectedStatus.Contains(j.Status));
+            }
+        }
+
+        if (TypeFilters.Count != 0)
+        {
+            var selectedTypes = TypeFilters.Skip(1).Where(f => f.IsSelected).Select(f => f.Value!.Value).ToList();
+            if (!TypeFilters[0].IsSelected && selectedTypes.Count > 0)
+            {
+                filtered = filtered.Where(j => selectedTypes.Contains(j.Type));
+            }
+        }
 
         var filteredJobs = !string.IsNullOrEmpty(SortColumn)
             ? _displayService.Sort(filtered, SortColumn, SortAscending)
@@ -262,5 +417,23 @@ public partial class ManageViewModel : ViewModelBase
         PaginationItems.Clear();
         foreach (var item in PaginationHelper.BuildVisibleItems(CurrentPage, TotalPages))
             PaginationItems.Add(item);
+    }
+
+    public partial class FilterItem<T> : ObservableObject
+    where T : struct
+    {
+        public T? Value { get; init; }
+
+        public string Label { get; init; } = string.Empty;
+
+        public Action<FilterItem<T>>? OnChanged { get; set; }
+
+        [ObservableProperty]
+        private bool isSelected;
+
+        partial void OnIsSelectedChanged(bool value)
+        {
+            OnChanged?.Invoke(this);
+        }
     }
 }

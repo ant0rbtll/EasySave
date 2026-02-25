@@ -23,6 +23,7 @@ public class LocalizationService : ILocalizationService
         {
             { "fr", LocalizationKey.config_locale_fr },
             { "en", LocalizationKey.config_locale_en },
+            { "it", LocalizationKey.config_locale_it },
         };
         _culture = "fr";
 

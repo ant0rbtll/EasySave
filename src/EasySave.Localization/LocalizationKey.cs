@@ -49,6 +49,7 @@ public enum LocalizationKey
     // CONFIG
     config_locale_fr,
     config_locale_en,
+    config_locale_it,
 
     ask_log_path,
     ask_large_file_threshold_value,
@@ -143,6 +144,8 @@ public enum LocalizationKey
     gui_sidebar_manage,
     gui_sidebar_progress,
     gui_sidebar_log,
+    gui_manage_filter_all_types,
+    gui_manage_filter_all_status,
     gui_sidebar_config,
     gui_config_title,
     gui_config_language,
@@ -182,6 +185,8 @@ public enum LocalizationKey
     gui_manage_tooltip_stop,
     gui_manage_run_success,
     gui_manage_delete_success,
+    gui_manage_filter_by_status,
+    gui_manage_filter_by_type,
     gui_create_add_success,
     gui_create_subtitle,
     gui_create_backup_name,
