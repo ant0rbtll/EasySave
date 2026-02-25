@@ -48,7 +48,7 @@ RUN dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.5
 ENV PATH="${PATH}:/root/.dotnet/tools"
 
 # Exécuter tous les tests avec code coverage
-CMD dotnet test --collect:"XPlat Code Coverage" --results-directory /app/test-results && \
+CMD dotnet test --collect:"XPlat Code Coverage" --settings /app/coverlet.runsettings --results-directory /app/test-results && \
     reportgenerator \
     -reports:/app/test-results/**/coverage.cobertura.xml \
     -targetdir:/app/coverage-report \
