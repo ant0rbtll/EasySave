@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using EasySave.Localization;
 
 namespace EasySave.Backup;
 
@@ -17,12 +18,12 @@ public sealed class ExternalCryptoProcessRunner : IExternalCryptoProcessRunner
     {
         if (string.IsNullOrWhiteSpace(executablePath))
         {
-            return ExternalCryptoProcessRunResult.Failure(-1, "CryptoSoft executable path is required.");
+            return ExternalCryptoProcessRunResult.Failure(-1, LocalizationKey.error_invalid_argument.ToString());
         }
 
         if (string.IsNullOrWhiteSpace(filePath))
         {
-            return ExternalCryptoProcessRunResult.Failure(-1, "File path is required.");
+            return ExternalCryptoProcessRunResult.Failure(-1, LocalizationKey.error_invalid_argument.ToString());
         }
 
         var startInfo = new ProcessStartInfo
@@ -43,12 +44,12 @@ public sealed class ExternalCryptoProcessRunner : IExternalCryptoProcessRunner
         {
             if (!process.Start())
             {
-                return ExternalCryptoProcessRunResult.Failure(-1, "CryptoSoft process failed to start.");
+                return ExternalCryptoProcessRunResult.Failure(-1, LocalizationKey.error_encryption_failed.ToString());
             }
         }
         catch (Exception ex)
         {
-            return ExternalCryptoProcessRunResult.Failure(ex.HResult, ex.Message);
+            return ExternalCryptoProcessRunResult.Failure(ex.HResult, LocalizationKey.error_encryption_failed.ToString());
         }
 
         try
@@ -66,7 +67,7 @@ public sealed class ExternalCryptoProcessRunner : IExternalCryptoProcessRunner
 
         return process.ExitCode == 0
             ? ExternalCryptoProcessRunResult.Success()
-            : ExternalCryptoProcessRunResult.Failure(process.ExitCode, $"CryptoSoft exited with code {process.ExitCode}.");
+            : ExternalCryptoProcessRunResult.Failure(process.ExitCode, LocalizationKey.error_encryption_failed.ToString());
     }
 
     private static void TryTerminateProcess(Process process)

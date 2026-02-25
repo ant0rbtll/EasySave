@@ -1,4 +1,5 @@
 using EasySave.Core;
+using EasySave.Localization;
 
 namespace EasySave.Backup.Tests;
 
@@ -39,7 +40,7 @@ public sealed class ExternalEncryptionProviderTests : IDisposable
 
         Assert.False(result.IsSuccess);
         Assert.True(result.EncryptionTimeMs < 0);
-        Assert.Contains("CryptoSoftExecutablePath is not configured", result.ErrorMessage, StringComparison.Ordinal);
+        Assert.Equal(LocalizationKey.error_invalid_argument.ToString(), result.ErrorMessage);
         Assert.Equal(0, runner.InvocationCount);
     }
 
@@ -56,7 +57,7 @@ public sealed class ExternalEncryptionProviderTests : IDisposable
 
         Assert.False(result.IsSuccess);
         Assert.True(result.EncryptionTimeMs < 0);
-        Assert.Contains("Target file not found", result.ErrorMessage, StringComparison.Ordinal);
+        Assert.Equal(LocalizationKey.error_file_not_found.ToString(), result.ErrorMessage);
         Assert.Equal(0, runner.InvocationCount);
     }
 
@@ -73,7 +74,7 @@ public sealed class ExternalEncryptionProviderTests : IDisposable
 
         Assert.False(result.IsSuccess);
         Assert.True(result.EncryptionTimeMs < 0);
-        Assert.Contains("CryptoSoft executable not found", result.ErrorMessage, StringComparison.Ordinal);
+        Assert.Equal(LocalizationKey.error_file_not_found.ToString(), result.ErrorMessage);
         Assert.Equal(0, runner.InvocationCount);
     }
 
@@ -161,7 +162,7 @@ public sealed class ExternalEncryptionProviderTests : IDisposable
 
             Assert.False(result.IsSuccess);
             Assert.True(result.EncryptionTimeMs < 0);
-            Assert.Contains("Timeout while waiting for CryptoSoft mono-instance lock", result.ErrorMessage, StringComparison.Ordinal);
+            Assert.Equal(LocalizationKey.error_encryption_failed.ToString(), result.ErrorMessage);
             Assert.Equal(0, runner.InvocationCount);
         }
         finally
@@ -190,7 +191,7 @@ public sealed class ExternalEncryptionProviderTests : IDisposable
 
         Assert.False(result.IsSuccess);
         Assert.True(result.EncryptionTimeMs < 0);
-        Assert.Contains("CryptoSoft execution timed out", result.ErrorMessage, StringComparison.Ordinal);
+        Assert.Equal(LocalizationKey.error_encryption_failed.ToString(), result.ErrorMessage);
         Assert.Equal(1, runner.InvocationCount);
 
         var mutexAcquiredFromOtherThread = await Task.Run(() =>

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using EasySave.Core;
 using EasySave.Exceptions;
+using EasySave.Localization;
 
 namespace EasySave.Backup;
 
@@ -58,15 +59,16 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
         TimeSpan mutexWaitTimeout,
         TimeSpan processExecutionTimeout)
     {
-        _processRunner = processRunner ?? throw new ArgumentNullException(nameof(processRunner));
-        _mutexName = string.IsNullOrWhiteSpace(mutexName)
-            ? throw new ArgumentException("Mutex name is required.", nameof(mutexName))
-            : mutexName.Trim();
+        EasysaveDefaultException.ThrowIfNull(processRunner);
+        EasysaveDefaultException.ThrowIfNullOrWhiteSpace(mutexName);
+
+        _processRunner = processRunner;
+        _mutexName = mutexName.Trim();
         _mutexWaitTimeout = mutexWaitTimeout <= TimeSpan.Zero
-            ? throw new ArgumentOutOfRangeException(nameof(mutexWaitTimeout), "Mutex wait timeout must be greater than zero.")
+            ? throw new EasysaveDefaultException(LocalizationKey.error_out_of_range, [nameof(mutexWaitTimeout)])
             : mutexWaitTimeout;
         _processExecutionTimeout = processExecutionTimeout <= TimeSpan.Zero
-            ? throw new ArgumentOutOfRangeException(nameof(processExecutionTimeout), "Process execution timeout must be greater than zero.")
+            ? throw new EasysaveDefaultException(LocalizationKey.error_out_of_range, [nameof(processExecutionTimeout)])
             : processExecutionTimeout;
     }
 
@@ -86,7 +88,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
             return Task.FromResult(EncryptionResult.Failure(
                 encryptionTimeMs: -1,
                 errorCode: -1,
-                errorMessage: "External provider selected but CryptoSoftExecutablePath is not configured."));
+                errorMessage: LocalizationKey.error_invalid_argument.ToString()));
         }
 
         if (string.IsNullOrWhiteSpace(filePath))
@@ -94,7 +96,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
             return Task.FromResult(EncryptionResult.Failure(
                 encryptionTimeMs: -1,
                 errorCode: -1,
-                errorMessage: "File path is required."));
+                errorMessage: LocalizationKey.error_invalid_argument.ToString()));
         }
 
         var executablePath = policy.CryptoSoftExecutablePath.Trim();
@@ -103,7 +105,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
             return Task.FromResult(EncryptionResult.Failure(
                 encryptionTimeMs: -1,
                 errorCode: -1,
-                errorMessage: $"CryptoSoft executable not found: {executablePath}"));
+                errorMessage: LocalizationKey.error_file_not_found.ToString()));
         }
 
         if (!File.Exists(filePath))
@@ -111,7 +113,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
             return Task.FromResult(EncryptionResult.Failure(
                 encryptionTimeMs: -1,
                 errorCode: -1,
-                errorMessage: $"Target file not found: {filePath}"));
+                errorMessage: LocalizationKey.error_file_not_found.ToString()));
         }
 
         var stopwatch = Stopwatch.StartNew();
@@ -126,7 +128,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
                 return Task.FromResult(EncryptionResult.Failure(
                     encryptionTimeMs: GetNegativeElapsed(stopwatch),
                     errorCode: -1,
-                    errorMessage: $"Timeout while waiting for CryptoSoft mono-instance lock ({FormatTimeout(_mutexWaitTimeout)})."));
+                    errorMessage: LocalizationKey.error_encryption_failed.ToString()));
             }
 
             using var processTimeoutCts = new CancellationTokenSource();
@@ -143,7 +145,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
                 return Task.FromResult(EncryptionResult.Failure(
                     encryptionTimeMs: GetNegativeElapsed(stopwatch),
                     errorCode: -1,
-                    errorMessage: $"CryptoSoft execution timed out after {FormatTimeout(_processExecutionTimeout)}."));
+                    errorMessage: LocalizationKey.error_encryption_failed.ToString()));
             }
 
             if (runResult.IsSuccess)
@@ -154,7 +156,7 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
             return Task.FromResult(EncryptionResult.Failure(
                 encryptionTimeMs: GetNegativeElapsed(stopwatch),
                 errorCode: NormalizeErrorCode(runResult.ErrorCode),
-                errorMessage: runResult.ErrorMessage ?? "CryptoSoft execution failed."));
+                errorMessage: runResult.ErrorMessage ?? LocalizationKey.error_encryption_failed.ToString()));
         }
         catch (OperationCanceledException)
         {
@@ -165,7 +167,9 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
             return Task.FromResult(EncryptionResult.Failure(
                 encryptionTimeMs: GetNegativeElapsed(stopwatch),
                 errorCode: NormalizeErrorCode(ex.HResult),
-                errorMessage: ex.Message));
+                errorMessage: ex is ITranslatableException translatable
+                    ? translatable.ErrorKey.ToString()
+                    : LocalizationKey.error_encryption_failed.ToString()));
         }
         finally
         {
@@ -223,13 +227,4 @@ public sealed class ExternalEncryptionProvider : IEncryptionProvider
         return errorCode == 0 ? -1 : errorCode;
     }
 
-    private static string FormatTimeout(TimeSpan timeout)
-    {
-        if (timeout.TotalSeconds >= 1)
-        {
-            return $"{Math.Ceiling(timeout.TotalSeconds):F0}s";
-        }
-
-        return $"{Math.Ceiling(timeout.TotalMilliseconds):F0}ms";
-    }
 }
