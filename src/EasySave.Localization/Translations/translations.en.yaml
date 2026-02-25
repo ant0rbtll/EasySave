@@ -43,6 +43,7 @@ translations:
   backupjob_delete_confirm: "Are you sure you want to delete this BackupJob? (Press Y to confirm)"
   config_locale_fr: "French"
   config_locale_en: "English"
+  config_locale_it: "Italian"
   ask_log_path: "Please input the log directory (or type 'default' to reset)"
   ask_large_file_threshold_value: "Enter threshold value (0 to disable)"
   log_path_updated: "Log directory updated."
@@ -320,4 +321,3 @@ translations:
   error_multiple_readers_registered: "Multiple readers registered"
   error_unable_access_log: "Unable to access log"
   error_job_not_found_named: "Job {0} does not exist"
-

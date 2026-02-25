@@ -38,14 +38,15 @@ public class MenuFactoryTests
         IReadOnlyDictionary<string, LocalizationKey> cultures = new Dictionary<string, LocalizationKey>
         {
             ["fr"] = LocalizationKey.config_locale_fr,
-            ["en"] = LocalizationKey.config_locale_en
+            ["en"] = LocalizationKey.config_locale_en,
+            ["it"] = LocalizationKey.config_locale_it
         };
 
         var menu = factory.CreateLocaleMenu(cultures, locale => selected = locale, () => backCalled = true);
 
-        Assert.Equal(new[] { LocalizationKey.config_locale_en, LocalizationKey.config_locale_fr, LocalizationKey.back }, menu.Items);
+        Assert.Equal(new[] { LocalizationKey.config_locale_en, LocalizationKey.config_locale_fr, LocalizationKey.config_locale_it, LocalizationKey.back }, menu.Items);
         menu.Actions[0]();
-        menu.Actions[2]();
+        menu.Actions[3]();
 
         Assert.Equal("en", selected);
         Assert.True(backCalled);

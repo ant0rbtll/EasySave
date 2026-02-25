@@ -22,9 +22,10 @@ public class LocalizationServiceTests
 
         // Assert
         Assert.NotNull(service.AllCultures);
-        Assert.Equal(2, service.AllCultures.Count);
+        Assert.Equal(3, service.AllCultures.Count);
         Assert.True(service.AllCultures.ContainsKey("fr"));
         Assert.True(service.AllCultures.ContainsKey("en"));
+        Assert.True(service.AllCultures.ContainsKey("it"));
     }
 
     [Fact]
@@ -36,6 +37,7 @@ public class LocalizationServiceTests
         // Assert
         Assert.Equal(LocalizationKey.config_locale_fr, service.AllCultures["fr"]);
         Assert.Equal(LocalizationKey.config_locale_en, service.AllCultures["en"]);
+        Assert.Equal(LocalizationKey.config_locale_it, service.AllCultures["it"]);
     }
 
     #endregion

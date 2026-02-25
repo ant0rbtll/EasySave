@@ -43,6 +43,7 @@ translations:
   backupjob_delete_confirm: "Êtes-vous sûr de vouloir supprimer ce BackupJob ? (Appuyez sur Y pour confirmer)"
   config_locale_fr: "Français"
   config_locale_en: "Anglais"
+  config_locale_it: "Italien"
   ask_log_path: "Veuillez indiquer le dossier des logs (ou tapez 'default' pour réinitialiser)"
   ask_large_file_threshold_value: "Indiquez le seuil (0 pour désactiver)"
   log_path_updated: "Le dossier des logs a été mis à jour."

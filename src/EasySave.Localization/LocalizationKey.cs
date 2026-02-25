@@ -49,6 +49,7 @@ public enum LocalizationKey
     // CONFIG
     config_locale_fr,
     config_locale_en,
+    config_locale_it,
 
     ask_log_path,
     ask_large_file_threshold_value,

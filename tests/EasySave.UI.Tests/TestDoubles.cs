@@ -9,7 +9,8 @@ internal sealed class FakeLocalizationService : ILocalizationService
     public Dictionary<string, LocalizationKey> AllCultures { get; } = new()
     {
         { "fr", LocalizationKey.config_locale_fr },
-        { "en", LocalizationKey.config_locale_en }
+        { "en", LocalizationKey.config_locale_en },
+        { "it", LocalizationKey.config_locale_it }
     };
 
     public Dictionary<LocalizationKey, string> KeyTranslations { get; } = new();
