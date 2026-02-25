@@ -14,18 +14,12 @@ package "AppCommon" {
     +RunHost(host : IApplicationHost) : void
   }
 
-  interface IApplicationHost {
-    +ConfigureServices(services, args) : void
-    +Run(serviceProvider, args) : void
-  }
-
   Program --> IApplicationHost : selection host
   Program --> ApplicationManager
 }
 
 package "Hosts" {
   class "UI.Host" as ConsoleHost
-  class "GUI.Host" as GuiHost
 
   IApplicationHost <|.. ConsoleHost
   IApplicationHost <|.. GuiHost
@@ -70,92 +64,134 @@ package "Core" {
   }
 }
 
-package "Application.Services" {
-  class BackupApplicationService {
-    +RunJob(id, ct) : Task
-    +RunJobs(ids, ct) : Task
-    +RunAllJobs(ct) : Task
-    +GetAllJobsRuntimeStates() : IReadOnlyDictionary
-    +GetAllJobsLiveProgress() : IReadOnlyDictionary
+package "Application" {
+  package "Hosting/" {
+    interface IApplicationHost {
+      +ConfigureServices(services, args) : void
+      +Run(serviceProvider, args) : void
+    }
   }
 
-  interface IBackupRunCoordinator
-  class InMemoryBackupRunCoordinator
+  package "Services/" {
+    class BackupApplicationService {
+      +RunJob(id, ct) : Task
+      +RunJobs(ids, ct) : Task
+      +RunAllJobs(ct) : Task
+      +GetAllJobsRuntimeStates() : IReadOnlyDictionary
+      +GetAllJobsLiveProgress() : IReadOnlyDictionary
+    }
 
-  interface IBackupEtaEstimator
-  class BackupEtaEstimator
+    interface IBackupJobStateService
+    class BackupJobStateService
 
-  interface IBackupJobStateService
-  class BackupJobStateService
+    interface ILogQueryService
+    class LogQueryService
 
-  interface ILogQueryService
-  class LogQueryService
+    interface ILogNavigationService
+    class LogNavigationService
 
-  interface ILogNavigationService
-  class LogNavigationService
+    IBackupJobStateService <|.. BackupJobStateService
+    ILogQueryService <|.. LogQueryService
+    ILogNavigationService <|.. LogNavigationService
+  }
 
-  class BusinessSoftwareBackupExecutionGuard
+  package "Eta/" {
+    interface IBackupEtaEstimator
+    class BackupEtaEstimator
+    class BackupEtaSnapshot
 
-  IBackupRunCoordinator <|.. InMemoryBackupRunCoordinator
-  IBackupEtaEstimator <|.. BackupEtaEstimator
-  IBackupJobStateService <|.. BackupJobStateService
-  ILogQueryService <|.. LogQueryService
-  ILogNavigationService <|.. LogNavigationService
-}
+    IBackupEtaEstimator <|.. BackupEtaEstimator
+  }
 
-package "Application.Readers" {
-  interface ILogReader
-  class JsonLogReader
-  class XmlLogReader
+  package "Runtime/" {
+    interface IBackupRunCoordinator
+    class InMemoryBackupRunCoordinator
+    class InMemoryPriorityFilesBarrier
+    class BusinessSoftwareBackupExecutionGuard
 
-  interface IStateReader
-  class JsonStateReader
+    IBackupRunCoordinator <|.. InMemoryBackupRunCoordinator
+  }
 
-  ILogReader <|.. JsonLogReader
-  ILogReader <|.. XmlLogReader
-  IStateReader <|.. JsonStateReader
+  package "Encryption/" {
+    class UserPreferencesEncryptionPolicyProvider
+  }
+
+  package "Logging/" {
+    class LogFileNaming
+    class LogNavigationModels
+  }
+
+  package "Readers/" {
+    interface ILogReader
+    class JsonLogReader
+    class XmlLogReader
+
+    interface IStateReader
+    class JsonStateReader
+
+    ILogReader <|.. JsonLogReader
+    ILogReader <|.. XmlLogReader
+    IStateReader <|.. JsonStateReader
+  }
 }
 
 package "Backup" {
-  interface IBackupEngine {
-    +Execute(job, ct, context) : Task
+  package "Controllers/" {
+    interface IBackupExecutionController
+    class BackupExecutionController
+    class NoOpBackupExecutionController
+
+    IBackupExecutionController <|.. BackupExecutionController
+    IBackupExecutionController <|.. NoOpBackupExecutionController
   }
 
-  class BackupEngine
-  class BackupRuntimeGate
-  class BackupExecutionReporter
-  class BackupFileExecutionService
-  class BackupExecutionContext
-  class BackupFilePlan
+  package "Engine/" {
+    interface IBackupEngine {
+      +Execute(job, ct, context) : Task
+    }
 
-  interface IBackupExecutionController
-  class BackupExecutionController
+    class BackupEngine
+    class BackupRuntimeGate
+    class BackupExecutionReporter
+    class BackupFileExecutionService
+    class BackupExecutionContext
 
-  interface IBackupFilePlanner
-  class DefaultBackupFilePlanner
+    IBackupEngine <|.. BackupEngine
+  }
 
-  class EncryptionPolicy
-  interface IEncryptionPolicyProvider
-  class UserPreferencesEncryptionPolicyProvider
+  package "Planning/" {
+    class BackupFilePlan
+    interface IBackupFilePlanner
+    class DefaultBackupFilePlanner
 
-  interface IEncryptionProviderResolver
-  class EncryptionProviderResolver
+    IBackupFilePlanner <|.. DefaultBackupFilePlanner
+  }
 
-  interface IEncryptionProvider
-  class DotNetAesEncryptionProvider
-  class ExternalEncryptionProvider
+  package "Encryption/" {
+    class EncryptionPolicy
+    class EncryptionResult
 
-  interface IExternalCryptoProcessRunner
-  class ExternalCryptoProcessRunner
+    interface IEncryptionPolicyProvider
+    class NoOpEncryptionPolicyProvider
 
-  IBackupEngine <|.. BackupEngine
-  IBackupExecutionController <|.. BackupExecutionController
-  IBackupFilePlanner <|.. DefaultBackupFilePlanner
-  IEncryptionPolicyProvider <|.. UserPreferencesEncryptionPolicyProvider
-  IEncryptionProviderResolver <|.. EncryptionProviderResolver
-  IEncryptionProvider <|.. DotNetAesEncryptionProvider
-  IEncryptionProvider <|.. ExternalEncryptionProvider
-  IExternalCryptoProcessRunner <|.. ExternalCryptoProcessRunner
+    interface IEncryptionProviderResolver
+    class EncryptionProviderResolver
+    class NoOpEncryptionProviderResolver
+
+    interface IEncryptionProvider
+    class DotNetAesEncryptionProvider
+    class ExternalEncryptionProvider
+
+    interface IExternalCryptoProcessRunner
+    class ExternalCryptoProcessRunner
+
+    IEncryptionPolicyProvider <|.. NoOpEncryptionPolicyProvider
+    IEncryptionProviderResolver <|.. EncryptionProviderResolver
+    IEncryptionProviderResolver <|.. NoOpEncryptionProviderResolver
+    IEncryptionProvider <|.. DotNetAesEncryptionProvider
+    IEncryptionProvider <|.. ExternalEncryptionProvider
+    IExternalCryptoProcessRunner <|.. ExternalCryptoProcessRunner
+  }
 }
 
 package "System" {
@@ -278,32 +314,120 @@ package "AppCommon.Services" {
 }
 
 package "LogServer" {
-  class LogServerApi
-  class ServerLogWriter
-  class JsonClientRegistry
-  class EnrichedLogEntry
+  package "Hosting/" {
+    class "Program" as LogServerProgram
+  }
 
-  LogServerApi --> ServerLogWriter
-  LogServerApi --> JsonClientRegistry
+  package "Models/" {
+    class ClientInfo
+    class LogEntryRequest
+    class UpdateClientNameRequest
+    class EnrichedLogEntry
+  }
+
+  package "Services/" {
+    interface IClientRegistry
+    class ServerLogWriter
+    class JsonClientRegistry
+    class ServerPathProvider
+    class EnrichedJsonLogFormatter
+    class EnrichedXmlLogFormatter
+
+    IClientRegistry <|.. JsonClientRegistry
+    LogServerProgram --> ServerLogWriter
+    LogServerProgram --> IClientRegistry
+  }
 }
 
-package "GUI (MVVM)" {
-  class MainWindowViewModel
-  class SidebarViewModel
-  class HomeViewModel
-  class CreateViewModel
-  class ManageViewModel
-  class ProgressViewModel
-  class LogViewModel
-  class ConfigViewModel
+package "GUI" {
+  package "Root/" {
+    class "Host" as GuiHost
+    class App
+    class ViewLocator
+  }
 
-  MainWindowViewModel --> SidebarViewModel
-  MainWindowViewModel --> HomeViewModel
-  MainWindowViewModel --> CreateViewModel
-  MainWindowViewModel --> ManageViewModel
-  MainWindowViewModel --> ProgressViewModel
-  MainWindowViewModel --> LogViewModel
-  MainWindowViewModel --> ConfigViewModel
+  package "Helpers/" {
+    class LogValueFormatter
+    class PaginationHelper
+    class PathValidation
+  }
+
+  package "Models/" {
+    class ModelBase
+    class IModel
+    class BackupJob
+    class ActiveBackupProgressItem
+    class LogCalendarDayModel
+    class LogDisplayModel
+    class LogJobSummaryModel
+    class LogMonthPickerItemModel
+    class LogRunSummaryModel
+    class LogYearPickerItemModel
+    class PaginationItem
+
+    ModelBase <|-- IModel
+    ModelBase <|-- BackupJob
+    ModelBase <|-- ActiveBackupProgressItem
+  }
+
+  package "Services/" {
+    interface IBackupJobDisplayService
+    class BackupJobDisplayService
+    interface IBackupRunningStateTracker
+    class BackupRunningStateTracker
+
+    IBackupJobDisplayService <|.. BackupJobDisplayService
+    IBackupRunningStateTracker <|.. BackupRunningStateTracker
+  }
+
+  package "ViewModels/" {
+    class ViewModelBase
+    class MainWindowViewModel
+    class SidebarViewModel
+    class HomeViewModel
+    class CreateViewModel
+    class ManageViewModel
+    class ProgressViewModel
+    class LogViewModel
+    class ConfigViewModel
+    class EditJobViewModel
+    class BackupTypeOption
+    class LanguageOption
+    class TransferSizeUnitOption
+    class "FilterItem<T>" as FilterItemT
+    class ActiveBackupPresentation
+
+    ViewModelBase <|-- MainWindowViewModel
+    ViewModelBase <|-- SidebarViewModel
+    ViewModelBase <|-- HomeViewModel
+    ViewModelBase <|-- CreateViewModel
+    ViewModelBase <|-- ManageViewModel
+    ViewModelBase <|-- ProgressViewModel
+    ViewModelBase <|-- LogViewModel
+    ViewModelBase <|-- ConfigViewModel
+    ViewModelBase <|-- EditJobViewModel
+
+    MainWindowViewModel --> SidebarViewModel
+    MainWindowViewModel --> HomeViewModel
+    MainWindowViewModel --> CreateViewModel
+    MainWindowViewModel --> ManageViewModel
+    MainWindowViewModel --> ProgressViewModel
+    MainWindowViewModel --> LogViewModel
+    MainWindowViewModel --> ConfigViewModel
+    ManageViewModel --> FilterItemT
+    ProgressViewModel --> ActiveBackupPresentation
+  }
+
+  package "Views/" {
+    class MainWindow
+    class SidebarView
+    class HomeView
+    class CreateView
+    class ManageView
+    class ProgressView
+    class LogView
+    class ConfigView
+  }
 }
 
 BackupApplicationService --> IBackupJobRepository
@@ -338,7 +462,11 @@ BackupFileExecutionService --> ITransferService
 BackupFileExecutionService --> IFileSystem
 BackupFileExecutionService --> IEncryptionProviderResolver
 
+IEncryptionPolicyProvider <|.. UserPreferencesEncryptionPolicyProvider
 UserPreferencesEncryptionPolicyProvider --> IUserPreferencesRepository
+IPriorityFilesBarrier <|.. InMemoryPriorityFilesBarrier
+JsonBackupJobRepository --> IPathProvider
+JsonUserPreferencesRepository --> IPathProvider
 EncryptionProviderResolver --> IEncryptionProvider
 ExternalEncryptionProvider --> IExternalCryptoProcessRunner
 BusinessSoftwareBackupExecutionGuard ..|> IBackupExecutionGuard
@@ -350,17 +478,41 @@ ReloadableLogger --> LogServerStatusNotifier
 ReloadableLogger --> CompositeLogger
 CompositeLogger --> ResilientHttpLogSender
 ResilientHttpLogSender --> HttpLogSender
-HttpLogSender --> LogServerApi : HTTP /api/logs
+HttpLogSender --> LogServerProgram : HTTP /api/logs
 
 ManageViewModel --> BackupApplicationService
 ManageViewModel --> IBackupExecutionController
+ManageViewModel --> IBackupJobDisplayService
+ManageViewModel --> IBackupRunningStateTracker
 ProgressViewModel --> BackupApplicationService
 ProgressViewModel --> IBackupExecutionController
+ProgressViewModel --> ActiveBackupProgressItem
+ProgressViewModel --> LogValueFormatter
 LogViewModel --> ILogQueryService
 LogViewModel --> ILogNavigationService
+LogViewModel --> LogDisplayModel
+LogViewModel --> LogCalendarDayModel
+LogViewModel --> LogJobSummaryModel
+LogViewModel --> LogRunSummaryModel
+LogViewModel --> LogMonthPickerItemModel
+LogViewModel --> LogYearPickerItemModel
+CreateViewModel --> BackupTypeOption
+CreateViewModel --> BackupApplicationService
+ConfigViewModel --> LanguageOption
+ConfigViewModel --> TransferSizeUnitOption
+ConfigViewModel --> PathValidation
 ConfigViewModel --> IUserPreferencesRepository
 ConfigViewModel --> IPathProvider
 ConfigViewModel --> ILoggerRuntimeReloader
 MainWindowViewModel --> ILogServerStatusNotifier
+MainWindow --> MainWindowViewModel
+SidebarView --> SidebarViewModel
+HomeView --> HomeViewModel
+CreateView --> CreateViewModel
+ManageView --> ManageViewModel
+ProgressView --> ProgressViewModel
+LogView --> LogViewModel
+ConfigView --> ConfigViewModel
+ViewLocator --> ViewModelBase
 
 @enduml
