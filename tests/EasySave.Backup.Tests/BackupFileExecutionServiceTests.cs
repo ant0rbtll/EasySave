@@ -17,13 +17,15 @@ public class BackupFileExecutionServiceTests
     public void PrepareDestinationDirectory_WhenDirectoryAlreadyExists_DoesNotCreate()
     {
         const string destinationFile = "/dest/folder/file.txt";
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/dest/folder")).Returns(true);
+        _fileSystemMock
+            .Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/dest/folder"))))
+            .Returns(true);
         var service = CreateService();
 
         var result = service.PrepareDestinationDirectory(destinationFile);
 
         Assert.False(result.Created);
-        Assert.Equal("/dest/folder", result.DirectoryPath);
+        Assert.True(PathTestHelper.Equal(result.DirectoryPath, "/dest/folder"));
         _fileSystemMock.Verify(fs => fs.CreateDirectory(It.IsAny<string>()), Times.Never);
     }
 
@@ -31,14 +33,18 @@ public class BackupFileExecutionServiceTests
     public void PrepareDestinationDirectory_WhenDirectoryMissing_CreatesDirectory()
     {
         const string destinationFile = "/dest/folder/file.txt";
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/dest/folder")).Returns(false);
+        _fileSystemMock
+            .Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/dest/folder"))))
+            .Returns(false);
         var service = CreateService();
 
         var result = service.PrepareDestinationDirectory(destinationFile);
 
         Assert.True(result.Created);
-        Assert.Equal("/dest/folder", result.DirectoryPath);
-        _fileSystemMock.Verify(fs => fs.CreateDirectory("/dest/folder"), Times.Once);
+        Assert.True(PathTestHelper.Equal(result.DirectoryPath, "/dest/folder"));
+        _fileSystemMock.Verify(
+            fs => fs.CreateDirectory(It.Is<string>(p => PathTestHelper.Equal(p, "/dest/folder"))),
+            Times.Once);
     }
 
     [Fact]

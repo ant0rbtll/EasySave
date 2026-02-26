@@ -32,10 +32,13 @@ public class BackupEngineEncryptionTests
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(true);
 
-        _transferServiceMock.Setup(ts => ts.TransferFile("/source/report.txt", "/destination/report.txt", true))
+        _transferServiceMock.Setup(ts => ts.TransferFile(
+                It.Is<string>(p => PathTestHelper.Equal(p, "/source/report.txt")),
+                It.Is<string>(p => PathTestHelper.Equal(p, "/destination/report.txt")),
+                true))
             .Returns(new TransferResult(120, 7, 0));
 
         var policy = new EncryptionPolicy([".txt"], EncryptionProviderNames.DotNet, null);
@@ -45,7 +48,10 @@ public class BackupEngineEncryptionTests
             .Returns(_encryptionProviderMock.Object);
 
         _encryptionProviderMock
-            .Setup(p => p.EncryptAsync("/destination/report.txt", policy, It.IsAny<CancellationToken>()))
+            .Setup(p => p.EncryptAsync(
+                It.Is<string>(path => PathTestHelper.Equal(path, "/destination/report.txt")),
+                policy,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(EncryptionResult.Failure(-5, 999, "crypto error"));
 
         var engine = BackupEngineFactory.Create(
@@ -82,10 +88,13 @@ public class BackupEngineEncryptionTests
             .Returns(["/source/image.png"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(true);
 
-        _transferServiceMock.Setup(ts => ts.TransferFile("/source/image.png", "/destination/image.png", true))
+        _transferServiceMock.Setup(ts => ts.TransferFile(
+                It.Is<string>(p => PathTestHelper.Equal(p, "/source/image.png")),
+                It.Is<string>(p => PathTestHelper.Equal(p, "/destination/image.png")),
+                true))
             .Returns(new TransferResult(120, 7, 0));
 
         _policyProviderMock.Setup(p => p.GetPolicy())
@@ -127,10 +136,13 @@ public class BackupEngineEncryptionTests
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(true);
 
-        _transferServiceMock.Setup(ts => ts.TransferFile("/source/report.txt", "/destination/report.txt", true))
+        _transferServiceMock.Setup(ts => ts.TransferFile(
+                It.Is<string>(p => PathTestHelper.Equal(p, "/source/report.txt")),
+                It.Is<string>(p => PathTestHelper.Equal(p, "/destination/report.txt")),
+                true))
             .Returns(new TransferResult(120, 7, 0));
 
         _policyProviderMock.Setup(p => p.GetPolicy())
@@ -171,10 +183,13 @@ public class BackupEngineEncryptionTests
             .Returns(["/source/report.txt"]);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(120);
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(true);
 
-        _transferServiceMock.Setup(ts => ts.TransferFile("/source/report.txt", "/destination/report.txt", true))
+        _transferServiceMock.Setup(ts => ts.TransferFile(
+                It.Is<string>(p => PathTestHelper.Equal(p, "/source/report.txt")),
+                It.Is<string>(p => PathTestHelper.Equal(p, "/destination/report.txt")),
+                true))
             .Returns(new TransferResult(120, 7, 0));
 
         var policy = new EncryptionPolicy([".txt"], EncryptionProviderNames.DotNet, null);
@@ -184,7 +199,10 @@ public class BackupEngineEncryptionTests
             .Returns(_encryptionProviderMock.Object);
 
         _encryptionProviderMock
-            .Setup(p => p.EncryptAsync("/destination/report.txt", policy, It.IsAny<CancellationToken>()))
+            .Setup(p => p.EncryptAsync(
+                It.Is<string>(path => PathTestHelper.Equal(path, "/destination/report.txt")),
+                policy,
+                It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("unexpected encryption crash"));
 
         var engine = BackupEngineFactory.Create(
