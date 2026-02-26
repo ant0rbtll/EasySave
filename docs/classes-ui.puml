@@ -1,0 +1,99 @@
+@startuml
+title EasySave - GUI (simple)
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+hide empty members
+
+package "GUI Root" {
+  class GuiHost
+  class App
+  class ViewLocator
+}
+
+package "GUI Services" {
+  interface IBackupJobDisplayService
+  class BackupJobDisplayService
+  interface IBackupRunningStateTracker
+  class BackupRunningStateTracker
+}
+
+package "GUI ViewModels" {
+  class ViewModelBase
+  class MainWindowViewModel
+  class SidebarViewModel
+  class HomeViewModel
+  class CreateViewModel
+  class ManageViewModel
+  class ProgressViewModel
+  class LogViewModel
+  class ConfigViewModel
+}
+
+package "GUI Views" {
+  class MainWindow
+  class SidebarView
+  class HomeView
+  class CreateView
+  class ManageView
+  class ProgressView
+  class LogView
+  class ConfigView
+}
+
+package "Application APIs" {
+  class BackupApplicationService
+  interface IBackupExecutionController
+  interface ILogQueryService
+  interface ILogNavigationService
+  interface IUserPreferencesRepository
+  interface IPathProvider
+  interface ILoggerRuntimeReloader
+  interface ILogServerStatusNotifier
+}
+
+IBackupJobDisplayService <|.. BackupJobDisplayService
+IBackupRunningStateTracker <|.. BackupRunningStateTracker
+
+ViewModelBase <|-- MainWindowViewModel
+ViewModelBase <|-- SidebarViewModel
+ViewModelBase <|-- HomeViewModel
+ViewModelBase <|-- CreateViewModel
+ViewModelBase <|-- ManageViewModel
+ViewModelBase <|-- ProgressViewModel
+ViewModelBase <|-- LogViewModel
+ViewModelBase <|-- ConfigViewModel
+
+MainWindowViewModel --> SidebarViewModel
+MainWindowViewModel --> HomeViewModel
+MainWindowViewModel --> CreateViewModel
+MainWindowViewModel --> ManageViewModel
+MainWindowViewModel --> ProgressViewModel
+MainWindowViewModel --> LogViewModel
+MainWindowViewModel --> ConfigViewModel
+
+ManageViewModel --> BackupApplicationService
+ManageViewModel --> IBackupExecutionController
+ManageViewModel --> IBackupJobDisplayService
+ManageViewModel --> IBackupRunningStateTracker
+ProgressViewModel --> BackupApplicationService
+ProgressViewModel --> IBackupExecutionController
+LogViewModel --> ILogQueryService
+LogViewModel --> ILogNavigationService
+CreateViewModel --> BackupApplicationService
+ConfigViewModel --> IUserPreferencesRepository
+ConfigViewModel --> IPathProvider
+ConfigViewModel --> ILoggerRuntimeReloader
+MainWindowViewModel --> ILogServerStatusNotifier
+
+MainWindow --> MainWindowViewModel
+SidebarView --> SidebarViewModel
+HomeView --> HomeViewModel
+CreateView --> CreateViewModel
+ManageView --> ManageViewModel
+ProgressView --> ProgressViewModel
+LogView --> LogViewModel
+ConfigView --> ConfigViewModel
+ViewLocator --> ViewModelBase
+
+@enduml

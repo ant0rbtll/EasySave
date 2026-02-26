@@ -1,0 +1,52 @@
+@startuml
+title EasySave - Execution d'un job (simple)
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+hide empty members
+
+class BackupApplicationService
+interface IBackupRunCoordinator
+class InMemoryBackupRunCoordinator
+interface IBackupEngine
+class BackupEngine
+class BackupRuntimeGate
+class BackupExecutionReporter
+class BackupFileExecutionService
+interface IBackupExecutionController
+interface IPriorityFilesBarrier
+interface ILargeFileTransferBarrier
+interface IBackupExecutionGuard
+interface IBackupFilePlanner
+interface IEncryptionPolicyProvider
+interface ITransferService
+interface IFileSystem
+interface IEncryptionProviderResolver
+interface IStateWriter
+interface ILogger
+
+IBackupRunCoordinator <|.. InMemoryBackupRunCoordinator
+IBackupEngine <|.. BackupEngine
+
+BackupApplicationService --> IBackupRunCoordinator
+BackupApplicationService --> IBackupEngine
+
+BackupEngine --> BackupRuntimeGate
+BackupEngine --> BackupFileExecutionService
+BackupEngine --> IBackupFilePlanner
+BackupEngine --> IEncryptionPolicyProvider
+
+BackupRuntimeGate --> IBackupExecutionController
+BackupRuntimeGate --> IPriorityFilesBarrier
+BackupRuntimeGate --> ILargeFileTransferBarrier
+BackupRuntimeGate --> IBackupExecutionGuard
+BackupRuntimeGate --> BackupExecutionReporter
+
+BackupExecutionReporter --> IStateWriter
+BackupExecutionReporter --> ILogger
+
+BackupFileExecutionService --> ITransferService
+BackupFileExecutionService --> IFileSystem
+BackupFileExecutionService --> IEncryptionProviderResolver
+
+@enduml

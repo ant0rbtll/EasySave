@@ -18,6 +18,7 @@ La version 3.0 finalise l'exécution parallèle, le pilotage runtime (pause/repr
 - [Serveur de logs centralisé](#serveur-de-logs-centralisé)
 - [Fichiers générés](#fichiers-générés)
 - [Documentation](#documentation)
+- [UML](#uml)
 - [Développement](#développement)
 - [Équipe](#équipe)
 
@@ -162,7 +163,12 @@ Pour le serveur de logs Docker:
 
 ### UML
 
-- [Classes](docs/classes.puml)
+- [Classes (architecture complete)](docs/classes.puml)
+- [Classes - Vue d'ensemble](docs/classes-overview.puml)
+- [Classes - Domaine backup](docs/classes-backup-domain.puml)
+- [Classes - Execution des jobs](docs/classes-job-execution.puml)
+- [Classes - Infrastructure](docs/classes-infra.puml)
+- [Classes - GUI](docs/classes-ui.puml)
 - [Séquence](docs/sequence.puml)
 - [Activité](docs/activity.puml)
 - [Cas d'utilisation](docs/usecase.puml)

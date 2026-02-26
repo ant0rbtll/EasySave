@@ -1,0 +1,59 @@
+@startuml
+title EasySave - Domaine Backup (simple)
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+hide empty members
+
+package "Core" {
+  enum BackupType {
+    Complete
+    Differential
+  }
+
+  enum BackupJobStatus {
+    Inactive
+    Active
+    Waiting
+    Done
+    Error
+    Paused
+    Blocked
+  }
+
+  class BackupJob {
+    +Id : int
+    +Name : string
+    +Source : string
+    +Destination : string
+    +Type : BackupType
+    +Status : BackupJobStatus
+  }
+}
+
+package "Application" {
+  class BackupApplicationService
+}
+
+package "Persistence" {
+  interface IBackupJobRepository
+  class JsonBackupJobRepository
+}
+
+package "State" {
+  interface IBackupJobStateService
+}
+
+package "Execution" {
+  interface IBackupExecutionController
+  interface IBackupEngine
+}
+
+IBackupJobRepository <|.. JsonBackupJobRepository
+BackupApplicationService --> IBackupJobRepository
+BackupApplicationService --> IBackupJobStateService
+BackupApplicationService --> IBackupEngine
+IBackupExecutionController ..> BackupApplicationService
+IBackupEngine --> BackupJob
+
+@enduml

@@ -1,0 +1,78 @@
+@startuml
+title EasySave - Infrastructure (simple)
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+hide empty members
+
+package "Configuration" {
+  interface IPathProvider
+  class DefaultPathProvider
+}
+
+package "Persistence" {
+  interface IBackupJobRepository
+  class JsonBackupJobRepository
+  interface IUserPreferencesRepository
+  class JsonUserPreferencesRepository
+  class UserPreferences
+}
+
+package "Logging" {
+  interface ILogger
+  interface ILoggerRuntimeReloader
+  interface ILogServerStatusNotifier
+  class ReloadableLogger
+  class CompositeLogger
+  class ResilientHttpLogSender
+  class HttpLogSender
+}
+
+package "Log Readers" {
+  interface ILogReader
+  class JsonLogReader
+  class XmlLogReader
+  interface IStateReader
+  class JsonStateReader
+}
+
+package "Encryption" {
+  interface IEncryptionPolicyProvider
+  class UserPreferencesEncryptionPolicyProvider
+  interface IEncryptionProviderResolver
+  class EncryptionProviderResolver
+  interface IEncryptionProvider
+  class DotNetAesEncryptionProvider
+  class ExternalEncryptionProvider
+  interface IExternalCryptoProcessRunner
+}
+
+IPathProvider <|.. DefaultPathProvider
+IBackupJobRepository <|.. JsonBackupJobRepository
+IUserPreferencesRepository <|.. JsonUserPreferencesRepository
+ILogReader <|.. JsonLogReader
+ILogReader <|.. XmlLogReader
+IStateReader <|.. JsonStateReader
+
+ILogger <|.. ReloadableLogger
+ILoggerRuntimeReloader <|.. ReloadableLogger
+ILogServerStatusNotifier <|.. ReloadableLogger
+ILogger <|.. CompositeLogger
+
+IEncryptionPolicyProvider <|.. UserPreferencesEncryptionPolicyProvider
+IEncryptionProviderResolver <|.. EncryptionProviderResolver
+IEncryptionProvider <|.. DotNetAesEncryptionProvider
+IEncryptionProvider <|.. ExternalEncryptionProvider
+
+JsonBackupJobRepository --> IPathProvider
+JsonUserPreferencesRepository --> IPathProvider
+UserPreferencesEncryptionPolicyProvider --> IUserPreferencesRepository
+EncryptionProviderResolver --> IEncryptionProvider
+ExternalEncryptionProvider --> IExternalCryptoProcessRunner
+ReloadableLogger --> IUserPreferencesRepository
+ReloadableLogger --> IPathProvider
+ReloadableLogger --> CompositeLogger
+CompositeLogger --> ResilientHttpLogSender
+ResilientHttpLogSender --> HttpLogSender
+
+@enduml
