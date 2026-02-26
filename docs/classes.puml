@@ -1,5 +1,5 @@
 @startuml
-title EasySave 2.0 - Diagramme de classes (vue architecture)
+title EasySave 3.0 - Diagramme de classes (vue architecture)
 
 skinparam packageStyle rectangle
 skinparam shadowing false
@@ -14,18 +14,12 @@ package "AppCommon" {
     +RunHost(host : IApplicationHost) : void
   }
 
-  interface IApplicationHost {
-    +ConfigureServices(services, args) : void
-    +Run(serviceProvider, args) : void
-  }
-
   Program --> IApplicationHost : selection host
   Program --> ApplicationManager
 }
 
 package "Hosts" {
   class "UI.Host" as ConsoleHost
-  class "GUI.Host" as GuiHost
 
   IApplicationHost <|.. ConsoleHost
   IApplicationHost <|.. GuiHost
@@ -37,9 +31,25 @@ package "Core" {
     Differential
   }
 
+  enum BackupJobStatus {
+    Inactive
+    Active
+    Waiting
+    Done
+    Error
+    Paused
+    Blocked
+  }
+
   enum LogFormat {
     Json
     Xml
+  }
+
+  enum LogMode {
+    Local
+    Centralized
+    LocalAndCentralized
   }
 
   class BackupJob {
@@ -50,203 +60,459 @@ package "Core" {
     +Type : BackupType
     +LastExecutionDate : DateTime?
     +IsActive : bool
+    +Status : BackupJobStatus
   }
 }
 
 package "Application" {
-  class BackupApplicationService {
-    +CreateJob(...) : void
-    +RunJob(id : int) : void
-    +RunJobs(ids : int[]) : void
-    +RunAllJobs() : void
-    +GetAllJobs() : List<BackupJob>
-    +GetJob(id : int) : BackupJob?
-    +UpdateJob(job : BackupJob) : void
-    +RemoveJob(id : int) : void
+  package "Hosting/" {
+    interface IApplicationHost {
+      +ConfigureServices(services, args) : void
+      +Run(serviceProvider, args) : void
+    }
   }
 
-  interface ILogQueryService
-  class LogQueryService
-  interface ILogNavigationService
-  class LogNavigationService
+  package "Services/" {
+    class BackupApplicationService {
+      +RunJob(id, ct) : Task
+      +RunJobs(ids, ct) : Task
+      +RunAllJobs(ct) : Task
+      +GetAllJobsRuntimeStates() : IReadOnlyDictionary
+      +GetAllJobsLiveProgress() : IReadOnlyDictionary
+    }
 
-  interface IBackupJobStateService
-  class BackupJobStateService
+    interface IBackupJobStateService
+    class BackupJobStateService
 
-  class BusinessSoftwareBackupExecutionGuard
+    interface ILogQueryService
+    class LogQueryService
 
-  ILogQueryService <|.. LogQueryService
-  ILogNavigationService <|.. LogNavigationService
-  IBackupJobStateService <|.. BackupJobStateService
-}
+    interface ILogNavigationService
+    class LogNavigationService
 
-package "Configuration" {
-  interface IPathProvider {
-    +ResolveLogsDirectory() : string
-    +GetDailyLogPath(date : DateTime, format : LogFormat) : string
-    +GetStatePath() : string
-    +GetJobsConfigPath() : string
-    +GetUserPreferencesPath() : string
-    +SetLogDirectoryOverride(directory : string?) : void
+    IBackupJobStateService <|.. BackupJobStateService
+    ILogQueryService <|.. LogQueryService
+    ILogNavigationService <|.. LogNavigationService
   }
 
-  class DefaultPathProvider
+  package "Eta/" {
+    interface IBackupEtaEstimator
+    class BackupEtaEstimator
+    class BackupEtaSnapshot
 
-  IPathProvider <|.. DefaultPathProvider
+    IBackupEtaEstimator <|.. BackupEtaEstimator
+  }
+
+  package "Runtime/" {
+    interface IBackupRunCoordinator
+    class InMemoryBackupRunCoordinator
+    class InMemoryPriorityFilesBarrier
+    class BusinessSoftwareBackupExecutionGuard
+
+    IBackupRunCoordinator <|.. InMemoryBackupRunCoordinator
+  }
+
+  package "Encryption/" {
+    class UserPreferencesEncryptionPolicyProvider
+  }
+
+  package "Logging/" {
+    class LogFileNaming
+    class LogNavigationModels
+  }
+
+  package "Readers/" {
+    interface ILogReader
+    class JsonLogReader
+    class XmlLogReader
+
+    interface IStateReader
+    class JsonStateReader
+
+    ILogReader <|.. JsonLogReader
+    ILogReader <|.. XmlLogReader
+    IStateReader <|.. JsonStateReader
+  }
 }
 
 package "Backup" {
-  interface IBackupEngine {
-    +Execute(job : BackupJob) : void
+  package "Controllers/" {
+    interface IBackupExecutionController
+    class BackupExecutionController
+    class NoOpBackupExecutionController
+
+    IBackupExecutionController <|.. BackupExecutionController
+    IBackupExecutionController <|.. NoOpBackupExecutionController
   }
 
-  class BackupEngine
+  package "Engine/" {
+    interface IBackupEngine {
+      +Execute(job, ct, context) : Task
+    }
 
-  class EncryptionPolicy
-  interface IEncryptionPolicyProvider
-  class UserPreferencesEncryptionPolicyProvider
-  interface IEncryptionProvider
-  class DotNetAesEncryptionProvider
-  class ExternalEncryptionProvider
-  interface IEncryptionProviderResolver
-  class EncryptionProviderResolver
+    class BackupEngine
+    class BackupRuntimeGate
+    class BackupExecutionReporter
+    class BackupFileExecutionService
+    class BackupExecutionContext
 
-  IBackupEngine <|.. BackupEngine
-  IEncryptionPolicyProvider <|.. UserPreferencesEncryptionPolicyProvider
-  IEncryptionProvider <|.. DotNetAesEncryptionProvider
-  IEncryptionProvider <|.. ExternalEncryptionProvider
-  IEncryptionProviderResolver <|.. EncryptionProviderResolver
-
-  BackupEngine --> IEncryptionPolicyProvider
-  BackupEngine --> IEncryptionProviderResolver
-}
-
-package "Persistence" {
-  interface IBackupJobRepository
-  class JsonBackupJobRepository
-
-  class UserPreferences {
-    +Language : string
-    +LogDirectory : string?
-    +LogFormat : LogFormat
-    +EncryptedExtensions : List<string>
-    +EncryptionProvider : string
-    +CryptoSoftExecutablePath : string?
-    +BusinessSoftwareProcessNames : List<string>
+    IBackupEngine <|.. BackupEngine
   }
 
-  interface IUserPreferencesRepository
-  class JsonUserPreferencesRepository
+  package "Planning/" {
+    class BackupFilePlan
+    interface IBackupFilePlanner
+    class DefaultBackupFilePlanner
 
-  IBackupJobRepository <|.. JsonBackupJobRepository
-  IUserPreferencesRepository <|.. JsonUserPreferencesRepository
-}
-
-package "State" {
-  enum BackupStatus
-  class StateEntry
-  class GlobalState
-  interface IStateWriter
-  class RealTimeStateWriter
-
-  IStateWriter <|.. RealTimeStateWriter
-}
-
-package "Log" {
-  enum LogEventType {
-    StartBackup
-    EndBackup
-    TransferFile
-    CreateDirectory
-    Error
-    BusinessSoftwareDetected
+    IBackupFilePlanner <|.. DefaultBackupFilePlanner
   }
 
-  class LogEntry
-  interface ILogger
-  interface ILoggerRuntimeReloader
-  class ReloadableLogger
+  package "Encryption/" {
+    class EncryptionPolicy
+    class EncryptionResult
 
-  ILogger <|.. ReloadableLogger
-  ILoggerRuntimeReloader <|.. ReloadableLogger
-}
+    interface IEncryptionPolicyProvider
+    class NoOpEncryptionPolicyProvider
 
-package "EasyLog" {
-  interface ILogFormatter
-  class JsonLogFormatter
-  class XmlLogFormatter
-  class DailyFileLogger
+    interface IEncryptionProviderResolver
+    class EncryptionProviderResolver
+    class NoOpEncryptionProviderResolver
 
-  ILogFormatter <|.. JsonLogFormatter
-  ILogFormatter <|.. XmlLogFormatter
-  DailyFileLogger --> ILogFormatter
+    interface IEncryptionProvider
+    class DotNetAesEncryptionProvider
+    class ExternalEncryptionProvider
+
+    interface IExternalCryptoProcessRunner
+    class ExternalCryptoProcessRunner
+
+    IEncryptionPolicyProvider <|.. NoOpEncryptionPolicyProvider
+    IEncryptionProviderResolver <|.. EncryptionProviderResolver
+    IEncryptionProviderResolver <|.. NoOpEncryptionProviderResolver
+    IEncryptionProvider <|.. DotNetAesEncryptionProvider
+    IEncryptionProvider <|.. ExternalEncryptionProvider
+    IExternalCryptoProcessRunner <|.. ExternalCryptoProcessRunner
+  }
 }
 
 package "System" {
   interface IFileSystem
   interface ITransferService
   interface IBackupExecutionGuard
+
+  interface IPriorityFilesBarrier
+  interface ILargeFileTransferBarrier
+
+  class InMemoryLargeFileTransferBarrier
+  class NoOpLargeFileTransferBarrier
+
+  ILargeFileTransferBarrier <|.. InMemoryLargeFileTransferBarrier
+  ILargeFileTransferBarrier <|.. NoOpLargeFileTransferBarrier
 }
 
-package "GUI (MVVM)" {
-  class MainWindowViewModel
-  class CreateViewModel
-  class ManageViewModel
-  class LogViewModel
-  class ConfigViewModel
+package "Persistence" {
+  interface IBackupJobRepository
+  class JsonBackupJobRepository
 
-  MainWindowViewModel --> CreateViewModel
-  MainWindowViewModel --> ManageViewModel
-  MainWindowViewModel --> LogViewModel
-  MainWindowViewModel --> ConfigViewModel
+  interface IUserPreferencesRepository
+  class JsonUserPreferencesRepository
+
+  enum TransferSizeUnit {
+    Kilo
+    Mega
+    Giga
+  }
+
+  class UserPreferences {
+    +Language : string
+    +LogFormat : LogFormat
+    +LogMode : LogMode
+    +LogServerUrl : string?
+    +LogDirectory : string?
+    +EncryptedExtensions : List<string>
+    +PriorityExtensions : List<string>
+    +EncryptionProvider : string
+    +CryptoSoftExecutablePath : string?
+    +BusinessSoftwareProcessNames : List<string>
+    +ParallelLargeFileThresholdValue : long
+    +ParallelLargeFileThresholdUnit : TransferSizeUnit
+  }
+
+  IBackupJobRepository <|.. JsonBackupJobRepository
+  IUserPreferencesRepository <|.. JsonUserPreferencesRepository
 }
 
-CreateViewModel --> BackupApplicationService
-ManageViewModel --> BackupApplicationService
-LogViewModel --> ILogQueryService
-LogViewModel --> ILogNavigationService
-ConfigViewModel --> IUserPreferencesRepository
-ConfigViewModel --> IPathProvider
-ConfigViewModel --> ILoggerRuntimeReloader
-MainWindowViewModel --> ILocalizationService
+package "Configuration" {
+  interface IPathProvider {
+    +GetDailyLogPath(date, format) : string
+    +ResolveLogsDirectory() : string
+    +SetLogDirectoryOverride(directory) : void
+    +GetStatePath() : string
+    +GetJobsConfigPath() : string
+    +GetUserPreferencesPath() : string
+  }
+
+  class DefaultPathProvider
+  IPathProvider <|.. DefaultPathProvider
+}
+
+package "State" {
+  enum BackupStatus {
+    Inactive
+    Active
+    Waiting
+    Done
+    Error
+    Paused
+    Blocked
+  }
+
+  class StateEntry {
+    +BackupId : int
+    +RemainingFiles : int
+    +RemainingSizeBytes : long
+    +ProgressPercent : int
+  }
+
+  interface IStateWriter
+  class RealTimeStateWriter
+
+  IStateWriter <|.. RealTimeStateWriter
+}
+
+package "Log (abstraction)" {
+  enum LogEventType {
+    StartBackup
+    TransferFile
+    CreateDirectory
+    EndBackup
+    Error
+    BusinessSoftwareDetected
+    Action
+    Stopped
+  }
+
+  class LogEntry
+
+  interface ILogger
+  interface ILoggerRuntimeReloader
+  interface ILogServerStatusNotifier
+}
+
+package "AppCommon.Services" {
+  class ReloadableLogger
+  class CompositeLogger
+  class HttpLogSender
+  class ResilientHttpLogSender
+  class LogServerStatusNotifier
+
+  ILogger <|.. ReloadableLogger
+  ILoggerRuntimeReloader <|.. ReloadableLogger
+  ILogger <|.. CompositeLogger
+  ILogger <|.. HttpLogSender
+  ILogger <|.. ResilientHttpLogSender
+  ILogServerStatusNotifier <|.. LogServerStatusNotifier
+}
+
+package "LogServer" {
+  package "Hosting/" {
+    class "Program" as LogServerProgram
+  }
+
+  package "Models/" {
+    class ClientInfo
+    class LogEntryRequest
+    class UpdateClientNameRequest
+    class EnrichedLogEntry
+  }
+
+  package "Services/" {
+    interface IClientRegistry
+    class ServerLogWriter
+    class JsonClientRegistry
+    class ServerPathProvider
+    class EnrichedJsonLogFormatter
+    class EnrichedXmlLogFormatter
+
+    IClientRegistry <|.. JsonClientRegistry
+    LogServerProgram --> ServerLogWriter
+    LogServerProgram --> IClientRegistry
+  }
+}
+
+package "GUI" {
+  package "Root/" {
+    class "Host" as GuiHost
+    class App
+    class ViewLocator
+  }
+
+  package "Helpers/" {
+    class LogValueFormatter
+    class PaginationHelper
+    class PathValidation
+  }
+
+  package "Models/" {
+    class ModelBase
+    class IModel
+    class BackupJob
+    class ActiveBackupProgressItem
+    class LogCalendarDayModel
+    class LogDisplayModel
+    class LogJobSummaryModel
+    class LogMonthPickerItemModel
+    class LogRunSummaryModel
+    class LogYearPickerItemModel
+    class PaginationItem
+
+    ModelBase <|-- IModel
+    ModelBase <|-- BackupJob
+    ModelBase <|-- ActiveBackupProgressItem
+  }
+
+  package "Services/" {
+    interface IBackupJobDisplayService
+    class BackupJobDisplayService
+    interface IBackupRunningStateTracker
+    class BackupRunningStateTracker
+
+    IBackupJobDisplayService <|.. BackupJobDisplayService
+    IBackupRunningStateTracker <|.. BackupRunningStateTracker
+  }
+
+  package "ViewModels/" {
+    class ViewModelBase
+    class MainWindowViewModel
+    class SidebarViewModel
+    class HomeViewModel
+    class CreateViewModel
+    class ManageViewModel
+    class ProgressViewModel
+    class LogViewModel
+    class ConfigViewModel
+    class EditJobViewModel
+    class BackupTypeOption
+    class LanguageOption
+    class TransferSizeUnitOption
+    class "FilterItem<T>" as FilterItemT
+    class ActiveBackupPresentation
+
+    ViewModelBase <|-- MainWindowViewModel
+    ViewModelBase <|-- SidebarViewModel
+    ViewModelBase <|-- HomeViewModel
+    ViewModelBase <|-- CreateViewModel
+    ViewModelBase <|-- ManageViewModel
+    ViewModelBase <|-- ProgressViewModel
+    ViewModelBase <|-- LogViewModel
+    ViewModelBase <|-- ConfigViewModel
+    ViewModelBase <|-- EditJobViewModel
+
+    MainWindowViewModel --> SidebarViewModel
+    MainWindowViewModel --> HomeViewModel
+    MainWindowViewModel --> CreateViewModel
+    MainWindowViewModel --> ManageViewModel
+    MainWindowViewModel --> ProgressViewModel
+    MainWindowViewModel --> LogViewModel
+    MainWindowViewModel --> ConfigViewModel
+    ManageViewModel --> FilterItemT
+    ProgressViewModel --> ActiveBackupPresentation
+  }
+
+  package "Views/" {
+    class MainWindow
+    class SidebarView
+    class HomeView
+    class CreateView
+    class ManageView
+    class ProgressView
+    class LogView
+    class ConfigView
+  }
+}
 
 BackupApplicationService --> IBackupJobRepository
 BackupApplicationService --> IBackupEngine
+BackupApplicationService --> IBackupRunCoordinator
 BackupApplicationService --> IBackupJobStateService
-BackupApplicationService --> IBackupExecutionGuard
+BackupApplicationService --> IStateReader
+BackupApplicationService --> IBackupEtaEstimator
+BackupApplicationService --> IUserPreferencesRepository
 
-BusinessSoftwareBackupExecutionGuard ..|> IBackupExecutionGuard
-
-BackupEngine --> IFileSystem
-BackupEngine --> ITransferService
-BackupEngine --> IStateWriter
-BackupEngine --> ILogger
-BackupEngine --> IBackupExecutionGuard
-
-UserPreferencesEncryptionPolicyProvider --> IUserPreferencesRepository
 BackupJobStateService --> IStateReader
-
-BusinessSoftwareBackupExecutionGuard --> IUserPreferencesRepository
+LogQueryService --> ILogReader
+LogNavigationService --> ILogReader
 LogQueryService --> IPathProvider
 LogNavigationService --> IPathProvider
 
+BackupEngine --> BackupRuntimeGate
+BackupEngine --> BackupFileExecutionService
+BackupEngine --> IBackupFilePlanner
+BackupEngine --> IEncryptionPolicyProvider
+
+BackupRuntimeGate --> IBackupExecutionController
+BackupRuntimeGate --> IPriorityFilesBarrier
+BackupRuntimeGate --> ILargeFileTransferBarrier
+BackupRuntimeGate --> IBackupExecutionGuard
+BackupRuntimeGate --> BackupExecutionReporter
+
+BackupExecutionReporter --> IStateWriter
+BackupExecutionReporter --> ILogger
+
+BackupFileExecutionService --> ITransferService
+BackupFileExecutionService --> IFileSystem
+BackupFileExecutionService --> IEncryptionProviderResolver
+
+IEncryptionPolicyProvider <|.. UserPreferencesEncryptionPolicyProvider
+UserPreferencesEncryptionPolicyProvider --> IUserPreferencesRepository
+IPriorityFilesBarrier <|.. InMemoryPriorityFilesBarrier
+JsonBackupJobRepository --> IPathProvider
+JsonUserPreferencesRepository --> IPathProvider
+EncryptionProviderResolver --> IEncryptionProvider
+ExternalEncryptionProvider --> IExternalCryptoProcessRunner
+BusinessSoftwareBackupExecutionGuard ..|> IBackupExecutionGuard
+BusinessSoftwareBackupExecutionGuard --> IUserPreferencesRepository
+
 ReloadableLogger --> IUserPreferencesRepository
 ReloadableLogger --> IPathProvider
-ReloadableLogger --> DailyFileLogger
+ReloadableLogger --> LogServerStatusNotifier
+ReloadableLogger --> CompositeLogger
+CompositeLogger --> ResilientHttpLogSender
+ResilientHttpLogSender --> HttpLogSender
+HttpLogSender --> LogServerProgram : HTTP /api/logs
 
-package "Application Read Models" {
-  interface ILogReader
-  class JsonLogReader
-  class XmlLogReader
-  interface IStateReader
-  class JsonStateReader
-
-  ILogReader <|.. JsonLogReader
-  ILogReader <|.. XmlLogReader
-  IStateReader <|.. JsonStateReader
-}
-
-LogNavigationService --> ILogReader
-LogQueryService --> ILogReader
+ManageViewModel --> BackupApplicationService
+ManageViewModel --> IBackupExecutionController
+ManageViewModel --> IBackupJobDisplayService
+ManageViewModel --> IBackupRunningStateTracker
+ProgressViewModel --> BackupApplicationService
+ProgressViewModel --> IBackupExecutionController
+ProgressViewModel --> ActiveBackupProgressItem
+ProgressViewModel --> LogValueFormatter
+LogViewModel --> ILogQueryService
+LogViewModel --> ILogNavigationService
+LogViewModel --> LogDisplayModel
+LogViewModel --> LogCalendarDayModel
+LogViewModel --> LogJobSummaryModel
+LogViewModel --> LogRunSummaryModel
+LogViewModel --> LogMonthPickerItemModel
+LogViewModel --> LogYearPickerItemModel
+CreateViewModel --> BackupTypeOption
+CreateViewModel --> BackupApplicationService
+ConfigViewModel --> LanguageOption
+ConfigViewModel --> TransferSizeUnitOption
+ConfigViewModel --> PathValidation
+ConfigViewModel --> IUserPreferencesRepository
+ConfigViewModel --> IPathProvider
+ConfigViewModel --> ILoggerRuntimeReloader
+MainWindowViewModel --> ILogServerStatusNotifier
+MainWindow --> MainWindowViewModel
+SidebarView --> SidebarViewModel
+HomeView --> HomeViewModel
+CreateView --> CreateViewModel
+ManageView --> ManageViewModel
+ProgressView --> ProgressViewModel
+LogView --> LogViewModel
+ConfigView --> ConfigViewModel
+ViewLocator --> ViewModelBase
 
 @enduml

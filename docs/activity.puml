@@ -1,61 +1,106 @@
 @startuml
-title EasySave 2.0 - Activite : execution d'un backup avec garde metier et chiffrement
+title EasySave 3.0 - Activite GUI : parcours utilisateur reel + execution backup
 
 start
+:Utilisateur ouvre EasySave (dotnet run --project src/EasySave.AppCommon ...);
+:Program.Main selectionne le host GUI (aucun argument CLI);
+  :Configurer services communs + host Avalonia;
+  :Charger preferences (langue/logs/config);
+  :Appliquer culture + log directory;
+  :ReconcileStartupState();
+  :Ouvrir MainWindow (Home + sidebar Create/Manage/Progress/Log/Config);
 
-:Charger le job;
-:Verifier les processus metier interdits (pre-check);
+  repeat
+    :Utilisateur choisit une page dans la sidebar;
+    switch (Page choisie ?)
+      case (Create)
+        :Saisir nom/source/destination/type;
+        :Valider formulaire;
+        if (Formulaire valide ?) then (Oui)
+          :CreateJob();
+          :Message succes + refresh Manage;
+        else (Non)
+          :Afficher erreurs de saisie;
+        endif
+      case (Manage)
+        :Afficher jobs (recherche/tri/filtres/pagination);
+        if (Executer 1..n jobs ?) then (Oui)
+          :Confirmer execution;
+          :RunJob/RunJobs (parallelise);
+        else (Non)
+          if (Modifier/Supprimer ?) then (Oui)
+            :Confirmer action puis Edit/Remove;
+            :Rafraichir la liste;
+          endif
+        endif
+      case (Progress)
+        :Refresh live toutes les 500 ms;
+        :Afficher Active/Waiting/Paused/Blocked + ETA;
+        :Pause/Resume/Stop (un job, selection, global);
+      case (Log)
+        :LoadDates();
+        :Selection date -> job -> run;
+        :Afficher details + pagination logs;
+      case (Config)
+        :Modifier langue, mode/format logs, URL serveur, extensions chiffrees/prioritaires, logiciels metier, seuil gros fichiers;
+        :Sauvegarder preferences;
+        if (Config logs changee ?) then (Oui)
+          :Reload logger runtime;
+        endif
+    endswitch
 
-if (Processus metier detecte ?) then (Oui)
-  :Lever exception
-(error_business_software_running);
-  :Logger BusinessSoftwareDetected;
-  :Etat = Error;
-  stop
-endif
+    if (Au moins un job en cours ?) then (Oui)
+      :Le moteur execute les jobs en parallele;
+      repeat
+        :Selectionner le fichier suivant;
+        :Verifier pause/reprise/arret utilisateur;
 
-:Enumerer les fichiers source;
-:Charger la policy de chiffrement;
-:Etat = Active (0%);
-:Logger StartBackup;
+        if (Arret demande ?) then (Oui)
+          :Logger Stopped et finir le job;
+        else (Non)
+          if (Fichier a copier ?) then (Oui)
+            if (Fichier non prioritaire et priorites globales en attente ?) then (Oui)
+              :Etat = Waiting jusqu'a liberation barriere priorites;
+            endif
 
-repeat
-  :Determiner le fichier suivant;
+            while (Logiciel metier detecte ?) is (Oui)
+              :Etat = Blocked;
+              :Attendre puis re-verifier;
+            endwhile (Non)
 
-  if (Type Differential et fichier inchange ?) then (Oui)
-    :Passer au fichier suivant;
-  else (Non)
-    :Verifier processus metier\navant copie du fichier;
-    if (Processus metier detecte ?) then (Oui)
-      :Lever exception\n(error_business_software_running);
-      :Logger BusinessSoftwareDetected;
-      :Etat = Error;
-      stop
+            if (Fichier > seuil gros fichiers ?) then (Oui)
+              :Attendre slot gros fichier (Etat = Waiting);
+            endif
+
+            :Creer dossier destination si absent;
+            :Transferer le fichier;
+
+            if (Extension chiffree ?) then (Oui)
+              :Chiffrer post-transfert;
+            endif
+
+            :Mettre a jour progression + logs;
+          endif
+        endif
+      repeat while (Fichiers restants ?)
+
+      :Etat final = Done / Error / Stopped;
     endif
 
-    :Creer dossier destination si absent;
-    :Transferer le fichier;
-
-    if (Transfert OK ?) then (Oui)
-      if (Extension chiffree ?) then (Oui)
-        :Resoudre provider;
-        :Chiffrer le fichier transfere;
+    if (Utilisateur ferme la fenetre ?) then (Oui)
+      if (Jobs actifs ou pauses ?) then (Oui)
+        :Afficher popup de confirmation;
+        if (Confirmer fermeture ?) then (Oui)
+          :RequestStopAll();
+          :Fermer l'application;
+        else (Non)
+          :Annuler fermeture;
+        endif
+      else (Non)
+        :Fermer l'application;
       endif
-      :Logger TransferFile;
-      :Mettre a jour progression;
-      :Etat = Active;
-    else (Non)
-      :Logger Error;
-      :Etat = Error;
-      stop
     endif
-  endif
+  repeat while (Application toujours ouverte ?)
 
-repeat while (Fichiers restants ?)
-
-:Etat = Done (100%);
-:Logger EndBackup;
-:MarkInactive(jobId);
-
-stop
+  stop
 @enduml

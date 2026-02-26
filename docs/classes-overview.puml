@@ -1,0 +1,72 @@
+@startuml
+title EasySave - Vue d'ensemble (simple)
+
+skinparam packageStyle rectangle
+skinparam shadowing false
+hide empty members
+
+package "AppCommon" {
+  class Program
+  class ApplicationManager
+}
+
+package "Hosts" {
+  interface IApplicationHost
+  class ConsoleHost
+  class GuiHost
+}
+
+package "Application" {
+  class BackupApplicationService
+  interface ILogQueryService
+  interface ILogNavigationService
+}
+
+package "Backup" {
+  interface IBackupEngine
+  interface IBackupExecutionController
+}
+
+package "Persistence" {
+  interface IBackupJobRepository
+  interface IUserPreferencesRepository
+}
+
+package "State/Logs" {
+  interface IStateReader
+  interface ILogReader
+  interface ILogger
+}
+
+package "GUI" {
+  class MainWindowViewModel
+  class ManageViewModel
+  class ProgressViewModel
+  class LogViewModel
+  class ConfigViewModel
+}
+
+Program --> ApplicationManager
+Program --> IApplicationHost
+ApplicationManager --> IApplicationHost
+IApplicationHost <|.. ConsoleHost
+IApplicationHost <|.. GuiHost
+
+ManageViewModel --> BackupApplicationService
+ProgressViewModel --> BackupApplicationService
+ManageViewModel --> IBackupExecutionController
+ProgressViewModel --> IBackupExecutionController
+LogViewModel --> ILogQueryService
+LogViewModel --> ILogNavigationService
+ConfigViewModel --> IUserPreferencesRepository
+
+BackupApplicationService --> IBackupJobRepository
+BackupApplicationService --> IUserPreferencesRepository
+BackupApplicationService --> IBackupEngine
+BackupApplicationService --> IStateReader
+ILogQueryService --> ILogReader
+ILogNavigationService --> ILogReader
+
+IBackupEngine --> ILogger
+
+@enduml

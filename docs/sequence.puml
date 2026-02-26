@@ -1,5 +1,5 @@
 @startuml
-title EasySave 2.0 - Sequence (GUI: config puis execution backup)
+title EasySave 3.0 - Sequence (configuration centralisee + execution parallele)
 
 actor Utilisateur as User
 participant "AppCommon.Program" as Program
@@ -7,74 +7,109 @@ participant "AppCommon.ApplicationManager" as AppManager
 participant "GUI.Host" as GuiHost
 participant "GUI.ConfigViewModel" as ConfigVM
 participant "Persistence.IUserPreferencesRepository" as PrefRepo
-participant "Log.ReloadableLogger" as ReloadableLogger
+participant "AppCommon.ReloadableLogger" as ReloadableLogger
 participant "GUI.ManageViewModel" as ManageVM
 participant "Application.BackupApplicationService" as AppService
-participant "Persistence.IBackupJobRepository" as JobRepo
-participant "System.IBackupExecutionGuard" as Guard
+participant "Application.IBackupRunCoordinator" as RunCoordinator
 participant "Backup.BackupEngine" as Engine
+participant "Backup.BackupRuntimeGate" as RuntimeGate
+participant "System.IPriorityFilesBarrier" as PriorityBarrier
+participant "System.ILargeFileTransferBarrier" as LargeFileBarrier
+participant "System.IBackupExecutionGuard" as Guard
+participant "Backup.BackupFileExecutionService" as FileExec
 participant "System.ITransferService" as Transfer
-participant "Backup.IEncryptionPolicyProvider" as EncPolicyProvider
 participant "Backup.IEncryptionProviderResolver" as EncResolver
 participant "Backup.IEncryptionProvider" as EncProvider
+participant "Backup.BackupExecutionReporter" as Reporter
 participant "State.IStateWriter" as StateWriter
 participant "Log.ILogger" as Logger
+participant "AppCommon.ResilientHttpLogSender" as ResilientSender
+participant "AppCommon.HttpLogSender" as HttpSender
+participant "LogServer.API" as LogServer
+participant "GUI.ProgressViewModel" as ProgressVM
+participant "Application.IStateReader" as StateReader
+participant "Application.IBackupEtaEstimator" as EtaEstimator
 
 == Demarrage ==
 User -> Program : Main(args=[])
 Program -> AppManager : RunHost(GuiHost)
-AppManager -> GuiHost : ConfigureServices(...)\nRun(...)
+AppManager -> GuiHost : ConfigureServices(...)
+AppManager -> GuiHost : Run(...)
 
 == Configuration ==
-User -> ConfigVM : Save(language, logFormat, logDirectory, encryptedExtensions, businessSoftware)
+User -> ConfigVM : Save(logMode, logServerUrl, priorites, seuil gros fichier, langue...)
 ConfigVM -> PrefRepo : Load()
 ConfigVM -> PrefRepo : Save(updatedPreferences)
-ConfigVM -> ReloadableLogger : Reload() (si format change)
+ConfigVM -> ReloadableLogger : Reload() (si config logs modifiee)
 
-== Execution d'un job ==
-User -> ManageVM : RunJob(jobId)
-ManageVM -> AppService : RunJob(jobId)
-AppService -> Guard : EnsureCanCopyNextFile()
-AppService -> JobRepo : GetById(jobId)
-JobRepo --> AppService : job?
+== Lancement de plusieurs jobs ==
+User -> ManageVM : RunSelected(jobIds)
+ManageVM -> AppService : RunJobs(jobIds)
 
-alt job trouve
-  AppService -> Engine : Execute(job)
+loop Pour chaque job (parallel)
+  AppService -> RunCoordinator : RunExclusiveAsync(jobId, run)
+  RunCoordinator -> Engine : Execute(job, executionContext)
 
-  Engine -> EncPolicyProvider : GetPolicy()
-  Engine -> StateWriter : Update(status=Active)
-  Engine -> Logger : Write(StartBackup)
+  Engine -> RuntimeGate : BeginJob(jobId)
+  Engine -> RuntimeGate : RegisterPriorityJob(jobId, pendingPriorityCount)
+  Engine -> Reporter : UpdateState(Active)
+  Engine -> Reporter : Log(StartBackup)
 
-  loop pour chaque fichier
-    Engine -> Guard : EnsureCanCopyNextFile()
-    Engine -> Transfer : TransferFile(src,dst,true)
-    Transfer --> Engine : TransferResult
+  loop Pour chaque fichier planifie
+    Engine -> RuntimeGate : WaitForRuntimeControlAndSyncState(...)
 
-    alt succes
-      Engine -> EncResolver : Resolve(policy.ProviderName)
-      EncResolver --> Engine : provider?
-      alt extension chiffree et provider trouve
-        Engine -> EncProvider : EncryptAsync(destinationFile, policy)
-        EncProvider --> Engine : EncryptionResult
-      end
-      Engine -> Logger : Write(TransferFile)
-      Engine -> StateWriter : Update(progress)
-    else erreur transfert / guard
-      Engine -> Logger : Write(Error ou BusinessSoftwareDetected)
-      Engine -> StateWriter : Update(status=Error)
-      Engine --> AppService : throw
-      AppService --> ManageVM : throw
+    alt Fichier non prioritaire
+      Engine -> PriorityBarrier : WaitUntilNoPriorityPendingAsync()
+      RuntimeGate -> Reporter : UpdateState(Waiting)
     end
+
+    RuntimeGate -> Guard : EnsureCanCopyNextFile()
+
+    RuntimeGate -> LargeFileBarrier : TryAcquire(fileSize, threshold)
+    alt Slot gros fichier indisponible
+      RuntimeGate -> Reporter : UpdateState(Waiting)
+    end
+
+    Engine -> FileExec : TransferAndEncrypt(plan, policy)
+    FileExec -> Transfer : TransferFile(src, dst, overwrite=true)
+    Transfer --> FileExec : TransferResult
+
+    alt Extension chiffree
+      FileExec -> EncResolver : Resolve(providerName)
+      EncResolver --> FileExec : provider?
+      FileExec -> EncProvider : EncryptAsync(dst, policy)
+      EncProvider --> FileExec : EncryptionResult
+    end
+
+    Engine -> Reporter : Log(TransferFile)
+    Engine -> Reporter : UpdateState(progress + remaining)
   end
 
-  alt execution complete
-    Engine -> Logger : Write(EndBackup)
-    Engine -> StateWriter : Update(status=Done)
+  alt Fin normale
+    Engine -> Reporter : Log(EndBackup)
+    Engine -> Reporter : UpdateState(Done)
     Engine -> StateWriter : MarkInactive(jobId)
-    Engine --> AppService : ok
+  else Erreur / Stop
+    Engine -> Reporter : Log(Error | Stopped)
+    Engine -> Reporter : UpdateState(Error)
   end
-else job absent
-  AppService --> ManageVM : retour sans execution
+
+  Engine -> RuntimeGate : UnregisterPriorityJob(jobId)
+  Engine -> RuntimeGate : EndJob(jobId)
+end
+
+== Acheminement log centralise ==
+Reporter -> Logger : Write(LogEntry)
+Logger -> ResilientSender : Write(LogEntry)
+ResilientSender -> HttpSender : POST /api/logs
+HttpSender -> LogServer : /api/logs
+
+== Supervision live GUI ==
+loop Toutes les 500 ms
+  ProgressVM -> AppService : GetAllJobsLiveProgress()
+  AppService -> StateReader : ReadEntries()
+  AppService -> EtaEstimator : UpdateEstimate(...)
+  AppService --> ProgressVM : Etats actifs + ETA
 end
 
 @enduml

@@ -77,13 +77,22 @@ public class BackupEngineTests
         _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
-        _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination"), Times.Once);
-        _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination/folder"), Times.Once);
-        _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination/folder/subfolder"), Times.Once);
+        _fileSystemMock.Verify(fs => fs.CreateDirectory(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))), Times.Once);
+        _fileSystemMock.Verify(fs => fs.CreateDirectory(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/folder"))), Times.Once);
+        _fileSystemMock.Verify(fs => fs.CreateDirectory(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/folder/subfolder"))), Times.Once);
 
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file1.txt", "/destination/file1.txt", true), Times.Once);
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/folder/file2.txt", "/destination/folder/file2.txt", true), Times.Once);
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/folder/subfolder/file3.txt", "/destination/folder/subfolder/file3.txt", true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/file1.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/file1.txt")),
+            true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/folder/file2.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/folder/file2.txt")),
+            true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/folder/subfolder/file3.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/folder/subfolder/file3.txt")),
+            true), Times.Once);
 
         _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Active)), Times.AtLeastOnce);
         _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Done)), Times.Once);
@@ -105,7 +114,7 @@ public class BackupEngineTests
         _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/file.txt" });
 
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(false);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(1000);
@@ -117,9 +126,12 @@ public class BackupEngineTests
         _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
-        _fileSystemMock.Verify(fs => fs.DirectoryExists("/destination"), Times.Once);
-        _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination"), Times.Once);
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file.txt", "/destination/file.txt", true), Times.Once);
+        _fileSystemMock.Verify(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))), Times.Once);
+        _fileSystemMock.Verify(fs => fs.CreateDirectory(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/file.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/file.txt")),
+            true), Times.Once);
     }
 
     [Fact]
@@ -138,23 +150,23 @@ public class BackupEngineTests
         _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/new.txt", "/source/modified.txt", "/source/unchanged.txt" });
 
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(true);
-        _fileSystemMock.Setup(fs => fs.FileExists("/destination/new.txt"))
+        _fileSystemMock.Setup(fs => fs.FileExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/new.txt"))))
             .Returns(false);
 
-        _fileSystemMock.Setup(fs => fs.FileExists("/destination/modified.txt"))
+        _fileSystemMock.Setup(fs => fs.FileExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/modified.txt"))))
             .Returns(true);
         _fileSystemMock.Setup(fs => fs.GetFileSize("/source/modified.txt"))
             .Returns(2000);
-        _fileSystemMock.Setup(fs => fs.GetFileSize("/destination/modified.txt"))
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/modified.txt"))))
             .Returns(1000);
 
-        _fileSystemMock.Setup(fs => fs.FileExists("/destination/unchanged.txt"))
+        _fileSystemMock.Setup(fs => fs.FileExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/unchanged.txt"))))
             .Returns(true);
         _fileSystemMock.Setup(fs => fs.GetFileSize("/source/unchanged.txt"))
             .Returns(1000);
-        _fileSystemMock.Setup(fs => fs.GetFileSize("/destination/unchanged.txt"))
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/unchanged.txt"))))
             .Returns(1000);
 
         _transferServiceMock.Setup(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true))
@@ -164,10 +176,19 @@ public class BackupEngineTests
         _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/new.txt", "/destination/new.txt", true), Times.Once);
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/modified.txt", "/destination/modified.txt", true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/new.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/new.txt")),
+            true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/modified.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/modified.txt")),
+            true), Times.Once);
 
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/unchanged.txt", "/destination/unchanged.txt", true), Times.Never);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/unchanged.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/unchanged.txt")),
+            true), Times.Never);
 
         _transferServiceMock.Verify(ts => ts.TransferFile(It.IsAny<string>(), It.IsAny<string>(), true), Times.Exactly(2));
     }
@@ -188,7 +209,7 @@ public class BackupEngineTests
         _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/file.txt" });
 
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(false);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(1000);
@@ -200,8 +221,11 @@ public class BackupEngineTests
         _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
-        _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination"), Times.Once);
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file.txt", "/destination/file.txt", true), Times.Once);
+        _fileSystemMock.Verify(fs => fs.CreateDirectory(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/file.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/file.txt")),
+            true), Times.Once);
     }
 
     [Fact]
@@ -220,9 +244,9 @@ public class BackupEngineTests
         _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/folder/file.txt" });
 
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination/folder"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/folder"))))
             .Returns(false);
-        _fileSystemMock.Setup(fs => fs.FileExists("/destination/folder/file.txt"))
+        _fileSystemMock.Setup(fs => fs.FileExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/folder/file.txt"))))
             .Returns(false);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(1000);
@@ -234,8 +258,11 @@ public class BackupEngineTests
         _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
-        _fileSystemMock.Verify(fs => fs.CreateDirectory("/destination/folder"), Times.Once);
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/folder/file.txt", "/destination/folder/file.txt", true), Times.Once);
+        _fileSystemMock.Verify(fs => fs.CreateDirectory(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/folder"))), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/folder/file.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/folder/file.txt")),
+            true), Times.Once);
     }
 
     [Fact]
@@ -342,8 +369,8 @@ public class BackupEngineTests
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le => 
             le.BackupName == "TestBackup" &&
             le.EventType == LogEventType.TransferFile &&
-            le.SourcePathUNC == "/source/file.txt" &&
-            le.DestinationPathUNC == "/destination/file.txt" &&
+            PathTestHelper.Equal(le.SourcePathUNC, "/source/file.txt") &&
+            PathTestHelper.Equal(le.DestinationPathUNC, "/destination/file.txt") &&
             le.FileSizeBytes == 1000 &&
             le.TransferTimeMs == 50
         )), Times.Once);
@@ -380,7 +407,7 @@ public class BackupEngineTests
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le => 
             le.BackupName == "TestBackup" &&
             le.EventType == LogEventType.CreateDirectory &&
-            le.SourcePathUNC == "/destination/folder"
+            PathTestHelper.Equal(le.SourcePathUNC, "/destination/folder")
         )), Times.Once);
     }
 
@@ -457,8 +484,14 @@ public class BackupEngineTests
 
         await engine.Execute(job);
 
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file1.txt", "/destination/file1.txt", true), Times.Once);
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/file2.txt", "/destination/file2.txt", true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/file1.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/file1.txt")),
+            true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/file2.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/file2.txt")),
+            true), Times.Once);
         _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Error)), Times.Never);
         _stateWriterMock.Verify(sw => sw.Update(It.Is<StateEntry>(se => se.Status == BackupStatus.Done)), Times.Once);
         _loggerMock.Verify(l => l.Write(It.Is<LogEntry>(le =>
@@ -1076,7 +1109,10 @@ public class BackupEngineTests
         _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/empty.txt", "/destination/empty.txt", true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/empty.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/empty.txt")),
+            true), Times.Once);
     }
 
     [Fact]
@@ -1094,13 +1130,13 @@ public class BackupEngineTests
 
         _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/file.txt" });
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(true);
-        _fileSystemMock.Setup(fs => fs.FileExists("/destination/file.txt"))
+        _fileSystemMock.Setup(fs => fs.FileExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/file.txt"))))
             .Returns(true);
         _fileSystemMock.Setup(fs => fs.GetFileSize("/source/file.txt"))
             .Returns(1000);
-        _fileSystemMock.Setup(fs => fs.GetFileSize("/destination/file.txt"))
+        _fileSystemMock.Setup(fs => fs.GetFileSize(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/file.txt"))))
             .Returns(1000);
 
         // Act
@@ -1125,9 +1161,9 @@ public class BackupEngineTests
 
         _fileSystemMock.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(new List<string> { "/source/newfile.txt" });
-        _fileSystemMock.Setup(fs => fs.DirectoryExists("/destination"))
+        _fileSystemMock.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination"))))
             .Returns(true);
-        _fileSystemMock.Setup(fs => fs.FileExists("/destination/newfile.txt"))
+        _fileSystemMock.Setup(fs => fs.FileExists(It.Is<string>(p => PathTestHelper.Equal(p, "/destination/newfile.txt"))))
             .Returns(false);
         _fileSystemMock.Setup(fs => fs.GetFileSize(It.IsAny<string>()))
             .Returns(1000);
@@ -1139,7 +1175,10 @@ public class BackupEngineTests
         _backupEngine.Execute(job).GetAwaiter().GetResult();
 
         // Assert
-        _transferServiceMock.Verify(ts => ts.TransferFile("/source/newfile.txt", "/destination/newfile.txt", true), Times.Once);
+        _transferServiceMock.Verify(ts => ts.TransferFile(
+            It.Is<string>(p => PathTestHelper.Equal(p, "/source/newfile.txt")),
+            It.Is<string>(p => PathTestHelper.Equal(p, "/destination/newfile.txt")),
+            true), Times.Once);
     }
 
     [Fact]

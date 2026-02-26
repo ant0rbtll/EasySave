@@ -39,12 +39,12 @@ public class DefaultBackupFilePlannerTests
         var fileSystem = new Mock<IFileSystem>();
         fileSystem.Setup(fs => fs.EnumerateFilesRecursive("/source", It.IsAny<IEnumerable<string>>()))
             .Returns(["/source/new.txt", "/source/unchanged.txt"]);
-        fileSystem.Setup(fs => fs.DirectoryExists("/dest")).Returns(true);
-        fileSystem.Setup(fs => fs.FileExists("/dest/new.txt")).Returns(false);
-        fileSystem.Setup(fs => fs.FileExists("/dest/unchanged.txt")).Returns(true);
+        fileSystem.Setup(fs => fs.DirectoryExists(It.Is<string>(p => PathTestHelper.Equal(p, "/dest")))).Returns(true);
+        fileSystem.Setup(fs => fs.FileExists(It.Is<string>(p => PathTestHelper.Equal(p, "/dest/new.txt")))).Returns(false);
+        fileSystem.Setup(fs => fs.FileExists(It.Is<string>(p => PathTestHelper.Equal(p, "/dest/unchanged.txt")))).Returns(true);
         fileSystem.Setup(fs => fs.GetFileSize("/source/new.txt")).Returns(10);
         fileSystem.Setup(fs => fs.GetFileSize("/source/unchanged.txt")).Returns(10);
-        fileSystem.Setup(fs => fs.GetFileSize("/dest/unchanged.txt")).Returns(10);
+        fileSystem.Setup(fs => fs.GetFileSize(It.Is<string>(p => PathTestHelper.Equal(p, "/dest/unchanged.txt")))).Returns(10);
 
         var planner = new DefaultBackupFilePlanner(fileSystem.Object);
         var job = new BackupJob
