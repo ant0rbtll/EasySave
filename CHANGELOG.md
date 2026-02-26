@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [3.0.0] - 2026-02-25
+## [3.0] - 2026-02-25
 
 Version majeure: execution parallele, du pilotage runtime, de la supervision multi-jobs et de la centralisation des logs.
 
@@ -62,7 +62,7 @@ Version majeure: execution parallele, du pilotage runtime, de la supervision mul
   - 12 projets de tests
   - 688 tests passes, 0 echec, 0 ignores
 
-## [2.0.0] - 2026-02-15
+## [2.0] - 2026-02-15
 
 Version majeure: passage a une architecture multi-host (GUI + console) et extension des capacites de supervision/execution.
 
@@ -127,7 +127,7 @@ Version majeure: passage a une architecture multi-host (GUI + console) et extens
   - 10 projets de tests
   - 505 tests passes, 0 echec, 0 ignores
 
-## [1.1.0] - 2026-02-09
+## [1.1] - 2026-02-09
 
 Evolution majeure de l'architecture UI/Logs et des preferences utilisateur.
 
@@ -175,7 +175,7 @@ Evolution majeure de l'architecture UI/Logs et des preferences utilisateur.
 
 - Mise a jour complete des diagrammes UML en version 1.1 (`docs/classes.puml`, `docs/sequence.puml`, `docs/activity.puml`, `docs/usecase.puml`)
 
-## [1.0.0] - 2026-02-05
+## [1.0] - 2026-02-05
 
 Version initiale de production d'EasySave.
 
@@ -360,7 +360,7 @@ Version initiale de production d'EasySave.
 - **Lisa ACHOUR** (@achourl14) - Application Service, UI, Tests
 - **Thaïs VIANES** (@thedarknessqueen) - ETR (État Temps Réel), State Writer
 
-[1.0.0]: https://github.com/ant0rbtll/easysave/releases/tag/v1.0.0
-[1.1.0]: https://github.com/ant0rbtll/easysave/compare/v1.0.0...v1.1.0
-[2.0.0]: https://github.com/ant0rbtll/easysave/compare/v1.1.0...v2.0
-[3.0.0]: https://github.com/ant0rbtll/easysave/compare/v2.0...HEAD
+[1.0]: https://github.com/ant0rbtll/easysave/releases/tag/v1.0
+[1.1]: https://github.com/ant0rbtll/easysave/compare/v1.0...v1.1
+[2.0]: https://github.com/ant0rbtll/easysave/compare/v1.1...v2.0
+[3.0]: https://github.com/ant0rbtll/easysave/compare/v2.0...v3.0
