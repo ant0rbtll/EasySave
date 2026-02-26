@@ -23,6 +23,7 @@ package "Logging" {
   interface ILoggerRuntimeReloader
   interface ILogServerStatusNotifier
   class ReloadableLogger
+  class LogServerStatusNotifier
   class CompositeLogger
   class ResilientHttpLogSender
   class HttpLogSender
@@ -56,7 +57,7 @@ IStateReader <|.. JsonStateReader
 
 ILogger <|.. ReloadableLogger
 ILoggerRuntimeReloader <|.. ReloadableLogger
-ILogServerStatusNotifier <|.. ReloadableLogger
+ILogServerStatusNotifier <|.. LogServerStatusNotifier
 ILogger <|.. CompositeLogger
 
 IEncryptionPolicyProvider <|.. UserPreferencesEncryptionPolicyProvider
@@ -71,6 +72,7 @@ EncryptionProviderResolver --> IEncryptionProvider
 ExternalEncryptionProvider --> IExternalCryptoProcessRunner
 ReloadableLogger --> IUserPreferencesRepository
 ReloadableLogger --> IPathProvider
+ReloadableLogger --> LogServerStatusNotifier
 ReloadableLogger --> CompositeLogger
 CompositeLogger --> ResilientHttpLogSender
 ResilientHttpLogSender --> HttpLogSender

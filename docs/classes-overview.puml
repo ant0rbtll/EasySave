@@ -54,6 +54,8 @@ IApplicationHost <|.. GuiHost
 
 ManageViewModel --> BackupApplicationService
 ProgressViewModel --> BackupApplicationService
+ManageViewModel --> IBackupExecutionController
+ProgressViewModel --> IBackupExecutionController
 LogViewModel --> ILogQueryService
 LogViewModel --> ILogNavigationService
 ConfigViewModel --> IUserPreferencesRepository
@@ -65,7 +67,6 @@ BackupApplicationService --> IStateReader
 ILogQueryService --> ILogReader
 ILogNavigationService --> ILogReader
 
-IBackupExecutionController ..> BackupApplicationService
 IBackupEngine --> ILogger
 
 @enduml

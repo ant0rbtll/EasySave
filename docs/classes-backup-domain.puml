@@ -53,7 +53,7 @@ IBackupJobRepository <|.. JsonBackupJobRepository
 BackupApplicationService --> IBackupJobRepository
 BackupApplicationService --> IBackupJobStateService
 BackupApplicationService --> IBackupEngine
-IBackupExecutionController ..> BackupApplicationService
+IBackupEngine ..> IBackupExecutionController
 IBackupEngine --> BackupJob
 
 @enduml
