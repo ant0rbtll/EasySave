@@ -1,6 +1,6 @@
+using System;
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 
 namespace EasySave.GUI.Views;
 
@@ -11,6 +11,9 @@ namespace EasySave.GUI.Views;
 /// </summary>
 public partial class EasterEggOverlay : UserControl
 {
+    private const string GifResourceUri = "avares://EasySave.GUI/Assets/EasterEgg/easteregg.gif";
+    private bool _sourceLoaded;
+
     public EasterEggOverlay()
     {
         InitializeComponent();
@@ -20,8 +23,21 @@ public partial class EasterEggOverlay : UserControl
     /// <summary>Shows the overlay.</summary>
     public void Show()
     {
-        IsVisible = true;
-        Focus();
+        try
+        {
+            if (!_sourceLoaded)
+            {
+                EasterEggImage.Source = new Uri(GifResourceUri);
+                _sourceLoaded = true;
+            }
+
+            IsVisible = true;
+            Focus();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[EasterEgg] Failed to show overlay: {ex.Message}");
+        }
     }
 
     /// <summary>Hides the overlay.</summary>
