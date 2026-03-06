@@ -136,6 +136,10 @@
                             Content="{Binding FixedPage}"/>
         </Grid>
 
+        <!-- Easter-egg overlay (6 → 7 key sequence) -->
+        <views:EasterEggOverlay x:Name="EasterEggOverlay"
+                                Grid.RowSpan="3" />
+
         <Border Grid.RowSpan="2"
                 Background="#AA000000"
                 IsVisible="{Binding IsCloseDialogOpen}">
