@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:gif="using:Avalonia.Labs.Gif"
+             x:Class="EasySave.GUI.Views.EasterEggOverlay"
+             IsHitTestVisible="True"
+             IsVisible="False">
+
+    <!--
+        Full-screen semi-transparent overlay that shows an animated GIF.
+        Click anywhere (or press Escape) to dismiss.
+    -->
+    <Border Background="#CC000000"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch">
+        <gif:GifImage x:Name="EasterEggImage"
+                      MaxWidth="600"
+                      MaxHeight="400"
+                      Stretch="Uniform"
+                      HorizontalAlignment="Center"
+                      VerticalAlignment="Center" />
+    </Border>
+</UserControl>

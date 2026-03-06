@@ -3,12 +3,14 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using EasySave.GUI.Services;
 using EasySave.GUI.ViewModels;
 
 namespace EasySave.GUI.Views;
 
 public partial class MainWindow : Window
 {
+    private readonly EasterEggKeyDetector _easterEggKeyDetector = new();
     private const string MaximizePathData = "M4 4h16v16H4V4m2 2v12h12V6H6z";
     private const string RestorePathData = "M4 8h12v12H4V8m2 2v8h8v-8H6m4-6h10v10h-2V4H10V2z";
 
@@ -22,8 +24,22 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         ConfigurePlatformTitleBar();
+        ConfigureEasterEgg();
         Closing += OnWindowClosing;
         DataContextChanged += OnDataContextChanged;
+    }
+
+    /// <summary>
+    /// Wires the Easter-egg key sequence detector.
+    /// Pressing 6 then 7 anywhere in the window shows the overlay.
+    /// </summary>
+    private void ConfigureEasterEgg()
+    {
+        _easterEggKeyDetector.SequenceDetected += () =>
+            Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => EasterEggOverlay.Show());
+
+        AddHandler(KeyDownEvent, (_, e) => _easterEggKeyDetector.OnKeyDown(e.Key),
+            RoutingStrategies.Tunnel);
     }
 
     private void ConfigurePlatformTitleBar()
